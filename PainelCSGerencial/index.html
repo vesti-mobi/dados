@@ -1153,7 +1153,7 @@ function updateHome(){
         });
     }
     document.getElementById('home-top80-val').textContent=Object.keys(tEmp).length.toLocaleString('pt-BR')+' empresa(s)';
-    document.getElementById('home-top80-sub').innerHTML=tQt.toLocaleString('pt-BR')+' pedidos &middot; R$ '+tVal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+    document.getElementById('home-top80-sub').textContent=tQt.toLocaleString('pt-BR')+' pedidos';
     // ONLOG respeita filtros globais (CS, empresa, mes)
     var od=(typeof ONLOG_DATA!=='undefined'?ONLOG_DATA:null);
     var oTot=0,oSem=0;
