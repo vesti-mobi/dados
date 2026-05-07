@@ -1124,7 +1124,7 @@ function updateHome(){
     document.getElementById('home-gmv-sub').textContent='R$ '+gTot.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     // TOP80 respeita filtros globais (CS, empresa, mes)
     var td=(typeof TOP80_DATA!=='undefined'?TOP80_DATA:null);
-    var tEmp={},tMes=0;
+    var tEmp={},tMes=0,tVal=0,tQt=0;
     if(td&&td.linhas){
         var fcsGlobal=(fCS&&fCS.value)||'';
         var selCoLow=selCo?selCo.toLowerCase():'';
@@ -1132,11 +1132,11 @@ function updateHome(){
             if(fcsGlobal&&(r.cs||'')!==fcsGlobal)return;
             if(selCoLow&&(r.marca||'').toLowerCase().indexOf(selCoLow)<0)return;
             if(fm&&(r.mes||'')!==fm)return;
-            tEmp[r.dominioId]=1;tMes++;
+            tEmp[r.dominioId]=1;tMes++;tVal+=(r.valTotal||0);tQt+=(r.qtTotal||0);
         });
     }
     document.getElementById('home-top80-val').textContent=Object.keys(tEmp).length.toLocaleString('pt-BR')+' empresa(s)';
-    document.getElementById('home-top80-sub').innerHTML='&nbsp;';
+    document.getElementById('home-top80-sub').innerHTML=tQt.toLocaleString('pt-BR')+' pedidos &middot; R$ '+tVal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     // ONLOG respeita filtros globais (CS, empresa, mes)
     var od=(typeof ONLOG_DATA!=='undefined'?ONLOG_DATA:null);
     var oTot=0,oSem=0;
