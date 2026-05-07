@@ -127,6 +127,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="subtab active" data-sub="fluxo" onclick="switchSub('fluxo')">Fluxo</div>
         <div class="subtab" data-sub="antec" onclick="switchSub('antec')">Antecipação</div>
         <button id="btnExcel" onclick="downloadExcel()" style="display:none;margin-left:auto;padding:7px 14px;background:#00B894;color:#fff;border:0;border-radius:8px;font:600 12px 'Inter',sans-serif;cursor:pointer">⬇ Baixar Excel</button>
+        <button id="btnCsvStark" onclick="downloadCsvStark()" style="display:none;margin-left:8px;padding:7px 14px;background:#6C5CE7;color:#fff;border:0;border-radius:8px;font:600 12px 'Inter',sans-serif;cursor:pointer" title="CSV no formato Starkbank (amount, name, taxId, key, scheduled, externalId)">⬇ Baixar CSV Stark</button>
     </div>
     <div class="subtabs" id="subtabsAud" style="display:none">
         <div class="subtab active" data-audsub="api" onclick="switchAudSub('api')">CR Stark API</div>
@@ -402,6 +403,7 @@ function switchTab(which){
     var isCr=(which==='cr'), isAud=(which==='aud'), isCp=(which==='cp');
     document.getElementById('subtabs').style.display    = isCp?'flex':'none';
     document.getElementById('btnExcel').style.display   = (isCp && SUB==='antec')?'inline-block':'none';
+    document.getElementById('btnCsvStark').style.display = (isCp && SUB==='antec')?'inline-block':'none';
     document.getElementById('thPix').style.display      = (isCp && SUB==='antec')?'':'none';
     document.getElementById('subtabsAud').style.display = isAud?'flex':'none';
     document.getElementById('kpisCp').style.display     = isCp?'grid':'none';
@@ -435,6 +437,7 @@ function switchSub(which){
     var isAntec=(which==='antec');
     document.getElementById('thPix').style.display = isAntec?'':'none';
     document.getElementById('btnExcel').style.display = isAntec?'inline-block':'none';
+    document.getElementById('btnCsvStark').style.display = isAntec?'inline-block':'none';
     openSet={};
     render();
 }
@@ -763,6 +766,52 @@ function renderCp(){
         });
     });
     tb.innerHTML=html.join('');
+}
+
+// CSV no formato esperado pelo upload da Starkbank.
+// Colunas: amount,name,taxId,key,scheduled,externalId
+// - amount em centavos (int)
+// - taxId derivado da chave PIX quando ela e numerica (CPF 11 / CNPJ 14 digitos)
+// - 1 linha por (payDate, companyId), agregando netValue do(s) pagamento(s)
+function downloadCsvStark(){
+    var rows=getFiltered();
+    if(!rows.length){alert('Nenhum dado com os filtros atuais.');return}
+    var byKey={};
+    rows.forEach(function(p){
+        var k=(p.payDate||'')+'|'+(p.companyId||'');
+        var b=byKey[k]||(byKey[k]={payDate:p.payDate||'',nomeFantasia:p.nomeFantasia||'',companyId:p.companyId||'',net:0});
+        b.net+=(p.netValue||0);
+    });
+    function fmtTaxId(raw){
+        var d=String(raw||'').replace(/\D/g,'');
+        if(d.length===14)return d.slice(0,2)+'.'+d.slice(2,5)+'.'+d.slice(5,8)+'/'+d.slice(8,12)+'-'+d.slice(12);
+        if(d.length===11)return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
+        return '';
+    }
+    function csvEsc(v){
+        var s=String(v==null?'':v);
+        if(/[",\n;]/.test(s))s='"'+s.replace(/"/g,'""')+'"';
+        return s;
+    }
+    var lines=['amount,name,taxId,key,scheduled,externalId'];
+    Object.keys(byKey).sort().forEach(function(k){
+        var r=byKey[k];
+        var key=window.PIX_MARCAS?window.PIX_MARCAS.get(r.nomeFantasia):'';
+        var taxId=fmtTaxId(key);
+        var amount=Math.round((r.net||0)*100);
+        var scheduled=(r.payDate||'')+(r.payDate?' 00:00:00':'');
+        var extId='vesti-'+(r.payDate||'')+'-'+(r.companyId||'').replace(/-/g,'').slice(0,10);
+        lines.push([amount,csvEsc(r.nomeFantasia),csvEsc(taxId),csvEsc(key),csvEsc(scheduled),csvEsc(extId)].join(','));
+    });
+    var csv=lines.join('\r\n');
+    var dDe=document.getElementById('fDataDe').value, dAte=document.getElementById('fDataAte').value;
+    var stamp=(dDe&&dAte)?(dDe+'_'+dAte):(new Date().toISOString().substring(0,10));
+    var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download='starkbank_pagamentos_'+stamp+'.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url)},0);
 }
 
 function downloadExcel(){
