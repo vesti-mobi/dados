@@ -213,7 +213,7 @@ table.dt tr:hover td{background:#FAFAFA}
             <div class="hl-icon">&#128176;</div>
             <div class="hl-label">Receita T3+</div>
             <div class="hl-cargo" id="home-t3-sub">--</div>
-            <div class="hl-score" id="home-t3-val">R$ --</div>
+            <div class="hl-score" style="font-size:22px;margin-top:8px" id="home-t3-val">R$ --</div>
             <div class="hl-meta" style="margin-top:10px">Mensalidade Iugu dos clientes nao-Starter (mes atual) &rarr;</div>
         </div>
     </div>
@@ -1136,7 +1136,7 @@ function updateHome(){
         });
     }
     document.getElementById('home-top80-val').textContent=Object.keys(tEmp).length.toLocaleString('pt-BR')+' empresa(s)';
-    document.getElementById('home-top80-sub').textContent='';
+    document.getElementById('home-top80-sub').innerHTML='&nbsp;';
     // ONLOG respeita filtros globais (CS, empresa, mes)
     var od=(typeof ONLOG_DATA!=='undefined'?ONLOG_DATA:null);
     var oTot=0,oSem=0;
