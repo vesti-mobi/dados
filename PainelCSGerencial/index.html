@@ -131,6 +131,7 @@ table.dt tr:hover td{background:#FAFAFA}
 <div class="filters">
     <div class="filter-group"><label>Empresa:</label><div class="filter-container"><input type="text" class="f-input" id="fEmpresa" placeholder="Buscar por nome ou CNPJ..." autocomplete="off"><div class="f-dropdown" id="fDropdown"></div></div><span id="fTag" style="display:none" class="f-tag"><span id="fTagName"></span><span class="x" onclick="clearEmpresa()">&times;</span></span></div>
     <div class="filter-group"><label>CS:</label><select class="f-select" id="fCS" onchange="updateAll()"><option value="">Todos</option></select></div>
+    <div class="filter-group"><label>M&ecirc;s:</label><select class="f-select" id="fMes" onchange="applyGlobalMes()"><option value="">Todos</option></select></div>
     <div class="filter-group"><label>Exibir:</label><select class="f-select" id="fTipo" onchange="updateAll()"><option value="">Todas empresas</option><option value="nps">Somente com NPS</option><option value="csat">Somente com CSAT</option><option value="both">Com NPS e CSAT</option></select></div>
     <button class="f-btn" onclick="clearAll()" id="fClear" style="display:none">Limpar Filtros</button>
 </div>
@@ -889,7 +890,30 @@ document.addEventListener('click',function(e){if(!e.target.closest('.filter-cont
 
 function selectCo(name){selCo=name;fEmpresa.style.display='none';document.getElementById('fTag').style.display='inline-flex';document.getElementById('fTagName').textContent=name;document.getElementById('fClear').style.display='inline-block';fDropdown.classList.remove('show');var c=coMap[name];if(c){document.getElementById('cd-t').textContent=name;document.getElementById('cd-nf').textContent=c.nome_fantasia||'-';document.getElementById('cd-dom').textContent=c.domain_id||'-';document.getElementById('cd-cnpj').textContent=c.cnpj||'-';document.getElementById('cd-rs').textContent=c.razao_social||'-';document.getElementById('cd-anjo').textContent=c.anjo||'-';document.getElementById('cd-canal').textContent=c.canal||'-';document.getElementById('cd-int').textContent=c.integracao||'-';document.getElementById('cd-plano').textContent=c.plano||'-';document.getElementById('cd-valor').textContent=c.valor_mensal?('R$ '+Number(c.valor_mensal).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})):'-';document.getElementById('cd-tipo').textContent=c.is_filial?'Filial de '+(c.matriz_name||'?'):'Empresa (Matriz)';document.getElementById('coDetail').classList.add('show')}updateAll()}
 function clearEmpresa(){selCo=null;fEmpresa.value='';fEmpresa.style.display='block';document.getElementById('fTag').style.display='none';document.getElementById('coDetail').classList.remove('show');updateAll()}
-function clearAll(){clearEmpresa();fCS.value='';document.getElementById('fTipo').value='';chartFilter=null;document.getElementById('chartFilterBar').style.display='none';document.getElementById('fClear').style.display='none';updateAll()}
+function clearAll(){clearEmpresa();fCS.value='';document.getElementById('fTipo').value='';var fm=document.getElementById('fMes');if(fm)fm.value='';chartFilter=null;document.getElementById('chartFilterBar').style.display='none';document.getElementById('fClear').style.display='none';applyGlobalMes()}
+function _ensurePanelInits(){try{churnInit&&churnInit()}catch(e){}try{_cgInit&&_cgInit()}catch(e){}try{vpInit&&vpInit()}catch(e){}try{gmvInit&&gmvInit()}catch(e){}try{top80Init&&top80Init()}catch(e){}try{t3Init&&t3Init()}catch(e){}}
+function _populateGlobalMes(){
+    var sel=document.getElementById('fMes');if(!sel||sel.options.length>1)return;
+    var meses={};
+    try{(typeof CHURN_DATA!=='undefined'?CHURN_DATA:[]).forEach(function(r){if(r.mes)meses[r.mes]=1})}catch(e){}
+    try{var cg=(typeof CHURN_GERAL!=='undefined'?CHURN_GERAL:null);if(cg){(cg.total||[]).concat(cg.parcial||[]).forEach(function(r){if(r.anoMesChurn)meses[r.anoMesChurn]=1})}}catch(e){}
+    try{var t3=(typeof T3PLUS_DATA!=='undefined'?T3PLUS_DATA:null);if(t3&&t3.serie)t3.serie.forEach(function(r){if(r.mes)meses[r.mes]=1})}catch(e){}
+    try{var gmv=(typeof GMV_DATA!=='undefined'?GMV_DATA:null);if(gmv&&gmv.serie)gmv.serie.forEach(function(r){if(r.mes)meses[r.mes]=1})}catch(e){}
+    try{var vp=(typeof VP_DATA!=='undefined'?VP_DATA:null);if(vp&&vp.serie)vp.serie.forEach(function(r){if(r.mes)meses[r.mes]=1})}catch(e){}
+    Object.keys(meses).sort().reverse().forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=fmtM(m);sel.appendChild(o)});
+}
+function applyGlobalMes(){
+    _ensurePanelInits();
+    var m=document.getElementById('fMes').value;
+    ['chFMes','cgFMes','vpFMes','gmvFMes','t80FMes','t3FMes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value=m});
+    var de=document.getElementById('olFDe'),ate=document.getElementById('olFAte'),dia=document.getElementById('olFDia');
+    if(de&&ate){
+        if(m){var p=m.split('-'),y=+p[0],mm=+p[1];var ld=new Date(y,mm,0).getDate();de.value=p[0]+'-'+p[1]+'-01';ate.value=p[0]+'-'+p[1]+'-'+(ld<10?'0'+ld:ld);if(dia)dia.value=''}
+        else {de.value='';ate.value=''}
+    }
+    if(m||selCo||fCS.value||document.getElementById('fTipo').value)document.getElementById('fClear').style.display='inline-block';
+    updateAll();
+}
 
 // === FILTERS PER DATA SOURCE ===
 function getfNps(){var d=NPS_DATA;if(selCo)d=d.filter(function(r){return r.empresa===selCo});var cs=fCS.value;if(cs)d=d.filter(function(r){return empresaToCS[r.empresa]===cs});if(chartFilter){var cf=chartFilter;if(cf.type==='month')d=d.filter(function(r){return (r.data||'').substring(0,7)===cf.value});if(cf.type==='nps_class'){if(cf.value==='promoter')d=d.filter(function(r){return r.nota>=9});if(cf.value==='passive')d=d.filter(function(r){return r.nota>=7&&r.nota<=8});if(cf.value==='detractor')d=d.filter(function(r){return r.nota<=6})}if(cf.type==='nps_cargo')d=d.filter(function(r){return (r._cargo||'Sem cargo')===cf.value})}return d}
@@ -2143,6 +2167,7 @@ function getfChurn(){
     var d=CHURN_DATA.slice();
     var m=document.getElementById('chFMes').value;if(m)d=d.filter(function(r){return r.mes===m});
     var c=document.getElementById('chFCS').value;if(c)d=d.filter(function(r){return r.cs===c});
+    if(selCo){var sl=selCo.toLowerCase();d=d.filter(function(r){return (r.empresa||'').toLowerCase().indexOf(sl)>=0})}
     return d;
 }
 function fmtD(s){if(!s)return '--';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2)}
@@ -2370,9 +2395,11 @@ function updateT3(){
     var canalF=document.getElementById('t3FCanal').value;
     var csF=document.getElementById('t3FCS').value;
     // Empresas filtradas por canal/cs
+    var selCoLow=selCo?selCo.toLowerCase():'';
     var emps=(t3.empresas||[]).filter(function(e){
         if(canalF && e.canal!==canalF)return false;
         if(csF && e.cs!==csF)return false;
+        if(selCoLow && (e.empresa||'').toLowerCase().indexOf(selCoLow)<0)return false;
         return true;
     });
     // Serie: recalcular a partir das empresas filtradas para refletir filtros canal/cs
@@ -2449,11 +2476,13 @@ function updateT3(){
     }).join('')||'<tr><td colspan="10" style="text-align:center;color:#999;padding:16px">Nenhuma empresa no filtro</td></tr>';
 }
 function filterByCS(name){fCS.value=name;document.getElementById('fClear').style.display='inline-block';updateAll()}
-window.selectCo=selectCo;window.clearEmpresa=clearEmpresa;window.clearAll=clearAll;window.updateAll=updateAll;window.clearChartFilter=clearChartFilter;window.setChartFilter=setChartFilter;window.switchTab=switchTab;window.switchCsat=switchCsat;window.updateVp=updateVp;window.vpClearFilters=vpClearFilters;window.goBack=goBack;window.updateChurn=updateChurn;window.churnClearFilters=churnClearFilters;window.filterByCS=filterByCS;window.openChurnDetail=openChurnDetail;window.closeChurnDetail=closeChurnDetail;window.updateGmv=updateGmv;window.gmvClearFilters=gmvClearFilters;window.updateTop80=updateTop80;window.top80ClearFilters=top80ClearFilters;window.openTop80Detail=openTop80Detail;window.updateOnlog=updateOnlog;window.onlogClearFilters=onlogClearFilters;window.onlogSetDia=onlogSetDia;window.onlogExportExcel=onlogExportExcel;window.onlogExportCsv=onlogExportCsv;window.onlogQuinzenaApply=onlogQuinzenaApply;window.onlogDoUpload=onlogDoUpload;window.updateT3=updateT3;window.t3ClearFilters=t3ClearFilters;window.openT3Detail=openT3Detail;
+window.applyGlobalMes=applyGlobalMes;window.selectCo=selectCo;window.clearEmpresa=clearEmpresa;window.clearAll=clearAll;window.updateAll=updateAll;window.clearChartFilter=clearChartFilter;window.setChartFilter=setChartFilter;window.switchTab=switchTab;window.switchCsat=switchCsat;window.updateVp=updateVp;window.vpClearFilters=vpClearFilters;window.goBack=goBack;window.updateChurn=updateChurn;window.churnClearFilters=churnClearFilters;window.filterByCS=filterByCS;window.openChurnDetail=openChurnDetail;window.closeChurnDetail=closeChurnDetail;window.updateGmv=updateGmv;window.gmvClearFilters=gmvClearFilters;window.updateTop80=updateTop80;window.top80ClearFilters=top80ClearFilters;window.openTop80Detail=openTop80Detail;window.updateOnlog=updateOnlog;window.onlogClearFilters=onlogClearFilters;window.onlogSetDia=onlogSetDia;window.onlogExportExcel=onlogExportExcel;window.onlogExportCsv=onlogExportCsv;window.onlogQuinzenaApply=onlogQuinzenaApply;window.onlogDoUpload=onlogDoUpload;window.updateT3=updateT3;window.t3ClearFilters=t3ClearFilters;window.openT3Detail=openT3Detail;
 // Inicializacao: Home e default; filtros globais visiveis, KPIs globais ocultos
 document.querySelector('.filters').style.display='flex';
 document.getElementById('globalKpiRow').style.display='none';
 document.getElementById('backNav').style.display='none';
+_ensurePanelInits();
+_populateGlobalMes();
 updateAll();
 }
 if(sessionStorage.getItem('cs_auth')==='1')initDashboard();
