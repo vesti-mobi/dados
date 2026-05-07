@@ -1083,10 +1083,12 @@ function updateCsatPlataforma(){
 
 // === UPDATE: HOME (GERAL) ===
 function updateHome(){
+    var fmEl=document.getElementById('fMes');var fm=fmEl?fmEl.value:'';
+    var fmMatch=function(s){return !fm||(String(s||'').substring(0,7)===fm)};
     // Satisfacao respeita filtros globais (selCo, fCS)
-    var nRec=getfNps().filter(function(r){return r.nota!=null});
+    var nRec=getfNps().filter(function(r){return r.nota!=null&&fmMatch(r.mes||r.data)});
     var nScore=calcNps(nRec);
-    var ora=getfCsatOra(),plat=getfCsatPlat();
+    var ora=getfCsatOra().filter(function(r){return fmMatch(r.mes||r.data)}),plat=getfCsatPlat().filter(function(r){return fmMatch(r.mes||r.data)});
     var allCsat=[];
     ora.forEach(function(r){if(r.nota!=null)allCsat.push(+r.nota)});
     plat.forEach(function(r){if(r.nota!=null)allCsat.push(+r.nota)});
@@ -1103,7 +1105,7 @@ function updateHome(){
     }
     document.getElementById('home-vp-val').textContent=nClientes+' clientes';
     document.getElementById('home-vp-sub').textContent='R$ '+totalValor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-    // GMV respeita filtros globais (selCo, fCS) — ignora o filtro interno de mes na home
+    // GMV respeita filtros globais (selCo, fCS, fMes)
     var gmv=(typeof GMV_DATA!=='undefined'?GMV_DATA:null);
     var gN=0,gTot=0;
     if(gmv&&gmv.empresas){
@@ -1112,6 +1114,7 @@ function updateHome(){
         var gRows=gmv.empresas.filter(function(r){
             if(fcsGlobal&&(r.cs||'')!==fcsGlobal)return false;
             if(selCoLow&&(r.marca||'').toLowerCase().indexOf(selCoLow)<0)return false;
+            if(fm&&(r.mesCompleto||'')!==fm)return false;
             return true;
         });
         gN=gRows.length;
@@ -1119,7 +1122,7 @@ function updateHome(){
     }
     document.getElementById('home-gmv-val').textContent=gN.toLocaleString('pt-BR')+' novo(s) cliente(s)';
     document.getElementById('home-gmv-sub').textContent='R$ '+gTot.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-    // TOP80 respeita filtros globais (CS, empresa)
+    // TOP80 respeita filtros globais (CS, empresa, mes)
     var td=(typeof TOP80_DATA!=='undefined'?TOP80_DATA:null);
     var tEmp={},tMes=0;
     if(td&&td.linhas){
@@ -1128,12 +1131,13 @@ function updateHome(){
         td.linhas.forEach(function(r){
             if(fcsGlobal&&(r.cs||'')!==fcsGlobal)return;
             if(selCoLow&&(r.marca||'').toLowerCase().indexOf(selCoLow)<0)return;
+            if(fm&&(r.mes||'')!==fm)return;
             tEmp[r.dominioId]=1;tMes++;
         });
     }
     document.getElementById('home-top80-val').textContent=Object.keys(tEmp).length.toLocaleString('pt-BR')+' empresa(s)';
     document.getElementById('home-top80-sub').textContent=tMes.toLocaleString('pt-BR')+' mes(es) qualificado(s)';
-    // ONLOG respeita filtros globais (CS, empresa)
+    // ONLOG respeita filtros globais (CS, empresa, mes)
     var od=(typeof ONLOG_DATA!=='undefined'?ONLOG_DATA:null);
     var oTot=0,oSem=0;
     if(od&&od.pedidos){
@@ -1142,21 +1146,29 @@ function updateHome(){
         od.pedidos.forEach(function(p){
             if(fcsG&&(p.cs||'')!==fcsG)return;
             if(selCoLow2&&(p.marca||'').toLowerCase().indexOf(selCoLow2)<0)return;
+            if(fm&&!fmMatch(p.data||p.dataPedido||p.dt))return;
             oTot++;
             if(!p.comEtiqueta)oSem++;
         });
     }
     document.getElementById('home-onlog-val').textContent=oTot.toLocaleString('pt-BR')+' pedido(s)';
     document.getElementById('home-onlog-sub').textContent=oSem?(oSem.toLocaleString('pt-BR')+' sem etiqueta'):'todas etiquetas geradas';
-    // Home card T3+ (receita mes atual)
+    // Home card T3+ — respeita filtros globais (selCo, fCS, fMes)
     var t3=(typeof T3PLUS_DATA!=='undefined'?T3PLUS_DATA:null);
     var t3v=document.getElementById('home-t3-val'),t3s=document.getElementById('home-t3-sub');
     if(t3v&&t3s){
-        if(t3&&t3.resumo){
-            var cur=t3.resumo.mensalidadeMesAtual||0, prev=t3.resumo.mensalidadeMesAnterior||0;
+        if(t3&&t3.empresas){
+            var fcsG3=(fCS&&fCS.value)||'';
+            var selCoLow3=selCo?selCo.toLowerCase():'';
+            var t3MesAtual=fm||(t3.resumo&&t3.resumo.mesAtual)||'';
+            var t3MesPrev='';
+            if(t3MesAtual){var _p3=t3MesAtual.split('-'),_y3=+_p3[0],_m3=+_p3[1]-1;if(_m3<1){_m3=12;_y3--}t3MesPrev=_y3+'-'+(_m3<10?'0':'')+_m3}
+            var sumT3=function(mes){var s=0;(t3.empresas||[]).forEach(function(e){if(fcsG3&&e.cs!==fcsG3)return;if(selCoLow3&&(e.empresa||'').toLowerCase().indexOf(selCoLow3)<0)return;var c=(e.porMes||{})[mes];if(c)s+=_t3Net(c)});return s};
+            var cur=t3MesAtual?sumT3(t3MesAtual):0;
+            var prev=t3MesPrev?sumT3(t3MesPrev):0;
             t3v.textContent='R$ '+cur.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
             var pct=prev>0?((cur-prev)/prev*100):null;
-            t3s.textContent=(t3.resumo.mesAtual?fmtM(t3.resumo.mesAtual):'--')+(pct!=null?(' ('+(pct>=0?'+':'')+pct.toFixed(1)+'% vs mes ant.)'):'');
+            t3s.textContent=(t3MesAtual?fmtM(t3MesAtual):'--')+(pct!=null?(' ('+(pct>=0?'+':'')+pct.toFixed(1)+'% vs mes ant.)'):'');
         } else {t3v.textContent='R$ --';t3s.textContent='sem dados';}
     }
 }
@@ -2227,16 +2239,29 @@ function closeChurnDetail(){
 }
 
 function updateHomeChurn(){
-    var total=CHURN_DATA.length;
-    var valor=CHURN_DATA.reduce(function(a,b){return a+(b.valorPerdido||0)},0);
+    var fmEl=document.getElementById('fMes');var fm=fmEl?fmEl.value:'';
+    var fcsG=(fCS&&fCS.value)||'';
+    var selCoLow=selCo?selCo.toLowerCase():'';
+    var ch=(CHURN_DATA||[]).filter(function(r){
+        if(fm&&r.mes!==fm)return false;
+        if(fcsG&&r.cs!==fcsG)return false;
+        if(selCoLow&&(r.empresa||'').toLowerCase().indexOf(selCoLow)<0)return false;
+        return true;
+    });
+    var total=ch.length;
+    var valor=ch.reduce(function(a,b){return a+(b.valorPerdido||0)},0);
     document.getElementById('home-churn-val').textContent=total.toLocaleString('pt-BR')+' empresas';
     document.getElementById('home-churn-sub').textContent='R$ '+valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' perdidos';
-    // Home card Churn Geral
     var cg=(typeof CHURN_GERAL!=='undefined'&&CHURN_GERAL)?CHURN_GERAL:{total:[],parcial:[]};
-    var nT=(cg.total||[]).length, nP=(cg.parcial||[]).length;
+    var fCG=function(arr){return (arr||[]).filter(function(r){
+        if(fm&&r.anoMesChurn!==fm)return false;
+        if(fcsG&&r.cs!==fcsG)return false;
+        if(selCoLow&&(r.empresa||'').toLowerCase().indexOf(selCoLow)<0)return false;
+        return true;
+    })};
+    var nT=fCG(cg.total).length, nP=fCG(cg.parcial).length;
     var elV=document.getElementById('home-cg-val'); if(elV) elV.textContent=(nT+nP).toLocaleString('pt-BR')+' empresas';
-    var elS=document.getElementById('home-cg-sub'); if(elS) elS.textContent=nT+' total &middot; '+nP+' parcial';
-    if(elS) elS.innerHTML=nT+' total &middot; '+nP+' parcial';
+    var elS=document.getElementById('home-cg-sub'); if(elS) elS.innerHTML=nT+' total &middot; '+nP+' parcial';
 }
 
 // === CHURN GERAL TAB ===
