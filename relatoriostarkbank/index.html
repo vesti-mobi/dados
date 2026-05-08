@@ -183,7 +183,11 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi red"><div class="lbl">Taxa Antecipação</div><div class="val" id="kFeeAn">R$ --</div><div class="ks" id="kFeeAnPct">--</div></div>
         <div class="kpi green"><div class="lbl">Líquido a pagar</div><div class="val" id="kNet">R$ --</div><div class="ks">soma netValue</div></div>
         <div class="kpi purple"><div class="lbl">Valor bruto</div><div class="val" id="kGross">R$ --</div><div class="ks">soma grossValue</div></div>
-        <div class="kpi teal" id="kpiSaldo"><div class="lbl">Saldo Stark VestiPago</div><div class="val" id="kSaldo">R$ --</div><div class="ks" id="kSaldoStatus">--</div></div>
+        <div class="kpi teal" id="kpiSaldo" style="position:relative">
+            <div class="lbl">Saldo Stark VestiPago <button id="btnRefreshSaldo" onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
+            <div class="val" id="kSaldo">R$ --</div>
+            <div class="ks" id="kSaldoStatus">--</div>
+        </div>
     </div>
     <div class="kpis" id="kpisCr" style="display:none">
         <div class="kpi orange"><div class="lbl">Empresas</div><div class="val" id="crEmp">--</div><div class="ks">no periodo</div></div>
@@ -382,6 +386,38 @@ function isoBRTDate(s){
 function fmtD(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 function fmtDT(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');var t=String(s).length>=16?' '+String(s).substring(11,16):'';return p[2]+'/'+p[1]+'/'+p[0]+t}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function refreshSaldoLive(){
+    var btn=document.getElementById('btnRefreshSaldo');
+    var t=localStorage.getItem('vesti_api_token')||'';
+    if(!t){
+        t=prompt('Cole o Bearer JWT da API Vesti (fica salvo só neste navegador):','')||'';
+        if(!t)return;
+        localStorage.setItem('vesti_api_token',t.trim());
+        t=t.trim();
+    }
+    btn.textContent='⏳';btn.disabled=true;
+    var url='https://apivesti.vesti.mobi/payment/v1/starkbank/workspace/4891441503404032/transactions?limit=1';
+    fetch(url,{headers:{'Authorization':'Bearer '+t,'Accept':'application/json'}})
+        .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+        .then(function(d){
+            var b=((d&&d.message)||{}).balance;
+            if(typeof b!=='number')throw new Error('sem balance');
+            window.SALDO_VESTIPAGO=b/100;
+            var now=new Date();
+            window.SALDO_GERADO_EM=now.toISOString().substring(0,19);
+            render();
+            btn.textContent='✓';
+            setTimeout(function(){btn.textContent='↻';btn.disabled=false},1500);
+        })
+        .catch(function(e){
+            btn.textContent='✗';btn.disabled=false;
+            if(String(e).indexOf('401')>=0){
+                localStorage.removeItem('vesti_api_token');
+                alert('Token expirado/invalido. Clique de novo pra colar um novo.');
+            }else alert('Falhou: '+e);
+            setTimeout(function(){btn.textContent='↻'},2000);
+        });
+}
 function fmtPixKey(v){
     if(!v)return'';
     var s=String(v);
