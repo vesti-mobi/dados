@@ -906,6 +906,8 @@ function downloadExcel(){
         return {
             'Data a pagar': r.payDate?fmtD(r.payDate):'',
             'Empresa': r.nomeFantasia,
+            'Razão social': window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(r.nomeFantasia):'',
+            'CNPJ': window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(r.nomeFantasia):'',
             'CompanyId': r.companyId,
             'Chave PIX': window.PIX_MARCAS?window.PIX_MARCAS.get(r.nomeFantasia):'',
             'Parcelas': r.parcelas,
@@ -917,14 +919,14 @@ function downloadExcel(){
         };
     });
     var ws=XLSX.utils.json_to_sheet(data);
-    // formato R$ nas colunas numéricas
-    var moneyCols=['F','G','H','I','J']; // bruto..líquido
+    // formato R$ nas colunas numéricas (Valor bruto..Valor líquido)
+    var moneyCols=['H','I','J','K','L'];
     for(var i=2;i<=data.length+1;i++){
         moneyCols.forEach(function(c){
             var cell=ws[c+i]; if(cell)cell.z='#,##0.00';
         });
     }
-    ws['!cols']=[{wch:12},{wch:28},{wch:26},{wch:30},{wch:9},{wch:12},{wch:13},{wch:13},{wch:14},{wch:13}];
+    ws['!cols']=[{wch:12},{wch:28},{wch:38},{wch:18},{wch:26},{wch:30},{wch:9},{wch:12},{wch:13},{wch:13},{wch:14},{wch:13}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Antecipacao');
     var stamp=new Date().toISOString().substring(0,10);
