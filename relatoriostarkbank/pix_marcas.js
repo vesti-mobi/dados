@@ -10,6 +10,7 @@ window.PIX_MARCAS = (function(){
         "evian":              "49238112000174",
         "petit enfant":       "60741324000102",
         "alcance jeans":      "pessoal@alcancejeans.com",
+        "alcance jeans nova": "pessoal@alcancejeans.com",
         "incentive moda":     "29780242000127",
         "imporio fitness":    "38280852000152",
         "arary":              "13495868000151",
