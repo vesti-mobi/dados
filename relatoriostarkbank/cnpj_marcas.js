@@ -1623,19 +1623,34 @@ window.CNPJ_MARCAS = (function(){
         "zua style atacado maringa": "51.013.982/0001-97",
         "zua style maringa": "50.886.409/0001-25",
         "zua style matriz": "51.033.465/0001-80",
-        // overrides manuais (planilha CC Starkbank - Walid)
+        // overrides manuais (planilha CC Starkbank - Walid) — sobrescrevem companies_data.json
         "alcance jeans": "34411241000145",
         "alcance jeans nova": "34411241000145",
+        "anne blanc": "43865993000177",
+        "arary": "13495868000151",
+        "barraca do willinha": "35322340000113",
+        "begkids": "44870711000192",
         "bella donna": "32805399000174",
         "erilluz jeans": "32796225000192",
+        "evian": "49238112000174",
         "ezee": "28314192000120",
+        "imporio fitness": "38280852000152",
+        "incentive moda": "29780242000127",
+        "kelly rodrigues": "54697378000115",
+        "mafia fitness": "41549988000120",
         "maria lima": "21721042000434",
         "maria lima santa cruz": "21721042000434",
+        "missmel": "17974887000111",
         "nicky atacado": "44839916000105",
         "nono modas": "34329403000109",
+        "oxigenio modas": "54911296000121",
         "patacho": "38544161000119",
         "patachosn": "38544161000119",
-        "vistamy": "24680354000192"
+        "petit enfant": "60741324000102",
+        "sedanbi": "39922297000188",
+        "tee fashion": "24459412000152",
+        "vistamy": "24680354000192",
+        "zeros confec": "45180025000152"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()

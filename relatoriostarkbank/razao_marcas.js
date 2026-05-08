@@ -1621,19 +1621,34 @@ window.RAZAO_MARCAS = (function(){
         "zua style atacado maringa": "ZUA STYLE ATACADO DO VESTUARIO MARINGA LTDA",
         "zua style maringa": "ZUA STYLE CONFECCAO MARINGA LTDA",
         "zua style matriz": "ZUA STYLE CONFECCAO DO VESTUARIO APUCARANA LTDA",
-        // overrides manuais (planilha CC Starkbank - Walid)
+        // overrides manuais (planilha CC Starkbank - Walid) — sobrescrevem companies_data.json
         "alcance jeans": "ALC INDUSTRIA E COMERCIO DE ROUPAS LTDA",
         "alcance jeans nova": "ALC INDUSTRIA E COMERCIO DE ROUPAS LTDA",
+        "anne blanc": "AMANDA CONFECCOES LTDA",
+        "arary": "ARARY COMERCIO DE TECIDOS LTDA",
+        "barraca do willinha": "THAMIRIS ALTEA VIEIRA",
+        "begkids": "ISABELA CARINY SALES MADEIRO - ME",
         "bella donna": "BELLA DONNA MODA BRAS ARTIGOS DO VESTUARIO LTDA",
         "erilluz jeans": "GILDA DE LIRA PEIXOTO",
+        "evian": "LHB CONFECCOES DE ROUPAS LTDA",
         "ezee": "EZEE CONFECCOES DE ROUPAS LTDA",
+        "imporio fitness": "ALINE LAYS DE LIMA SILVA TORRES - ME",
+        "incentive moda": "CONFECCOES INCENTIVE LTDA",
+        "kelly rodrigues": "RK STORE LTDA",
+        "mafia fitness": "LIMA CONFECCOES FITNESS LTDA",
         "maria lima": "RD CONFECCOES DE ROUPAS LTDA",
         "maria lima santa cruz": "RD CONFECCOES DE ROUPAS LTDA",
+        "missmel": "GILMA MARIA SIMAO LTDA",
         "nicky atacado": "DANIEL TOLA MAMANI",
         "nono modas": "NOELMA CUNHA MENEZES",
+        "oxigenio modas": "GAIDO CONFECCOES LTDA",
         "patacho": "A F DE LIMA LTDA",
         "patachosn": "A F DE LIMA LTDA",
-        "vistamy": "VINICIUS DA S BEZERRA LTDA"
+        "petit enfant": "CORPORATIVO TACI LTDA",
+        "sedanbi": "COMERCIO E CONFECCOES DE ROUPAS S H LTDA",
+        "tee fashion": "TEE FASHION ARTIGOS DO VESTUARIO LTDA",
+        "vistamy": "VINICIUS DA S BEZERRA LTDA",
+        "zeros confec": "ZEROS CONFECCOES LTDA"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()
