@@ -221,6 +221,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
                         <th id="thCnpj" style="display:none">CNPJ</th>
                         <th id="thRazao" style="display:none">Razão social</th>
                         <th id="thPix" style="display:none">Chave PIX</th>
+                        <th id="thSaldoMarca" style="display:none">Saldo Stark</th>
                     </tr>
                 </thead>
                 <tbody id="tbody"></tbody>
@@ -435,6 +436,7 @@ function switchTab(which){
     document.getElementById('thPix').style.display      = (isCp && SUB==='antec')?'':'none';
     document.getElementById('thCnpj').style.display     = (isCp && SUB==='antec')?'':'none';
     document.getElementById('thRazao').style.display    = (isCp && SUB==='antec')?'':'none';
+    document.getElementById('thSaldoMarca').style.display = (isCp && SUB==='antec')?'':'none';
     document.getElementById('subtabsAud').style.display = isAud?'flex':'none';
     document.getElementById('kpisCp').style.display     = isCp?'grid':'none';
     document.getElementById('kpisCr').style.display     = isCr?'grid':'none';
@@ -468,6 +470,7 @@ function switchSub(which){
     document.getElementById('thPix').style.display = isAntec?'':'none';
     document.getElementById('thCnpj').style.display = isAntec?'':'none';
     document.getElementById('thRazao').style.display = isAntec?'':'none';
+    document.getElementById('thSaldoMarca').style.display = isAntec?'':'none';
     document.getElementById('btnExcel').style.display = isAntec?'inline-block':'none';
     document.getElementById('btnCsvStark').style.display = isAntec?'inline-block':'none';
     openSet={};
@@ -710,8 +713,8 @@ function renderCp(){
 
     var tb=document.getElementById('tbody');
     var showPix=(SUB==='antec');
-    var COLSPAN=showPix?12:9;
-    var pixCell=showPix?'<td></td><td></td><td></td>':'';
+    var COLSPAN=showPix?13:9;
+    var pixCell=showPix?'<td></td><td></td><td></td><td></td>':'';
     if(!rows.length){tb.innerHTML='<tr><td colspan="'+COLSPAN+'" class="empty">Nenhum pagamento com os filtros atuais</td></tr>';return}
 
     var sortMode=(document.getElementById('fSort')||{}).value||'date';
@@ -740,7 +743,7 @@ function renderCp(){
                 '<td class="money" style="color:var(--y)">'+fmtC(ct.af)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtC(ct.antec)+'</td>'+
                 '<td class="money total">'+fmtC(ct.net)+'</td>'+
-                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td>':'')+
+                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td><td class="money" style="font-size:11px;color:'+(((window.SALDO_BY_COMPANY||{})[cid]||0)>0?'var(--g)':'var(--mut)')+'">'+fmtC((window.SALDO_BY_COMPANY||{})[cid]||0)+'</td>':'')+
             '</tr>');
             if(!cOpen)return;
             var byD={};
@@ -816,7 +819,7 @@ function renderCp(){
                 '<td class="money" style="color:var(--y)">'+fmtC(ct.af)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtC(ct.antec)+'</td>'+
                 '<td class="money total">'+fmtC(ct.net)+'</td>'+
-                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td>':'')+
+                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td><td class="money" style="font-size:11px;color:'+(((window.SALDO_BY_COMPANY||{})[cid]||0)>0?'var(--g)':'var(--mut)')+'">'+fmtC((window.SALDO_BY_COMPANY||{})[cid]||0)+'</td>':'')+
             '</tr>');
             if(!cOpen)return;
             // agrupa parcelas por pedido dentro da empresa
