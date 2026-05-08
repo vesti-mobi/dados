@@ -183,6 +183,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi red"><div class="lbl">Taxa Antecipação</div><div class="val" id="kFeeAn">R$ --</div><div class="ks" id="kFeeAnPct">--</div></div>
         <div class="kpi green"><div class="lbl">Líquido a pagar</div><div class="val" id="kNet">R$ --</div><div class="ks">soma netValue</div></div>
         <div class="kpi purple"><div class="lbl">Valor bruto</div><div class="val" id="kGross">R$ --</div><div class="ks">soma grossValue</div></div>
+        <div class="kpi teal" id="kpiSaldo"><div class="lbl">Saldo Stark VestiPago</div><div class="val" id="kSaldo">R$ --</div><div class="ks" id="kSaldoStatus">--</div></div>
     </div>
     <div class="kpis" id="kpisCr" style="display:none">
         <div class="kpi orange"><div class="lbl">Empresas</div><div class="val" id="crEmp">--</div><div class="ks">no periodo</div></div>
@@ -307,6 +308,10 @@ window._dadosError=null;
     var s5=document.createElement('script');
     s5.src='razao_marcas.js?v='+v;
     document.head.appendChild(s5);
+    var s6=document.createElement('script');
+    s6.src='saldos.js?v='+v;
+    s6.onerror=function(){};
+    document.head.appendChild(s6);
 })();
 // captura qualquer erro de JS pra nao ficar silencioso
 window.addEventListener('error',function(e){
@@ -688,6 +693,19 @@ function renderCp(){
     document.getElementById('kFeeAnPct').textContent=pct(tot.antec);
     document.getElementById('kNet').textContent=fmtC(tot.net);
     document.getElementById('kGross').textContent=fmtC(tot.gross);
+    var saldo=(typeof window.SALDO_VESTIPAGO==='number')?window.SALDO_VESTIPAGO:null;
+    var elS=document.getElementById('kSaldo'), elSt=document.getElementById('kSaldoStatus'), elKp=document.getElementById('kpiSaldo');
+    if(elS){
+        if(saldo===null){elS.textContent='R$ --';elSt.textContent='saldos.js indisponível';elKp.className='kpi';}
+        else{
+            elS.textContent=fmtC(saldo);
+            var falta=tot.net-saldo;
+            if(SUB==='antec' && tot.net>0){
+                if(falta<=0){elSt.textContent='✓ cobre líquido a pagar ('+fmtC(-falta)+' sobra)';elKp.className='kpi green';}
+                else{elSt.textContent='⚠ FALTAM '+fmtC(falta);elKp.className='kpi red';}
+            }else{elSt.textContent=window.SALDO_GERADO_EM?'atualizado '+window.SALDO_GERADO_EM.substring(11,16):'';elKp.className='kpi teal';}
+        }
+    }
     document.getElementById('tblCount').textContent=fmtN(tot.n)+' parcela(s) em '+fmtN(dates.length)+' dia(s)';
 
     var tb=document.getElementById('tbody');
