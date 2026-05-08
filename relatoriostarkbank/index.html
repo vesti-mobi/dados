@@ -197,6 +197,11 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi purple"><div class="lbl">Valor bruto</div><div class="val" id="crGross">R$ --</div><div class="ks">amount total</div></div>
         <div class="kpi orange"><div class="lbl">Taxas</div><div class="val" id="crFee">R$ --</div><div class="ks">fees Starkbank</div></div>
         <div class="kpi blue"><div class="lbl">Valor líquido</div><div class="val" id="crLiq">R$ --</div><div class="ks">cai na Starkbank</div></div>
+        <div class="kpi teal" id="kpiSaldoCr" style="position:relative">
+            <div class="lbl"><span id="kSaldoCrLbl">Saldo Stark VestiPago</span> <button onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
+            <div class="val" id="kSaldoCr">R$ --</div>
+            <div class="ks" id="kSaldoCrStatus">--</div>
+        </div>
     </div>
     <div class="kpis" id="kpisCrSaldo" style="display:none">
         <div class="kpi green" style="display:none"><div class="lbl">Entradas hoje</div><div class="val" id="crEntradas">R$ --</div><div class="ks">parcelas liquidando</div></div>
@@ -386,6 +391,55 @@ function isoBRTDate(s){
 function fmtD(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 function fmtDT(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');var t=String(s).length>=16?' '+String(s).substring(11,16):'';return p[2]+'/'+p[1]+'/'+p[0]+t}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function updateSaldoKpi(rows, totNet, compareToTot){
+    // detecta empresa filtrada — se filtro casa só 1 empresa nas rows, usa saldo dela.
+    var fEmp=(document.getElementById('fEmpresa')||{}).value||'';
+    var cidsUnicos={};
+    (rows||[]).forEach(function(r){if(r.companyId)cidsUnicos[r.companyId]=r.nomeFantasia||r.companyId});
+    var lista=Object.keys(cidsUnicos);
+    var marcaFiltrada=null, marcaNome=null;
+    if(fEmp && lista.length===1){marcaFiltrada=lista[0];marcaNome=cidsUnicos[marcaFiltrada]}
+
+    var saldo, lbl, isCentral;
+    if(marcaFiltrada && window.SALDO_BY_COMPANY && marcaFiltrada in window.SALDO_BY_COMPANY){
+        saldo=window.SALDO_BY_COMPANY[marcaFiltrada];
+        lbl='Saldo Stark · '+marcaNome;
+        isCentral=false;
+    }else{
+        saldo=(typeof window.SALDO_VESTIPAGO==='number')?window.SALDO_VESTIPAGO:null;
+        lbl='Saldo Stark VestiPago';
+        isCentral=true;
+    }
+    var ts=window.SALDO_GERADO_EM?window.SALDO_GERADO_EM.substring(11,16):'';
+
+    function paint(prefix){
+        var elS=document.getElementById('kSaldo'+prefix);
+        var elSt=document.getElementById('kSaldo'+prefix+'Status');
+        var elKp=document.getElementById('kpiSaldo'+prefix);
+        var elLbl=document.getElementById('kSaldo'+prefix+'Lbl');
+        if(!elS)return;
+        if(elLbl)elLbl.textContent=lbl;
+        else{var lblNode=elKp.querySelector('.lbl');if(lblNode){
+            // preserva o botão ↻
+            var btn=lblNode.querySelector('button');
+            lblNode.firstChild.nodeValue=lbl+' ';
+            if(btn)lblNode.appendChild(btn);
+        }}
+        if(saldo===null){elS.textContent='R$ --';elSt.textContent='saldos.js indisponível';elKp.className='kpi';return}
+        elS.textContent=fmtC(saldo);
+        if(compareToTot && totNet>0 && isCentral){
+            var falta=totNet-saldo;
+            if(falta<=0){elSt.textContent='✓ cobre líquido ('+fmtC(-falta)+' sobra)';elKp.className='kpi green';}
+            else{elSt.textContent='⚠ FALTAM '+fmtC(falta);elKp.className='kpi red';}
+        }else{
+            elSt.textContent=ts?'atualizado '+ts:'';
+            elKp.className=isCentral?'kpi teal':'kpi blue';
+        }
+    }
+    paint('');     // KPI da aba CP
+    paint('Cr');   // KPI da aba CR
+}
+
 function refreshSaldoLive(){
     var btn=document.getElementById('btnRefreshSaldo');
     var t=localStorage.getItem('vesti_api_token')||'';
@@ -732,19 +786,7 @@ function renderCp(){
     document.getElementById('kFeeAnPct').textContent=pct(tot.antec);
     document.getElementById('kNet').textContent=fmtC(tot.net);
     document.getElementById('kGross').textContent=fmtC(tot.gross);
-    var saldo=(typeof window.SALDO_VESTIPAGO==='number')?window.SALDO_VESTIPAGO:null;
-    var elS=document.getElementById('kSaldo'), elSt=document.getElementById('kSaldoStatus'), elKp=document.getElementById('kpiSaldo');
-    if(elS){
-        if(saldo===null){elS.textContent='R$ --';elSt.textContent='saldos.js indisponível';elKp.className='kpi';}
-        else{
-            elS.textContent=fmtC(saldo);
-            var falta=tot.net-saldo;
-            if(SUB==='antec' && tot.net>0){
-                if(falta<=0){elSt.textContent='✓ cobre líquido a pagar ('+fmtC(-falta)+' sobra)';elKp.className='kpi green';}
-                else{elSt.textContent='⚠ FALTAM '+fmtC(falta);elKp.className='kpi red';}
-            }else{elSt.textContent=window.SALDO_GERADO_EM?'atualizado '+window.SALDO_GERADO_EM.substring(11,16):'';elKp.className='kpi teal';}
-        }
-    }
+    updateSaldoKpi(rows, tot.net, SUB==='antec');
     document.getElementById('tblCount').textContent=fmtN(tot.n)+' parcela(s) em '+fmtN(dates.length)+' dia(s)';
 
     var tb=document.getElementById('tbody');
@@ -1098,6 +1140,7 @@ function renderCr(){
     document.getElementById('crGross').textContent=fmtC(tot.vRec+tot.vAr);
     document.getElementById('crFee').textContent=fmtC(tot.fee);
     document.getElementById('crLiq').textContent=fmtC(tot.liq);
+    updateSaldoKpi(getFiltered(), 0, false);
 
     // === KPIs Saldo Stark — 100% via API ===
     //
