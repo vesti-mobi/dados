@@ -50,6 +50,11 @@ PIX = [
     ("MissMel",             "17974887000111",            "CNPJ",  "17974887000111", "GILMA MARIA SIMAO LTDA"),
     ("Oxigenio Modas",      "54911296000121",            "CNPJ",  "54911296000121", "GAIDO CONFECCOES LTDA"),
     ("Máfia Fitness",       "41549988000120",            "CNPJ",  "41549988000120", "LIMA CONFECCOES FITNESS LTDA"),
+    ("Erilluz Jeans",       "32796225000192",            "CNPJ",  "32796225000192", "GILDA DE LIRA PEIXOTO"),
+    ("Maria Lima",          "21721042000434",            "CNPJ",  "21721042000434", "RD CONFECCOES DE ROUPAS LTDA"),
+    ("Nicky Atacado",       "44839916000105",            "CNPJ",  "44839916000105", "DANIEL TOLA MAMANI"),
+    ("Nono Modas",          "34329403000109",            "CNPJ",  "34329403000109", "NOELMA CUNHA MENEZES"),
+    ("Vistamy",             "24680354000192",            "CNPJ",  "24680354000192", "VINICIUS DA S BEZERRA LTDA"),
 ]
 
 schema = StructType([

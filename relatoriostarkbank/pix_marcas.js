@@ -20,7 +20,12 @@ window.PIX_MARCAS = (function(){
         "sedanbi":            "39922297000188",
         "missmel":            "17974887000111",
         "oxigenio modas":     "54911296000121",
-        "mafia fitness":      "41549988000120"
+        "mafia fitness":      "41549988000120",
+        "erilluz jeans":      "32796225000192",
+        "maria lima":         "21721042000434",
+        "nicky atacado":      "44839916000105",
+        "nono modas":         "34329403000109",
+        "vistamy":            "24680354000192"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()
