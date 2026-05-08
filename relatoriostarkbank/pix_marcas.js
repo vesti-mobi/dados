@@ -28,7 +28,8 @@ window.PIX_MARCAS = (function(){
         "nono modas":         "34329403000109",
         "vistamy":            "24680354000192",
         "patacho":            "38544161000119",
-        "patachosn":          "38544161000119"
+        "patachosn":          "38544161000119",
+        "maria lima santa cruz":"21721042000434"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()
