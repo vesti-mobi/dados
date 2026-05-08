@@ -184,7 +184,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi green"><div class="lbl">Líquido a pagar</div><div class="val" id="kNet">R$ --</div><div class="ks">soma netValue</div></div>
         <div class="kpi purple"><div class="lbl">Valor bruto</div><div class="val" id="kGross">R$ --</div><div class="ks">soma grossValue</div></div>
         <div class="kpi teal" id="kpiSaldo" style="position:relative">
-            <div class="lbl">Saldo Stark VestiPago <button id="btnRefreshSaldo" onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
+            <div class="lbl"><span id="kSaldoLbl">Saldo Stark VestiPago</span> <button id="btnRefreshSaldo" onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
             <div class="val" id="kSaldo">R$ --</div>
             <div class="ks" id="kSaldoStatus">--</div>
         </div>
@@ -419,12 +419,6 @@ function updateSaldoKpi(rows, totNet, compareToTot){
         var elLbl=document.getElementById('kSaldo'+prefix+'Lbl');
         if(!elS)return;
         if(elLbl)elLbl.textContent=lbl;
-        else{var lblNode=elKp.querySelector('.lbl');if(lblNode){
-            // preserva o botão ↻
-            var btn=lblNode.querySelector('button');
-            lblNode.firstChild.nodeValue=lbl+' ';
-            if(btn)lblNode.appendChild(btn);
-        }}
         if(saldo===null){elS.textContent='R$ --';elSt.textContent='saldos.js indisponível';elKp.className='kpi';return}
         elS.textContent=fmtC(saldo);
         if(compareToTot && totNet>0 && isCentral){
