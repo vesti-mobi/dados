@@ -376,6 +376,14 @@ function isoBRTDate(s){
 function fmtD(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 function fmtDT(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');var t=String(s).length>=16?' '+String(s).substring(11,16):'';return p[2]+'/'+p[1]+'/'+p[0]+t}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function fmtPixKey(v){
+    if(!v)return'';
+    var s=String(v);
+    var d=s.replace(/\D/g,'');
+    if(d.length===13&&d.indexOf('55')===0)d=d.substring(2);
+    if(d.length===11&&d.charAt(2)==='9')return'('+d.substring(0,2)+')'+d.substring(2,7)+'-'+d.substring(7);
+    return s;
+}
 
 var DADOS=null;
 var TAB='cp';      // 'cp' | 'cr' | 'aud'
@@ -714,7 +722,7 @@ function renderCp(){
                 '<td class="money" style="color:var(--y)">'+fmtC(ct.af)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtC(ct.antec)+'</td>'+
                 '<td class="money total">'+fmtC(ct.net)+'</td>'+
-                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):'')+'</td>':'')+
+                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td>':'')+
             '</tr>');
             if(!cOpen)return;
             var byD={};
@@ -790,7 +798,7 @@ function renderCp(){
                 '<td class="money" style="color:var(--y)">'+fmtC(ct.af)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtC(ct.antec)+'</td>'+
                 '<td class="money total">'+fmtC(ct.net)+'</td>'+
-                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):'')+'</td>':'')+
+                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td style="font-size:11px">'+esc(window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):''))+'</td>':'')+
             '</tr>');
             if(!cOpen)return;
             // agrupa parcelas por pedido dentro da empresa
@@ -909,7 +917,7 @@ function downloadExcel(){
             'Razão social': window.RAZAO_MARCAS?window.RAZAO_MARCAS.get(r.nomeFantasia):'',
             'CNPJ': window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(r.nomeFantasia):'',
             'CompanyId': r.companyId,
-            'Chave PIX': window.PIX_MARCAS?window.PIX_MARCAS.get(r.nomeFantasia):'',
+            'Chave PIX': fmtPixKey(window.PIX_MARCAS?window.PIX_MARCAS.get(r.nomeFantasia):''),
             'Parcelas': r.parcelas,
             'Valor bruto': r.gross,
             'Taxa VestiPago': r.vp,
