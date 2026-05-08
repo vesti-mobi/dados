@@ -55,6 +55,7 @@ PIX = [
     ("Nicky Atacado",       "44839916000105",            "CNPJ",  "44839916000105", "DANIEL TOLA MAMANI"),
     ("Nono Modas",          "34329403000109",            "CNPJ",  "34329403000109", "NOELMA CUNHA MENEZES"),
     ("Vistamy",             "24680354000192",            "CNPJ",  "24680354000192", "VINICIUS DA S BEZERRA LTDA"),
+    ("Patacho",              "38544161000119",            "CNPJ",  "38544161000119", "A F DE LIMA LTDA"),
 ]
 
 schema = StructType([
