@@ -157,6 +157,13 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
             <input type="text" id="fEmpresa" list="empresaList" placeholder="Digite o nome fantasia ou companyId...">
             <datalist id="empresaList"></datalist>
         </div>
+        <div class="fg">
+            <label>Ordenar por</label>
+            <select id="fSort">
+                <option value="date">Data (padrão)</option>
+                <option value="empresa">Empresa A → Z</option>
+            </select>
+        </div>
         <button class="clear-btn" onclick="clearAllFilters()">Limpar</button>
     </div>
     <div class="filters" id="filtersAntec" style="display:none">
@@ -391,7 +398,7 @@ function init(){
     });
     // Sem filtro default: mostra todas as datas (pagas em datas passadas + a receber futuras).
     // A linha do dia atual ganha destaque visual em renderCr.
-    ['fDataDe','fDataAte','fPagoDe','fPagoAte','fAudDia'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',render)});
+    ['fDataDe','fDataAte','fPagoDe','fPagoAte','fAudDia','fSort'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('change',render)});
     document.getElementById('fEmpresa').addEventListener('input',render);
     render();
 }
@@ -674,6 +681,58 @@ function renderCp(){
     var COLSPAN=showPix?11:9;
     var pixCell=showPix?'<td></td><td></td>':'';
     if(!rows.length){tb.innerHTML='<tr><td colspan="'+COLSPAN+'" class="empty">Nenhum pagamento com os filtros atuais</td></tr>';return}
+
+    var sortMode=(document.getElementById('fSort')||{}).value||'date';
+    if(sortMode==='empresa'){
+        var byEmp={};
+        rows.forEach(function(p){(byEmp[p.companyId]=byEmp[p.companyId]||[]).push(p)});
+        var cidsAll=Object.keys(byEmp).sort(function(a,b){
+            var na=(byEmp[a][0].nomeFantasia||'').toLowerCase();
+            var nb=(byEmp[b][0].nomeFantasia||'').toLowerCase();
+            return na<nb?-1:na>nb?1:0;
+        });
+        var htmlE=[];
+        cidsAll.forEach(function(cid){
+            var cPags=byEmp[cid];
+            var ct=sumTotals(cPags);
+            var cKey='E:'+cid;
+            var cOpen=!!openSet[cKey];
+            var cLabel=cPags[0].nomeFantasia||cid;
+            htmlE.push('<tr class="ped'+(cOpen?' open':'')+'" onclick="toggleKey(\''+cKey+'\')">'+
+                '<td class="chev">&rtrif;</td>'+
+                '<td><strong>'+esc(cLabel)+'</strong>'+(cPags[0].isAntecipacao?' <span class="badge advanced">ANTEC.</span>':'')+' <span style="color:var(--mut);font-weight:400">· '+fmtN(ct.pedCount)+' pedido(s) · '+fmtN(ct.n)+' parcela(s)</span></td>'+
+                '<td>-</td>'+
+                '<td class="money" style="color:var(--p)">'+fmtN(ct.n)+'</td>'+
+                '<td class="money" style="color:var(--mut)">'+fmtC(ct.gross)+'</td>'+
+                '<td class="money" style="color:var(--b)">'+fmtC(ct.vp)+'</td>'+
+                '<td class="money" style="color:var(--y)">'+fmtC(ct.af)+'</td>'+
+                '<td class="money" style="color:var(--r)">'+fmtC(ct.antec)+'</td>'+
+                '<td class="money total">'+fmtC(ct.net)+'</td>'+
+                (showPix?'<td class="mono" style="font-size:11px">'+esc(window.CNPJ_MARCAS?window.CNPJ_MARCAS.get(cLabel):'')+'</td><td class="mono" style="font-size:11px">'+esc(window.PIX_MARCAS?window.PIX_MARCAS.get(cLabel):'')+'</td>':'')+
+            '</tr>');
+            if(!cOpen)return;
+            var byD={};
+            cPags.forEach(function(p){(byD[p.payDate||'']=byD[p.payDate||'']||[]).push(p)});
+            Object.keys(byD).sort().forEach(function(d){
+                var dPags=byD[d];
+                var dt=sumTotals(dPags);
+                htmlE.push('<tr class="parc show" style="background:#FAFAFF">'+
+                    '<td></td>'+
+                    '<td class="ind" style="padding-left:40px">'+(d?fmtD(d):'(sem data)')+' <span style="color:var(--mut)">· '+fmtN(dt.n)+' parcela(s)</span></td>'+
+                    '<td>-</td>'+
+                    '<td class="money" style="color:var(--p)">'+fmtN(dt.n)+'</td>'+
+                    '<td class="money" style="color:var(--mut)">'+fmtC(dt.gross)+'</td>'+
+                    '<td class="money" style="color:var(--b)">'+fmtC(dt.vp)+'</td>'+
+                    '<td class="money" style="color:var(--y)">'+fmtC(dt.af)+'</td>'+
+                    '<td class="money" style="color:var(--r)">'+fmtC(dt.antec)+'</td>'+
+                    '<td class="money total">'+fmtC(dt.net)+'</td>'+
+                    pixCell+
+                '</tr>');
+            });
+        });
+        tb.innerHTML=htmlE.join('')||'<tr><td colspan="'+COLSPAN+'" class="empty">Sem dados</td></tr>';
+        return;
+    }
 
     var html=[];
     dates.forEach(function(date){
