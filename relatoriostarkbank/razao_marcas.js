@@ -1620,7 +1620,20 @@ window.RAZAO_MARCAS = (function(){
         "zua style apucarana": " ZUA STYLE COMERCIO DE ARTIGOS DO VESTUARIO APUCARANA LTDA.",
         "zua style atacado maringa": "ZUA STYLE ATACADO DO VESTUARIO MARINGA LTDA",
         "zua style maringa": "ZUA STYLE CONFECCAO MARINGA LTDA",
-        "zua style matriz": "ZUA STYLE CONFECCAO DO VESTUARIO APUCARANA LTDA"
+        "zua style matriz": "ZUA STYLE CONFECCAO DO VESTUARIO APUCARANA LTDA",
+        // overrides manuais (planilha CC Starkbank - Walid)
+        "alcance jeans": "ALC INDUSTRIA E COMERCIO DE ROUPAS LTDA",
+        "alcance jeans nova": "ALC INDUSTRIA E COMERCIO DE ROUPAS LTDA",
+        "bella donna": "BELLA DONNA MODA BRAS ARTIGOS DO VESTUARIO LTDA",
+        "erilluz jeans": "GILDA DE LIRA PEIXOTO",
+        "ezee": "EZEE CONFECCOES DE ROUPAS LTDA",
+        "maria lima": "RD CONFECCOES DE ROUPAS LTDA",
+        "maria lima santa cruz": "RD CONFECCOES DE ROUPAS LTDA",
+        "nicky atacado": "DANIEL TOLA MAMANI",
+        "nono modas": "NOELMA CUNHA MENEZES",
+        "patacho": "A F DE LIMA LTDA",
+        "patachosn": "A F DE LIMA LTDA",
+        "vistamy": "VINICIUS DA S BEZERRA LTDA"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()

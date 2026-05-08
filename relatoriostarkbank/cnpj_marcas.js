@@ -1622,7 +1622,20 @@ window.CNPJ_MARCAS = (function(){
         "zua style apucarana": "51.033.402/0001-23",
         "zua style atacado maringa": "51.013.982/0001-97",
         "zua style maringa": "50.886.409/0001-25",
-        "zua style matriz": "51.033.465/0001-80"
+        "zua style matriz": "51.033.465/0001-80",
+        // overrides manuais (planilha CC Starkbank - Walid)
+        "alcance jeans": "34411241000145",
+        "alcance jeans nova": "34411241000145",
+        "bella donna": "32805399000174",
+        "erilluz jeans": "32796225000192",
+        "ezee": "28314192000120",
+        "maria lima": "21721042000434",
+        "maria lima santa cruz": "21721042000434",
+        "nicky atacado": "44839916000105",
+        "nono modas": "34329403000109",
+        "patacho": "38544161000119",
+        "patachosn": "38544161000119",
+        "vistamy": "24680354000192"
     };
     function norm(s){
         return String(s||"").toLowerCase().trim()
