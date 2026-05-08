@@ -34,7 +34,7 @@ from pyspark.sql.types import (StructType, StructField, StringType, LongType, Ti
 PIX = [
     ("Kelly Rodrigues",     "54697378000115",            "CNPJ",  "54697378000115", "RK STORE LTDA"),
     ("Anne Blanc",          "43865993000177",            "CNPJ",  "43865993000177", "AMANDA CONFECCOES LTDA"),
-    ("Bella Donna",         "11933990994",               "CPF",   "32805399000174", "BELLA DONNA MODA BRAS ARTIGOS DO VESTUARIO LTDA"),
+    ("Bella Donna",         "+5511933990994",            "TELEFONE","32805399000174", "BELLA DONNA MODA BRAS ARTIGOS DO VESTUARIO LTDA"),
     ("Barraca do Willinha", "35322340000113",            "CNPJ",  "35322340000113", "THAMIRIS ALTEA VIEIRA"),
     ("Evian",               "49238112000174",            "CNPJ",  "49238112000174", "LHB CONFECCOES DE ROUPAS LTDA"),
     ("Petit Enfant",        "60741324000102",            "CNPJ",  "60741324000102", "CORPORATIVO TACI LTDA"),

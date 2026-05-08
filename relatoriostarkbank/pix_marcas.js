@@ -5,7 +5,7 @@ window.PIX_MARCAS = (function(){
     var raw = {
         "kelly rodrigues":    "54697378000115",
         "anne blanc":         "43865993000177",
-        "bella donna":        "11933990994",
+        "bella donna":        "+5511933990994",
         "barraca do willinha":"35322340000113",
         "evian":              "49238112000174",
         "petit enfant":       "60741324000102",
