@@ -184,7 +184,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi green"><div class="lbl">Líquido a pagar</div><div class="val" id="kNet">R$ --</div><div class="ks">soma netValue</div></div>
         <div class="kpi purple"><div class="lbl">Valor bruto</div><div class="val" id="kGross">R$ --</div><div class="ks">soma grossValue</div></div>
         <div class="kpi teal" id="kpiSaldo" style="position:relative">
-            <div class="lbl"><span id="kSaldoLbl">Saldo Stark VestiPago</span> <button id="btnRefreshSaldo" onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
+            <div class="lbl"><span id="kSaldoLbl">Saldo Stark VestiPago</span> <button id="btnRefreshSaldo" onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar saldo em tempo real (usa token da API Vesti)" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
             <div class="val" id="kSaldo">R$ --</div>
             <div class="ks" id="kSaldoStatus">--</div>
         </div>
@@ -198,7 +198,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="kpi orange"><div class="lbl">Taxas</div><div class="val" id="crFee">R$ --</div><div class="ks">fees Starkbank</div></div>
         <div class="kpi blue"><div class="lbl">Valor líquido</div><div class="val" id="crLiq">R$ --</div><div class="ks">cai na Starkbank</div></div>
         <div class="kpi teal" id="kpiSaldoCr" style="position:relative">
-            <div class="lbl"><span id="kSaldoCrLbl">Saldo Stark VestiPago</span> <button onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar agora" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
+            <div class="lbl"><span id="kSaldoCrLbl">Saldo Stark VestiPago</span> <button onclick="event.stopPropagation();refreshSaldoLive()" title="Atualizar saldo em tempo real (usa token da API Vesti)" style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.3);border:none;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:11px;color:inherit">↻</button></div>
             <div class="val" id="kSaldoCr">R$ --</div>
             <div class="ks" id="kSaldoCrStatus">--</div>
         </div>
@@ -438,12 +438,18 @@ function refreshSaldoLive(){
     var btn=document.getElementById('btnRefreshSaldo');
     var t=localStorage.getItem('vesti_api_token')||'';
     if(!t){
-        t=prompt('Cole o Bearer JWT da API Vesti (fica salvo só neste navegador):','')||'';
+        var instr='Cole o Bearer JWT da API Vesti (fica salvo só neste navegador).\n\n'+
+                  'Como pegar:\n'+
+                  '1. Abra o admin Vesti no navegador e faça login.\n'+
+                  '2. F12 → aba Network → clique em qualquer tela que carregue dados.\n'+
+                  '3. Procure uma chamada para apivesti.vesti.mobi → aba Headers.\n'+
+                  '4. Copie o que vem após "Bearer " no header Authorization (começa com eyJ).';
+        t=prompt(instr,'')||'';
         if(!t)return;
         localStorage.setItem('vesti_api_token',t.trim());
         t=t.trim();
     }
-    btn.textContent='⏳';btn.disabled=true;
+    if(btn){btn.textContent='⏳';btn.disabled=true;}
     var url='https://apivesti.vesti.mobi/payment/v1/starkbank/workspace/4891441503404032/transactions?limit=1';
     fetch(url,{headers:{'Authorization':'Bearer '+t,'Accept':'application/json'}})
         .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
@@ -454,18 +460,17 @@ function refreshSaldoLive(){
             var now=new Date();
             window.SALDO_GERADO_EM=now.toISOString().substring(0,19);
             render();
-            btn.textContent='✓';
-            setTimeout(function(){btn.textContent='↻';btn.disabled=false},1500);
+            if(btn){btn.textContent='✓';setTimeout(function(){btn.textContent='↻';btn.disabled=false},1500);}
         })
         .catch(function(e){
-            btn.textContent='✗';btn.disabled=false;
+            if(btn){btn.textContent='✗';btn.disabled=false;setTimeout(function(){btn.textContent='↻'},2000);}
             if(String(e).indexOf('401')>=0){
                 localStorage.removeItem('vesti_api_token');
-                alert('Token expirado/invalido. Clique de novo pra colar um novo.');
+                alert('Token expirado/inválido. Clique de novo no ↻ pra colar um novo.');
             }else alert('Falhou: '+e);
-            setTimeout(function(){btn.textContent='↻'},2000);
         });
 }
+
 function fmtPixKey(v){
     if(!v)return'';
     var s=String(v);
