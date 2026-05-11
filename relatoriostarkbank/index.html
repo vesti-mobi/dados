@@ -77,6 +77,8 @@ tr.ped.open td.chev{color:var(--p);transform:rotate(90deg)}
 .badge.exp{background:#FDEAEA;color:#E17055}
 .badge.sm{background:#F0F0F0;color:#777}
 .badge.advanced{background:#F0EFFF;color:#6C5CE7}
+.badge.cancel{background:#FFEBEE;color:#D32F2F;border:1px solid #FFCDD2}
+.cancel-strike{text-decoration:line-through;color:#B71C1C !important;opacity:0.7}
 tr.parc{display:none}
 tr.parc.show{display:table-row}
 tr.parc td{background:#F5F4FF;padding:7px 12px;font-size:11.5px;color:var(--tx);border-bottom:1px solid #E8E4FF}
@@ -1096,6 +1098,9 @@ function renderCr(){
         var instNum={};
         all.forEach(function(ix,idx){if(ix.id)instNum[ix.id]=idx+1});
         f._instNum=instNum;
+        // Se o pedido inteiro foi cancelado (purchase.status='voided'), marca todas as parcelas
+        var purchVoided=(f.purchase&&f.purchase.status==='voided');
+        if(purchVoided){all.forEach(function(ix){ix._purchaseVoided=true});}
         var insts=filtParc((f.purchase&&f.purchase.installments)||[]);
         insts.forEach(function(i){
             var d=isoBRTDate(i.due)||'(sem)';
@@ -1111,10 +1116,15 @@ function renderCr(){
     var dates=Object.keys(byDate).sort();
     // totais gerais
     function sumInsts(list){
-        var s={n:0,nPg:0,nAr:0,vRec:0,vAr:0,fee:0};
+        var s={n:0,nPg:0,nAr:0,nCanc:0,vRec:0,vAr:0,fee:0,vCanc:0};
         list.forEach(function(i){
-            s.n++;
             var v=(i.amount||0)/100;
+            // Parcelas canceladas (voided) e pedidos com purchase voided NAO entram em totais.
+            if(i.status==='voided' || i._purchaseVoided){
+                s.nCanc++; s.vCanc+=v;
+                return;
+            }
+            s.n++;
             s.fee+=(i.fee||0)/100;
             if(i.status==='paid'){s.nPg++;s.vRec+=v}
             else{s.nAr++;s.vAr+=v}
@@ -1152,12 +1162,14 @@ function renderCr(){
     (window.INVOICES.faturas||[]).forEach(function(f){
         if(isTestMarca(f.nomeFantasia))return;
         var p = f.purchase || {};
+        // Pedido cancelado: nao entra em entradas nem saidas
+        if(p.status==='voided')return;
         var dCriado = isoBRTDate(p.created);
         if(dCriado){
             entradasByDay[dCriado] = (entradasByDay[dCriado]||0) + (p.amount||0)/100;
         }
         (p.installments||[]).forEach(function(i){
-            if(i.status!=='paid')return;
+            if(i.status!=='paid')return; // tambem exclui voided naturalmente
             var d = isoBRTDate(i.due); if(!d)return;
             saidasByDay[d] = (saidasByDay[d]||0) + (i.amount||0)/100;
         });
@@ -1269,9 +1281,15 @@ function renderCr(){
                 var os=sumInsts(op.insts);
                 var pKey='CRP:'+date+'|'+cid+'|'+f.orderId;
                 var pOpen=!!openSet[pKey];
-                html.push('<tr class="parc show" onclick="event.stopPropagation();toggleKey(\''+pKey+'\')" style="cursor:pointer;background:'+(pOpen?'#F0ECFF':'#FAFAFF')+';'+(pOpen?'font-weight:600':'')+'">'+
+                var pedVoided=(f.purchase&&f.purchase.status==='voided');
+                var pedCancBadge='';
+                if(pedVoided){
+                    var dC=(f.purchase&&isoBRTDate(f.purchase.apiUpdated||f.purchase.updated))||'';
+                    pedCancBadge=' <span class="badge cancel">CANCELADO'+(dC?' · '+fmtD(dC):'')+'</span>';
+                }
+                html.push('<tr class="parc show" onclick="event.stopPropagation();toggleKey(\''+pKey+'\')" style="cursor:pointer;background:'+(pOpen?'#F0ECFF':(pedVoided?'#FFF5F5':'#FAFAFF'))+';'+(pOpen?'font-weight:600':'')+'">'+
                     '<td></td>'+
-                    '<td style="padding-left:80px;color:var(--tx)">'+(pOpen?'▾':'▸')+' Pedido #'+esc((f.orderNumber||f.orderId||'').toString())+' · <span style="color:var(--mut);font-weight:400">'+esc(f.customerName||'-')+' · '+fmtN(os.n)+'/'+fmtN(total)+' parcelas ('+fmtN(os.nPg)+' pagas, '+fmtN(os.nAr)+' a receber)</span></td>'+
+                    '<td style="padding-left:80px;color:var(--tx)">'+(pOpen?'▾':'▸')+' Pedido #'+esc((f.orderNumber||f.orderId||'').toString())+pedCancBadge+' · <span style="color:var(--mut);font-weight:400">'+esc(f.customerName||'-')+' · '+fmtN(os.n+os.nCanc)+'/'+fmtN(total)+' parcelas ('+fmtN(os.nPg)+' pagas, '+fmtN(os.nAr)+' a receber'+(os.nCanc?', '+fmtN(os.nCanc)+' cancelada(s)':'')+')</span></td>'+
                     '<td>-</td>'+
                     '<td class="date">'+fmtD((f.purchase&&f.purchase.created)||f.orderDate||'')+'</td>'+
                     '<td class="money" style="color:var(--p)">'+fmtN(os.n)+'</td>'+
@@ -1286,20 +1304,32 @@ function renderCr(){
                 var sorted=op.insts.slice().sort(function(a,b){return (a.due||'').localeCompare(b.due||'')});
                 sorted.forEach(function(i,idx){
                     var pago=(i.status==='paid');
+                    var voided=(i.status==='voided' || i._purchaseVoided);
                     var g=(i.amount||0)/100;
                     var fee=(i.fee||0)/100;
                     var num=(f._instNum && f._instNum[i.id]) || (idx+1);
-                    html.push('<tr class="parc show" style="background:#FAFAFF">'+
+                    var rowBg=voided?'#FFF5F5':'#FAFAFF';
+                    var statusBadge;
+                    if(voided){
+                        var dCanc=isoBRTDate(i.apiUpdated||(f.purchase&&(f.purchase.apiUpdated||f.purchase.updated)))||'';
+                        statusBadge='<span class="badge cancel">CANCELADA'+(dCanc?' · '+fmtD(dCanc):'')+'</span>';
+                    }else if(pago){
+                        statusBadge='<span class="badge paid">PAGA</span>';
+                    }else{
+                        statusBadge='<span class="badge pen">A RECEBER</span>';
+                    }
+                    var moneyCls=voided?'cancel-strike':'';
+                    html.push('<tr class="parc show" style="background:'+rowBg+'">'+
                         '<td></td>'+
-                        '<td style="padding-left:120px;color:var(--tx)">parcela '+num+'/'+total+' '+(pago?'<span class="badge paid">PAGA</span>':'<span class="badge pen">A RECEBER</span>')+'</td>'+
+                        '<td style="padding-left:120px;color:var(--tx)">parcela '+num+'/'+total+' '+statusBadge+'</td>'+
                         '<td class="date">'+(i.due?fmtD(i.due):'-')+'</td>'+
                         '<td class="date">'+fmtD((f.purchase&&f.purchase.created)||f.orderDate||'')+'</td>'+
-                        '<td class="money" style="color:var(--p)">1</td>'+
-                        '<td class="money" style="color:var(--g)">'+(pago?1:0)+'</td>'+
-                        '<td class="money" style="color:var(--r)">'+(pago?0:1)+'</td>'+
-                        '<td class="money" style="color:var(--mut)">'+fmtC(g)+'</td>'+
-                        '<td class="money" style="color:var(--y)">'+fmtC(fee)+'</td>'+
-                        '<td class="money total">'+fmtC(g-fee)+'</td>'+
+                        '<td class="money" style="color:var(--p)">'+(voided?'-':'1')+'</td>'+
+                        '<td class="money" style="color:var(--g)">'+(voided?'-':(pago?1:0))+'</td>'+
+                        '<td class="money" style="color:var(--r)">'+(voided?'-':(pago?0:1))+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--mut)">'+fmtC(g)+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--y)">'+fmtC(fee)+'</td>'+
+                        '<td class="money total '+moneyCls+'">'+fmtC(g-fee)+'</td>'+
                     '</tr>');
                 });
             });
