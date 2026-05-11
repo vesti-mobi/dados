@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt-br"><head>
+<meta charset="utf-8">
+<title>Pedidos Cancelados — Starkbank</title>
+<style>
+body{font-family:system-ui,Segoe UI,sans-serif;margin:20px;color:#222;background:#fafafa}
+h1{margin:0 0 4px;font-size:20px}
+.sub{color:#666;font-size:13px;margin-bottom:16px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar input,.bar select{padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
+th{background:#f5f5f5;cursor:pointer;user-select:none;font-weight:600}
+th:hover{background:#ececec}
+tr:hover td{background:#fffaf0}
+.money{text-align:right;font-variant-numeric:tabular-nums}
+.k{display:inline-block;background:#FFEBEE;color:#B71C1C;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid #FFCDD2}
+.kpi{display:inline-block;margin-right:24px;font-size:13px;color:#555}
+.kpi b{font-size:18px;color:#222;display:block}
+.mono{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#666}
+</style></head><body>
+<h1>Pedidos cancelados — Starkbank <span class="k" id="kCount">0</span></h1>
+<div class="sub" id="sub">Carregando...</div>
+
+<div>
+  <span class="kpi">Total cancelados <b id="kT">0</b></span>
+  <span class="kpi">Marcas afetadas <b id="kM">0</b></span>
+  <span class="kpi">Mais recente <b id="kU">-</b></span>
+</div>
+
+<div class="bar">
+  <input id="q" placeholder="Buscar marca, cliente, orderId..." style="flex:1;min-width:240px">
+  <select id="fM"><option value="">— todas marcas —</option></select>
+  <input id="dDe" type="date" title="Cancelado de">
+  <input id="dAte" type="date" title="Cancelado até">
+  <button onclick="csv()">CSV</button>
+</div>
+
+<table id="tb">
+<thead><tr>
+  <th data-k="orderDate">Data compra</th>
+  <th data-k="nomeFantasia">Marca</th>
+  <th data-k="customerName">Cliente</th>
+  <th data-k="orderNumber">Pedido</th>
+  <th data-k="installmentCount">Parcelas</th>
+  <th data-k="network">Bandeira</th>
+  <th data-k="cardEnding">Cartão</th>
+  <th data-k="cancelAt">Data cancelamento</th>
+  <th data-k="diffH">Tempo até cancelar</th>
+  <th data-k="orderId">orderId</th>
+</tr></thead>
+<tbody></tbody>
+</table>
+
+<script src="invoices.js"></script>
+<script>
+var rows=[], sort={k:'cancelAt',desc:true};
+function fmtD(s){if(!s)return'-';var d=new Date(s);if(isNaN(d))return s.substring(0,10);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+function fmtDay(s){return s?s.substring(8,10)+'/'+s.substring(5,7)+'/'+s.substring(0,4):'-'}
+function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+
+function build(){
+    var faturas=(window.INVOICES&&window.INVOICES.faturas)||[];
+    rows=faturas.filter(function(f){return f.purchase&&f.purchase.status==='voided'}).map(function(f){
+        var p=f.purchase||{};
+        var canc=p.apiUpdated||p.updated||'';
+        var created=p.apiCreated||p.created||'';
+        var diffH='';
+        if(canc&&created){var d=(new Date(canc)-new Date(created))/3600000;diffH=d<1?Math.round(d*60)+'m':d.toFixed(1)+'h'}
+        return {
+            orderDate:f.orderDate||'',
+            nomeFantasia:f.nomeFantasia||'',
+            customerName:f.customerName||p.holderName||'',
+            orderNumber:f.orderNumber||'',
+            orderId:f.orderId||'',
+            installmentCount:p.installmentCount||1,
+            network:p.network||'',
+            cardEnding:p.cardEnding||'',
+            cancelAt:canc,
+            createdAt:created,
+            diffH:diffH,
+            _diffNum:canc&&created?(new Date(canc)-new Date(created)):0
+        };
+    });
+    var marcas=[...new Set(rows.map(function(r){return r.nomeFantasia}))].sort();
+    var sel=document.getElementById('fM');
+    marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o)});
+    document.getElementById('sub').textContent='Fonte: invoices.js · gerado '+(window.INVOICES.geradoEm||'?');
+    document.getElementById('kT').textContent=rows.length;
+    document.getElementById('kM').textContent=marcas.length;
+    var latest=rows.map(function(r){return r.cancelAt}).filter(Boolean).sort().pop();
+    document.getElementById('kU').textContent=latest?fmtD(latest):'-';
+    document.getElementById('kCount').textContent=rows.length;
+    render();
+}
+
+function filtered(){
+    var q=(document.getElementById('q').value||'').toLowerCase();
+    var fm=document.getElementById('fM').value;
+    var de=document.getElementById('dDe').value, ate=document.getElementById('dAte').value;
+    return rows.filter(function(r){
+        if(fm&&r.nomeFantasia!==fm)return false;
+        if(q){var h=(r.nomeFantasia+' '+r.customerName+' '+r.orderId+' '+r.orderNumber).toLowerCase();if(h.indexOf(q)<0)return false}
+        var c=(r.cancelAt||'').substring(0,10);
+        if(de&&c<de)return false;
+        if(ate&&c>ate)return false;
+        return true;
+    });
+}
+
+function render(){
+    var data=filtered().slice();
+    data.sort(function(a,b){
+        var k=sort.k, av=a[k]||'', bv=b[k]||'';
+        if(k==='diffH'){av=a._diffNum;bv=b._diffNum}
+        if(typeof av==='number'&&typeof bv==='number')return sort.desc?bv-av:av-bv;
+        av=String(av);bv=String(bv);
+        return sort.desc?bv.localeCompare(av):av.localeCompare(bv);
+    });
+    var tb=document.querySelector('#tb tbody');
+    tb.innerHTML=data.map(function(r){return '<tr>'+
+        '<td>'+fmtDay(r.orderDate)+'</td>'+
+        '<td>'+esc(r.nomeFantasia)+'</td>'+
+        '<td>'+esc(r.customerName)+'</td>'+
+        '<td>'+esc(r.orderNumber||'-')+'</td>'+
+        '<td class="money">'+r.installmentCount+'x</td>'+
+        '<td>'+esc(r.network)+'</td>'+
+        '<td class="mono">****'+esc(r.cardEnding||'')+'</td>'+
+        '<td>'+fmtD(r.cancelAt)+'</td>'+
+        '<td>'+esc(r.diffH)+'</td>'+
+        '<td class="mono">'+esc(r.orderId)+'</td>'+
+    '</tr>'}).join('');
+    document.getElementById('kCount').textContent=data.length+(data.length!==rows.length?' / '+rows.length:'');
+}
+
+function csv(){
+    var data=filtered();
+    var head=['data_compra','marca','cliente','pedido','parcelas','bandeira','cartao','data_cancelamento','tempo_ate_cancelar','order_id'];
+    var lines=[head.join(';')];
+    data.forEach(function(r){lines.push([r.orderDate,r.nomeFantasia,r.customerName,r.orderNumber||'',r.installmentCount,r.network,r.cardEnding,r.cancelAt,r.diffH,r.orderId].map(function(v){var s=String(v==null?'':v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(';'))});
+    var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cancelados.csv';a.click();
+}
+
+document.querySelectorAll('#tb th').forEach(function(th){th.onclick=function(){var k=th.dataset.k;if(sort.k===k)sort.desc=!sort.desc;else{sort.k=k;sort.desc=true}render()}});
+['q','fM','dDe','dAte'].forEach(function(id){document.getElementById(id).addEventListener('input',render)});
+build();
+</script>
+</body></html>
