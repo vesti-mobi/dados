@@ -1258,9 +1258,12 @@ function renderCr(){
             var cKey='CRC:'+date+'|'+cid;
             var cOpen=!!openSet[cKey];
             var antecBadge=e.antec?' <span class="badge advanced">ANTEC.</span>':'';
-            html.push('<tr class="parc show" onclick="event.stopPropagation();toggleKey(\''+cKey+'\')" style="cursor:pointer;'+(cOpen?'background:#E8E4FF;font-weight:600':'')+'">'+
+            var nPedCanc=0;
+            Object.values(e.pedsMap).forEach(function(op){if(op.f&&op.f.purchase&&op.f.purchase.status==='voided')nPedCanc++});
+            var cancBadge=nPedCanc?' <span class="badge cancel">'+fmtN(nPedCanc)+' CANCELADO'+(nPedCanc>1?'S':'')+'</span>':'';
+            html.push('<tr class="parc show" onclick="event.stopPropagation();toggleKey(\''+cKey+'\')" style="cursor:pointer;'+(cOpen?'background:#E8E4FF;font-weight:600':(nPedCanc?'background:#FFF5F5':''))+'">'+
                 '<td></td>'+
-                '<td class="ind" style="padding-left:40px">'+(cOpen?'▾':'▸')+' '+esc(e.nome)+antecBadge+' <span style="color:var(--mut);font-weight:400">· '+fmtN(es.n)+' parcelas (<span style="color:var(--g)">'+fmtN(es.nPg)+' pagas</span>, <span style="color:var(--r)">'+fmtN(es.nAr)+' a receber</span>)</span> <span class="mono" style="color:#8290a0;font-weight:400">'+esc(cid.substring(0,14))+(cid.length>14?'...':'')+'</span></td>'+
+                '<td class="ind" style="padding-left:40px">'+(cOpen?'▾':'▸')+' '+esc(e.nome)+antecBadge+cancBadge+' <span style="color:var(--mut);font-weight:400">· '+fmtN(es.n)+' parcelas (<span style="color:var(--g)">'+fmtN(es.nPg)+' pagas</span>, <span style="color:var(--r)">'+fmtN(es.nAr)+' a receber</span>)</span> <span class="mono" style="color:#8290a0;font-weight:400">'+esc(cid.substring(0,14))+(cid.length>14?'...':'')+'</span></td>'+
                 '<td>-</td><td>-</td>'+
                 '<td class="money" style="color:var(--p)">'+fmtN(es.n)+'</td>'+
                 '<td class="money" style="color:var(--g)">'+fmtN(es.nPg)+'</td>'+
