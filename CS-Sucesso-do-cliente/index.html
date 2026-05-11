@@ -298,6 +298,7 @@
         <button class="tab-btn" onclick="switchTab(2)">Financeiro</button>
         <button class="tab-btn" onclick="switchTab(3)">Análise de Churn</button>
         <button class="tab-btn" onclick="switchTab(5)">Oráculo</button>
+        <button class="tab-btn" onclick="switchTab(6)">Oportunidades de Upgrade</button>
         <button class="tab-btn" onclick="switchTab(4)">Dados para Exportação</button>
     </div>
 
@@ -476,6 +477,61 @@
     </div>
 
     <!-- TAB 5: Oráculo -->
+    <div class="tab-content" id="tab6">
+        <div class="table-card" style="margin-bottom:20px;">
+            <div class="table-header" style="flex-wrap:wrap;gap:14px;">
+                <div>
+                    <div class="table-title">Oportunidades de Upgrade</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Marcas com alto GMV ainda em planos baixos — potenciais candidatas a upgrade</div>
+                </div>
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div>
+                        <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">GMV mínimo (R$)</label>
+                        <input type="number" id="opGmvMin" value="100000" step="10000" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:8px 12px;border-radius:8px;font-family:'Inter';font-size:13px;width:140px;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Mensalidade máx. (R$)</label>
+                        <input type="number" id="opMensMax" value="1000" step="100" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:8px 12px;border-radius:8px;font-family:'Inter';font-size:13px;width:140px;">
+                    </div>
+                    <button class="btn-clear" style="background:rgba(124,58,237,0.18);color:var(--primary);border:1px solid rgba(124,58,237,0.35);" onclick="renderTabPotencial()">Aplicar</button>
+                </div>
+            </div>
+            <div class="kpi-grid" id="opKpiGrid" style="padding:16px 24px 0;"></div>
+            <div id="opLoading" style="display:none;text-align:center;padding:60px 20px;color:var(--text-secondary);"><div style="font-size:13px;">Calculando oportunidades...</div></div>
+            <div id="opEmpty" style="display:none;text-align:center;padding:60px 20px;color:var(--text-secondary);">
+                <div style="font-size:42px;margin-bottom:14px;">&#128269;</div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px;">Nenhuma marca encontrada com esses critérios</div>
+                <div style="font-size:12px;">Ajuste os limiares de GMV e mensalidade acima e clique em Aplicar</div>
+            </div>
+            <div id="opTableWrap" class="table-wrapper" style="display:none;">
+                <table>
+                    <thead><tr>
+                        <th>Marca</th><th>CS</th><th>Plano contratado</th><th style="text-align:right;">GMV</th><th style="text-align:right;">Pedidos pagos</th><th style="text-align:right;">Mensalidade</th><th style="text-align:center;">Integração</th><th style="text-align:center;">Modalidade</th><th style="text-align:center;">Oráculo</th><th style="text-align:center;">Detalhes</th>
+                    </tr></thead>
+                    <tbody id="opTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="opDrawerBackdrop" style="display:none;position:fixed;inset:0;background:rgba(8,10,18,0.6);z-index:9000;backdrop-filter:blur(2px);" onclick="closeOpDrawer()"></div>
+    <div id="opDrawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(520px,92vw);background:var(--bg-card,#13151c);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(0,0,0,0.4);z-index:9001;overflow-y:auto;padding:24px 26px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;">
+            <div>
+                <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:4px;">Oportunidade de Upgrade</div>
+                <div id="opDrwNome" style="font-size:20px;font-weight:700;color:var(--text-primary);"></div>
+                <div id="opDrwSub" style="font-size:12px;color:var(--text-secondary);margin-top:4px;"></div>
+            </div>
+            <button onclick="closeOpDrawer()" style="background:transparent;border:none;color:var(--text-secondary);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;">&times;</button>
+        </div>
+        <div class="kpi-grid" id="opDrwKpi" style="grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;"></div>
+        <div id="opDrwInfo" style="background:rgba(124,58,237,0.05);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button id="opDrwContato" class="btn-clear" style="background:linear-gradient(90deg,var(--primary),var(--accent-purple));color:#fff;border:none;padding:10px 18px;font-weight:700;">Entrar em contato</button>
+            <button class="btn-clear" style="background:rgba(6,182,212,0.18);color:var(--teal);border:1px solid rgba(6,182,212,0.35);padding:10px 18px;" onclick="opDrwFiltrar()">Filtrar no dashboard</button>
+        </div>
+    </div>
+
     <div class="tab-content" id="tab5">
         <div id="oraculoTabEmpty" style="text-align:center;padding:60px 20px;color:var(--text-secondary);">
             <div style="font-size:48px;margin-bottom:16px;">&#128302;</div>
@@ -1096,9 +1152,153 @@ function renderTabOraculo(){
 
 /* ========== TAB SWITCH ========== */
 function switchTab(n){
-    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===n));
-    document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',i===n));
+    document.querySelectorAll('.tab-btn').forEach(b=>{
+        const m=(b.getAttribute('onclick')||'').match(/switchTab\((\d+)\)/);
+        b.classList.toggle('active',!!m && +m[1]===n);
+    });
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab'+n));
     if(n===5)renderTabOraculo();
+    if(n===6)renderTabPotencial();
+}
+
+/* ========== TAB 6: OPORTUNIDADES DE UPGRADE ========== */
+function getMensalidadeNum(e){
+    // Prioriza valor real cobrado (faturas IUGU paid). Fallback: planoTotalCobrado / planoMensalidade.
+    if(e.faturamento && e.faturamento.faturas){
+        // primeira fatura paga do plano principal (faturas vêm da mais recente para a mais antiga)
+        const principal=e.faturamento.faturas.find(f=>f.status==='paid'&&['Avançado','Pro','Starter','PRO'].includes(f.plano));
+        if(principal)return principal.total;
+    }
+    return e.planoTotalCobrado||e.planoMensalidade||0;
+}
+function renderTabPotencial(){
+    const gmvMin=parseFloat(document.getElementById('opGmvMin').value)||0;
+    const mensMax=parseFloat(document.getElementById('opMensMax').value)||Infinity;
+    const loading=document.getElementById('opLoading');
+    const empty=document.getElementById('opEmpty');
+    const wrap=document.getElementById('opTableWrap');
+    loading.style.display='block';empty.style.display='none';wrap.style.display='none';
+
+    setTimeout(()=>{
+        const isTest=(typeof isTestMarca==='function')?isTestMarca:()=>false;
+        const ops=DADOS.empresas.filter(e=>{
+            if(isTest(e))return false;
+            if(e.statusEmpresa==='Desativada')return false;
+            const m=getMensalidadeNum(e);
+            return (e.gmv||0)>=gmvMin && m>0 && m<=mensMax;
+        }).map(e=>({...e,_mens:getMensalidadeNum(e)}))
+          .sort((a,b)=>(b.gmv||0)-(a.gmv||0));
+
+        loading.style.display='none';
+        const kpiEl=document.getElementById('opKpiGrid');
+        const totalGmv=ops.reduce((s,e)=>s+(e.gmv||0),0);
+        const totalMens=ops.reduce((s,e)=>s+e._mens,0);
+        const comInteg=ops.filter(e=>e.temIntegracao==='Sim'||e.temIntegracao===true).length;
+        kpiEl.innerHTML=kpiHTML([
+            {icon:'&#127919;',label:'Marcas com potencial',value:fmtN(ops.length)},
+            {icon:'&#128176;',label:'GMV somado',value:fmtC(totalGmv)},
+            {icon:'&#128179;',label:'Mensalidade atual somada',value:fmtC(totalMens)},
+            {icon:'&#128268;',label:'Com integração',value:fmtN(comInteg)+' / '+fmtN(ops.length)},
+        ]);
+
+        if(!ops.length){empty.style.display='block';return;}
+        wrap.style.display='block';
+        const body=document.getElementById('opTableBody');
+        body.innerHTML=ops.map((e,i)=>{
+            const integBadge=(e.temIntegracao==='Sim'||e.temIntegracao===true)
+                ?'<span style="background:rgba(16,185,129,0.18);color:var(--success);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">Sim</span>'
+                :'<span style="background:rgba(139,143,163,0.18);color:var(--text-secondary);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">Não</span>';
+            let modBadge='<span style="color:var(--text-muted);font-size:11px;">-</span>';
+            if(e.modalidadeStark==='Antecipação')modBadge='<span style="background:rgba(168,85,247,0.18);color:var(--accent-purple,#a78bfa);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">Antecipação</span>';
+            else if(e.modalidadeStark==='Fluxo')modBadge='<span style="background:rgba(6,182,212,0.18);color:var(--teal,#06B6D4);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">Fluxo</span>';
+            const temOrac=e.temOraculoFabric||!!e.oraculoEtapa;
+            const oracBadge=temOrac
+                ?'<span style="background:rgba(124,58,237,0.18);color:var(--primary);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;" title="'+(e.oraculoEtapa||'Ativo')+'">'+(e.oraculoEtapa||'Sim')+'</span>'
+                :'<span style="background:rgba(139,143,163,0.18);color:var(--text-secondary);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">Não</span>';
+            const plano=e.plano||'<span style="color:var(--text-muted);font-style:italic;">sem plano</span>';
+            const nm=(e.nome||'').replace(/'/g,"\\'");
+            return `<tr style="cursor:pointer;" onclick="opFilterEmp('${e.id}')" title="Clique para filtrar o dashboard por esta marca">
+                <td style="font-weight:600;">${e.nome||'-'}</td>
+                <td style="color:var(--text-secondary);">${e.anjo||'-'}</td>
+                <td style="font-weight:600;">${plano}</td>
+                <td style="text-align:right;font-weight:700;color:var(--success);">${fmtC(e.gmv||0)}</td>
+                <td style="text-align:right;">${fmtN(e.pedidosPagos||0)}</td>
+                <td style="text-align:right;font-weight:600;">${fmtCFull(e._mens)}</td>
+                <td style="text-align:center;">${integBadge}</td>
+                <td style="text-align:center;">${modBadge}</td>
+                <td style="text-align:center;">${oracBadge}</td>
+                <td style="text-align:center;" onclick="event.stopPropagation();openOpDrawer('${e.id}')"><span style="color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;padding:4px 8px;">Ver &rsaquo;</span></td>
+            </tr>`;
+        }).join('');
+    },50);
+}
+function openOpDrawer(id){
+    const e=DADOS.empresas.find(x=>x.id===id);if(!e)return;
+    const mens=getMensalidadeNum(e);
+    document.getElementById('opDrwNome').textContent=e.nome||'-';
+    document.getElementById('opDrwSub').textContent=(e.canal||'-')+' • CS: '+(e.anjo||'-')+' • '+(e.plano||'sem plano');
+    document.getElementById('opDrwKpi').innerHTML=kpiHTML([
+        {icon:'&#128176;',label:'GMV',value:fmtC(e.gmv||0),color:'var(--success)'},
+        {icon:'&#128179;',label:'Mensalidade atual',value:fmtCFull(mens)},
+        {icon:'&#128722;',label:'Pedidos pagos',value:fmtN(e.pedidosPagos||0)},
+        {icon:'&#128269;',label:'Ticket médio',value:fmtC((e.pedidosPagos>0)?(e.valPedidosPagos/e.pedidosPagos):0)},
+    ]);
+    const integBadge=(e.temIntegracao==='Sim'||e.temIntegracao===true)
+        ?'<span style="background:rgba(16,185,129,0.18);color:var(--success);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;">Integrada</span>'
+        :'<span style="background:rgba(139,143,163,0.18);color:var(--text-secondary);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;">Sem integração</span>';
+    let modText='-',modColor='var(--text-muted)';
+    if(e.modalidadeStark==='Antecipação'){modText='Antecipação';modColor='var(--accent-purple,#a78bfa)';}
+    else if(e.modalidadeStark==='Fluxo'){modText='Fluxo';modColor='var(--teal,#06B6D4)';}
+    let vpBadge;
+    if(e.temVestiPago){
+        const metodos=[];
+        if(e.cartao==='Sim')metodos.push('Cartão');
+        if(e.pix==='Sim')metodos.push('PIX');
+        const sufixo=metodos.length?' <span style="color:var(--text-muted);font-size:11px;font-weight:500;">('+metodos.join(' + ')+')</span>':'';
+        vpBadge='<strong style="color:var(--success);">Sim</strong>'+sufixo;
+    } else {
+        vpBadge='<strong style="color:var(--text-muted);">Não</strong>';
+    }
+    document.getElementById('opDrwInfo').innerHTML=`
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;font-size:12px;">
+            <div><span style="color:var(--text-secondary);">CNPJ:</span> <strong>${e.cnpj||'-'}</strong></div>
+            <div><span style="color:var(--text-secondary);">Canal:</span> <strong>${e.canal||'-'}</strong></div>
+            <div><span style="color:var(--text-secondary);">Integração:</span> ${integBadge}</div>
+            <div><span style="color:var(--text-secondary);">Vesti Pago:</span> ${vpBadge}</div>
+            <div><span style="color:var(--text-secondary);">Modalidade:</span> <strong style="color:${modColor};">${modText}</strong></div>
+            <div><span style="color:var(--text-secondary);">Plano contratado:</span> <strong>${e.plano||'-'}</strong></div>
+            <div><span style="color:var(--text-secondary);">Subconta IUGU:</span> <strong>${e.planoSubconta||'-'}</strong></div>
+            <div><span style="color:var(--text-secondary);">Risco Churn:</span> <strong>${e.churnRisco||'-'}</strong></div>
+            <div><span style="color:var(--text-secondary);">Status:</span> <strong>${e.statusEmpresa||'-'}</strong></div>
+        </div>`;
+    document.getElementById('opDrwContato').onclick=()=>{
+        const u=e.usuario||'';
+        if(u && u.includes('@')) window.location.href='mailto:'+u+'?subject=Oportunidade%20de%20upgrade%20de%20plano%20-%20'+encodeURIComponent(e.nome||'');
+        else alert('E-mail de contato não cadastrado para '+(e.nome||'esta marca')+'.');
+    };
+    window._opDrwId=e.id;
+    document.getElementById('opDrawerBackdrop').style.display='block';
+    document.getElementById('opDrawer').style.display='block';
+}
+function closeOpDrawer(){
+    document.getElementById('opDrawerBackdrop').style.display='none';
+    document.getElementById('opDrawer').style.display='none';
+}
+function opDrwFiltrar(){
+    const e=DADOS.empresas.find(x=>x.id===window._opDrwId);if(!e)return;
+    closeOpDrawer();opFilterEmp(e.id);
+}
+function opFilterEmp(id){
+    const e=DADOS.empresas.find(x=>x.id===id);if(!e)return;
+    const sel=document.getElementById('fEmpresa');
+    if(sel){
+        sel.value=e.nome||'';
+        sel.dispatchEvent(new Event('input',{bubbles:true}));
+        sel.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    if(typeof applyFilters==='function'){tablePage=1;applyFilters();}
+    switchTab(0);
+    window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ========== KPI HELPERS ========== */
