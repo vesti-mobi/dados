@@ -16,8 +16,14 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from urllib import request, error
+try:
+    from zoneinfo import ZoneInfo
+    TZ_BR = ZoneInfo('America/Sao_Paulo')
+except Exception:
+    TZ_BR = None
 
 DIR = Path(__file__).parent
 DADOS = DIR / 'dados.js'
@@ -89,7 +95,7 @@ def main():
 
     out = (
         '// Saldos Starkbank (gerado por fetch_saldos.py)\n'
-        f'window.SALDO_GERADO_EM = "{time.strftime("%Y-%m-%dT%H:%M:%S")}";\n'
+        f'window.SALDO_GERADO_EM = "{(datetime.now(TZ_BR) if TZ_BR else datetime.now()).strftime("%Y-%m-%dT%H:%M:%S")}";\n'
         f'window.SALDO_VESTIPAGO = {saldo_central:.2f};\n'
         f'window.SALDO_TOTAL_MARCAS = {total_marcas:.2f};\n'
         f'window.SALDOS = {json.dumps(saldos, indent=2)};\n'
