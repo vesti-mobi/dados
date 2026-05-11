@@ -124,6 +124,7 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         <div class="tab active" data-tab="cp" onclick="switchTab('cp')">CP · Contas a Pagar</div>
         <div class="tab" data-tab="cr" onclick="switchTab('cr')">CR · Contas a Receber</div>
         <div class="tab" data-tab="aud" onclick="switchTab('aud')">Auditoria</div>
+        <div class="tab" data-tab="canc" onclick="switchTab('canc')">Cancelados</div>
     </div>
     <div class="subtabs" id="subtabs" style="align-items:center">
         <div class="subtab active" data-sub="fluxo" onclick="switchSub('fluxo')">Fluxo</div>
@@ -267,6 +268,60 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
         </div>
     </div>
 
+    <div class="filters" id="filtersCanc" style="display:none">
+        <div class="fg" style="flex:1;min-width:240px">
+            <label>Buscar</label>
+            <input type="text" id="fCancQ" placeholder="marca, cliente, pedido, orderId...">
+        </div>
+        <div class="fg">
+            <label>Marca</label>
+            <select id="fCancMarca"><option value="">— todas —</option></select>
+        </div>
+        <div class="fg">
+            <label>Cancelado (de)</label>
+            <input type="date" id="fCancDe">
+        </div>
+        <div class="fg">
+            <label>Cancelado (até)</label>
+            <input type="date" id="fCancAte">
+        </div>
+        <button class="clear-btn" onclick="clearCancFilters()">Limpar</button>
+    </div>
+
+    <div class="kpis" id="kpisCanc" style="display:none">
+        <div class="kpi red"><div class="lbl">Pedidos cancelados</div><div class="val" id="kCancN">--</div><div class="ks">no filtro</div></div>
+        <div class="kpi orange"><div class="lbl">Valor total</div><div class="val" id="kCancV">R$ --</div><div class="ks">summary_total</div></div>
+        <div class="kpi teal"><div class="lbl">Marcas afetadas</div><div class="val" id="kCancM">--</div><div class="ks">distintas</div></div>
+        <div class="kpi blue"><div class="lbl">Mais recente</div><div class="val" id="kCancU" style="font-size:14px">--</div><div class="ks">data cancelamento</div></div>
+    </div>
+
+    <div class="tbl-card" id="cardCanc" style="display:none">
+        <div class="tbl-head">
+            <h3>Pedidos cancelados (Starkbank · voided)</h3>
+            <span class="count" id="cancCount">--</span>
+        </div>
+        <div class="tbl-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data compra</th>
+                        <th>Marca</th>
+                        <th>Cliente</th>
+                        <th>Pedido</th>
+                        <th class="r">Valor</th>
+                        <th class="r">Parcelas</th>
+                        <th>Bandeira</th>
+                        <th>Cartão</th>
+                        <th>Data cancelamento</th>
+                        <th>Tempo até cancelar</th>
+                        <th>orderId</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyCanc"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="tbl-card" id="cardCr" style="display:none">
         <div class="tbl-head">
             <h3>Contas a receber por empresa</h3>
@@ -324,6 +379,10 @@ window._dadosError=null;
     s6.src='saldos.js?v='+v;
     s6.onerror=function(){};
     document.head.appendChild(s6);
+    var s7=document.createElement('script');
+    s7.src='cancelados_valores.js?v='+v;
+    s7.onerror=function(){};
+    document.head.appendChild(s7);
 })();
 // captura qualquer erro de JS pra nao ficar silencioso
 window.addEventListener('error',function(e){
@@ -520,7 +579,25 @@ function clearAllFilters(){
 function switchTab(which){
     TAB=which;
     document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===which)});
-    var isCr=(which==='cr'), isAud=(which==='aud'), isCp=(which==='cp');
+    var isCr=(which==='cr'), isAud=(which==='aud'), isCp=(which==='cp'), isCanc=(which==='canc');
+    document.getElementById('filtersCanc').style.display = isCanc?'flex':'none';
+    document.getElementById('kpisCanc').style.display    = isCanc?'grid':'none';
+    document.getElementById('cardCanc').style.display    = isCanc?'block':'none';
+    if(isCanc){
+        document.getElementById('subtabs').style.display='none';
+        document.getElementById('subtabsAud').style.display='none';
+        document.getElementById('kpisCp').style.display='none';
+        document.getElementById('kpisCr').style.display='none';
+        document.getElementById('kpisCrSaldo').style.display='none';
+        document.getElementById('kpisAud').style.display='none';
+        document.getElementById('cardCp').style.display='none';
+        document.getElementById('cardCr').style.display='none';
+        document.getElementById('cardAud').style.display='none';
+        document.getElementById('filtersDefault').style.display='none';
+        document.getElementById('filtersAntec').style.display='none';
+        buildCancelados();
+        return;
+    }
     document.getElementById('subtabs').style.display    = isCp?'flex':'none';
     document.getElementById('btnExcel').style.display   = (isCp && SUB==='antec')?'inline-block':'none';
     document.getElementById('btnCsvStark').style.display = (isCp && SUB==='antec')?'inline-block':'none';
@@ -1339,6 +1416,88 @@ function renderCr(){
         });
     });
     tb.innerHTML=html.join('');
+}
+
+// ===== Aba CANCELADOS =====
+var CANC_ROWS=null, CANC_SORT={k:'cancelAt',desc:true};
+function buildCancelados(){
+    if(CANC_ROWS===null){
+        var faturas=(window.INVOICES&&window.INVOICES.faturas)||[];
+        var vals=(window.CANCELADOS_VALORES&&window.CANCELADOS_VALORES.valores)||{};
+        CANC_ROWS=faturas.filter(function(f){return f.purchase&&f.purchase.status==='voided'}).map(function(f){
+            var p=f.purchase||{}; var v=vals[f.orderId]||{};
+            var canc=p.apiUpdated||p.updated||''; var created=p.apiCreated||p.created||'';
+            var diffH='';
+            if(canc&&created){var d=(new Date(canc)-new Date(created))/3600000;diffH=d<1?Math.round(d*60)+'m':d.toFixed(1)+'h'}
+            return {
+                orderDate:f.orderDate||v.order_date||'',
+                nomeFantasia:f.nomeFantasia||'',
+                customerName:f.customerName||v.customer_name||p.holderName||'',
+                orderNumber:f.orderNumber||v.order_number||'',
+                orderId:f.orderId||'',
+                summaryTotal:v.summary_total==null?null:v.summary_total,
+                installmentCount:p.installmentCount||v.installments||1,
+                network:p.network||'', cardEnding:p.cardEnding||'',
+                cancelAt:canc, createdAt:created, diffH:diffH,
+                _diffNum:canc&&created?(new Date(canc)-new Date(created)):0
+            };
+        }).filter(function(r){return !isTestMarca(r.nomeFantasia)});
+        var marcas=[...new Set(CANC_ROWS.map(function(r){return r.nomeFantasia}))].sort();
+        var sel=document.getElementById('fCancMarca');
+        marcas.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o)});
+        ['fCancQ','fCancMarca','fCancDe','fCancAte'].forEach(function(id){document.getElementById(id).addEventListener('input',renderCancelados)});
+        var keys=['orderDate','nomeFantasia','customerName','orderNumber','summaryTotal','installmentCount','network','cardEnding','cancelAt','diffH','orderId'];
+        document.querySelectorAll('#cardCanc thead th').forEach(function(th,idx){
+            th.style.cursor='pointer';
+            th.onclick=function(){var k=keys[idx];if(CANC_SORT.k===k)CANC_SORT.desc=!CANC_SORT.desc;else{CANC_SORT.k=k;CANC_SORT.desc=true}renderCancelados()};
+        });
+    }
+    renderCancelados();
+}
+function clearCancFilters(){['fCancQ','fCancMarca','fCancDe','fCancAte'].forEach(function(id){document.getElementById(id).value=''});renderCancelados()}
+function renderCancelados(){
+    if(!CANC_ROWS)return;
+    var q=(document.getElementById('fCancQ').value||'').toLowerCase();
+    var fm=document.getElementById('fCancMarca').value;
+    var de=document.getElementById('fCancDe').value, ate=document.getElementById('fCancAte').value;
+    var data=CANC_ROWS.filter(function(r){
+        if(fm&&r.nomeFantasia!==fm)return false;
+        if(q){var h=(r.nomeFantasia+' '+r.customerName+' '+r.orderId+' '+r.orderNumber).toLowerCase();if(h.indexOf(q)<0)return false}
+        var c=(r.cancelAt||'').substring(0,10);
+        if(de&&c<de)return false;
+        if(ate&&c>ate)return false;
+        return true;
+    });
+    data.sort(function(a,b){
+        var k=CANC_SORT.k, av=a[k], bv=b[k];
+        if(k==='diffH'){av=a._diffNum;bv=b._diffNum}
+        if(av==null)av=''; if(bv==null)bv='';
+        if(typeof av==='number'&&typeof bv==='number')return CANC_SORT.desc?bv-av:av-bv;
+        av=String(av);bv=String(bv);
+        return CANC_SORT.desc?bv.localeCompare(av):av.localeCompare(bv);
+    });
+    var tot=data.reduce(function(s,r){return s+(r.summaryTotal||0)},0);
+    var marcas={};data.forEach(function(r){marcas[r.nomeFantasia]=1});
+    var latest=data.map(function(r){return r.cancelAt}).filter(Boolean).sort().pop();
+    document.getElementById('kCancN').textContent=fmtN(data.length);
+    document.getElementById('kCancV').textContent=fmtC(tot);
+    document.getElementById('kCancM').textContent=fmtN(Object.keys(marcas).length);
+    document.getElementById('kCancU').textContent=latest?fmtDT(latest):'-';
+    document.getElementById('cancCount').textContent=fmtN(data.length)+' de '+fmtN(CANC_ROWS.length);
+    var tb=document.getElementById('tbodyCanc');
+    tb.innerHTML=data.map(function(r){return '<tr>'+
+        '<td>'+fmtD(r.orderDate)+'</td>'+
+        '<td>'+esc(r.nomeFantasia)+'</td>'+
+        '<td>'+esc(r.customerName)+'</td>'+
+        '<td>'+esc(r.orderNumber||'-')+'</td>'+
+        '<td class="r">'+(r.summaryTotal==null?'-':fmtC(r.summaryTotal))+'</td>'+
+        '<td class="r">'+r.installmentCount+'x</td>'+
+        '<td>'+esc(r.network)+'</td>'+
+        '<td style="font-family:monospace;font-size:11px;color:#666">****'+esc(r.cardEnding||'')+'</td>'+
+        '<td>'+fmtDT(r.cancelAt)+'</td>'+
+        '<td>'+esc(r.diffH)+'</td>'+
+        '<td style="font-family:monospace;font-size:11px;color:#666">'+esc(r.orderId)+'</td>'+
+    '</tr>'}).join('');
 }
 </script>
 </body>
