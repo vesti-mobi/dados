@@ -48,11 +48,19 @@ jobs:
           VESTIAPI_TOKEN: ${{ secrets.VESTIAPI_TOKEN }}
         run: python fetch_invoices.py
 
+      - name: Rodar fetcher Cancelados (Fabric)
+        working-directory: relatoriostarkbank
+        env:
+          FABRIC_REFRESH_TOKEN: ${{ secrets.FABRIC_REFRESH_TOKEN }}
+          FABRIC_TENANT_ID: ${{ secrets.FABRIC_TENANT_ID }}
+          FABRIC_CLIENT_ID: ${{ secrets.FABRIC_CLIENT_ID }}
+        run: python fetch_cancelados.py
+
       - name: Commit e push se houver mudancas
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add relatoriostarkbank/dados.js relatoriostarkbank/invoices.js 2>/dev/null || true
+          git add relatoriostarkbank/dados.js relatoriostarkbank/invoices.js relatoriostarkbank/cancelados_valores.js 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "sem mudancas"
           else
