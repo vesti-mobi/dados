@@ -25,6 +25,7 @@ tr:hover td{background:#fffaf0}
 <div>
   <span class="kpi">Total cancelados <b id="kT">0</b></span>
   <span class="kpi">Marcas afetadas <b id="kM">0</b></span>
+  <span class="kpi">Valor total <b id="kV">-</b></span>
   <span class="kpi">Mais recente <b id="kU">-</b></span>
 </div>
 
@@ -42,6 +43,7 @@ tr:hover td{background:#fffaf0}
   <th data-k="nomeFantasia">Marca</th>
   <th data-k="customerName">Cliente</th>
   <th data-k="orderNumber">Pedido</th>
+  <th data-k="summaryTotal">Valor</th>
   <th data-k="installmentCount">Parcelas</th>
   <th data-k="network">Bandeira</th>
   <th data-k="cardEnding">Cartão</th>
@@ -53,27 +55,32 @@ tr:hover td{background:#fffaf0}
 </table>
 
 <script src="invoices.js"></script>
+<script src="cancelados_valores.js"></script>
 <script>
 var rows=[], sort={k:'cancelAt',desc:true};
 function fmtD(s){if(!s)return'-';var d=new Date(s);if(isNaN(d))return s.substring(0,10);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
 function fmtDay(s){return s?s.substring(8,10)+'/'+s.substring(5,7)+'/'+s.substring(0,4):'-'}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 
+function fmtC(v){if(v==null||isNaN(v))return'-';return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function build(){
     var faturas=(window.INVOICES&&window.INVOICES.faturas)||[];
+    var vals=(window.CANCELADOS_VALORES&&window.CANCELADOS_VALORES.valores)||{};
     rows=faturas.filter(function(f){return f.purchase&&f.purchase.status==='voided'}).map(function(f){
         var p=f.purchase||{};
+        var v=vals[f.orderId]||{};
         var canc=p.apiUpdated||p.updated||'';
         var created=p.apiCreated||p.created||'';
         var diffH='';
         if(canc&&created){var d=(new Date(canc)-new Date(created))/3600000;diffH=d<1?Math.round(d*60)+'m':d.toFixed(1)+'h'}
         return {
-            orderDate:f.orderDate||'',
+            orderDate:f.orderDate||v.order_date||'',
             nomeFantasia:f.nomeFantasia||'',
-            customerName:f.customerName||p.holderName||'',
-            orderNumber:f.orderNumber||'',
+            customerName:f.customerName||v.customer_name||p.holderName||'',
+            orderNumber:f.orderNumber||v.order_number||'',
             orderId:f.orderId||'',
-            installmentCount:p.installmentCount||1,
+            summaryTotal:v.summary_total==null?null:v.summary_total,
+            installmentCount:p.installmentCount||v.installments||1,
             network:p.network||'',
             cardEnding:p.cardEnding||'',
             cancelAt:canc,
@@ -88,6 +95,8 @@ function build(){
     document.getElementById('sub').textContent='Fonte: invoices.js · gerado '+(window.INVOICES.geradoEm||'?');
     document.getElementById('kT').textContent=rows.length;
     document.getElementById('kM').textContent=marcas.length;
+    var tot=rows.reduce(function(s,r){return s+(r.summaryTotal||0)},0);
+    document.getElementById('kV').textContent=fmtC(tot);
     var latest=rows.map(function(r){return r.cancelAt}).filter(Boolean).sort().pop();
     document.getElementById('kU').textContent=latest?fmtD(latest):'-';
     document.getElementById('kCount').textContent=rows.length;
@@ -123,6 +132,7 @@ function render(){
         '<td>'+esc(r.nomeFantasia)+'</td>'+
         '<td>'+esc(r.customerName)+'</td>'+
         '<td>'+esc(r.orderNumber||'-')+'</td>'+
+        '<td class="money">'+fmtC(r.summaryTotal)+'</td>'+
         '<td class="money">'+r.installmentCount+'x</td>'+
         '<td>'+esc(r.network)+'</td>'+
         '<td class="mono">****'+esc(r.cardEnding||'')+'</td>'+
@@ -135,9 +145,9 @@ function render(){
 
 function csv(){
     var data=filtered();
-    var head=['data_compra','marca','cliente','pedido','parcelas','bandeira','cartao','data_cancelamento','tempo_ate_cancelar','order_id'];
+    var head=['data_compra','marca','cliente','pedido','valor','parcelas','bandeira','cartao','data_cancelamento','tempo_ate_cancelar','order_id'];
     var lines=[head.join(';')];
-    data.forEach(function(r){lines.push([r.orderDate,r.nomeFantasia,r.customerName,r.orderNumber||'',r.installmentCount,r.network,r.cardEnding,r.cancelAt,r.diffH,r.orderId].map(function(v){var s=String(v==null?'':v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(';'))});
+    data.forEach(function(r){lines.push([r.orderDate,r.nomeFantasia,r.customerName,r.orderNumber||'',r.summaryTotal==null?'':r.summaryTotal.toFixed(2).replace('.',','),r.installmentCount,r.network,r.cardEnding,r.cancelAt,r.diffH,r.orderId].map(function(v){var s=String(v==null?'':v);return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}).join(';'))});
     var blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cancelados.csv';a.click();
 }
