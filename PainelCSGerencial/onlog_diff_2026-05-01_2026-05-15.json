@@ -3,8 +3,8 @@
     "de": "2026-05-01",
     "ate": "2026-05-15"
   },
-  "geradoEm": "2026-05-08T20:12:50.085666",
-  "planilhaArquivo": "2026-05-08-17-01_AnalisarPostagens-544407-20260507.xlsx",
+  "geradoEm": "2026-05-11T13:19:27.365135",
+  "planilhaArquivo": "2026-05-11-13-18_Carole_vesti_maio.xlsx",
   "resumo": {
     "ok": 76,
     "divergencias": 3,
@@ -13,32 +13,18 @@
     "soFabric": 1,
     "nPlanilha": 103,
     "nFabric": 90,
-    "totalPedidosPostagem": 4022.52,
+    "totalPedidosPostagem": 3996.16,
     "totalPaVesti": 276.91,
-    "totalGeralPostagem": 4299.43,
-    "totalCobrarPedidos": 4424.77,
+    "totalGeralPostagem": 4273.07,
+    "totalCobrarPedidos": 4395.78,
     "totalCobrarPa": 304.6,
-    "totalCobrarMarcas": 4729.37,
-    "custoDiogo": 4299.43,
+    "totalCobrarMarcas": 4700.38,
+    "custoDiogo": 4273.07,
     "diogoDetectado": false,
-    "margemVesti": 429.94,
+    "margemVesti": 427.31,
     "nPaVesti": 3
   },
   "paVesti": [
-    {
-      "data": "2026-05-06",
-      "operador": "ONLOG RED",
-      "modalidade": "ECONOPACK",
-      "codigoInterno": "AA0097914325",
-      "numeroNF": "11078758",
-      "remetente": "PA VESTI",
-      "cliente": "MARIA APARECIDA SANTANA LIMA",
-      "clienteDoc": "22.982.386/0001-17",
-      "cidade": "ILHÉUS",
-      "uf": "BA",
-      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
-      "postagem": 104.32
-    },
     {
       "data": "2026-05-04",
       "operador": "ONLOG RED",
@@ -65,6 +51,20 @@
       "cidade": "ILHEUS",
       "uf": "BA",
       "status": "ETIQUETA EMITIDA",
+      "postagem": 104.32
+    },
+    {
+      "data": "2026-05-06",
+      "operador": "ONLOG RED",
+      "modalidade": "ECONOPACK",
+      "codigoInterno": "AA0097914325",
+      "numeroNF": "11078758",
+      "remetente": "PA VESTI",
+      "cliente": "MARIA APARECIDA SANTANA LIMA",
+      "clienteDoc": "22.982.386/0001-17",
+      "cidade": "ILHÉUS",
+      "uf": "BA",
+      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
       "postagem": 104.32
     }
   ],
@@ -105,18 +105,18 @@
       "cobrar": 160.49
     },
     {
-      "domainId": "1956465",
-      "marca": "",
-      "nPedidos": 5,
-      "postagem": 129.62,
-      "cobrar": 142.58
-    },
-    {
       "domainId": "15",
       "marca": "",
       "nPedidos": 1,
       "postagem": 107.79,
       "cobrar": 118.57
+    },
+    {
+      "domainId": "1956465",
+      "marca": "",
+      "nPedidos": 5,
+      "postagem": 103.26,
+      "cobrar": 113.59
     },
     {
       "domainId": "2032548",
@@ -394,14 +394,14 @@
   "divergencias": [
     {
       "orderNumber": 3,
-      "marca": "",
+      "marca": "DoceVida ",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
     },
     {
       "orderNumber": 3,
-      "marca": "DoceVida ",
+      "marca": "",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
@@ -416,17 +416,17 @@
   ],
   "soPlanilha": [
     {
-      "codigoVolume": "1355848_4193",
-      "orderNumber": "4193",
-      "cliente": "LUCILENE VALERIA DA SILVA",
-      "clienteDoc": "30253775000130",
-      "cidade": "BETIM",
+      "codigoVolume": "14035_6306",
+      "orderNumber": "6306",
+      "cliente": "NATALIA PESSOA",
+      "clienteDoc": "08017624646",
+      "cidade": "CAETE9",
       "uf": "MG",
-      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
-      "postagem": 20.93,
+      "status": "OBJETO CRIADO",
+      "postagem": 23.43,
       "data": "2026-05-06",
-      "remetente": "ARARY",
-      "valorDeclarado": 734.0
+      "remetente": "ANNE BLE1NC",
+      "valorDeclarado": 505.0
     },
     {
       "codigoVolume": "14035_6320",
@@ -442,69 +442,17 @@
       "valorDeclarado": 316.0
     },
     {
-      "codigoVolume": "268016_6751",
-      "orderNumber": "6751",
-      "cliente": "INDIANA SAN FERREIRA",
-      "clienteDoc": "43763542000129",
-      "cidade": "PORTO SEGURO",
-      "uf": "BA",
-      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
-      "postagem": 66.67,
-      "data": "2026-05-06",
-      "remetente": "CHOCOLATE DOCE",
-      "valorDeclarado": 515.0
-    },
-    {
-      "codigoVolume": "1893722_10",
-      "orderNumber": "10",
-      "cliente": "KELLY GOMES TOMELIN",
-      "clienteDoc": "41264100000102",
-      "cidade": "SINOP",
-      "uf": "MT",
-      "status": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO",
-      "postagem": 36.16,
-      "data": "2026-05-05",
-      "remetente": "SARA E MARI",
-      "valorDeclarado": 515.6
-    },
-    {
-      "codigoVolume": "1528187_13",
-      "orderNumber": "13",
-      "cliente": "SANDRA CARROZZO",
-      "clienteDoc": "09093228803",
-      "cidade": "MOGI MIRIM",
+      "codigoVolume": "1305816_15",
+      "orderNumber": "15",
+      "cliente": "MATHEUS",
+      "clienteDoc": "38155471802",
+      "cidade": "SE3O PAULO",
       "uf": "SP",
-      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
-      "postagem": 29.16,
-      "data": "2026-05-02",
-      "remetente": "SANDY",
-      "valorDeclarado": 990.0
-    },
-    {
-      "codigoVolume": "268016_6750",
-      "orderNumber": "6750",
-      "cliente": "GIOVANNA YARZON",
-      "clienteDoc": "55335196000167",
-      "cidade": "CAMPO GRANDE",
-      "uf": "MS",
-      "status": "OBJETO POSTADO APÓS O HORÁRIO LIMITE DA UNIDADE",
-      "postagem": 37.21,
+      "status": "OBJETO CRIADO",
+      "postagem": 12.28,
       "data": "2026-05-06",
-      "remetente": "CHOCOLATE DOCE",
-      "valorDeclarado": 620.0
-    },
-    {
-      "codigoVolume": "1805647_1256",
-      "orderNumber": "1256",
-      "cliente": "FRANCINELI ALCALE1",
-      "clienteDoc": "31035734800",
-      "cidade": "SANTA BE1RBARA D'OESTE",
-      "uf": "SP",
-      "status": "OBJETO POSTADO APÓS O HORÁRIO LIMITE DA UNIDADE",
-      "postagem": 14.3,
-      "data": "2026-05-06",
-      "remetente": "CVL MODA - PLAZA POLO",
-      "valorDeclarado": 261.4
+      "remetente": "PALMEIRA",
+      "valorDeclarado": 259.9
     },
     {
       "codigoVolume": "14035_6297",
@@ -520,121 +468,30 @@
       "valorDeclarado": 328.0
     },
     {
-      "codigoVolume": "14035_6296",
-      "orderNumber": "6296",
-      "cliente": "BRUNA TAISLA",
-      "clienteDoc": "10651693616",
-      "cidade": "LAVRAS",
-      "uf": "MG",
-      "status": "OBJETO CRIADO",
-      "postagem": 25.66,
-      "data": "2026-05-06",
-      "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 587.0
-    },
-    {
-      "codigoVolume": "1305816_15",
-      "orderNumber": "15",
-      "cliente": "MATHEUS",
-      "clienteDoc": "38155471802",
-      "cidade": "SE3O PAULO",
+      "codigoVolume": "14035_6315",
+      "orderNumber": "6315",
+      "cliente": "VANESSA LISBOA",
+      "clienteDoc": "31267163852",
+      "cidade": "AMPARO",
       "uf": "SP",
       "status": "OBJETO CRIADO",
-      "postagem": 12.28,
-      "data": "2026-05-06",
-      "remetente": "PALMEIRA",
-      "valorDeclarado": 259.9
-    },
-    {
-      "codigoVolume": "1355848_4194",
-      "orderNumber": "4194",
-      "cliente": "SILVANA ESCOBAR DE VASTO",
-      "clienteDoc": "32174296000153",
-      "cidade": "SOROCABA",
-      "uf": "SP",
-      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
-      "postagem": 15.09,
-      "data": "2026-05-06",
-      "remetente": "ARARY",
-      "valorDeclarado": 382.0
-    },
-    {
-      "codigoVolume": "268016_6752",
-      "orderNumber": "6752",
-      "cliente": "MARCELY VALESCA DA SILVA CARDOSO",
-      "clienteDoc": "54990271000160",
-      "cidade": "MACAPE1",
-      "uf": "AP",
-      "status": "OBJETO CRIADO",
-      "postagem": 50.73,
-      "data": "2026-05-06",
-      "remetente": "CHOCOLATE DOCE",
-      "valorDeclarado": 1292.0
-    },
-    {
-      "codigoVolume": "14035_6300",
-      "orderNumber": "6300",
-      "cliente": "JAMILA STOCO GOBBI JOSE",
-      "clienteDoc": "06881444702",
-      "cidade": "VITF3RIA",
-      "uf": "ES",
-      "status": "OBJETO CRIADO",
-      "postagem": 17.94,
+      "postagem": 31.26,
       "data": "2026-05-06",
       "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 350.0
+      "valorDeclarado": 506.0
     },
     {
-      "codigoVolume": "14035_6306",
-      "orderNumber": "6306",
-      "cliente": "NATALIA PESSOA",
-      "clienteDoc": "08017624646",
-      "cidade": "CAETE9",
-      "uf": "MG",
-      "status": "OBJETO CRIADO",
-      "postagem": 23.43,
-      "data": "2026-05-06",
-      "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 505.0
-    },
-    {
-      "codigoVolume": "14035_6308",
-      "orderNumber": "6308",
-      "cliente": "EDUARDA LIMA",
-      "clienteDoc": "62523484000100",
-      "cidade": "FRANCA",
+      "codigoVolume": "1956465_211",
+      "orderNumber": "211",
+      "cliente": "VIVIAM CRISTINA FERNANDES DE SOUZA",
+      "clienteDoc": "30134545800",
+      "cidade": "SANTA RITA DO PASSA QUATRO",
       "uf": "SP",
       "status": "OBJETO CRIADO",
-      "postagem": 17.27,
+      "postagem": 26.36,
       "data": "2026-05-06",
-      "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 696.0
-    },
-    {
-      "codigoVolume": "1355848_4195",
-      "orderNumber": "4195",
-      "cliente": "OLIVEIRA",
-      "clienteDoc": "03167504170",
-      "cidade": "BRASEDLIA",
-      "uf": "DF",
-      "status": "OBJETO CRIADO",
-      "postagem": 31.87,
-      "data": "2026-05-07",
-      "remetente": "ARARY",
-      "valorDeclarado": 620.0
-    },
-    {
-      "codigoVolume": "14035_6304",
-      "orderNumber": "6304",
-      "cliente": "NATE1LIA CORREIA",
-      "clienteDoc": "03336228123",
-      "cidade": "BRASEDLIA",
-      "uf": "DF",
-      "status": "OBJETO CRIADO",
-      "postagem": 40.04,
-      "data": "2026-05-06",
-      "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 957.0
+      "remetente": "PORE3",
+      "valorDeclarado": 240.0
     },
     {
       "codigoVolume": "14035_6298",
@@ -650,6 +507,84 @@
       "valorDeclarado": 551.0
     },
     {
+      "codigoVolume": "1355848_4193",
+      "orderNumber": "4193",
+      "cliente": "LUCILENE VALERIA DA SILVA",
+      "clienteDoc": "30253775000130",
+      "cidade": "BETIM",
+      "uf": "MG",
+      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
+      "postagem": 20.93,
+      "data": "2026-05-06",
+      "remetente": "ARARY",
+      "valorDeclarado": 734.0
+    },
+    {
+      "codigoVolume": "14035_6304",
+      "orderNumber": "6304",
+      "cliente": "NATE1LIA CORREIA",
+      "clienteDoc": "03336228123",
+      "cidade": "BRASEDLIA",
+      "uf": "DF",
+      "status": "OBJETO CRIADO",
+      "postagem": 40.04,
+      "data": "2026-05-06",
+      "remetente": "ANNE BLE1NC",
+      "valorDeclarado": 957.0
+    },
+    {
+      "codigoVolume": "268016_6750",
+      "orderNumber": "6750",
+      "cliente": "GIOVANNA YARZON",
+      "clienteDoc": "55335196000167",
+      "cidade": "CAMPO GRANDE",
+      "uf": "MS",
+      "status": "OBJETO POSTADO APÓS O HORÁRIO LIMITE DA UNIDADE",
+      "postagem": 37.21,
+      "data": "2026-05-06",
+      "remetente": "CHOCOLATE DOCE",
+      "valorDeclarado": 620.0
+    },
+    {
+      "codigoVolume": "268016_6751",
+      "orderNumber": "6751",
+      "cliente": "INDIANA SAN FERREIRA",
+      "clienteDoc": "43763542000129",
+      "cidade": "PORTO SEGURO",
+      "uf": "BA",
+      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
+      "postagem": 66.67,
+      "data": "2026-05-06",
+      "remetente": "CHOCOLATE DOCE",
+      "valorDeclarado": 515.0
+    },
+    {
+      "codigoVolume": "14035_6296",
+      "orderNumber": "6296",
+      "cliente": "BRUNA TAISLA",
+      "clienteDoc": "10651693616",
+      "cidade": "LAVRAS",
+      "uf": "MG",
+      "status": "OBJETO CRIADO",
+      "postagem": 25.66,
+      "data": "2026-05-06",
+      "remetente": "ANNE BLE1NC",
+      "valorDeclarado": 587.0
+    },
+    {
+      "codigoVolume": "1355848_4194",
+      "orderNumber": "4194",
+      "cliente": "SILVANA ESCOBAR DE VASTO",
+      "clienteDoc": "32174296000153",
+      "cidade": "SOROCABA",
+      "uf": "SP",
+      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
+      "postagem": 15.09,
+      "data": "2026-05-06",
+      "remetente": "ARARY",
+      "valorDeclarado": 382.0
+    },
+    {
       "codigoVolume": "14035_6309",
       "orderNumber": "6309",
       "cliente": "LAURA DE ALMEIDA MAGALHAES FURTADO MIRANDA",
@@ -663,43 +598,17 @@
       "valorDeclarado": 933.0
     },
     {
-      "codigoVolume": "1305816_14",
-      "orderNumber": "14",
-      "cliente": "TESTE PEDIDO SUPORTE VESTI",
-      "clienteDoc": "88174196000181",
-      "cidade": "PORTO ALEGRE",
-      "uf": "RS",
+      "codigoVolume": "268016_6752",
+      "orderNumber": "6752",
+      "cliente": "MARCELY VALESCA DA SILVA CARDOSO",
+      "clienteDoc": "54990271000160",
+      "cidade": "MACAPE1",
+      "uf": "AP",
       "status": "OBJETO CRIADO",
-      "postagem": 23.34,
+      "postagem": 50.73,
       "data": "2026-05-06",
-      "remetente": "PALMEIRA",
-      "valorDeclarado": 519.8
-    },
-    {
-      "codigoVolume": "1956465_211",
-      "orderNumber": "211",
-      "cliente": "VIVIAM CRISTINA FERNANDES DE SOUZA",
-      "clienteDoc": "30134545800",
-      "cidade": "SANTA RITA DO PASSA QUATRO",
-      "uf": "SP",
-      "status": "OBJETO CRIADO",
-      "postagem": 52.72,
-      "data": "2026-05-06",
-      "remetente": "PORE3",
-      "valorDeclarado": 240.0
-    },
-    {
-      "codigoVolume": "14035_6315",
-      "orderNumber": "6315",
-      "cliente": "VANESSA LISBOA",
-      "clienteDoc": "31267163852",
-      "cidade": "AMPARO",
-      "uf": "SP",
-      "status": "OBJETO CRIADO",
-      "postagem": 31.26,
-      "data": "2026-05-06",
-      "remetente": "ANNE BLE1NC",
-      "valorDeclarado": 506.0
+      "remetente": "CHOCOLATE DOCE",
+      "valorDeclarado": 1292.0
     },
     {
       "codigoVolume": "14035_6262",
@@ -715,6 +624,32 @@
       "valorDeclarado": 500.0
     },
     {
+      "codigoVolume": "1528187_13",
+      "orderNumber": "13",
+      "cliente": "SANDRA CARROZZO",
+      "clienteDoc": "09093228803",
+      "cidade": "MOGI MIRIM",
+      "uf": "SP",
+      "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
+      "postagem": 29.16,
+      "data": "2026-05-02",
+      "remetente": "SANDY",
+      "valorDeclarado": 990.0
+    },
+    {
+      "codigoVolume": "14035_6308",
+      "orderNumber": "6308",
+      "cliente": "EDUARDA LIMA",
+      "clienteDoc": "62523484000100",
+      "cidade": "FRANCA",
+      "uf": "SP",
+      "status": "OBJETO CRIADO",
+      "postagem": 17.27,
+      "data": "2026-05-06",
+      "remetente": "ANNE BLE1NC",
+      "valorDeclarado": 696.0
+    },
+    {
       "codigoVolume": "1956465_215",
       "orderNumber": "215",
       "cliente": "MARIA SANTOS",
@@ -726,6 +661,71 @@
       "data": "2026-05-06",
       "remetente": "PORE3",
       "valorDeclarado": 201.0
+    },
+    {
+      "codigoVolume": "1305816_14",
+      "orderNumber": "14",
+      "cliente": "TESTE PEDIDO SUPORTE VESTI",
+      "clienteDoc": "88174196000181",
+      "cidade": "PORTO ALEGRE",
+      "uf": "RS",
+      "status": "OBJETO CRIADO",
+      "postagem": 23.34,
+      "data": "2026-05-06",
+      "remetente": "PALMEIRA",
+      "valorDeclarado": 519.8
+    },
+    {
+      "codigoVolume": "1805647_1256",
+      "orderNumber": "1256",
+      "cliente": "FRANCINELI ALCALE1",
+      "clienteDoc": "31035734800",
+      "cidade": "SANTA BE1RBARA D'OESTE",
+      "uf": "SP",
+      "status": "OBJETO CRIADO",
+      "postagem": 14.3,
+      "data": "2026-05-06",
+      "remetente": "CVL MODA - PLAZA POLO",
+      "valorDeclarado": 261.4
+    },
+    {
+      "codigoVolume": "14035_6300",
+      "orderNumber": "6300",
+      "cliente": "JAMILA STOCO GOBBI JOSE",
+      "clienteDoc": "06881444702",
+      "cidade": "VITF3RIA",
+      "uf": "ES",
+      "status": "OBJETO CRIADO",
+      "postagem": 17.94,
+      "data": "2026-05-06",
+      "remetente": "ANNE BLE1NC",
+      "valorDeclarado": 350.0
+    },
+    {
+      "codigoVolume": "1893722_10",
+      "orderNumber": "10",
+      "cliente": "KELLY GOMES TOMELIN",
+      "clienteDoc": "41264100000102",
+      "cidade": "SINOP",
+      "uf": "MT",
+      "status": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO",
+      "postagem": 36.16,
+      "data": "2026-05-05",
+      "remetente": "SARA E MARI",
+      "valorDeclarado": 515.6
+    },
+    {
+      "codigoVolume": "1355848_4195",
+      "orderNumber": "4195",
+      "cliente": "OLIVEIRA",
+      "clienteDoc": "03167504170",
+      "cidade": "BRASEDLIA",
+      "uf": "DF",
+      "status": "OBJETO CRIADO",
+      "postagem": 31.87,
+      "data": "2026-05-07",
+      "remetente": "ARARY",
+      "valorDeclarado": 620.0
     }
   ],
   "soFabric": [
@@ -1887,7 +1887,7 @@
         "uf": "SP",
         "status": "OBJETO CRIADO",
         "data": "2026-05-06",
-        "postagem": 52.72,
+        "postagem": 26.36,
         "remetente": "PORE3",
         "valorDeclarado": 240.0
       },
@@ -1927,7 +1927,7 @@
         "clienteDoc": "31035734800",
         "cidade": "SANTA BE1RBARA D'OESTE",
         "uf": "SP",
-        "status": "OBJETO POSTADO APÓS O HORÁRIO LIMITE DA UNIDADE",
+        "status": "OBJETO CRIADO",
         "data": "2026-05-06",
         "postagem": 14.3,
         "remetente": "CVL MODA - PLAZA POLO",
@@ -2188,20 +2188,6 @@
     },
     "paVesti": [
       {
-        "data": "2026-05-06",
-        "operador": "ONLOG RED",
-        "modalidade": "ECONOPACK",
-        "codigoInterno": "AA0097914325",
-        "numeroNF": "11078758",
-        "remetente": "PA VESTI",
-        "cliente": "MARIA APARECIDA SANTANA LIMA",
-        "clienteDoc": "22.982.386/0001-17",
-        "cidade": "ILHÉUS",
-        "uf": "BA",
-        "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
-        "postagem": 104.32
-      },
-      {
         "data": "2026-05-04",
         "operador": "ONLOG RED",
         "modalidade": "FASTPACK",
@@ -2227,6 +2213,20 @@
         "cidade": "ILHEUS",
         "uf": "BA",
         "status": "ETIQUETA EMITIDA",
+        "postagem": 104.32
+      },
+      {
+        "data": "2026-05-06",
+        "operador": "ONLOG RED",
+        "modalidade": "ECONOPACK",
+        "codigoInterno": "AA0097914325",
+        "numeroNF": "11078758",
+        "remetente": "PA VESTI",
+        "cliente": "MARIA APARECIDA SANTANA LIMA",
+        "clienteDoc": "22.982.386/0001-17",
+        "cidade": "ILHÉUS",
+        "uf": "BA",
+        "status": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE",
         "postagem": 104.32
       }
     ]
