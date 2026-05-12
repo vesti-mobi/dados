@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel CS - Reunioes</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--p:#6C5CE7;--pl:rgba(108,92,231,.15);--s:#00B894;--w:#F39C12;--d:#E17055;--dk:#2D3436;--g:#636E72;--lg:#DFE6E9;--bg:#F8F9FA;--card:#FFF;--sh:0 2px 10px rgba(0,0,0,.07);--r:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dk);overflow-x:hidden}
+.top-bar{background:linear-gradient(135deg,#6C5CE7,#8B7BF7);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(108,92,231,.3)}
+.top-bar .logo{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.top-bar .info{font-size:11px;color:rgba(255,255,255,.6)}
+.container{max-width:1280px;margin:0 auto;padding:24px 20px}
+.filters{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:14px 18px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-group label{font-size:12px;font-weight:600;white-space:nowrap;color:var(--g)}
+.f-select{padding:8px 12px;border:2px solid var(--lg);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;background:#fff;cursor:pointer;font-weight:500}
+.f-select:focus{border-color:var(--p)}
+.kpi-row{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.kpi{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:22px 24px;position:relative}
+.kpi .kl{font-size:13px;color:var(--g);font-weight:500;margin-bottom:6px}
+.kpi .kv{font-size:42px;font-weight:700;line-height:1}
+.kpi .ks{font-size:12px;color:var(--g);margin-top:6px}
+.kpi .ki{position:absolute;top:18px;right:18px;width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.ch{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:22px 24px}
+.ch h4{font-size:15px;font-weight:600;margin-bottom:14px}
+.cw{position:relative;height:380px}
+.note{margin-top:18px;padding:14px 18px;background:#FFF8E1;border-left:4px solid #F39C12;border-radius:8px;font-size:12px;color:var(--dk);line-height:1.5}
+@media(max-width:700px){.kpi-row{grid-template-columns:1fr}.cw{height:320px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#2D3436,#636E72)">
+    <div style="background:#fff;border-radius:16px;padding:40px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2);text-align:center">
+        <div style="font-size:28px;font-weight:700;color:#2D3436;margin-bottom:4px">CS Reunioes</div>
+        <div style="font-size:13px;color:#636E72;margin-bottom:28px">Painel de Reunioes &amp; Negocios</div>
+        <input type="password" id="loginPass" placeholder="Digite a senha..." style="width:100%;padding:12px 16px;border:2px solid #DFE6E9;border-radius:10px;font-size:14px;font-family:'Inter',sans-serif;outline:none;margin-bottom:12px;text-align:center" onkeydown="if(event.key==='Enter')doLogin()">
+        <div id="loginError" style="color:#E17055;font-size:12px;margin-bottom:12px;display:none">Senha incorreta</div>
+        <button onclick="doLogin()" style="width:100%;padding:12px;background:#6C5CE7;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">Entrar</button>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashContent" style="display:none">
+<div class="top-bar">
+    <div><span class="logo">CS Reunioes</span><span style="font-size:12px;opacity:.7;margin-left:10px">Painel de Reunioes &amp; Negocios Fechados</span></div>
+    <div class="info">Dados ficticios &middot; Atualiza quando as planilhas estiverem em uso</div>
+</div>
+
+<div class="container">
+
+<div class="filters">
+    <div class="filter-group"><label>CS:</label>
+        <select class="f-select" id="fCS" onchange="render()">
+            <option value="">Todas as CSs</option>
+            <option>Luana</option>
+            <option>Thamiris</option>
+            <option>Gabriella</option>
+        </select>
+    </div>
+    <div class="filter-group"><label>Periodo:</label>
+        <select class="f-select" id="fPer" onchange="render()">
+            <option value="all">Todas as semanas</option>
+            <option value="12">Ultimas 12 semanas</option>
+            <option value="8">Ultimas 8 semanas</option>
+            <option value="4">Ultimas 4 semanas</option>
+        </select>
+    </div>
+</div>
+
+<div class="kpi-row">
+    <div class="kpi">
+        <div class="ki" style="background:#F0EFFF">&#128197;</div>
+        <div class="kl">Reunioes Realizadas</div>
+        <div class="kv" style="color:var(--p)" id="k-reu">--</div>
+        <div class="ks" id="k-reu-s">no periodo selecionado</div>
+    </div>
+    <div class="kpi">
+        <div class="ki" style="background:#E0F7F0">&#9989;</div>
+        <div class="kl">Negocios Fechados</div>
+        <div class="kv" style="color:var(--s)" id="k-neg">--</div>
+        <div class="ks" id="k-neg-s">vendas/upgrades originados</div>
+    </div>
+</div>
+
+<div class="ch">
+    <h4>Evolucao Semanal - Reunioes &amp; Negocios Fechados</h4>
+    <div class="cw"><canvas id="chartLine"></canvas></div>
+</div>
+
+<div class="note">
+    <b>Como funciona:</b> cada CS registra suas reunioes na propria planilha do Google Sheets
+    (uma para Luana, uma para Thamiris, uma para Gabriella). O painel agrega os dados
+    e mostra quantas reunioes aconteceram por semana e quantas delas viraram negocio fechado
+    (upgrade, reativacao, plataforma nova, filial, etc).
+</div>
+
+</div>
+</div><!-- /dashContent -->
+
+<script>
+function doLogin(){
+    var pass=document.getElementById('loginPass').value;
+    if(pass==='Mudar123'){
+        document.getElementById('loginScreen').style.display='none';
+        document.getElementById('dashContent').style.display='block';
+        sessionStorage.setItem('cs_reu_auth','1');
+        init();
+    }else{
+        document.getElementById('loginError').style.display='block';
+        document.getElementById('loginPass').style.borderColor='#E17055';
+    }
+}
+if(sessionStorage.getItem('cs_reu_auth')==='1'){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('dashContent').style.display='block';
+    document.addEventListener('DOMContentLoaded',init);
+    if(document.readyState!=='loading')setTimeout(init,0);
+}
+</script>
+
+<script>// Dados ficticios para o Painel CS Reunioes - SUBSTITUIR pela leitura real das planilhas quando estiverem em uso
+// 12 semanas (do mais antigo pro mais recente)
+var FICT_DATA = {
+  weeks: [
+    '2026-02-23','2026-03-02','2026-03-09','2026-03-16','2026-03-23','2026-03-30',
+    '2026-04-06','2026-04-13','2026-04-20','2026-04-27','2026-05-04','2026-05-11'
+  ],
+  reunioes: {
+    Luana:     [ 4,  5,  6,  5,  7,  6,  8,  7,  9,  8, 10,  9],
+    Thamiris:  [ 6,  7,  8,  7,  9, 10, 11,  9, 12, 13, 14, 12],
+    Gabriella: [ 3,  4,  5,  4,  6,  5,  7,  6,  8,  7,  9,  8]
+  },
+  negocios: {  // fecharam negocio (upgrade, reativacao, plataforma, etc)
+    Luana:     [ 1,  1,  2,  1,  2,  2,  3,  2,  3,  3,  4,  3],
+    Thamiris:  [ 2,  3,  3,  2,  4,  4,  5,  4,  6,  5,  6,  5],
+    Gabriella: [ 1,  1,  1,  1,  2,  1,  2,  2,  3,  2,  3,  3]
+  }
+};
+</script>
+
+<script>
+var _chart=null;
+function fmtSemana(iso){
+    var d=new Date(iso+'T00:00:00');
+    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);
+}
+function render(){
+    if(typeof FICT_DATA==='undefined')return;
+    var cs=document.getElementById('fCS').value;
+    var per=document.getElementById('fPer').value;
+    var weeks=FICT_DATA.weeks.slice();
+    var startIdx=0;
+    if(per!=='all'){var n=parseInt(per);startIdx=Math.max(0,weeks.length-n)}
+    weeks=weeks.slice(startIdx);
+    function serie(obj){
+        if(cs)return obj[cs].slice(startIdx);
+        var out=new Array(weeks.length).fill(0);
+        ['Luana','Thamiris','Gabriella'].forEach(function(c){
+            obj[c].slice(startIdx).forEach(function(v,i){out[i]+=v});
+        });
+        return out;
+    }
+    var reu=serie(FICT_DATA.reunioes);
+    var neg=serie(FICT_DATA.negocios);
+    var totReu=reu.reduce(function(a,b){return a+b},0);
+    var totNeg=neg.reduce(function(a,b){return a+b},0);
+    document.getElementById('k-reu').textContent=totReu;
+    document.getElementById('k-neg').textContent=totNeg;
+    var pct=totReu?((totNeg/totReu)*100).toFixed(0):0;
+    document.getElementById('k-reu-s').textContent=weeks.length+' semanas - '+(cs||'todas as CSs');
+    document.getElementById('k-neg-s').textContent=pct+'% das reunioes viraram negocio';
+    if(_chart){_chart.destroy()}
+    _chart=new Chart(document.getElementById('chartLine'),{
+        type:'line',
+        data:{
+            labels:weeks.map(fmtSemana),
+            datasets:[
+                {label:'Reunioes',data:reu,borderColor:'#6C5CE7',backgroundColor:'rgba(108,92,231,.15)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3},
+                {label:'Negocios Fechados',data:neg,borderColor:'#00B894',backgroundColor:'rgba(0,184,148,.10)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3}
+            ]
+        },
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            interaction:{intersect:false,mode:'index'},
+            plugins:{
+                legend:{position:'top',labels:{font:{size:13,weight:'600'},padding:14}},
+                tooltip:{padding:10,titleFont:{size:13},bodyFont:{size:12}},
+                datalabels:{display:false}
+            },
+            scales:{
+                y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#F0F0F0'}},
+                x:{ticks:{font:{size:11}},grid:{display:false}}
+            }
+        }
+    });
+}
+function init(){render()}
+window.doLogin=doLogin;window.render=render;
+</script>
+</body>
+</html>
