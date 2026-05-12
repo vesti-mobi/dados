@@ -18,6 +18,7 @@ SA_PATH = BASE.parent / 'PainelCSGerencial' / 'google_sa.json'
 SHARE_WITH = [
     'maria.laura@vesti.mobi',  # Laura (dona dos dashboards)
 ]
+PARENT_FOLDER_ID = '0AE52PmO4AIvjUk9PVA'  # Shared Drive "Planilhas CS Reunioes"
 
 CS_LIST = [
     {'cs': 'Luana',     'title': 'Reunioes CS - Luana Coutinho'},
@@ -39,20 +40,36 @@ def get_services():
 
 
 def create_one(sheets_svc, drive_svc, info):
-    # 1. Cria spreadsheet
-    body = {
-        'properties': {'title': info['title'], 'locale': 'pt_BR', 'timeZone': 'America/Sao_Paulo'},
-        'sheets': [{
+    # 1. Cria spreadsheet via Drive API dentro da pasta da Laura
+    drive_file = drive_svc.files().create(
+        body={
+            'name': info['title'],
+            'mimeType': 'application/vnd.google-apps.spreadsheet',
+            'parents': [PARENT_FOLDER_ID],
+        },
+        fields='id,webViewLink',
+        supportsAllDrives=True,
+    ).execute()
+    sid = drive_file['id']
+    print(f"  criada: {sid}")
+
+    # 2. Renomeia a aba pra 'Reunioes' e ajusta gridProperties
+    ss_meta = sheets_svc.spreadsheets().get(spreadsheetId=sid).execute()
+    sheet_id_num = ss_meta['sheets'][0]['properties']['sheetId']
+    sheets_svc.spreadsheets().batchUpdate(spreadsheetId=sid, body={'requests': [
+        {'updateSheetProperties': {
             'properties': {
+                'sheetId': sheet_id_num,
                 'title': 'Reunioes',
                 'gridProperties': {'rowCount': 500, 'columnCount': len(HEADERS), 'frozenRowCount': 1},
             },
-        }],
-    }
-    ss = sheets_svc.spreadsheets().create(body=body, fields='spreadsheetId,spreadsheetUrl,sheets.properties').execute()
-    sid = ss['spreadsheetId']
-    sheet_id_num = ss['sheets'][0]['properties']['sheetId']
-    print(f"  criada: {sid}")
+            'fields': 'title,gridProperties',
+        }},
+        {'updateSpreadsheetProperties': {
+            'properties': {'locale': 'pt_BR', 'timeZone': 'America/Sao_Paulo'},
+            'fields': 'locale,timeZone',
+        }},
+    ]}).execute()
 
     # 2. Header + formatacao
     sheets_svc.spreadsheets().values().update(
@@ -116,7 +133,7 @@ def create_one(sheets_svc, drive_svc, info):
     ]
     sheets_svc.spreadsheets().batchUpdate(spreadsheetId=sid, body={'requests': requests}).execute()
 
-    # 3. Compartilhar
+    # 3. Compartilhar (precisa supportsAllDrives em arquivos de Shared Drive)
     for email in SHARE_WITH:
         try:
             drive_svc.permissions().create(
@@ -124,19 +141,42 @@ def create_one(sheets_svc, drive_svc, info):
                 body={'type': 'user', 'role': 'writer', 'emailAddress': email},
                 sendNotificationEmail=True,
                 fields='id',
+                supportsAllDrives=True,
             ).execute()
             print(f"  compartilhada com {email}")
         except Exception as e:
             print(f"  WARN: falha ao compartilhar com {email}: {e}")
 
-    return {'cs': info['cs'], 'title': info['title'], 'spreadsheetId': sid, 'url': ss['spreadsheetUrl']}
+    url = f'https://docs.google.com/spreadsheets/d/{sid}/edit'
+    return {'cs': info['cs'], 'title': info['title'], 'spreadsheetId': sid, 'url': url}
+
+
+def list_existing(drive_svc):
+    """Mapa de titulo -> file id dos arquivos ja no shared drive."""
+    r = drive_svc.files().list(
+        driveId=PARENT_FOLDER_ID,
+        corpora='drive',
+        includeItemsFromAllDrives=True,
+        supportsAllDrives=True,
+        fields='files(id,name)',
+    ).execute()
+    return {f['name']: f['id'] for f in r.get('files', [])}
 
 
 def main():
     sheets_svc, drive_svc = get_services()
+    existing = list_existing(drive_svc)
     results = []
     for info in CS_LIST:
         print(f"=> {info['cs']}")
+        if info['title'] in existing:
+            sid = existing[info['title']]
+            print(f"  ja existe: {sid} (pulando criacao)")
+            results.append({
+                'cs': info['cs'], 'title': info['title'], 'spreadsheetId': sid,
+                'url': f'https://docs.google.com/spreadsheets/d/{sid}/edit',
+            })
+            continue
         results.append(create_one(sheets_svc, drive_svc, info))
     out = BASE / 'sheets_urls.json'
     out.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
