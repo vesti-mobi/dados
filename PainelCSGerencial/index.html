@@ -221,7 +221,7 @@ table.dt tr:hover td{background:#FAFAFA}
             <div class="hl-label">Time CS</div>
             <div class="hl-cargo">Reunioes &amp; negocios</div>
             <div class="hl-score" style="font-size:22px;margin-top:8px" id="home-csteam-val">-- / --</div>
-            <div class="hl-meta" style="margin-top:10px">Deals fechados/total por CS (HubSpot) + churn/metas &rarr;</div>
+            <div class="hl-meta" style="margin-top:10px">Reunioes fechadas/total por CS (HubSpot) + churn e metas &rarr;</div>
         </div>
     </div>
 </div>
@@ -735,23 +735,23 @@ table.dt tr:hover td{background:#FAFAFA}
     <div class="filters">
         <div class="filter-group"><label>CS:</label><select class="f-select" id="ctCS" onchange="renderCsTeam()"><option value="">Todos</option><option>Luana</option><option>Thamiris</option><option>Gabriella</option></select></div>
         <div class="filter-group"><label>Periodo:</label><select class="f-select" id="ctPer" onchange="renderCsTeam()"><option value="all">Todo o historico</option><option value="2026" selected>2026</option><option value="2026-q1">Q1/2026</option><option value="2026-q2">Q2/2026</option><option value="last90">Ultimos 90d</option><option value="last30">Ultimos 30d</option></select></div>
-        <div class="filter-group"><label>Status:</label><select class="f-select" id="ctSt" onchange="renderCsTeam()"><option value="">Todos</option><option value="won">Fechados (Won)</option><option value="lost">Perdidos (Lost)</option><option value="open">Em aberto</option></select></div>
+        <div class="filter-group"><label>Status:</label><select class="f-select" id="ctSt" onchange="renderCsTeam()"><option value="">Todos</option><option value="won">Fecharam negocio</option><option value="lost">Nao fecharam</option><option value="open">Em andamento</option></select></div>
     </div>
     <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
-        <div class="kpi"><div class="ki" style="background:#F0EFFF">&#128197;</div><div class="kl">Reunioes/Deals Totais</div><div class="kv" style="color:var(--p)" id="ct-total">--</div><div class="ks">deals no HubSpot</div></div>
-        <div class="kpi"><div class="ki" style="background:#E0F7F0">&#9989;</div><div class="kl">Fechados (Won)</div><div class="kv" style="color:var(--s)" id="ct-won">--</div><div class="ks" id="ct-won-s"></div></div>
-        <div class="kpi"><div class="ki" style="background:#FDEAEA">&#10060;</div><div class="kl">Perdidos (Lost)</div><div class="kv" style="color:var(--d)" id="ct-lost">--</div><div class="ks" id="ct-lost-s"></div></div>
-        <div class="kpi"><div class="ki" style="background:#FFF3E0">&#9203;</div><div class="kl">Em Aberto</div><div class="kv" style="color:var(--w)" id="ct-open">--</div></div>
-        <div class="kpi"><div class="ki" style="background:#E8F5E9">&#128176;</div><div class="kl">Receita Won</div><div class="kv" style="color:var(--s);font-size:20px" id="ct-rev">--</div><div class="ks" id="ct-rev-s"></div></div>
+        <div class="kpi"><div class="ki" style="background:#F0EFFF">&#128197;</div><div class="kl">Total de Reunioes</div><div class="kv" style="color:var(--p)" id="ct-total">--</div><div class="ks">registradas no HubSpot</div></div>
+        <div class="kpi"><div class="ki" style="background:#E0F7F0">&#9989;</div><div class="kl">Fecharam Negocio</div><div class="kv" style="color:var(--s)" id="ct-won">--</div><div class="ks" id="ct-won-s"></div></div>
+        <div class="kpi"><div class="ki" style="background:#FDEAEA">&#10060;</div><div class="kl">Nao Fecharam</div><div class="kv" style="color:var(--d)" id="ct-lost">--</div><div class="ks" id="ct-lost-s"></div></div>
+        <div class="kpi"><div class="ki" style="background:#FFF3E0">&#9203;</div><div class="kl">Em Andamento</div><div class="kv" style="color:var(--w)" id="ct-open">--</div><div class="ks">aguardando decisao</div></div>
+        <div class="kpi"><div class="ki" style="background:#E8F5E9">&#128176;</div><div class="kl">Receita Gerada</div><div class="kv" style="color:var(--s);font-size:20px" id="ct-rev">--</div><div class="ks" id="ct-rev-s"></div></div>
     </div>
-    <div class="chart-row"><div class="ch"><h4>Deals por CS (Won x Lost x Aberto)</h4><div class="cw tall"><canvas id="ct-c1"></canvas></div></div><div class="ch"><h4>Fechamentos por Tipo de Produto</h4><div class="cw tall"><canvas id="ct-c2"></canvas></div></div></div>
-    <div class="chart-row full"><div class="ch"><h4>Evolucao Mensal - Deals Fechados (Won)</h4><div class="cw tall"><canvas id="ct-c3"></canvas></div></div></div>
-    <div class="chart-row"><div class="ch"><h4>Taxa de Conversao por CS (Won / Total)</h4><div class="cw"><canvas id="ct-c4"></canvas></div></div><div class="ch"><h4>Ticket Medio por CS (R$)</h4><div class="cw"><canvas id="ct-c5"></canvas></div></div></div>
+    <div class="chart-row"><div class="ch"><h4>Reunioes por CS (Fecharam x Nao Fecharam x Em Andamento)</h4><div class="cw tall"><canvas id="ct-c1"></canvas></div></div><div class="ch"><h4>O que foi vendido nas reunioes (por tipo de produto)</h4><div class="cw tall"><canvas id="ct-c2"></canvas></div></div></div>
+    <div class="chart-row full"><div class="ch"><h4>Evolucao Mensal - Reunioes que Fecharam Negocio</h4><div class="cw tall"><canvas id="ct-c3"></canvas></div></div></div>
+    <div class="chart-row"><div class="ch"><h4>Taxa de Conversao por CS (% que fechou negocio)</h4><div class="cw"><canvas id="ct-c4"></canvas></div></div><div class="ch"><h4>Ticket Medio por CS (R$ por venda)</h4><div class="cw"><canvas id="ct-c5"></canvas></div></div></div>
     <div class="chart-row">
         <div class="ch"><h4>Churn por CS (planilha)</h4><div style="max-height:280px;overflow-y:auto"><table class="dt" id="ct-tChurn"><thead><tr><th>Mes</th><th>Marca</th><th>Produto</th><th>Valor</th><th>CS</th><th>Obs</th></tr></thead><tbody></tbody></table></div></div>
         <div class="ch"><h4>Meta vs Realizado (planilha)</h4><div class="cw"><canvas id="ct-c6"></canvas></div></div>
     </div>
-    <div class="tbl-card"><h4>Detalhamento de Deals</h4><div style="max-height:420px;overflow-y:auto"><table class="dt" id="ct-tDeals"><thead><tr><th>Data</th><th>CS</th><th>Marca/Deal</th><th>Produto</th><th>Status</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tbl-card"><h4>Detalhamento das Reunioes</h4><div style="max-height:420px;overflow-y:auto"><table class="dt" id="ct-tDeals"><thead><tr><th>Data</th><th>CS</th><th>Marca / Assunto</th><th>Produto</th><th>Resultado</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <!-- ============ NPS TAB ============ -->
 <div class="tab-panel" id="tab-nps">
@@ -2582,26 +2582,26 @@ console.log('[TimeCS v3] script loaded; CS_TEAM_DATA?', typeof CS_TEAM_DATA);
     var rev=won.reduce(function(a,b){return a+(b.amount||0)},0);
     document.getElementById('ct-total').textContent=deals.length;
     document.getElementById('ct-won').textContent=won.length;
-    document.getElementById('ct-won-s').textContent=deals.length?((won.length/deals.length*100).toFixed(0)+'% de conversao'):'';
+    document.getElementById('ct-won-s').textContent=deals.length?((won.length/deals.length*100).toFixed(0)+'% das reunioes fecharam'):'';
     document.getElementById('ct-lost').textContent=lost.length;
-    document.getElementById('ct-lost-s').textContent=deals.length?((lost.length/deals.length*100).toFixed(0)+'%'):'';
+    document.getElementById('ct-lost-s').textContent=deals.length?((lost.length/deals.length*100).toFixed(0)+'% das reunioes'):'';
     document.getElementById('ct-open').textContent=open.length;
     document.getElementById('ct-rev').textContent=_fmtBR(rev);
-    document.getElementById('ct-rev-s').textContent=won.length?('Ticket medio '+_fmtBR(rev/won.length)):'';
+    document.getElementById('ct-rev-s').textContent=won.length?('Ticket medio: '+_fmtBR(rev/won.length)):'soma das vendas fechadas';
     var homeVal=document.getElementById('home-csteam-val');if(homeVal)homeVal.textContent=won.length+' / '+deals.length;
     var csList=fCS?[fCS]:['Luana','Thamiris','Gabriella'];
     var wByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&d.won}).length});
     var lByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&d.lost}).length});
     var oByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&!d.won&&!d.lost}).length});
-    _kill('ct-c1');_ctCharts['ct-c1']=new Chart(document.getElementById('ct-c1'),{type:'bar',data:{labels:csList,datasets:[{label:'Won',data:wByCs,backgroundColor:'#00B894'},{label:'Lost',data:lByCs,backgroundColor:'#E17055'},{label:'Aberto',data:oByCs,backgroundColor:'#F39C12'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:true,color:'#fff',font:{weight:'bold'}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},plugins:[ChartDataLabels]});
+    _kill('ct-c1');_ctCharts['ct-c1']=new Chart(document.getElementById('ct-c1'),{type:'bar',data:{labels:csList,datasets:[{label:'Fechou negocio',data:wByCs,backgroundColor:'#00B894'},{label:'Nao fechou',data:lByCs,backgroundColor:'#E17055'},{label:'Em andamento',data:oByCs,backgroundColor:'#F39C12'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:true,color:'#fff',font:{weight:'bold'}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},plugins:[ChartDataLabels]});
     var prodOrder=['Oraculo','Filial','Upgrade','Reativacao','Plataforma','Agente','Integracao','Projeto Especial','Nova Loja','Outro'];
     var prodCt=prodOrder.map(function(p){return won.filter(function(d){return d.produto===p}).length});
-    _kill('ct-c2');_ctCharts['ct-c2']=new Chart(document.getElementById('ct-c2'),{type:'bar',data:{labels:prodOrder,datasets:[{label:'Won',data:prodCt,backgroundColor:'#6C5CE7',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'right',font:{weight:'bold'}}}},plugins:[ChartDataLabels]});
+    _kill('ct-c2');_ctCharts['ct-c2']=new Chart(document.getElementById('ct-c2'),{type:'bar',data:{labels:prodOrder,datasets:[{label:'Vendas fechadas',data:prodCt,backgroundColor:'#6C5CE7',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'right',font:{weight:'bold'}}}},plugins:[ChartDataLabels]});
     var monMap={};won.forEach(function(d){var k=(d.close||d.create||'').substring(0,7);if(!k)return;if(!monMap[k])monMap[k]={Luana:0,Thamiris:0,Gabriella:0};monMap[k][d.cs]=(monMap[k][d.cs]||0)+1});
     var mons=Object.keys(monMap).sort();
     _kill('ct-c3');_ctCharts['ct-c3']=new Chart(document.getElementById('ct-c3'),{type:'bar',data:{labels:mons.map(_fmtM),datasets:csList.map(function(c,i){return{label:c,data:mons.map(function(m){return monMap[m][c]||0}),backgroundColor:['#6C5CE7','#00B894','#F39C12'][i%3],borderRadius:4}})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},plugins:[ChartDataLabels]});
     var convRates=csList.map(function(c){var tot=deals.filter(function(d){return d.cs===c}).length;var w=deals.filter(function(d){return d.cs===c&&d.won}).length;return tot?+(w/tot*100).toFixed(1):0});
-    _kill('ct-c4');_ctCharts['ct-c4']=new Chart(document.getElementById('ct-c4'),{type:'bar',data:{labels:csList,datasets:[{label:'% Won',data:convRates,backgroundColor:convRates.map(function(v){return v>=50?'#00B894':v>=25?'#F39C12':'#E17055'}),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'top',font:{weight:'bold'},formatter:function(v){return v+'%'}}},scales:{y:{min:0,max:100}}},plugins:[ChartDataLabels]});
+    _kill('ct-c4');_ctCharts['ct-c4']=new Chart(document.getElementById('ct-c4'),{type:'bar',data:{labels:csList,datasets:[{label:'% Fechou negocio',data:convRates,backgroundColor:convRates.map(function(v){return v>=50?'#00B894':v>=25?'#F39C12':'#E17055'}),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'top',font:{weight:'bold'},formatter:function(v){return v+'%'}}},scales:{y:{min:0,max:100}}},plugins:[ChartDataLabels]});
     var ticket=csList.map(function(c){var wo=deals.filter(function(d){return d.cs===c&&d.won});if(!wo.length)return 0;return +(wo.reduce(function(a,b){return a+(b.amount||0)},0)/wo.length).toFixed(2)});
     _kill('ct-c5');_ctCharts['ct-c5']=new Chart(document.getElementById('ct-c5'),{type:'bar',data:{labels:csList,datasets:[{label:'Ticket Medio R$',data:ticket,backgroundColor:'#00B894',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'top',font:{weight:'bold'},formatter:function(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}}}},plugins:[ChartDataLabels]});
     var churnRows=CH.filter(function(r){return !fCS||r.cs===fCS}).filter(function(r){return inPer(r.mes+'-15')});
@@ -2610,7 +2610,7 @@ console.log('[TimeCS v3] script loaded; CS_TEAM_DATA?', typeof CS_TEAM_DATA);
     var tb=document.querySelector('#ct-tDeals tbody');
     var rows=deals.slice().sort(function(a,b){return (b.close||b.create||'').localeCompare(a.close||a.create||'')}).slice(0,500);
     tb.innerHTML=rows.map(function(d){
-      var st=d.won?'<span class="badge pr">Won</span>':d.lost?'<span class="badge de">Lost</span>':'<span class="badge pa">Aberto</span>';
+      var st=d.won?'<span class="badge pr">Fechou</span>':d.lost?'<span class="badge de">Nao fechou</span>':'<span class="badge pa">Em andamento</span>';
       var dt=(d.close||d.create||'').substring(0,10);
       var url='https://app.hubspot.com/contacts/20880281/record/0-3/'+d.id;
       return '<tr><td>'+dt+'</td><td>'+d.cs+'</td><td>'+(d.name||'-')+'</td><td>'+d.produto+'</td><td>'+st+'</td><td>'+(d.amount?_fmtBR(d.amount):'-')+'</td><td><a href="'+url+'" target="_blank" style="color:var(--p);font-size:10px">abrir</a></td></tr>';
