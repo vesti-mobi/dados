@@ -125,7 +125,7 @@ if(sessionStorage.getItem('cs_reu_auth')==='1'){
 }
 </script>
 
-<script>/*FICT_DATA_INLINE*/</script>
+<script>/*DATA_INLINE*/</script>
 
 <script>
 var _chart=null;
@@ -134,10 +134,10 @@ function fmtSemana(iso){
     return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);
 }
 function render(){
-    if(typeof FICT_DATA==='undefined')return;
+    if(typeof DATA==='undefined')return;
     var cs=document.getElementById('fCS').value;
     var per=document.getElementById('fPer').value;
-    var weeks=FICT_DATA.weeks.slice();
+    var weeks=DATA.weeks.slice();
     var startIdx=0;
     if(per!=='all'){var n=parseInt(per);startIdx=Math.max(0,weeks.length-n)}
     weeks=weeks.slice(startIdx);
@@ -149,8 +149,8 @@ function render(){
         });
         return out;
     }
-    var reu=serie(FICT_DATA.reunioes);
-    var neg=serie(FICT_DATA.negocios);
+    var reu=serie(DATA.reunioes);
+    var neg=serie(DATA.negocios);
     var totReu=reu.reduce(function(a,b){return a+b},0);
     var totNeg=neg.reduce(function(a,b){return a+b},0);
     document.getElementById('k-reu').textContent=totReu;

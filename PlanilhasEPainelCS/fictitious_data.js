@@ -1,6 +1,6 @@
-// Dados ficticios para o Painel CS Reunioes - SUBSTITUIR pela leitura real das planilhas quando estiverem em uso
+// Dados de placeholder (sera substituido por real_data.js quando as planilhas tiverem dados)
 // 12 semanas (do mais antigo pro mais recente)
-var FICT_DATA = {
+var DATA = {
   weeks: [
     '2026-02-23','2026-03-02','2026-03-09','2026-03-16','2026-03-23','2026-03-30',
     '2026-04-06','2026-04-13','2026-04-20','2026-04-27','2026-05-04','2026-05-11'
