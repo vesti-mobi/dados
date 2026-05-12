@@ -2545,7 +2545,8 @@ updateAll();
 if(sessionStorage.getItem('cs_auth')==='1')initDashboard();
 </script>
 <script>
-// ============ TIME CS (HubSpot Deals + planilha) ============
+// ============ TIME CS (HubSpot Deals + planilha) v3 ============
+console.log('[TimeCS v3] script loaded; CS_TEAM_DATA?', typeof CS_TEAM_DATA);
 (function(){
   var _ctCharts={};
   function _kill(id){if(_ctCharts[id]){_ctCharts[id].destroy();delete _ctCharts[id]}}
@@ -2614,7 +2615,19 @@ if(sessionStorage.getItem('cs_auth')==='1')initDashboard();
       var url='https://app.hubspot.com/contacts/20880281/record/0-3/'+d.id;
       return '<tr><td>'+dt+'</td><td>'+d.cs+'</td><td>'+(d.name||'-')+'</td><td>'+d.produto+'</td><td>'+st+'</td><td>'+(d.amount?_fmtBR(d.amount):'-')+'</td><td><a href="'+url+'" target="_blank" style="color:var(--p);font-size:10px">abrir</a></td></tr>';
     }).join('');
+    console.log('[TimeCS v3] render OK -',deals.length,'deals,',won.length,'won');
   };
+// Auto-render assim que o DOM tiver os elementos, mesmo sem clique no card
+function _tryInitTimeCS(tries){
+  tries=tries||0;
+  if(document.getElementById('ct-total')&&typeof CS_TEAM_DATA!=='undefined'){
+    try{window.renderCsTeam();console.log('[TimeCS v3] auto-render')}catch(e){console.log('[TimeCS v3] auto-render ERR',e.message)}
+    return;
+  }
+  if(tries<30)setTimeout(function(){_tryInitTimeCS(tries+1)},200);
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){_tryInitTimeCS()})}
+else{_tryInitTimeCS()}
 })();
 </script>
 </body>
