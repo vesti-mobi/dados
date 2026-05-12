@@ -1178,9 +1178,17 @@ function renderCr(){
         // Se o pedido inteiro foi cancelado (purchase.status='voided'), marca todas as parcelas
         var purchVoided=(f.purchase&&f.purchase.status==='voided');
         if(purchVoided){all.forEach(function(ix){ix._purchaseVoided=true});}
-        var insts=filtParc((f.purchase&&f.purchase.installments)||[]);
-        insts.forEach(function(i){
-            var d=isoBRTDate(i.due)||'(sem)';
+        // Parcelas voided/_purchaseVoided BYPASSAM o filtro de Data de recebimento
+        // (caso contrario, ao filtrar "hoje" a empresa com pedido cancelado
+        // simplesmente some — bug reportado). Sao bucketadas pela DATA DA COMPRA
+        // (purchase.created em BRT, com fallback pra orderDate do Mongo) pra
+        // aparecer no dia que o pedido foi feito.
+        var rawAll=(f.purchase&&f.purchase.installments)||[];
+        var instsAtivas=filtParc(rawAll.filter(function(i){return !(i.status==='voided'||i._purchaseVoided)}));
+        var instsCanc=rawAll.filter(function(i){return i.status==='voided'||i._purchaseVoided});
+        var cancDate=isoBRTDate((f.purchase&&f.purchase.created)||f.orderDate||'')||null;
+        var pushInst=function(i,dForce){
+            var d=dForce||isoBRTDate(i.due)||'(sem)';
             var cid=f.companyId||'(sem)';
             empSet[cid]=1;
             var db=byDate[d]||(byDate[d]={date:d,byEmp:{}});
@@ -1188,7 +1196,11 @@ function renderCr(){
             if(f.antecipacaoEnabled)e.antec=true;
             var op=e.pedsMap[f.orderId]||(e.pedsMap[f.orderId]={f:f,insts:[],instTotal:(f.purchase&&f.purchase.installmentCount)||0});
             op.insts.push(i);
-        });
+        };
+        instsAtivas.forEach(function(i){pushInst(i,null)});
+        // Voided: bucketa pela data do cancelamento (apiUpdated). Se nao tiver,
+        // cai no due original. Independe do filtro dDe/dAte de due.
+        instsCanc.forEach(function(i){pushInst(i,cancDate||isoBRTDate(i.due)||'(sem)')});
     });
     var dates=Object.keys(byDate).sort();
     // totais gerais

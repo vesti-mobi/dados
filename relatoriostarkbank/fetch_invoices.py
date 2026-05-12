@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -293,7 +294,10 @@ def load_enrichment_from_dados() -> dict:
         return {}
 
 
-def _api_get(url: str, token: str) -> dict | None:
+def _api_get(url: str, token: str, retries: int = 3) -> dict | None:
+    """GET com retry em falha transiente (timeout / 5xx / 429).
+    Retorna None só se TODAS as tentativas falharem — assim oscilacao por
+    erro intermitente da API nao derruba purchases silenciosamente."""
     req = urllib.request.Request(
         url,
         headers={
@@ -302,13 +306,21 @@ def _api_get(url: str, token: str) -> dict | None:
             "User-Agent": "relatoriostarkbank/1.0",
         },
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        print(f"[api] {url} HTTP {e.code}", file=sys.stderr)
-    except Exception as e:
-        print(f"[api] {url} erro: {e}", file=sys.stderr)
+    last_err = ""
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            last_err = f"HTTP {e.code}"
+            # 4xx (exceto 429) sao erros permanentes — nao adianta retentar
+            if 400 <= e.code < 500 and e.code != 429:
+                break
+        except Exception as e:
+            last_err = str(e)
+        if attempt < retries - 1:
+            time.sleep(1.5 * (attempt + 1))
+    print(f"[api] {url} falhou apos {retries}x: {last_err}", file=sys.stderr)
     return None
 
 
@@ -327,8 +339,11 @@ def list_workspaces(token: str) -> list[dict]:
     return out
 
 
-def list_purchases(ws_id: str, token: str) -> list[dict]:
-    """Lista todos os pedidos da workspace (paginado via cursor)."""
+def list_purchases(ws_id: str, token: str) -> tuple[list[dict], bool]:
+    """Lista todos os pedidos da workspace (paginado via cursor).
+    Retorna (purchases, ok) onde ok=False sinaliza que a paginacao foi
+    interrompida por erro — main usa pra NAO sobrescrever invoices.js
+    com versao incompleta."""
     purchases: list[dict] = []
     cursor: str | None = None
     pages = 0
@@ -338,7 +353,8 @@ def list_purchases(ws_id: str, token: str) -> list[dict]:
             url += f"?cursor={cursor}"
         resp = _api_get(url, token)
         if not resp or not resp.get("success"):
-            break
+            print(f"[api]   workspace {ws_id} paginacao interrompida em page {pages+1}", file=sys.stderr)
+            return purchases, False
         msg = resp.get("message") or {}
         page = msg.get("purchases") or []
         purchases.extend(page)
@@ -346,7 +362,7 @@ def list_purchases(ws_id: str, token: str) -> list[dict]:
         pages += 1
         if not cursor or pages > 200:
             break
-    return purchases
+    return purchases, True
 
 
 def fetch_purchase(ws_id: str, pur_id: str, token: str) -> dict | None:
@@ -426,6 +442,28 @@ def extract(resp: dict) -> dict | None:
     }
 
 
+def load_previous_invoices() -> dict[str, dict]:
+    """Le invoices.js anterior e indexa por transactionId. Usado pra fazer
+    merge: se uma purchase falhou nesta rodada, preserva a versao anterior
+    em vez de descartar — eliminando a oscilacao nos KPIs do CR."""
+    if not OUT_JS.exists():
+        return {}
+    try:
+        text = OUT_JS.read_text(encoding="utf-8")
+        m = re.match(r"window\.INVOICES\s*=\s*(.*);\s*$", text.strip(), re.DOTALL)
+        if not m:
+            return {}
+        data = json.loads(m.group(1))
+        return {
+            f.get("transactionId"): f
+            for f in (data.get("faturas") or [])
+            if f.get("transactionId")
+        }
+    except Exception as e:
+        print(f"[merge] falha lendo invoices.js anterior: {e}", file=sys.stderr)
+        return {}
+
+
 def main() -> None:
     token = os.environ.get("VESTIAPI_TOKEN", "").strip()
     if not token:
@@ -439,11 +477,15 @@ def main() -> None:
 
     # 2) lista todas as purchases por workspace (paginadas)
     tarefas: list[dict] = []
+    ws_pagination_falhou: list[str] = []
     for ws in workspaces:
         ws_id = ws.get("id")
         ws_name = ws.get("name") or ""
-        purchases = list_purchases(ws_id, token)
-        print(f"[api]   {ws_name}: {len(purchases)} purchases")
+        purchases, ok = list_purchases(ws_id, token)
+        marker = "" if ok else " [PAGINACAO INCOMPLETA]"
+        print(f"[api]   {ws_name}: {len(purchases)} purchases{marker}")
+        if not ok:
+            ws_pagination_falhou.append(ws_name or ws_id)
         for p in purchases:
             tarefas.append({
                 "ws_id": ws_id,
@@ -451,13 +493,13 @@ def main() -> None:
                 "purchase_id": p.get("id"),
                 "summary": p,  # preserva tags, holderName, etc. caso enriquecimento Mongo falte
             })
-    print(f"[api] total purchases: {len(tarefas)}")
+    print(f"[api] total purchases: {len(tarefas)} (workspaces com paginacao incompleta: {len(ws_pagination_falhou)})")
 
     # 3) carrega enriquecimento Mongo (opcional)
     enrich = load_enrichment_from_dados()
     print(f"[enrich] {len(enrich)} entradas em dados.js (orderNumber/isAntec/...)")
 
-    # 4) busca detalhes (com installments) em paralelo
+    # 4) busca detalhes (com installments) em paralelo (com retry interno em _api_get)
     def _process(t: dict) -> dict | None:
         resp = fetch_purchase(t["ws_id"], t["purchase_id"], token)
         data = extract(resp)
@@ -481,12 +523,42 @@ def main() -> None:
             "purchase":            data,
         }
 
-    faturas: list[dict] = []
+    faturas_novas: list[dict] = []
+    tids_falharam: list[str] = []
     with cf.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-        for r in ex.map(_process, tarefas):
+        for t, r in zip(tarefas, ex.map(_process, tarefas)):
             if r is not None:
-                faturas.append(r)
-    print(f"[api] {len(faturas)} faturas obtidas")
+                faturas_novas.append(r)
+            else:
+                tids_falharam.append(t["purchase_id"])
+    print(f"[api] {len(faturas_novas)} faturas obtidas (falhas individuais: {len(tids_falharam)})")
+
+    # 5) MERGE com invoices.js anterior: mantem last-known-good de qualquer
+    # purchase que falhou nesta rodada OU que esta dentro de workspace com
+    # paginacao incompleta. Elimina a oscilacao por falhas transientes.
+    previo = load_previous_invoices()
+    print(f"[merge] {len(previo)} faturas no invoices.js anterior")
+    novo_index = {f["transactionId"]: f for f in faturas_novas}
+    merged_index = dict(previo)  # comeca com tudo do anterior
+    merged_index.update(novo_index)  # sobrescreve com versoes novas (fonte da verdade)
+    preservadas = sum(1 for tid in previo if tid not in novo_index)
+    print(f"[merge] {preservadas} faturas preservadas do anterior (nao vieram na rodada atual)")
+
+    faturas = list(merged_index.values())
+
+    # 6) Guard de qualidade: se a rodada degradou demais (perdeu >10% em
+    # relacao ao anterior) E houve falhas, aborta a escrita pra nao
+    # publicar dashboard pior. Primeira execucao (sem anterior) passa.
+    if previo:
+        delta = len(faturas) - len(previo)
+        if delta < 0 and abs(delta) > 0.10 * len(previo):
+            print(
+                f"[guard] ABORTADO: total caiu de {len(previo)} pra {len(faturas)} "
+                f"({delta}, {abs(delta)/len(previo)*100:.1f}%). Mantendo invoices.js anterior. "
+                f"WS com paginacao incompleta: {ws_pagination_falhou}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
 
     payload = {
         "geradoEm": datetime.now(timezone.utc).isoformat(),
