@@ -58,7 +58,10 @@ tr:hover td{background:#fffaf0}
 <script src="cancelados_valores.js"></script>
 <script>
 var rows=[], sort={k:'cancelAt',desc:true};
-function fmtD(s){if(!s)return'-';var d=new Date(s);if(isNaN(d))return s.substring(0,10);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+var TZ_BRT={timeZone:'America/Sao_Paulo'};
+function fmtD(s){if(!s)return'-';var d=new Date(s);if(isNaN(d))return s.substring(0,10);return d.toLocaleDateString('pt-BR',TZ_BRT)+' '+d.toLocaleTimeString('pt-BR',Object.assign({hour:'2-digit',minute:'2-digit'},TZ_BRT))}
+// Converte ISO UTC pra yyyy-mm-dd em BRT (pra filtros de data por dia).
+function isoBRTDate(s){if(!s)return'';var d=new Date(s);if(isNaN(d))return s.substring(0,10);var p=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(d);return p}
 function fmtDay(s){return s?s.substring(8,10)+'/'+s.substring(5,7)+'/'+s.substring(0,4):'-'}
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 
@@ -110,7 +113,7 @@ function filtered(){
     return rows.filter(function(r){
         if(fm&&r.nomeFantasia!==fm)return false;
         if(q){var h=(r.nomeFantasia+' '+r.customerName+' '+r.orderId+' '+r.orderNumber).toLowerCase();if(h.indexOf(q)<0)return false}
-        var c=(r.cancelAt||'').substring(0,10);
+        var c=isoBRTDate(r.cancelAt||'');
         if(de&&c<de)return false;
         if(ate&&c>ate)return false;
         return true;
