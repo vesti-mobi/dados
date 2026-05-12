@@ -216,13 +216,6 @@ table.dt tr:hover td{background:#FAFAFA}
             <div class="hl-score" style="font-size:22px;margin-top:8px" id="home-t3-val">R$ --</div>
             <div class="hl-meta" style="margin-top:10px">Mensalidade Iugu dos clientes nao-Starter (mes atual) &rarr;</div>
         </div>
-        <div class="hl-card" style="background:linear-gradient(135deg,#6C5CE7,#A29BFE);cursor:pointer" onclick="switchTab('csteam')">
-            <div class="hl-icon">&#128106;</div>
-            <div class="hl-label">Time CS</div>
-            <div class="hl-cargo">Reunioes &amp; negocios</div>
-            <div class="hl-score" style="font-size:22px;margin-top:8px" id="home-csteam-val">-- / --</div>
-            <div class="hl-meta" style="margin-top:10px">Reunioes fechadas/total por CS (HubSpot) + churn e metas &rarr;</div>
-        </div>
     </div>
 </div>
 <!-- ============ CHURN TAB ============ -->
@@ -730,29 +723,6 @@ table.dt tr:hover td{background:#FAFAFA}
         <p>Os filtros globais de <b>Empresa</b> e <b>CS</b> (barra superior) tambem se aplicam aqui.</p>
     </div>
 </div>
-<!-- ============ TIME CS TAB ============ -->
-<div class="tab-panel" id="tab-csteam">
-    <div class="filters">
-        <div class="filter-group"><label>CS:</label><select class="f-select" id="ctCS" onchange="renderCsTeam()"><option value="">Todos</option><option>Luana</option><option>Thamiris</option><option>Gabriella</option></select></div>
-        <div class="filter-group"><label>Periodo:</label><select class="f-select" id="ctPer" onchange="renderCsTeam()"><option value="all">Todo o historico</option><option value="2026" selected>2026</option><option value="2026-q1">Q1/2026</option><option value="2026-q2">Q2/2026</option><option value="last90">Ultimos 90d</option><option value="last30">Ultimos 30d</option></select></div>
-        <div class="filter-group"><label>Status:</label><select class="f-select" id="ctSt" onchange="renderCsTeam()"><option value="">Todos</option><option value="won">Fecharam negocio</option><option value="lost">Nao fecharam</option><option value="open">Em andamento</option></select></div>
-    </div>
-    <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
-        <div class="kpi"><div class="ki" style="background:#F0EFFF">&#128197;</div><div class="kl">Total de Reunioes</div><div class="kv" style="color:var(--p)" id="ct-total">--</div><div class="ks">registradas no HubSpot</div></div>
-        <div class="kpi"><div class="ki" style="background:#E0F7F0">&#9989;</div><div class="kl">Fecharam Negocio</div><div class="kv" style="color:var(--s)" id="ct-won">--</div><div class="ks" id="ct-won-s"></div></div>
-        <div class="kpi"><div class="ki" style="background:#FDEAEA">&#10060;</div><div class="kl">Nao Fecharam</div><div class="kv" style="color:var(--d)" id="ct-lost">--</div><div class="ks" id="ct-lost-s"></div></div>
-        <div class="kpi"><div class="ki" style="background:#FFF3E0">&#9203;</div><div class="kl">Em Andamento</div><div class="kv" style="color:var(--w)" id="ct-open">--</div><div class="ks">aguardando decisao</div></div>
-        <div class="kpi"><div class="ki" style="background:#E8F5E9">&#128176;</div><div class="kl">Receita Gerada</div><div class="kv" style="color:var(--s);font-size:20px" id="ct-rev">--</div><div class="ks" id="ct-rev-s"></div></div>
-    </div>
-    <div class="chart-row"><div class="ch"><h4>Reunioes por CS (Fecharam x Nao Fecharam x Em Andamento)</h4><div class="cw tall"><canvas id="ct-c1"></canvas></div></div><div class="ch"><h4>O que foi vendido nas reunioes (por tipo de produto)</h4><div class="cw tall"><canvas id="ct-c2"></canvas></div></div></div>
-    <div class="chart-row full"><div class="ch"><h4>Evolucao Mensal - Reunioes que Fecharam Negocio</h4><div class="cw tall"><canvas id="ct-c3"></canvas></div></div></div>
-    <div class="chart-row"><div class="ch"><h4>Taxa de Conversao por CS (% que fechou negocio)</h4><div class="cw"><canvas id="ct-c4"></canvas></div></div><div class="ch"><h4>Ticket Medio por CS (R$ por venda)</h4><div class="cw"><canvas id="ct-c5"></canvas></div></div></div>
-    <div class="chart-row">
-        <div class="ch"><h4>Churn por CS (planilha)</h4><div style="max-height:280px;overflow-y:auto"><table class="dt" id="ct-tChurn"><thead><tr><th>Mes</th><th>Marca</th><th>Produto</th><th>Valor</th><th>CS</th><th>Obs</th></tr></thead><tbody></tbody></table></div></div>
-        <div class="ch"><h4>Meta vs Realizado (planilha)</h4><div class="cw"><canvas id="ct-c6"></canvas></div></div>
-    </div>
-    <div class="tbl-card"><h4>Detalhamento das Reunioes</h4><div style="max-height:420px;overflow-y:auto"><table class="dt" id="ct-tDeals"><thead><tr><th>Data</th><th>CS</th><th>Marca / Assunto</th><th>Produto</th><th>Resultado</th><th>Valor</th><th></th></tr></thead><tbody></tbody></table></div></div>
-</div>
 <!-- ============ NPS TAB ============ -->
 <div class="tab-panel" id="tab-nps">
     <div class="kpi-row" id="npsKpiNormal">
@@ -947,7 +917,7 @@ function switchTab(t,skipPush){
     if(prev && prev!==t && !skipPush){navStack.push(prev)}
     currentTab=t;
     if(typeof closeChurnDetail==='function')closeChurnDetail();
-    var tabs=['home','csat','nps','vp','churn','churngeral','gmv','top80','onlog','t3plus','csteam'];
+    var tabs=['home','csat','nps','vp','churn','churngeral','gmv','top80','onlog','t3plus'];
     tabs.forEach(function(x){
         var pan=document.getElementById('tab-'+x);if(pan)pan.classList.toggle('active',x===t);
     });
@@ -961,12 +931,11 @@ function switchTab(t,skipPush){
     // Back nav aparece fora da home
     var bn=document.getElementById('backNav');
     bn.style.display=t==='home'?'none':'block';
-    var labels={'csat':'Satisfacao (CSAT)','nps':'Satisfacao (NPS)','vp':'Novos VestiPago','churn':'Churn de Clientes','churngeral':'Churn Geral','gmv':'GMV Mensal','top80':'Clientes 80+ pedidos/mes','onlog':'Frete Onlog','t3plus':'Receita T3+','csteam':'Time CS - Reunioes & Negocios','home':'Geral'};
+    var labels={'csat':'Satisfacao (CSAT)','nps':'Satisfacao (NPS)','vp':'Novos VestiPago','churn':'Churn de Clientes','churngeral':'Churn Geral','gmv':'GMV Mensal','top80':'Clientes 80+ pedidos/mes','onlog':'Frete Onlog','t3plus':'Receita T3+','home':'Geral'};
     document.getElementById('breadcrumb').textContent='Voce esta em: '+(labels[t]||t);
     // Filtros globais (empresa/CS) visiveis em TODAS as paginas; KPIs globais so fora de vp/gmv/churn/home
     document.querySelector('.filters').style.display='flex';
-    var hideKpi=(t==='vp'||t==='home'||t==='churn'||t==='churngeral'||t==='gmv'||t==='top80'||t==='onlog'||t==='t3plus'||t==='csteam');
-    if(t==='csteam' && typeof renderCsTeam==='function') renderCsTeam();
+    var hideKpi=(t==='vp'||t==='home'||t==='churn'||t==='churngeral'||t==='gmv'||t==='top80'||t==='onlog'||t==='t3plus');
     document.getElementById('globalKpiRow').style.display=hideKpi?'none':'grid';
     var cd=document.getElementById('coDetail');if(cd)cd.style.display=hideKpi?'none':'';
     updateAll();
@@ -2526,92 +2495,6 @@ _populateGlobalMes();
 updateAll();
 }
 if(sessionStorage.getItem('cs_auth')==='1')initDashboard();
-</script>
-<script>
-// ============ TIME CS (HubSpot Deals + planilha) v3 ============
-console.log('[TimeCS v3] script loaded; CS_TEAM_DATA?', typeof CS_TEAM_DATA);
-(function(){
-  var _ctCharts={};
-  function _kill(id){if(_ctCharts[id]){_ctCharts[id].destroy();delete _ctCharts[id]}}
-  function _fmtBR(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
-  function _fmtM(m){var n=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];if(!m||m.length<7)return m||'';return n[parseInt(m.split('-')[1])-1]+'/'+m.substring(2,4)}
-  window.renderCsTeam=function(){
-    if(typeof CS_TEAM_DATA==='undefined'){return}
-    var D=CS_TEAM_DATA.DEALS_CS||[], CH=CS_TEAM_DATA.CHURN_CS||[], MT=CS_TEAM_DATA.METAS_CS||[];
-    var elCS=document.getElementById('ctCS'),elPer=document.getElementById('ctPer'),elSt=document.getElementById('ctSt');
-    if(!elCS||!elPer||!elSt)return;
-    var fCS=elCS.value, fPer=elPer.value, fSt=elSt.value;
-    var now=new Date(), cutoff=null;
-    if(fPer==='last30')cutoff=new Date(now-30*864e5);
-    else if(fPer==='last90')cutoff=new Date(now-90*864e5);
-    function inPer(dt){
-      if(!dt)return fPer==='all';
-      if(fPer==='all')return true;
-      if(fPer==='2026')return dt.indexOf('2026')===0;
-      if(fPer==='2026-q1')return /^2026-0[123]/.test(dt);
-      if(fPer==='2026-q2')return /^2026-0[456]/.test(dt);
-      if(cutoff)return new Date(dt)>=cutoff;
-      return true;
-    }
-    var deals=D.filter(function(d){
-      if(fCS && d.cs!==fCS)return false;
-      var ref=d.close||d.create; if(!inPer(ref))return false;
-      if(fSt==='won'&&!d.won)return false;
-      if(fSt==='lost'&&!d.lost)return false;
-      if(fSt==='open'&&(d.won||d.lost))return false;
-      return true;
-    });
-    var won=deals.filter(function(d){return d.won}),lost=deals.filter(function(d){return d.lost}),open=deals.filter(function(d){return !d.won&&!d.lost});
-    var rev=won.reduce(function(a,b){return a+(b.amount||0)},0);
-    document.getElementById('ct-total').textContent=deals.length;
-    document.getElementById('ct-won').textContent=won.length;
-    document.getElementById('ct-won-s').textContent=deals.length?((won.length/deals.length*100).toFixed(0)+'% das reunioes fecharam'):'';
-    document.getElementById('ct-lost').textContent=lost.length;
-    document.getElementById('ct-lost-s').textContent=deals.length?((lost.length/deals.length*100).toFixed(0)+'% das reunioes'):'';
-    document.getElementById('ct-open').textContent=open.length;
-    document.getElementById('ct-rev').textContent=_fmtBR(rev);
-    document.getElementById('ct-rev-s').textContent=won.length?('Ticket medio: '+_fmtBR(rev/won.length)):'soma das vendas fechadas';
-    var homeVal=document.getElementById('home-csteam-val');if(homeVal)homeVal.textContent=won.length+' / '+deals.length;
-    var csList=fCS?[fCS]:['Luana','Thamiris','Gabriella'];
-    var wByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&d.won}).length});
-    var lByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&d.lost}).length});
-    var oByCs=csList.map(function(c){return deals.filter(function(d){return d.cs===c&&!d.won&&!d.lost}).length});
-    _kill('ct-c1');_ctCharts['ct-c1']=new Chart(document.getElementById('ct-c1'),{type:'bar',data:{labels:csList,datasets:[{label:'Fechou negocio',data:wByCs,backgroundColor:'#00B894'},{label:'Nao fechou',data:lByCs,backgroundColor:'#E17055'},{label:'Em andamento',data:oByCs,backgroundColor:'#F39C12'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:true,color:'#fff',font:{weight:'bold'}}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},plugins:[ChartDataLabels]});
-    var prodOrder=['Oraculo','Filial','Upgrade','Reativacao','Plataforma','Agente','Integracao','Projeto Especial','Nova Loja','Outro'];
-    var prodCt=prodOrder.map(function(p){return won.filter(function(d){return d.produto===p}).length});
-    _kill('ct-c2');_ctCharts['ct-c2']=new Chart(document.getElementById('ct-c2'),{type:'bar',data:{labels:prodOrder,datasets:[{label:'Vendas fechadas',data:prodCt,backgroundColor:'#6C5CE7',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'right',font:{weight:'bold'}}}},plugins:[ChartDataLabels]});
-    var monMap={};won.forEach(function(d){var k=(d.close||d.create||'').substring(0,7);if(!k)return;if(!monMap[k])monMap[k]={Luana:0,Thamiris:0,Gabriella:0};monMap[k][d.cs]=(monMap[k][d.cs]||0)+1});
-    var mons=Object.keys(monMap).sort();
-    _kill('ct-c3');_ctCharts['ct-c3']=new Chart(document.getElementById('ct-c3'),{type:'bar',data:{labels:mons.map(_fmtM),datasets:csList.map(function(c,i){return{label:c,data:mons.map(function(m){return monMap[m][c]||0}),backgroundColor:['#6C5CE7','#00B894','#F39C12'][i%3],borderRadius:4}})},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:false}},scales:{x:{stacked:true},y:{stacked:true,beginAtZero:true}}},plugins:[ChartDataLabels]});
-    var convRates=csList.map(function(c){var tot=deals.filter(function(d){return d.cs===c}).length;var w=deals.filter(function(d){return d.cs===c&&d.won}).length;return tot?+(w/tot*100).toFixed(1):0});
-    _kill('ct-c4');_ctCharts['ct-c4']=new Chart(document.getElementById('ct-c4'),{type:'bar',data:{labels:csList,datasets:[{label:'% Fechou negocio',data:convRates,backgroundColor:convRates.map(function(v){return v>=50?'#00B894':v>=25?'#F39C12':'#E17055'}),borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'top',font:{weight:'bold'},formatter:function(v){return v+'%'}}},scales:{y:{min:0,max:100}}},plugins:[ChartDataLabels]});
-    var ticket=csList.map(function(c){var wo=deals.filter(function(d){return d.cs===c&&d.won});if(!wo.length)return 0;return +(wo.reduce(function(a,b){return a+(b.amount||0)},0)/wo.length).toFixed(2)});
-    _kill('ct-c5');_ctCharts['ct-c5']=new Chart(document.getElementById('ct-c5'),{type:'bar',data:{labels:csList,datasets:[{label:'Ticket Medio R$',data:ticket,backgroundColor:'#00B894',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{display:true,anchor:'end',align:'top',font:{weight:'bold'},formatter:function(v){return 'R$ '+(v||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}}}},plugins:[ChartDataLabels]});
-    var churnRows=CH.filter(function(r){return !fCS||r.cs===fCS}).filter(function(r){return inPer(r.mes+'-15')});
-    var ctb=document.querySelector('#ct-tChurn tbody');ctb.innerHTML=churnRows.map(function(r){return '<tr><td>'+_fmtM(r.mes)+'</td><td>'+r.marca+'</td><td>'+r.produto+'</td><td>'+_fmtBR(r.valor)+'</td><td>'+(r.cs||'-')+'</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(r.obs||'').replace(/"/g,'&quot;')+'">'+(r.obs||'-')+'</td></tr>'}).join('')||'<tr><td colspan="6" style="text-align:center;color:#999">Sem churn no filtro</td></tr>';
-    _kill('ct-c6');_ctCharts['ct-c6']=new Chart(document.getElementById('ct-c6'),{type:'bar',data:{labels:MT.map(function(m){return _fmtM(m.mes)}),datasets:[{label:'Meta',data:MT.map(function(m){return m.meta||0}),backgroundColor:'#DFE6E9',borderRadius:6},{label:'Realizado',data:MT.map(function(m){return m.realizado||0}),backgroundColor:'#6C5CE7',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'},datalabels:{display:true,anchor:'end',align:'top',font:{size:9,weight:'bold'},formatter:function(v){return v?'R$'+(v/1000).toFixed(1)+'k':''}}}},plugins:[ChartDataLabels]});
-    var tb=document.querySelector('#ct-tDeals tbody');
-    var rows=deals.slice().sort(function(a,b){return (b.close||b.create||'').localeCompare(a.close||a.create||'')}).slice(0,500);
-    tb.innerHTML=rows.map(function(d){
-      var st=d.won?'<span class="badge pr">Fechou</span>':d.lost?'<span class="badge de">Nao fechou</span>':'<span class="badge pa">Em andamento</span>';
-      var dt=(d.close||d.create||'').substring(0,10);
-      var url='https://app.hubspot.com/contacts/20880281/record/0-3/'+d.id;
-      return '<tr><td>'+dt+'</td><td>'+d.cs+'</td><td>'+(d.name||'-')+'</td><td>'+d.produto+'</td><td>'+st+'</td><td>'+(d.amount?_fmtBR(d.amount):'-')+'</td><td><a href="'+url+'" target="_blank" style="color:var(--p);font-size:10px">abrir</a></td></tr>';
-    }).join('');
-    console.log('[TimeCS v3] render OK -',deals.length,'deals,',won.length,'won');
-  };
-// Auto-render assim que o DOM tiver os elementos, mesmo sem clique no card
-function _tryInitTimeCS(tries){
-  tries=tries||0;
-  if(document.getElementById('ct-total')&&typeof CS_TEAM_DATA!=='undefined'){
-    try{window.renderCsTeam();console.log('[TimeCS v3] auto-render')}catch(e){console.log('[TimeCS v3] auto-render ERR',e.message)}
-    return;
-  }
-  if(tries<30)setTimeout(function(){_tryInitTimeCS(tries+1)},200);
-}
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){_tryInitTimeCS()})}
-else{_tryInitTimeCS()}
-})();
 </script>
 </body>
 </html>
