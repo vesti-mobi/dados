@@ -64,14 +64,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--dk);overflo
             <option>Gabriella</option>
         </select>
     </div>
-    <div class="filter-group"><label>Periodo:</label>
-        <select class="f-select" id="fPer" onchange="render()">
-            <option value="all">Todas as semanas</option>
-            <option value="12">Ultimas 12 semanas</option>
-            <option value="8">Ultimas 8 semanas</option>
-            <option value="4">Ultimas 4 semanas</option>
-        </select>
+    <div class="filter-group"><label>De:</label>
+        <input type="date" class="f-select" id="fDe" onchange="render()">
     </div>
+    <div class="filter-group"><label>Ate:</label>
+        <input type="date" class="f-select" id="fAte" onchange="render()">
+    </div>
+    <button class="f-select" onclick="limparPeriodo()" style="cursor:pointer;font-weight:600;color:var(--p)">Limpar periodo</button>
 </div>
 
 <div class="kpi-row">
@@ -147,25 +146,37 @@ var DATA = {
 
 <script>
 var _chart=null;
-function fmtSemana(iso){
-    var d=new Date(iso+'T00:00:00');
-    return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);
+// numero ISO da semana (ISO 8601) a partir da data de segunda-feira (yyyy-mm-dd)
+function isoWeek(iso){
+    var d=new Date(iso+'T00:00:00Z');
+    // quinta-feira da mesma semana ISO
+    d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+    var y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d-y0)/86400000)+1)/7);
+}
+function labelSemana(iso){return 'Semana '+isoWeek(iso)}
+function limparPeriodo(){
+    document.getElementById('fDe').value='';
+    document.getElementById('fAte').value='';
+    render();
 }
 function render(){
     if(typeof DATA==='undefined')return;
     var cs=document.getElementById('fCS').value;
-    var per=document.getElementById('fPer').value;
-    var weeks=DATA.weeks.slice();
-    var startIdx=0;
-    if(per!=='all'){var n=parseInt(per);startIdx=Math.max(0,weeks.length-n)}
-    weeks=weeks.slice(startIdx);
+    var de=document.getElementById('fDe').value;
+    var ate=document.getElementById('fAte').value;
+    // filtra indices por data
+    var keep=DATA.weeks.map(function(w,i){
+        if(de && w<de) return -1;
+        if(ate && w>ate) return -1;
+        return i;
+    }).filter(function(i){return i>=0});
+    var weeks=keep.map(function(i){return DATA.weeks[i]});
     function serie(obj){
-        if(cs)return obj[cs].slice(startIdx);
-        var out=new Array(weeks.length).fill(0);
-        ['Luana','Thamiris','Gabriella'].forEach(function(c){
-            obj[c].slice(startIdx).forEach(function(v,i){out[i]+=v});
+        if(cs)return keep.map(function(i){return obj[cs][i]});
+        return keep.map(function(i){
+            return ['Luana','Thamiris','Gabriella'].reduce(function(s,c){return s+obj[c][i]},0);
         });
-        return out;
     }
     var reu=serie(DATA.reunioes);
     var neg=serie(DATA.negocios);
@@ -174,16 +185,17 @@ function render(){
     document.getElementById('k-reu').textContent=totReu;
     document.getElementById('k-neg').textContent=totNeg;
     var pct=totReu?((totNeg/totReu)*100).toFixed(0):0;
-    document.getElementById('k-reu-s').textContent=weeks.length+' semanas - '+(cs||'todas as CSs');
+    var rangeTxt=(de||ate)?((de||'inicio')+' a '+(ate||'fim')):'todas as semanas';
+    document.getElementById('k-reu-s').textContent=weeks.length+' semanas ('+rangeTxt+') - '+(cs||'todas as CSs');
     document.getElementById('k-neg-s').textContent=pct+'% das reunioes viraram negocio';
     if(_chart){_chart.destroy()}
     _chart=new Chart(document.getElementById('chartLine'),{
         type:'line',
         data:{
-            labels:weeks.map(fmtSemana),
+            labels:weeks.map(labelSemana),
             datasets:[
-                {label:'Reunioes',data:reu,borderColor:'#6C5CE7',backgroundColor:'rgba(108,92,231,.15)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3},
-                {label:'Negocios Fechados',data:neg,borderColor:'#00B894',backgroundColor:'rgba(0,184,148,.10)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3}
+                {label:'Reunioes',data:reu,borderColor:'#6C5CE7',backgroundColor:'rgba(108,92,231,.15)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3,_iso:weeks},
+                {label:'Negocios Fechados',data:neg,borderColor:'#00B894',backgroundColor:'rgba(0,184,148,.10)',fill:true,tension:.35,pointRadius:5,pointHoverRadius:7,borderWidth:3,_iso:weeks}
             ]
         },
         options:{
@@ -191,7 +203,7 @@ function render(){
             interaction:{intersect:false,mode:'index'},
             plugins:{
                 legend:{position:'top',labels:{font:{size:13,weight:'600'},padding:14}},
-                tooltip:{padding:10,titleFont:{size:13},bodyFont:{size:12}},
+                tooltip:{padding:10,titleFont:{size:13},bodyFont:{size:12},callbacks:{title:function(items){var i=items[0].dataIndex;var iso=items[0].dataset._iso&&items[0].dataset._iso[i];return items[0].label+(iso?' (inicia '+iso.split('-').reverse().slice(0,2).join('/')+')':'')}}},
                 datalabels:{display:false}
             },
             scales:{
@@ -202,7 +214,7 @@ function render(){
     });
 }
 function init(){render()}
-window.doLogin=doLogin;window.render=render;
+window.doLogin=doLogin;window.render=render;window.limparPeriodo=limparPeriodo;
 </script>
 </body>
 </html>
