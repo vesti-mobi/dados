@@ -450,7 +450,25 @@ function isoBRTDate(s){
     return str.substring(0,10);
 }
 function fmtD(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
-function fmtDT(s){if(!s)return '-';var d=isoBRTDate(s);if(d.length<10)return s;var p=d.split('-');var t=String(s).length>=16?' '+String(s).substring(11,16):'';return p[2]+'/'+p[1]+'/'+p[0]+t}
+function fmtDT(s){
+    if(!s)return '-';
+    var d=isoBRTDate(s);
+    if(d.length<10)return s;
+    var p=d.split('-');
+    var t='';
+    var str=String(s);
+    // se tem timezone explicito, converte hora pra BRT (UTC-3); senao usa hh:mm cru
+    if(/[zZ]$|[+\-]\d{2}:?\d{2}$/.test(str.substring(10))){
+        var dt=new Date(str);
+        if(!isNaN(dt)){
+            var brt=new Date(dt.getTime()-3*3600000);
+            t=' '+String(brt.getUTCHours()).padStart(2,'0')+':'+String(brt.getUTCMinutes()).padStart(2,'0');
+        }
+    } else if(str.length>=16){
+        t=' '+str.substring(11,16);
+    }
+    return p[2]+'/'+p[1]+'/'+p[0]+t;
+}
 function esc(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function updateSaldoKpi(rows, totNet, compareToTot){
     // detecta empresa filtrada — se filtro casa só 1 empresa nas rows, usa saldo dela.
