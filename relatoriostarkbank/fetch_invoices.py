@@ -262,36 +262,57 @@ def write_warehouse(faturas: list[dict]) -> None:
     print("[warehouse] ok")
 
 
-def load_enrichment_from_dados() -> dict:
+def load_enrichment_from_dados() -> tuple[dict, dict]:
     """Le dados.js pra obter orderNumber/isAntecipacao/etc por transactionId.
-    Indexa por transactionId (= purchase.id na Stark). Retorna {} se dados.js
-    nao existe ou estiver vazio — nao bloqueia o pipeline."""
+    Retorna (out, ws_antec_default):
+      - out: indexado por transactionId (= purchase.id na Stark)
+      - ws_antec_default: workspaceId -> bool, "essa workspace eh antecipadora?"
+        com base na maioria dos pedidos historicos da marca em dados.js.
+        Usado como fallback quando uma compra NOVA nao esta em dados.js ainda
+        (lag Mongo→Fabric) — sem isso, defaulta False e marcas 100% antec
+        aparecem como fluxo no dashboard ate o sync rodar."""
     if not DADOS_JS.exists():
-        return {}
+        return {}, {}
     try:
         text = DADOS_JS.read_text(encoding="utf-8")
         m = re.match(r"window\.DADOS\s*=\s*(.*);\s*$", text.strip(), re.DOTALL)
         if not m:
-            return {}
+            return {}, {}
         data = json.loads(m.group(1))
         out: dict[str, dict] = {}
+        ws_counts: dict[str, list] = {}  # ws_id -> [n_antec, n_total]
         for p in data.get("pedidos", []):
+            ws_id = (p.get("workspaceId") or "").strip()
+            antec = bool(p.get("antecipacaoEnabled"))
+            if ws_id:
+                c = ws_counts.setdefault(ws_id, [0, 0])
+                c[0] += int(antec)
+                c[1] += 1
             for pc in p.get("parcelas") or []:
                 tid = (pc.get("transactionId") or "").strip()
                 if tid and tid not in out:
                     out[tid] = {
                         "orderNumber":         p.get("orderNumber"),
                         "nomeFantasia":        p.get("nomeFantasia"),
-                        "antecipacaoEnabled":  bool(p.get("antecipacaoEnabled")),
+                        "antecipacaoEnabled":  antec,
                         "customerName":        p.get("customerName"),
                         "orderDate":           p.get("orderDate"),
                         "companyId":           p.get("companyId"),
                         "domainId":            p.get("domainId"),
                     }
-        return out
+        # workspace antec=True se >=70% dos pedidos historicos sao antec.
+        # Threshold alto pra evitar falso-positivo em marcas mistas.
+        ws_antec_default = {
+            ws: (n_antec / n_tot) >= 0.7
+            for ws, (n_antec, n_tot) in ws_counts.items()
+            if n_tot >= 3
+        }
+        n_antec_ws = sum(1 for v in ws_antec_default.values() if v)
+        print(f"[enrich] {n_antec_ws}/{len(ws_antec_default)} workspaces classificadas como antecipadoras (>=70% historico)")
+        return out, ws_antec_default
     except Exception as e:
         print(f"[enrich] falha lendo dados.js: {e}", file=sys.stderr)
-        return {}
+        return {}, {}
 
 
 def _api_get(url: str, token: str, retries: int = 3) -> dict | None:
@@ -496,7 +517,7 @@ def main() -> None:
     print(f"[api] total purchases: {len(tarefas)} (workspaces com paginacao incompleta: {len(ws_pagination_falhou)})")
 
     # 3) carrega enriquecimento Mongo (opcional)
-    enrich = load_enrichment_from_dados()
+    enrich, ws_antec_default = load_enrichment_from_dados()
     print(f"[enrich] {len(enrich)} entradas em dados.js (orderNumber/isAntec/...)")
 
     # 4) busca detalhes (com installments) em paralelo (com retry interno em _api_get)
@@ -509,6 +530,13 @@ def main() -> None:
         tags_parsed = parse_purchase_tags(summ.get("tags", []))
         e = enrich.get(t["purchase_id"], {})
         order_date = e.get("orderDate") or (summ.get("created") or "")[:10]
+        # antec: usa o valor do enrichment quando achou; caso contrario, cai
+        # no default da workspace (maioria historica). Evita classificar como
+        # fluxo compras recentes que ainda nao chegaram em dados.js (lag).
+        if "antecipacaoEnabled" in e:
+            antec = bool(e["antecipacaoEnabled"])
+        else:
+            antec = ws_antec_default.get(t["ws_id"], False)
         return {
             "workspaceId":         t["ws_id"],
             "transactionId":       t["purchase_id"],
@@ -519,7 +547,7 @@ def main() -> None:
             "domainId":            e.get("domainId", ""),
             "orderDate":           order_date,
             "customerName":        e.get("customerName") or summ.get("holderName") or "",
-            "antecipacaoEnabled":  bool(e.get("antecipacaoEnabled", False)),
+            "antecipacaoEnabled":  antec,
             "purchase":            data,
         }
 
