@@ -533,16 +533,49 @@ def main() -> None:
                 tids_falharam.append(t["purchase_id"])
     print(f"[api] {len(faturas_novas)} faturas obtidas (falhas individuais: {len(tids_falharam)})")
 
-    # 5) MERGE com invoices.js anterior: mantem last-known-good de qualquer
-    # purchase que falhou nesta rodada OU que esta dentro de workspace com
-    # paginacao incompleta. Elimina a oscilacao por falhas transientes.
+    # 5) MERGE com invoices.js anterior. A API `/workspace/{ws}/purchases`
+    # so lista compras em aberto/recentes — quando uma parcela e paga, a
+    # purchase some da listagem. Se simplesmente preservassemos o anterior,
+    # o status ficaria congelado em "created" pra sempre, inflando o CR.
+    # Solucao: pra cada transactionId do anterior que NAO veio na rodada,
+    # re-buscar individualmente via /workspace/{ws}/purchase/{tid} (esse
+    # endpoint sempre devolve status atual). Se a re-busca tb falhar, aí
+    # sim preservamos como ultimo fallback.
     previo = load_previous_invoices()
     print(f"[merge] {len(previo)} faturas no invoices.js anterior")
     novo_index = {f["transactionId"]: f for f in faturas_novas}
-    merged_index = dict(previo)  # comeca com tudo do anterior
-    merged_index.update(novo_index)  # sobrescreve com versoes novas (fonte da verdade)
-    preservadas = sum(1 for tid in previo if tid not in novo_index)
-    print(f"[merge] {preservadas} faturas preservadas do anterior (nao vieram na rodada atual)")
+    faltantes = [(tid, f) for tid, f in previo.items() if tid not in novo_index]
+    print(f"[merge] {len(faltantes)} faturas ausentes na rodada — re-buscando individualmente")
+
+    def _refresh(item: tuple) -> tuple:
+        tid, antiga = item
+        ws_id = antiga.get("workspaceId")
+        if not ws_id:
+            return (tid, antiga, "sem-workspace")
+        resp = fetch_purchase(ws_id, tid, token)
+        data = extract(resp)
+        if not data:
+            return (tid, antiga, "falhou")
+        # preserva enriquecimento (orderNumber, nomeFantasia, antec, etc.)
+        # e atualiza somente o bloco purchase com status fresco.
+        atualizada = dict(antiga)
+        atualizada["purchase"] = data
+        return (tid, atualizada, "ok")
+
+    refreshed: dict[str, dict] = {}
+    n_ok = n_stale = 0
+    if faltantes:
+        with cf.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+            for tid, fat, status in ex.map(_refresh, faltantes):
+                refreshed[tid] = fat
+                if status == "ok":
+                    n_ok += 1
+                else:
+                    n_stale += 1
+    print(f"[merge] re-fetch: {n_ok} atualizadas, {n_stale} preservadas como fallback (re-fetch falhou)")
+
+    merged_index = dict(refreshed)       # antigas (atualizadas via re-fetch ou fallback)
+    merged_index.update(novo_index)      # sobrescreve com as da rodada principal
 
     faturas = list(merged_index.values())
 
