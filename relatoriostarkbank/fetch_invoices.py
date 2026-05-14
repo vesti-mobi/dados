@@ -628,6 +628,23 @@ def main() -> None:
 
     faturas = list(merged_index.values())
 
+    # 5.1) Re-aplica ws_antec_default em TODAS as faturas (inclusive as
+    # preservadas do `previo`). Sem isso, faturas que ja estavam no
+    # invoices.js anterior com antec=False (porque foram geradas antes
+    # do fix de classificacao por workspace, ou estavam fora do enrich
+    # naquela rodada) ficam congeladas em False — fazendo a marca
+    # aparecer como Fluxo no CR mesmo que a workspace seja antec.
+    # So promove False->True (nunca rebaixa) pra nao reclassificar
+    # marcas que migraram de antec pra fluxo.
+    promovidas = 0
+    for f in faturas:
+        if f.get("antecipacaoEnabled"):
+            continue
+        if ws_antec_default.get(f.get("workspaceId")):
+            f["antecipacaoEnabled"] = True
+            promovidas += 1
+    print(f"[antec-fallback] {promovidas} faturas promovidas a antec=True via ws_antec_default")
+
     # 6) Guard de qualidade: se a rodada degradou demais (perdeu >10% em
     # relacao ao anterior) E houve falhas, aborta a escrita pra nao
     # publicar dashboard pior. Primeira execucao (sem anterior) passa.
