@@ -724,7 +724,7 @@ function isoWeek(iso){
     var y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));
     return Math.ceil((((d-y0)/86400000)+1)/7);
 }
-function labelSemana(iso){var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0].slice(2)}
+function labelSemana(iso){return 'Sem '+isoWeek(iso)+'/'+iso.slice(2,4)}
 function limparPeriodo(){
     document.getElementById('fDe').value='';
     document.getElementById('fAte').value='';
