@@ -119,8 +119,8 @@ function doLogin(){
 if(sessionStorage.getItem('cs_reu_auth')==='1'){
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('dashContent').style.display='block';
-    document.addEventListener('DOMContentLoaded',init);
-    if(document.readyState!=='loading')setTimeout(init,0);
+    document.addEventListener('DOMContentLoaded',function(){init()});
+    if(document.readyState!=='loading')setTimeout(function(){init()},0);
 }
 </script>
 
