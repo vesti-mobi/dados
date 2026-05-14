@@ -1,21 +1,18 @@
-"""Gera index.html a partir de template.html.
-
-Prefere real_data.js (dados reais das planilhas) se existir; caso contrario,
-usa fictitious_data.js (placeholder).
-"""
+"""Gera index.html a partir de template.html, inlineando real_data.js (HubSpot)."""
 import pathlib
+import sys
 
 BASE = pathlib.Path(__file__).resolve().parent
 template = BASE / 'template.html'
 output = BASE / 'index.html'
 real = BASE / 'real_data.js'
-fict = BASE / 'fictitious_data.js'
 
-src = real if real.exists() else fict
-src_kind = 'real_data.js' if real.exists() else 'fictitious_data.js'
+if not real.exists():
+    print('ERRO: real_data.js nao existe. Rode `py fetch_hubspot.py` primeiro.', file=sys.stderr)
+    sys.exit(1)
 
 html = template.read_text(encoding='utf-8')
-js = src.read_text(encoding='utf-8') if src.exists() else ''
+js = real.read_text(encoding='utf-8')
 html = html.replace('/*DATA_INLINE*/', js)
 output.write_text(html, encoding='utf-8')
-print(f'index.html gerado usando {src_kind} ({len(js)} bytes de dados).')
+print(f'index.html gerado ({len(js)} bytes de dados HubSpot).')
