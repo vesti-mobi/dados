@@ -280,14 +280,23 @@ def load_enrichment_from_dados() -> tuple[dict, dict]:
             return {}, {}
         data = json.loads(m.group(1))
         out: dict[str, dict] = {}
-        ws_counts: dict[str, list] = {}  # ws_id -> [n_antec, n_total]
+        ws_counts: dict[str, list] = {}  # ws_id -> [n_antec, n_total] (janela recente)
+        ws_counts_full: dict[str, list] = {}  # ws_id -> [n_antec, n_total] (historico todo, fallback)
+        # Olha so os ultimos 14 dias pra captar migracoes de modalidade
+        # (marca que era fluxo e virou antecipacao). Marcas com pouco historico
+        # recente caem no fallback de historico completo.
+        from datetime import date, timedelta
+        cutoff = (date.today() - timedelta(days=14)).isoformat()
         for p in data.get("pedidos", []):
             ws_id = (p.get("workspaceId") or "").strip()
             antec = bool(p.get("antecipacaoEnabled"))
+            order_date = (p.get("orderDate") or "")[:10]
             if ws_id:
-                c = ws_counts.setdefault(ws_id, [0, 0])
-                c[0] += int(antec)
-                c[1] += 1
+                cf_ = ws_counts_full.setdefault(ws_id, [0, 0])
+                cf_[0] += int(antec); cf_[1] += 1
+                if order_date >= cutoff:
+                    c = ws_counts.setdefault(ws_id, [0, 0])
+                    c[0] += int(antec); c[1] += 1
             for pc in p.get("parcelas") or []:
                 tid = (pc.get("transactionId") or "").strip()
                 if tid and tid not in out:
@@ -300,15 +309,27 @@ def load_enrichment_from_dados() -> tuple[dict, dict]:
                         "companyId":           p.get("companyId"),
                         "domainId":            p.get("domainId"),
                     }
-        # workspace antec=True se >=70% dos pedidos historicos sao antec.
-        # Threshold alto pra evitar falso-positivo em marcas mistas.
-        ws_antec_default = {
-            ws: (n_antec / n_tot) >= 0.7
-            for ws, (n_antec, n_tot) in ws_counts.items()
-            if n_tot >= 3
-        }
+        # workspace antec=True se >=70% dos pedidos sao antec.
+        # Prioridade: janela recente (14d, >=3 amostras). Fallback: historico
+        # completo (>=3 amostras). Isso captura migracao de modalidade — marca
+        # que era 100% fluxo no passado mas migrou pra antecipacao nas vendas
+        # recentes deve ser classificada antec.
+        ws_antec_default: dict[str, bool] = {}
+        n_recente = n_fallback = 0
+        all_ws = set(ws_counts.keys()) | set(ws_counts_full.keys())
+        for ws in all_ws:
+            rec = ws_counts.get(ws, [0, 0])
+            if rec[1] >= 3:
+                ws_antec_default[ws] = (rec[0] / rec[1]) >= 0.7
+                n_recente += 1
+            else:
+                full = ws_counts_full.get(ws, [0, 0])
+                if full[1] >= 3:
+                    ws_antec_default[ws] = (full[0] / full[1]) >= 0.7
+                    n_fallback += 1
         n_antec_ws = sum(1 for v in ws_antec_default.values() if v)
-        print(f"[enrich] {n_antec_ws}/{len(ws_antec_default)} workspaces classificadas como antecipadoras (>=70% historico)")
+        print(f"[enrich] {n_antec_ws}/{len(ws_antec_default)} workspaces antecipadoras "
+              f"(janela 14d: {n_recente}, fallback historico: {n_fallback})")
         return out, ws_antec_default
     except Exception as e:
         print(f"[enrich] falha lendo dados.js: {e}", file=sys.stderr)
