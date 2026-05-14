@@ -1,0 +1,20 @@
+name: debug-alcance
+on:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Lista purchases Alcance via API Vesti
+        env:
+          VESTIAPI_TOKEN: ${{ secrets.VESTIAPI_TOKEN }}
+        run: python relatoriostarkbank/_debug_alcance.py
+      - name: Upload JSON
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-alcance-json
+          path: _debug_alcance.json
