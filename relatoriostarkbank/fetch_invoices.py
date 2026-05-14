@@ -367,11 +367,24 @@ def _api_get(url: str, token: str, retries: int = 3) -> dict | None:
 
 
 def list_workspaces(token: str) -> list[dict]:
-    """Lista workspaces Stark, filtrando marcas de teste."""
-    resp = _api_get(URL_WORKSPACES, token)
-    if not resp or not resp.get("success"):
-        return []
-    workspaces = resp.get("message", {}).get("workspaces", [])
+    """Lista workspaces Stark (paginado via cursor), filtrando marcas de teste.
+    A API limita a 100 workspaces por page — sem paginacao, marcas alem da
+    100a sumiam do invoices.js (ex: Alcance Jeans em 14/05/2026)."""
+    workspaces: list[dict] = []
+    cursor: str | None = None
+    pages = 0
+    while True:
+        url = URL_WORKSPACES + (f"?cursor={cursor}" if cursor else "")
+        resp = _api_get(url, token)
+        if not resp or not resp.get("success"):
+            break
+        msg = resp.get("message") or {}
+        page = msg.get("workspaces") or []
+        workspaces.extend(page)
+        cursor = msg.get("cursor") or None
+        pages += 1
+        if not cursor or pages > 100:
+            break
     out = []
     for w in workspaces:
         nome = (w.get("name") or "").strip().lower()
