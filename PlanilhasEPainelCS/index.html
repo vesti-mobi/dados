@@ -724,7 +724,8 @@ function isoWeek(iso){
     var y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));
     return Math.ceil((((d-y0)/86400000)+1)/7);
 }
-function labelSemana(iso){var i=(typeof DATA!=='undefined')?DATA.weeks.indexOf(iso):-1;return 'Semana '+(i>=0?i+1:'?')}
+function isoWeekYear(iso){var d=new Date(iso+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));return d.getUTCFullYear();}
+function labelSemana(iso){return 'Sem '+isoWeek(iso)+'/'+String(isoWeekYear(iso)).slice(-2);}
 function limparPeriodo(){
     document.getElementById('fDe').value='';
     document.getElementById('fAte').value='';
