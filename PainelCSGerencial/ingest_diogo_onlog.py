@@ -212,6 +212,44 @@ def filter_fabric(pedidos: list[dict], de: str, ate: str) -> dict:
     return out
 
 
+def fetch_vesti_keys(order_numbers: set[int]) -> set[str]:
+    """Existencia autoritativa no Vesti: consulta MongoDB_Pedidos_Geral (base
+    COMPLETA, nao so o subconjunto provider=onLog do onlog_data.json) e retorna
+    o conjunto de chaves 'domainId_orderNumber' que existem.
+
+    Usado para nao classificar como 'so na planilha' pedido que existe no Vesti
+    apenas porque o provider dele nao esta tagueado como onLog no Mongo.
+
+    Falha de Fabric e' NAO-FATAL: retorna set() e o ingest segue (sem a validacao
+    extra), so loga aviso.
+    """
+    nums = sorted({int(n) for n in order_numbers if str(n).strip().isdigit()})
+    if not nums:
+        return set()
+    try:
+        from fetch_fabric import connect, load_config
+        conn = connect(load_config())
+        cur = conn.cursor()
+        keys: set[str] = set()
+        # consulta em lotes (IN list) p/ nao estourar limite de parametros
+        for i in range(0, len(nums), 800):
+            chunk = nums[i:i + 800]
+            inlist = ",".join(str(n) for n in chunk)
+            cur.execute(
+                f"SELECT domainId, orderNumber FROM dbo.MongoDB_Pedidos_Geral "
+                f"WHERE orderNumber IN ({inlist})"
+            )
+            for dom, on in cur.fetchall():
+                keys.add(f"{dom}_{on}")
+        conn.close()
+        print(f"      [fabric] base completa: {len(keys)} chaves dominio_pedido existentes no Vesti")
+        return keys
+    except Exception as e:
+        print(f"      [fabric] AVISO: nao deu p/ validar contra a base completa ({e}). "
+              f"Seguindo sem essa validacao (pode haver falso 'so na planilha').")
+        return set()
+
+
 def _is_no_postavel(p: dict) -> bool:
     """Pedidos cancelados ou ainda em SEPARATED nao deveriam aparecer na planilha
     do Diogo - sao 'so no Fabric' esperado e nao representam problema."""
@@ -268,13 +306,20 @@ def fmt_brl(v) -> str:
     return "R$ " + f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def compare(planilha: dict, fabric: dict) -> tuple[int, list, list, list]:
+def compare(planilha: dict, fabric: dict, vesti_exists: set[str] | None = None) -> tuple[int, list, list, list]:
     keys = set(planilha) | set(fabric)
     dif, only_p, only_f, ok = [], [], [], 0
+    reclass = 0
     for k in keys:
         pl = planilha.get(k)
         fa = fabric.get(k)
         if pl and not fa:
+            # Existe no Vesti (base completa do Mongo), so nao estava no onlog_data
+            # (provider nao tagueado como onLog) -> NAO e' 'so na planilha'.
+            if vesti_exists and k in vesti_exists:
+                reclass += 1
+                ok += 1
+                continue
             only_p.append(pl)
             continue
         if fa and not pl:
@@ -306,6 +351,8 @@ def compare(planilha: dict, fabric: dict) -> tuple[int, list, list, list]:
                 })
         else:
             ok += 1
+    if reclass:
+        print(f"      [fabric] {reclass} reclassificados: existem no Vesti (base completa) -> NAO sao 'so planilha'")
     return ok, dif, only_p, only_f
 
 
@@ -385,8 +432,12 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
     n_upd, n_skip = patch_onlog_data(onlog_data, planilha, de, ate)
     print(f"      {n_upd} pedidos atualizados (postagem + margem); {n_skip} sem match na planilha")
 
+    print(f"[3.8/4] Validando contra base COMPLETA do Vesti (Fabric)")
+    _onums = {p.get("orderNumber") for p in planilha.values()}
+    vesti_exists = fetch_vesti_keys(_onums)
+
     print(f"[4/4] Comparando")
-    ok, dif, only_p, only_f = compare(planilha, fabric)
+    ok, dif, only_p, only_f = compare(planilha, fabric, vesti_exists)
 
     # Auditoria simplificada: 3 tipos de problema relevantes
     audit_status, audit_etiqueta, audit_frete = [], [], []
