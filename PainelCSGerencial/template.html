@@ -1446,7 +1446,26 @@ function _onlogTriggerConfRender(){}
 var _onlogDiogoIdx=null;
 function _onlogBuildDiogoIdx(){
     if(_onlogDiogoIdx)return _onlogDiogoIdx;
-    var idx={divergPorPedido:{},quinzenas:[],soPlanilha:[]};
+    var idx={divergPorPedido:{},quinzenas:[],soPlanilha:[],_reclass:0};
+    // Indice dos pedidos Vesti (ONLOG_DATA) p/ detectar falso "so planilha":
+    // o ingest casa por dominio_pedido exato e filtra por data da quinzena, entao
+    // pedidos que existem no Vesti (dominio divergente ou fora da janela) vinham marcados
+    // como so-planilha. Aqui reclassificamos: se casa no Vesti, nao e' so-planilha.
+    var _vBy={}, _vByOrd={};
+    var _od=(typeof ONLOG_DATA!=='undefined'?ONLOG_DATA:null);
+    if(_od&&_od.pedidos)_od.pedidos.forEach(function(p){
+        var on=String(p.orderNumber||'').trim(), dom=String(p.dominioId||'').trim();
+        var doc=String(p.clienteDoc||'').replace(/\D/g,'');
+        if(dom&&on)_vBy[dom+'_'+on]=p;
+        if(on)(_vByOrd[on]=_vByOrd[on]||[]).push({doc:doc});
+    });
+    function _vestiMatch(dom,on,doc){
+        on=String(on||'').trim(); dom=String(dom||'').trim(); doc=String(doc||'').replace(/\D/g,'');
+        if(dom&&on&&_vBy[dom+'_'+on])return true;            // match exato dominio+pedido
+        if(on&&doc&&_vByOrd[on])                              // mesmo pedido + mesmo CPF/CNPJ (dominio divergente)
+            return _vByOrd[on].some(function(c){return c.doc&&c.doc===doc});
+        return false;
+    }
     var diffs=(typeof ONLOG_DIFFS!=='undefined'?ONLOG_DIFFS:[]);
     diffs.forEach(function(d){
         if(d.quinzena&&d.quinzena.de&&d.quinzena.ate)idx.quinzenas.push(d.quinzena);
@@ -1456,6 +1475,7 @@ function _onlogBuildDiogoIdx(){
         });
         (d.soPlanilha||[]).forEach(function(x){
             var parts=String(x.codigoVolume||'').split('_');
+            if(_vestiMatch(parts[0]||'',x.orderNumber,x.clienteDoc)){idx._reclass++;return;}
             idx.soPlanilha.push({
                 _origem:'planilha-only',
                 dominioId:parts[0]||'',
@@ -1475,6 +1495,7 @@ function _onlogBuildDiogoIdx(){
         });
         (d.paVesti||[]).forEach(function(x){
             // Postagens avulsas (PA VESTI) - estao na planilha do Diogo mas nao tem pedido Vesti correspondente
+            if(_vestiMatch('',x.numeroNF||x.codigoInterno||'',x.clienteDoc)){idx._reclass++;return;}
             idx.soPlanilha.push({
                 _origem:'planilha-only',
                 _paVesti:true,
@@ -1660,7 +1681,7 @@ function updateOnlog(){
             }).join('<br>')+'</div>';
         }
         if(p._origem==='planilha-only'){
-            var pl='<span style="color:#B2BEC3;font-style:italic">(planilha)</span>';
+            var pl='<span style="color:#B2BEC3" title="Sem dado Vesti: pedido consta somente na planilha do Diogo">&mdash;</span>';
             var marcaCell;
             if(p._paVesti){
                 var mi=p.marcasInferidas||[];
