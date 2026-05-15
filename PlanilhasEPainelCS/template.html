@@ -150,6 +150,7 @@ function render(){
     var ate=document.getElementById('fAte').value;
     // filtra indices por data
     var keep=DATA.weeks.map(function(w,i){
+        if(isoWeekYear(w)!==2026) return -1;
         if(de && w<de) return -1;
         if(ate && w>ate) return -1;
         return i;
