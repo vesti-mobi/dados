@@ -1466,6 +1466,7 @@ function _onlogBuildDiogoIdx(){
                 uf:x.uf||'',
                 statusOnlog:x.status||'',
                 valorPostagem:x.postagem,
+                valorAnaFinal:(x.postagem!=null?Math.round(x.postagem*110)/100:null),
                 data:x.data||((d.quinzena&&d.quinzena.de)||''),
                 marca:x.remetente||'',
                 valor:x.valorDeclarado,
@@ -1485,6 +1486,7 @@ function _onlogBuildDiogoIdx(){
                 uf:x.uf||'',
                 statusOnlog:x.status||'',
                 valorPostagem:x.postagem,
+                valorAnaFinal:(x.postagem!=null?Math.round(x.postagem*110)/100:null),
                 data:x.data||((d.quinzena&&d.quinzena.de)||''),
                 _operador:x.operador||'',
                 _modalidade:x.modalidade||'',
@@ -1692,7 +1694,7 @@ function updateOnlog(){
                 '<td>'+pl+'</td>'+
                 '<td style="text-align:right;font-weight:600">'+valorCell+'</td>'+
                 '<td style="text-align:right">'+pl+'</td>'+
-                '<td style="text-align:right">'+pl+'</td>'+
+                '<td style="text-align:right;color:var(--p);white-space:nowrap">'+_olFmt(p.valorAnaFinal)+'</td>'+
                 '<td style="text-align:right;color:#0984E3;white-space:nowrap">'+_olFmt(p.valorPostagem)+'</td>'+
                 '<td style="text-align:right">'+pl+'</td>'+
             '</tr>';
