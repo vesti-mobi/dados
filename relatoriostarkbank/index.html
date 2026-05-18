@@ -607,7 +607,7 @@ function switchTab(which){
         return;
     }
     document.getElementById('subtabs').style.display    = isCp?'flex':'none';
-    document.getElementById('btnExcel').style.display   = (isCp && SUB==='antec')?'inline-block':'none';
+    document.getElementById('btnExcel').style.display   = isCp?'inline-block':'none';
     document.getElementById('btnCsvStark').style.display = (isCp && SUB==='antec')?'inline-block':'none';
     document.getElementById('thPix').style.display      = (isCp && SUB==='antec')?'':'none';
     document.getElementById('thCnpj').style.display     = (isCp && SUB==='antec')?'':'none';
@@ -647,7 +647,7 @@ function switchSub(which){
     document.getElementById('thCnpj').style.display = isAntec?'':'none';
     document.getElementById('thRazao').style.display = isAntec?'':'none';
     document.getElementById('thSaldoMarca').style.display = isAntec?'':'none';
-    document.getElementById('btnExcel').style.display = isAntec?'inline-block':'none';
+    document.getElementById('btnExcel').style.display = 'inline-block';
     document.getElementById('btnCsvStark').style.display = isAntec?'inline-block':'none';
     openSet={};
     render();
@@ -1121,9 +1121,10 @@ function downloadExcel(){
     }
     ws['!cols']=[{wch:12},{wch:28},{wch:38},{wch:18},{wch:26},{wch:30},{wch:9},{wch:12},{wch:13},{wch:13},{wch:14},{wch:13}];
     var wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'Antecipacao');
+    var nome=(SUB==='antec')?'Antecipacao':'Fluxo';
+    XLSX.utils.book_append_sheet(wb,ws,nome);
     var stamp=new Date().toISOString().substring(0,10);
-    XLSX.writeFile(wb,'antecipacao_'+stamp+'.xlsx');
+    XLSX.writeFile(wb,nome.toLowerCase()+'_'+stamp+'.xlsx');
 }
 
 function renderCr(){
