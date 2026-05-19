@@ -20,6 +20,7 @@ window.PIX_MARCAS = (function(){
         "charisma filial":        "11759407000113",
         "coinage":                "54493334000173",
         "deslum":                 "+5548067277842",
+        "deslum...":              "+5548067277842",
         "enfasy":                 "2a7fa437-21c9-4254-bff8-f9e1ab4ad1e8",
         "enfasy jeans":           "2a7fa437-21c9-4254-bff8-f9e1ab4ad1e8",
         "erilluz jeans":          "32796225000192",
