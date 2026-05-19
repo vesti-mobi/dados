@@ -788,52 +788,30 @@ function updateEmpresaPanel(){
         // Plano contratado (apenas nome) e mensalidade real = média/total das faturas pagas
         const elPlano=document.getElementById('eiPlano');
         const ufEl=document.getElementById('eiUltimaFatura');
-        let mensalReal=0,ufMes='',ufTotalRef=0,faturasRefMes=[];
-        if(show.faturamento&&show.faturamento.faturas&&show.faturamento.faturas.length>0){
-            const mesAtual=new Date().toISOString().substring(0,7);
-            // Mensalidade real: média do total mensal dos últimos 3 meses totalmente pagos
-            const porMes={};
-            show.faturamento.faturas.forEach(f=>{
-                if(f.status==='canceled'||f.mes>mesAtual)return;
-                if(!porMes[f.mes])porMes[f.mes]={total:0,pago:0,n:0,pagas:0};
-                porMes[f.mes].total+=f.total;porMes[f.mes].n++;
-                if(f.status==='paid'||f.status==='externally_paid'){porMes[f.mes].pago+=f.total;porMes[f.mes].pagas++;}
-            });
-            const mesesPagos=Object.keys(porMes).filter(m=>porMes[m].pagas===porMes[m].n&&porMes[m].n>0).sort().reverse().slice(0,3);
-            if(mesesPagos.length>0){
-                const soma=mesesPagos.reduce((s,m)=>s+porMes[m].total,0);
-                mensalReal=soma/mesesPagos.length;
-            }
-            // Mês de referência da última fatura (mais recente não cancelado)
-            const ufRef=show.faturamento.faturas.find(f=>f.mes<=mesAtual&&f.status!=='canceled')||show.faturamento.faturas.find(f=>f.mes<=mesAtual)||show.faturamento.faturas[0];
-            ufMes=ufRef.mes;
-            faturasRefMes=show.faturamento.faturas.filter(f=>f.mes===ufMes&&f.status!=='canceled');
-            ufTotalRef=faturasRefMes.reduce((s,f)=>s+f.total,0);
-        }
-        // Mensalidade Total: prioriza valor real das faturas, com plano contratado como sufixo
+        // Mensalidade Total = soma das faturas PAGAS do mes mais recente com
+        // pagamento (fonte unica: mensalidadePagaMes). Mesmo numero usado na
+        // Ultima Fatura e na aba Financeira.
+        const mref=(show.faturamento)?mensalidadePagaMes(show.faturamento):null;
         const planoNome=show.plano||'';
-        if(mensalReal>0){
-            elPlano.innerHTML=fmtCFull(mensalReal)+(planoNome?' <span style="color:var(--text-muted);font-size:11px;font-weight:500;">('+planoNome+')</span>':'');
+        const mesTagPlano=mref?' <span style="color:var(--text-muted);font-size:11px;">'+mref.mes+'</span>':'';
+        if(mref&&mref.valor>0){
+            elPlano.innerHTML=fmtCFull(mref.valor)+(planoNome?' <span style="color:var(--text-muted);font-size:11px;font-weight:500;">('+planoNome+')</span>':'')+mesTagPlano;
         } else if(show.planoTotalCobrado>0){
             elPlano.innerHTML=fmtCFull(show.planoTotalCobrado)+(planoNome?' <span style="color:var(--text-muted);font-size:11px;font-weight:500;">('+planoNome+' — contratado)</span>':'');
         } else {
             elPlano.textContent=planoNome||'-';
         }
-        // Última Fatura - status consolidado do mês + valor pago vs total
-        if(faturasRefMes.length>0){
-            const pagas=faturasRefMes.filter(f=>f.status==='paid'||f.status==='externally_paid');
-            const totalPago=pagas.reduce((s,f)=>s+f.total,0);
-            const todasPagas=pagas.length===faturasRefMes.length;
-            const qtd=faturasRefMes.length;
-            const sufixoQtd=qtd>1?' <span style="color:var(--text-muted);font-size:11px;">('+qtd+' faturas)</span>':'';
-            const mesTag=' <span style="color:var(--text-muted);font-size:11px;">'+ufMes+'</span>';
-            if(todasPagas){
-                ufEl.innerHTML='<span style="color:var(--success);font-weight:700;">✓ Pago</span> — '+fmtCFull(ufTotalRef)+sufixoQtd+mesTag;
+        // Última Fatura - mesmo mês/valor da Mensalidade Total, com status
+        if(mref){
+            const sufixoQtd=mref.n>1?' <span style="color:var(--text-muted);font-size:11px;">('+mref.n+' faturas)</span>':'';
+            const mesTag=' <span style="color:var(--text-muted);font-size:11px;">'+mref.mes+'</span>';
+            if(mref.todasPagas){
+                ufEl.innerHTML='<span style="color:var(--success);font-weight:700;">✓ Pago</span> — '+fmtCFull(mref.valor)+sufixoQtd+mesTag;
             } else {
-                const temVencido=faturasRefMes.some(f=>f.status==='expired');
+                const temVencido=mref.faturasMes.some(f=>f.status==='expired');
                 const cor=temVencido?'var(--danger)':'var(--warning)';
                 const rotulo=temVencido?'Vencido':'Pendente';
-                ufEl.innerHTML='<span style="color:'+cor+';font-weight:700;">'+rotulo+'</span> — Pago '+fmtCFull(totalPago)+' de '+fmtCFull(ufTotalRef)+sufixoQtd+mesTag;
+                ufEl.innerHTML='<span style="color:'+cor+';font-weight:700;">'+rotulo+'</span> — Pago '+fmtCFull(mref.valor)+' de '+fmtCFull(mref.total)+sufixoQtd+mesTag;
             }
         } else if(show.planoTotalCobrado>0){
             ufEl.innerHTML='<span style="color:var(--text-muted);">Sem fatura</span>';
@@ -982,6 +960,25 @@ function updateFiliaisSection(match){
     }
 }
 
+// Mensalidade Total = soma das faturas PAGAS do mes mais recente que tem
+// pelo menos 1 fatura paga. Fonte unica usada no card, na Ultima Fatura e
+// na aba Financeira pra os 3 baterem.
+function mensalidadePagaMes(fat){
+    if(!fat||!fat.faturas||!fat.faturas.length)return null;
+    var mesAtual=new Date().toISOString().substring(0,7);
+    var porMes={};
+    fat.faturas.forEach(function(f){
+        if(f.status==='canceled'||f.mes>mesAtual)return;
+        if(!porMes[f.mes])porMes[f.mes]={mes:f.mes,total:0,pago:0,n:0,pagas:0,faturas:[]};
+        var pm=porMes[f.mes];pm.total+=f.total;pm.n++;pm.faturas.push(f);
+        if(f.status==='paid'||f.status==='externally_paid'){pm.pago+=f.total;pm.pagas++;}
+    });
+    var comPago=Object.keys(porMes).filter(function(m){return porMes[m].pagas>0;}).sort();
+    if(!comPago.length)return null;
+    var r=porMes[comPago[comPago.length-1]];
+    return {mes:r.mes,valor:r.pago,total:r.total,faturasMes:r.faturas,
+            todasPagas:r.pagas===r.n,n:r.n,pagas:r.pagas};
+}
 function updateFinanceiroDetail(match){
     const detail=document.getElementById('finEmpresaDetail');
     const tbody=document.getElementById('finEmpresaBody');
@@ -996,6 +993,10 @@ function updateFinanceiroDetail(match){
             const statusBadge=(s)=>{if(s==='paid')return'<span class="cell-badge badge-sim">Pago</span>';if(s==='pending')return'<span class="cell-badge" style="background:rgba(245,158,11,0.15);color:var(--warning);">Pendente</span>';if(s==='expired')return'<span class="cell-badge badge-nao">Vencido</span>';if(s==='canceled')return'<span class="cell-badge" style="background:rgba(90,94,114,0.15);color:var(--text-muted);">Cancelado</span>';if(s==='externally_paid')return'<span class="cell-badge badge-sim">Pago ext.</span>';return s;};
             // Summary KPIs
             html+='<tr><td colspan="4" style="padding:10px 12px;font-weight:700;color:var(--primary);font-size:13px;border-bottom:1px solid var(--border);">Faturas Iugu — '+f.planoIugu+'</td></tr>';
+            const _mref=mensalidadePagaMes(f);
+            if(_mref){
+                html+='<tr><td style="padding:6px 12px;font-weight:600;color:var(--text-secondary);">Mensalidade Total</td><td style="padding:6px 12px;color:var(--primary);font-weight:700;">'+fmtCFull(_mref.valor)+' <span style="color:var(--text-muted);font-size:11px;font-weight:500;">'+_mref.mes+'</span></td><td colspan="2" style="padding:6px 12px;color:var(--text-muted);font-size:11px;">soma das faturas pagas do mês</td></tr>';
+            }
             html+='<tr><td style="padding:6px 12px;font-weight:600;color:var(--text-secondary);">Total Pago</td><td style="padding:6px 12px;color:var(--success);font-weight:700;">'+fmtCFull(f.totalPago)+'</td>';
             html+='<td style="padding:6px 12px;font-weight:600;color:var(--text-secondary);">Pendente</td><td style="padding:6px 12px;color:var(--warning);font-weight:700;">'+(f.totalPendente?fmtCFull(f.totalPendente):'-')+'</td></tr>';
             html+='<tr><td style="padding:6px 12px;font-weight:600;color:var(--text-secondary);">Vencido</td><td style="padding:6px 12px;color:var(--danger);font-weight:700;">'+(f.totalVencido?fmtCFull(f.totalVencido):'-')+'</td>';
