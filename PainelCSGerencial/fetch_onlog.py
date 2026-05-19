@@ -269,6 +269,53 @@ def build(rows: list[dict], companies: dict[str, dict]) -> dict:
     }
 
 
+def reapply_diogo_patches(data: dict) -> None:
+    """fetch_onlog reconstroi onlog_data.json do zero (Fabric), o que apaga
+    o patch da planilha do Diogo (postagemFonte=planilha-diogo). Sem isso,
+    todo refresh diario faz a aba Frete mostrar os pedidos da quinzena como
+    'so na vesti' em vez de 'na planilha e na vesti'. Aqui re-aplicamos os
+    patches a partir do _planilhaSnapshot salvo em cada onlog_diff_*.json.
+    Idempotente e nao-fatal: snapshot ausente/quebrado so loga aviso.
+    """
+    total = 0
+    for dpath in sorted(ROOT.glob("onlog_diff_*.json")):
+        try:
+            diff = json.loads(dpath.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"[patch] {dpath.name}: ignorado ({e})")
+            continue
+        snap = (diff.get("_planilhaSnapshot") or {}).get("planilha") or {}
+        qz = diff.get("quinzena") or {}
+        de, ate = qz.get("de") or "", qz.get("ate") or ""
+        if not snap or not de or not ate:
+            continue
+        n = 0
+        for p in data.get("pedidos", []):
+            d = p.get("data") or ""
+            if not d or d < de or d > ate:
+                continue
+            pl = snap.get(f'{p.get("dominioId","")}_{p.get("orderNumber","")}')
+            if not pl:
+                continue
+            post = round(float(pl.get("postagem") or 0.0), 2)
+            p["valorPostagem"] = post
+            p["postagemFonte"] = "planilha-diogo"
+            if pl.get("status"):
+                p["statusOnlog"] = pl["status"]
+            bia = p.get("cotacaoBia")
+            bia_f = float(bia) if bia is not None else None
+            if bia_f is not None and bia_f > 0:
+                p["margemOnlog"] = round(bia_f - post, 2)
+                p["valorAnaFinal"] = round(max(bia_f, post * 1.10), 2)
+            else:
+                p["margemOnlog"] = None
+                p["valorAnaFinal"] = round(post * 1.10, 2)
+            n += 1
+        total += n
+        print(f"[patch] {dpath.name} ({de}..{ate}): {n} pedidos re-patcheados")
+    print(f"[patch] total re-patcheado: {total}")
+
+
 def main() -> None:
     cfg = load_config()
     companies = load_companies()
@@ -276,6 +323,7 @@ def main() -> None:
     with connect(cfg) as conn:
         rows = fetch_rows(conn)
     data = build(rows, companies)
+    reapply_diogo_patches(data)
     OUT_JSON.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     print(f"[write] {OUT_JSON.name}")
 
