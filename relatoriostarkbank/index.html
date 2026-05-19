@@ -330,6 +330,8 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
                         <th class="r">Pagas</th>
                         <th class="r">A receber</th>
                         <th class="r">Valor bruto</th>
+                        <th class="r">Recebido</th>
+                        <th class="r">A receber R$</th>
                         <th class="r">Taxas</th>
                         <th class="r">Valor líquido</th>
                     </tr>
@@ -1133,7 +1135,7 @@ function renderCr(){
     // 'created') = a receber. Valores da API sao em centavos.
     var tb=document.getElementById('tbodyCr');
     if(!window.INVOICES||!window.INVOICES.faturas){
-        tb.innerHTML='<tr><td colspan="10" class="empty" style="color:#E17055">invoices.js nao carregou — rode fetch_invoices.py</td></tr>';
+        tb.innerHTML='<tr><td colspan="12" class="empty" style="color:#E17055">invoices.js nao carregou — rode fetch_invoices.py</td></tr>';
         ['crEmp','crPedQty','crPed','crPedPg','crGross','crFee','crLiq','crEntradas','crSaidas','crSaldo'].forEach(function(id){document.getElementById(id).textContent='--'});
         return;
     }
@@ -1305,7 +1307,7 @@ function renderCr(){
     var saiLbl=document.querySelector('#kpisCrSaldo .kpi.red .lbl');   if(saiLbl) saiLbl.textContent='Saídas '+lblHoje;
     var sldLbl=document.querySelector('#kpisCrSaldo .kpi.teal .lbl');  if(sldLbl) sldLbl.textContent='Saldo '+(rAte===hojeISO?'hoje':fmtD(rAte));
     document.getElementById('crCount').textContent=fmtN(tot.n)+' parcela(s) em '+fmtN(dates.length)+' dia(s)';
-    if(!dates.length){tb.innerHTML='<tr><td colspan="10" class="empty">Nenhuma parcela com os filtros atuais</td></tr>';return}
+    if(!dates.length){tb.innerHTML='<tr><td colspan="12" class="empty">Nenhuma parcela com os filtros atuais</td></tr>';return}
     var html=[];
     dates.forEach(function(date){
         var db=byDate[date];
@@ -1335,6 +1337,8 @@ function renderCr(){
             '<td class="money" style="color:var(--g)">'+fmtN(dt.nPg)+'</td>'+
             '<td class="money" style="color:var(--r)">'+fmtN(dt.nAr)+'</td>'+
             '<td class="money" style="color:var(--mut)">'+fmtC(dt.vRec+dt.vAr)+'</td>'+
+            '<td class="money" style="color:var(--g)">'+fmtC(dt.vRec)+'</td>'+
+            '<td class="money" style="color:var(--r)">'+fmtC(dt.vAr)+'</td>'+
             '<td class="money" style="color:var(--y)">'+fmtC(dt.fee)+'</td>'+
             '<td class="money total">'+fmtC(dt.liq)+'</td>'+
         '</tr>');
@@ -1363,6 +1367,8 @@ function renderCr(){
                 '<td class="money" style="color:var(--g)">'+fmtN(es.nPg)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtN(es.nAr)+'</td>'+
                 '<td class="money" style="color:var(--mut)">'+fmtC(es.vRec+es.vAr)+'</td>'+
+                '<td class="money" style="color:var(--g)">'+fmtC(es.vRec)+'</td>'+
+                '<td class="money" style="color:var(--r)">'+fmtC(es.vAr)+'</td>'+
                 '<td class="money" style="color:var(--y)">'+fmtC(es.fee)+'</td>'+
                 '<td class="money total">'+fmtC(es.liq)+'</td>'+
             '</tr>');
@@ -1393,6 +1399,8 @@ function renderCr(){
                     '<td class="money" style="color:var(--g)">'+fmtN(os.nPg)+'</td>'+
                     '<td class="money" style="color:var(--r)">'+fmtN(os.nAr)+'</td>'+
                     '<td class="money" style="color:var(--mut)">'+fmtC(os.vRec+os.vAr)+'</td>'+
+                    '<td class="money" style="color:var(--g)">'+fmtC(os.vRec)+'</td>'+
+                    '<td class="money" style="color:var(--r)">'+fmtC(os.vAr)+'</td>'+
                     '<td class="money" style="color:var(--y)">'+fmtC(os.fee)+'</td>'+
                     '<td class="money total">'+fmtC(os.liq)+'</td>'+
                 '</tr>');
@@ -1425,6 +1433,8 @@ function renderCr(){
                         '<td class="money" style="color:var(--g)">'+(voided?'-':(pago?1:0))+'</td>'+
                         '<td class="money" style="color:var(--r)">'+(voided?'-':(pago?0:1))+'</td>'+
                         '<td class="money '+moneyCls+'" style="color:var(--mut)">'+fmtC(g)+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--g)">'+(voided?'-':(pago?fmtC(g):'—'))+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--r)">'+(voided?'-':(pago?'—':fmtC(g)))+'</td>'+
                         '<td class="money '+moneyCls+'" style="color:var(--y)">'+fmtC(fee)+'</td>'+
                         '<td class="money total '+moneyCls+'">'+fmtC(g-fee)+'</td>'+
                     '</tr>');
