@@ -1,0 +1,8 @@
+# NUNCA versionar segredos
+.streamlit/secrets.toml
+*secrets*.toml
+*TOKENS*.csv
+__pycache__/
+*.pyc
+.venv/
+venv/

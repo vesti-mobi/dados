@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: vesti-pix-automatico
+    runtime: docker
+    rootDir: vesti-pix-app
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /_stcore/health
+    # O arquivo de segredos NAO vai pro Git. Crie no painel do Render:
+    # Settings -> Secret Files -> Add Secret File
+    #   Filename: .streamlit/secrets.toml
+    #   Contents: conteudo do secrets.toml.example preenchido com os tokens reais
