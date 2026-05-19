@@ -330,8 +330,8 @@ tr.parc.last td{border-bottom:2px solid #E8E4FF}
                         <th class="r">Pagas</th>
                         <th class="r">A receber</th>
                         <th class="r">Valor bruto</th>
-                        <th class="r">Recebido</th>
-                        <th class="r">A receber R$</th>
+                        <th class="r">Recebido (líq.)</th>
+                        <th class="r">A receber (líq.)</th>
                         <th class="r">Taxas</th>
                         <th class="r">Valor líquido</th>
                     </tr>
@@ -1212,7 +1212,7 @@ function renderCr(){
     var dates=Object.keys(byDate).sort();
     // totais gerais
     function sumInsts(list){
-        var s={n:0,nPg:0,nAr:0,nCanc:0,vRec:0,vAr:0,fee:0,vCanc:0};
+        var s={n:0,nPg:0,nAr:0,nCanc:0,vRec:0,vAr:0,fee:0,feeRec:0,feeAr:0,vCanc:0};
         list.forEach(function(i){
             var v=(i.amount||0)/100;
             // Parcelas canceladas (voided) e pedidos com purchase voided NAO entram em totais.
@@ -1221,9 +1221,10 @@ function renderCr(){
                 return;
             }
             s.n++;
-            s.fee+=(i.fee||0)/100;
-            if(i.status==='paid'){s.nPg++;s.vRec+=v}
-            else{s.nAr++;s.vAr+=v}
+            var fi=(i.fee||0)/100;
+            s.fee+=fi;
+            if(i.status==='paid'){s.nPg++;s.vRec+=v;s.feeRec+=fi}
+            else{s.nAr++;s.vAr+=v;s.feeAr+=fi}
         });
         s.liq=s.vRec+s.vAr-s.fee;
         return s;
@@ -1337,8 +1338,8 @@ function renderCr(){
             '<td class="money" style="color:var(--g)">'+fmtN(dt.nPg)+'</td>'+
             '<td class="money" style="color:var(--r)">'+fmtN(dt.nAr)+'</td>'+
             '<td class="money" style="color:var(--mut)">'+fmtC(dt.vRec+dt.vAr)+'</td>'+
-            '<td class="money" style="color:var(--g)">'+fmtC(dt.vRec)+'</td>'+
-            '<td class="money" style="color:var(--r)">'+fmtC(dt.vAr)+'</td>'+
+            '<td class="money" style="color:var(--g)">'+fmtC(dt.vRec-dt.feeRec)+'</td>'+
+            '<td class="money" style="color:var(--r)">'+fmtC(dt.vAr-dt.feeAr)+'</td>'+
             '<td class="money" style="color:var(--y)">'+fmtC(dt.fee)+'</td>'+
             '<td class="money total">'+fmtC(dt.liq)+'</td>'+
         '</tr>');
@@ -1367,8 +1368,8 @@ function renderCr(){
                 '<td class="money" style="color:var(--g)">'+fmtN(es.nPg)+'</td>'+
                 '<td class="money" style="color:var(--r)">'+fmtN(es.nAr)+'</td>'+
                 '<td class="money" style="color:var(--mut)">'+fmtC(es.vRec+es.vAr)+'</td>'+
-                '<td class="money" style="color:var(--g)">'+fmtC(es.vRec)+'</td>'+
-                '<td class="money" style="color:var(--r)">'+fmtC(es.vAr)+'</td>'+
+                '<td class="money" style="color:var(--g)">'+fmtC(es.vRec-es.feeRec)+'</td>'+
+                '<td class="money" style="color:var(--r)">'+fmtC(es.vAr-es.feeAr)+'</td>'+
                 '<td class="money" style="color:var(--y)">'+fmtC(es.fee)+'</td>'+
                 '<td class="money total">'+fmtC(es.liq)+'</td>'+
             '</tr>');
@@ -1399,8 +1400,8 @@ function renderCr(){
                     '<td class="money" style="color:var(--g)">'+fmtN(os.nPg)+'</td>'+
                     '<td class="money" style="color:var(--r)">'+fmtN(os.nAr)+'</td>'+
                     '<td class="money" style="color:var(--mut)">'+fmtC(os.vRec+os.vAr)+'</td>'+
-                    '<td class="money" style="color:var(--g)">'+fmtC(os.vRec)+'</td>'+
-                    '<td class="money" style="color:var(--r)">'+fmtC(os.vAr)+'</td>'+
+                    '<td class="money" style="color:var(--g)">'+fmtC(os.vRec-os.feeRec)+'</td>'+
+                    '<td class="money" style="color:var(--r)">'+fmtC(os.vAr-os.feeAr)+'</td>'+
                     '<td class="money" style="color:var(--y)">'+fmtC(os.fee)+'</td>'+
                     '<td class="money total">'+fmtC(os.liq)+'</td>'+
                 '</tr>');
@@ -1433,8 +1434,8 @@ function renderCr(){
                         '<td class="money" style="color:var(--g)">'+(voided?'-':(pago?1:0))+'</td>'+
                         '<td class="money" style="color:var(--r)">'+(voided?'-':(pago?0:1))+'</td>'+
                         '<td class="money '+moneyCls+'" style="color:var(--mut)">'+fmtC(g)+'</td>'+
-                        '<td class="money '+moneyCls+'" style="color:var(--g)">'+(voided?'-':(pago?fmtC(g):'—'))+'</td>'+
-                        '<td class="money '+moneyCls+'" style="color:var(--r)">'+(voided?'-':(pago?'—':fmtC(g)))+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--g)">'+(voided?'-':(pago?fmtC(g-fee):'—'))+'</td>'+
+                        '<td class="money '+moneyCls+'" style="color:var(--r)">'+(voided?'-':(pago?'—':fmtC(g-fee)))+'</td>'+
                         '<td class="money '+moneyCls+'" style="color:var(--y)">'+fmtC(fee)+'</td>'+
                         '<td class="money total '+moneyCls+'">'+fmtC(g-fee)+'</td>'+
                     '</tr>');
