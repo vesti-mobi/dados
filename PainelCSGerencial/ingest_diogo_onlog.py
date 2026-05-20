@@ -244,7 +244,7 @@ def fetch_vesti_keys(order_numbers: set[int]) -> set[str]:
         conn.close()
         print(f"      [fabric] base completa: {len(keys)} chaves dominio_pedido existentes no Vesti")
         return keys
-    except Exception as e:
+    except BaseException as e:
         print(f"      [fabric] AVISO: nao deu p/ validar contra a base completa ({e}). "
               f"Seguindo sem essa validacao (pode haver falso 'so na planilha').")
         return set()
