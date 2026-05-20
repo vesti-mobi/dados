@@ -425,8 +425,17 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
     print(f"      {len(pa_vesti)} postagens avulsas PA VESTI (sem pedido) - total R$ {pa_total:,.2f}")
 
     print(f"[3/4] Filtrando Fabric")
-    fabric = filter_fabric(onlog_data.get("pedidos", []), de, ate)
-    print(f"      {len(fabric)} pedidos do Fabric na quinzena")
+    # Filtra Fabric pelo range REAL coberto pela planilha (e nao pela quinzena
+    # inteira), pra evitar falso "so Fabric" quando o Diogo ainda nao exportou
+    # todos os dias. Clampa dentro de [de, ate] da quinzena.
+    datas_pl = [p.get("data") for p in planilha.values() if p.get("data")]
+    if datas_pl:
+        pl_de = max(de, min(datas_pl))
+        pl_ate = min(ate, max(datas_pl))
+    else:
+        pl_de, pl_ate = de, ate
+    fabric = filter_fabric(onlog_data.get("pedidos", []), pl_de, pl_ate)
+    print(f"      {len(fabric)} pedidos do Fabric no range coberto pela planilha ({pl_de}..{pl_ate})")
 
     print(f"[3.5/4] Patch onlog_data com valores da planilha (postagem + margem)")
     n_upd, n_skip = patch_onlog_data(onlog_data, planilha, de, ate)
