@@ -1530,6 +1530,9 @@ function _onlogInQuinzena(date,idx){
 function _onlogPedidoOrigem(p,idx){
     if(p._origem==='planilha-only')return 'planilha-only';
     if(p.postagemFonte==='planilha-diogo')return 'both';
+    // Cancelados e SEPARATED nao deveriam aparecer na planilha por design — nao sao
+    // "soFabric" reais (alinhado com _is_no_postavel do ingest_diogo_onlog.py).
+    if(p.cancelado || (p.status||'').toUpperCase()==='SEPARATED')return 'outOfRange';
     // so e' "soFabric" se a data esta dentro de range coberto por alguma planilha
     var dt=p.data||'';
     if(dt){
@@ -1591,8 +1594,11 @@ function _onlogFilterRows(od){
         // SO no Vesti (nao tem na planilha): pedidos Vesti sem patch da planilha
         // E que estao em um range coberto por planilha ingerida (senao nao da p/ afirmar
         // que e' so-vesti - simplesmente nao tem planilha pra comparar naquele dia).
+        // Exclui cancelados e SEPARATED — nao deveriam estar na planilha por design
+        // (mesma regra do _is_no_postavel no ingest_diogo_onlog.py).
         rows=rows.filter(function(p){
             if(p.postagemFonte==='planilha-diogo')return false;
+            if(p.cancelado || (p.status||'').toUpperCase()==='SEPARATED')return false;
             var dt=p.data||'';if(!dt)return false;
             for(var i=0;i<idx.rangesCobertos.length;i++){
                 var r=idx.rangesCobertos[i];
