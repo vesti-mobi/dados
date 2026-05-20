@@ -7,7 +7,7 @@
     "de": "2026-05-01",
     "ate": "2026-05-12"
   },
-  "geradoEm": "2026-05-20T11:43:28.553205",
+  "geradoEm": "2026-05-20T11:51:44.893054",
   "planilhaArquivo": "2026-05-12-15-56_AnalisarPostagens-544407-20260512.xlsx",
   "resumo": {
     "ok": 132,
@@ -274,7 +274,14 @@
   },
   "divergencias": [
     {
-      "orderNumber": 15,
+      "orderNumber": 3,
+      "marca": "",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 14,
       "marca": "",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
@@ -288,21 +295,7 @@
       "fabric": "CANCELADO no Vesti"
     },
     {
-      "orderNumber": 14,
-      "marca": "",
-      "campo": "Cancelado",
-      "planilha": "(postado pela Onlog)",
-      "fabric": "CANCELADO no Vesti"
-    },
-    {
-      "orderNumber": 4,
-      "marca": "Asha Plus",
-      "campo": "Cancelado",
-      "planilha": "(postado pela Onlog)",
-      "fabric": "CANCELADO no Vesti"
-    },
-    {
-      "orderNumber": 3,
+      "orderNumber": 15,
       "marca": "",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
@@ -314,20 +307,27 @@
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 4,
+      "marca": "Asha Plus",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
     }
   ],
   "soPlanilha": [],
   "soFabric": [
     {
-      "data": "2026-05-04",
-      "orderNumber": 4174,
+      "data": "2026-05-12",
+      "orderNumber": 4221,
       "marca": "Arary",
-      "cliente": "ENI DA COSTA",
-      "cidade": "Contagem",
-      "uf": "MG",
+      "cliente": "Ana Luiza Pessanha ",
+      "cidade": "Campos dos Goytacazes",
+      "uf": "RJ",
       "cancelado": false,
-      "status": "DELIVERED",
-      "valor": 1137.13
+      "status": "SENT",
+      "valor": 910.67
     },
     {
       "data": "2026-05-06",
@@ -341,6 +341,17 @@
       "valor": 788.35
     },
     {
+      "data": "2026-05-04",
+      "orderNumber": 4174,
+      "marca": "Arary",
+      "cliente": "ENI DA COSTA",
+      "cidade": "Contagem",
+      "uf": "MG",
+      "cancelado": false,
+      "status": "DELIVERED",
+      "valor": 1137.13
+    },
+    {
       "data": "2026-05-03",
       "orderNumber": 4163,
       "marca": "Arary",
@@ -350,39 +361,6 @@
       "cancelado": false,
       "status": "SENT",
       "valor": 1129.0
-    },
-    {
-      "data": "2026-05-12",
-      "orderNumber": 4221,
-      "marca": "Arary",
-      "cliente": "Ana Luiza Pessanha ",
-      "cidade": "Campos dos Goytacazes",
-      "uf": "RJ",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 910.67
-    },
-    {
-      "data": "2026-05-12",
-      "orderNumber": 4224,
-      "marca": "Arary",
-      "cliente": "Simone Francisca Da Silva",
-      "cidade": "Várzea Grande",
-      "uf": "MT",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 1496.56
-    },
-    {
-      "data": "2026-05-11",
-      "orderNumber": 57,
-      "marca": "Practory",
-      "cliente": "Wanessa Oliveira Lucinari",
-      "cidade": "Sao Paulo",
-      "uf": "SP",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 1389.11
     },
     {
       "data": "2026-05-07",
@@ -416,6 +394,28 @@
       "cancelado": false,
       "status": "SENT",
       "valor": 408.8
+    },
+    {
+      "data": "2026-05-11",
+      "orderNumber": 57,
+      "marca": "Practory",
+      "cliente": "Wanessa Oliveira Lucinari",
+      "cidade": "Sao Paulo",
+      "uf": "SP",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1389.11
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 4224,
+      "marca": "Arary",
+      "cliente": "Simone Francisca Da Silva",
+      "cidade": "Várzea Grande",
+      "uf": "MT",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1496.56
     }
   ],
   "_planilhaSnapshot": {

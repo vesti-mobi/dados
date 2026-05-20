@@ -441,9 +441,19 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
     n_upd, n_skip = patch_onlog_data(onlog_data, planilha, de, ate)
     print(f"      {n_upd} pedidos atualizados (postagem + margem); {n_skip} sem match na planilha")
 
-    print(f"[3.8/4] Validando contra base COMPLETA do Vesti (Fabric)")
-    _onums = {p.get("orderNumber") for p in planilha.values()}
-    vesti_exists = fetch_vesti_keys(_onums)
+    print(f"[3.8/4] Validando contra onlog_data (pedidos com provider=onLog)")
+    # Antes consultavamos MongoDB_Pedidos_Geral (base ampla), mas isso fazia sumir
+    # pedidos cujo provider no Mongo nao esta como onLog: caiam fora de 'so planilha'
+    # via reclass MAS nao apareciam em onlog_data => limbo. Agora reclassificamos
+    # somente quando o pedido existe no proprio onlog_data (que e' o que o painel
+    # exibe). Casos de dominio divergente dentro de onLog continuam sendo capturados
+    # pelo _vestiMatch do template (orderNumber + CPF).
+    vesti_exists = {
+        f'{p.get("dominioId","")}_{p.get("orderNumber","")}'
+        for p in onlog_data.get("pedidos", [])
+        if p.get("orderNumber") is not None
+    }
+    print(f"      onlog_data: {len(vesti_exists)} chaves dominio_pedido (provider=onLog)")
 
     print(f"[4/4] Comparando")
     ok, dif, only_p, only_f = compare(planilha, fabric, vesti_exists)
