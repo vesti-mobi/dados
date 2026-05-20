@@ -259,27 +259,40 @@ def _is_no_postavel(p: dict) -> bool:
 
 
 def patch_onlog_data(onlog_data: dict, planilha: dict, de: str, ate: str) -> tuple[int, int]:
-    """Atualiza valorPostagem e margemOnlog dos pedidos no onlog_data.json
-    usando os valores reais da planilha do Diogo, para o range [de, ate].
+    """Atualiza valorPostagem, data (= data de postagem do Diogo), status e
+    margemOnlog dos pedidos no onlog_data.json usando os valores reais da planilha
+    do Diogo.
+
+    Casamento pela chave dominioId_orderNumber (sem restringir por data Mongo),
+    porque o orderDate Mongo as vezes diverge da data real de postagem - ex.:
+    cliente faz pedido dia 15 e Diogo posta dia 16. Quem manda na conferencia
+    Onlog e' a data da planilha do Diogo (postagem real). Filtramos so' por
+    [de, ate] usando a data da planilha pra nao reescrever pedidos de outra
+    quinzena ingerida em outro upload.
 
     Margem = Cotacao BIA - Valor Postagem (lucro real da Vesti por frete).
 
     Retorna (n_atualizados, n_no_range_sem_planilha).
     """
+    # indexa onlog_data por chave domain_order p/ lookup O(1)
+    by_key = {f'{p.get("dominioId","")}_{p.get("orderNumber","")}': p
+              for p in onlog_data.get("pedidos", [])}
     n_upd = 0
     n_skip = 0
-    for p in onlog_data.get("pedidos", []):
-        d = p.get("data") or ""
-        if not d or d < de or d > ate:
+    for k, pl in planilha.items():
+        pl_data = pl.get("data") or ""
+        if not pl_data or pl_data < de or pl_data > ate:
             continue
-        k = f'{p.get("dominioId","")}_{p.get("orderNumber","")}'
-        pl = planilha.get(k)
-        if not pl:
+        p = by_key.get(k)
+        if not p:
             n_skip += 1
             continue
         post = round(pl["postagem"], 2)
         p["valorPostagem"] = post
         p["postagemFonte"] = "planilha-diogo"
+        # Sobrescreve a data Mongo (orderDate) pela data real de postagem do Diogo.
+        # Isso faz o painel filtrar o pedido pela quinzena CORRETA (a da postagem).
+        p["data"] = pl_data
         # Status REAL da postagem (Diogo) - sobrepoe o status do Mongo no display
         if pl.get("status"):
             p["statusOnlog"] = pl["status"]

@@ -7,7 +7,7 @@
     "de": "2026-04-16",
     "ate": "2026-04-30"
   },
-  "geradoEm": "2026-05-20T17:22:06.201328",
+  "geradoEm": "2026-05-20T17:41:12.076362",
   "planilhaArquivo": "Fechamento 2ª quinzena de abril - Diogo .xlsx",
   "resumo": {
     "ok": 303,
@@ -487,7 +487,7 @@
       "orderNumber": 4095,
       "marca": "Arary",
       "cliente": "Maria José Naves",
-      "data": "2026-04-24",
+      "data": "2026-04-28",
       "statusMongo": "SENT",
       "statusOnlog": "ENTREGUE",
       "postagem": 51.72
@@ -505,7 +505,7 @@
       "orderNumber": 1004,
       "marca": " Era Uma Vez",
       "cliente": "Aline Amereles",
-      "data": "2026-04-22",
+      "data": "2026-04-23",
       "statusMongo": "WAITING",
       "statusOnlog": "ENTREGUE",
       "postagem": 171.47
@@ -523,7 +523,7 @@
       "orderNumber": 1012,
       "marca": " Era Uma Vez",
       "cliente": "Keila De Souza Duarte",
-      "data": "2026-04-25",
+      "data": "2026-04-30",
       "statusMongo": "WAITING",
       "statusOnlog": "ENTREGUE",
       "postagem": 108.57
@@ -638,8 +638,8 @@
   },
   "divergencias": [
     {
-      "orderNumber": 2,
-      "marca": "Issa Modas",
+      "orderNumber": 5951,
+      "marca": "Anne Blánc",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
@@ -652,8 +652,8 @@
       "fabric": "CANCELADO no Vesti"
     },
     {
-      "orderNumber": 10,
-      "marca": "UNBRAND",
+      "orderNumber": 3,
+      "marca": "Issa Modas",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
@@ -666,15 +666,15 @@
       "fabric": "CANCELADO no Vesti"
     },
     {
-      "orderNumber": 3,
-      "marca": "Issa Modas",
+      "orderNumber": 10,
+      "marca": "UNBRAND",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
     },
     {
-      "orderNumber": 5951,
-      "marca": "Anne Blánc",
+      "orderNumber": 2,
+      "marca": "Issa Modas",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
@@ -689,39 +689,6 @@
   ],
   "soPlanilha": [],
   "soFabric": [
-    {
-      "data": "2026-04-18",
-      "orderNumber": 4050,
-      "marca": "Arary",
-      "cliente": "Maria Cristiane Macedo Silva",
-      "cidade": "São Paulo",
-      "uf": "SP",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 1008.35
-    },
-    {
-      "data": "2026-04-28",
-      "orderNumber": 1017,
-      "marca": " Era Uma Vez",
-      "cliente": "Aline Amereles",
-      "cidade": "Londrina",
-      "uf": "PR",
-      "cancelado": false,
-      "status": "WAITING",
-      "valor": 4317.61
-    },
-    {
-      "data": "2026-04-16",
-      "orderNumber": 1084,
-      "marca": "CVL Moda - CD Nova Friburgo",
-      "cliente": "Antonia Peixoto",
-      "cidade": "Brasília",
-      "uf": "DF",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 483.64
-    },
     {
       "data": "2026-04-27",
       "orderNumber": 4109,
@@ -745,15 +712,48 @@
       "valor": 1022.08
     },
     {
-      "data": "2026-04-24",
-      "orderNumber": 42,
-      "marca": "Practory",
-      "cliente": "Renata Reis",
-      "cidade": "Santos",
+      "data": "2026-04-28",
+      "orderNumber": 1017,
+      "marca": " Era Uma Vez",
+      "cliente": "Aline Amereles",
+      "cidade": "Londrina",
+      "uf": "PR",
+      "cancelado": false,
+      "status": "WAITING",
+      "valor": 4317.61
+    },
+    {
+      "data": "2026-04-30",
+      "orderNumber": 6738,
+      "marca": "Chocolate Doce",
+      "cliente": "Giseli Cristina Velasques",
+      "cidade": "Ladário",
+      "uf": "MS",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 597.42
+    },
+    {
+      "data": "2026-04-16",
+      "orderNumber": 1084,
+      "marca": "CVL Moda - CD Nova Friburgo",
+      "cliente": "Antonia Peixoto",
+      "cidade": "Brasília",
+      "uf": "DF",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 483.64
+    },
+    {
+      "data": "2026-04-18",
+      "orderNumber": 4050,
+      "marca": "Arary",
+      "cliente": "Maria Cristiane Macedo Silva",
+      "cidade": "São Paulo",
       "uf": "SP",
       "cancelado": false,
       "status": "SENT",
-      "valor": 1218.84
+      "valor": 1008.35
     },
     {
       "data": "2026-04-23",
@@ -767,15 +767,15 @@
       "valor": 2077.81
     },
     {
-      "data": "2026-04-30",
-      "orderNumber": 6738,
-      "marca": "Chocolate Doce",
-      "cliente": "Giseli Cristina Velasques",
-      "cidade": "Ladário",
-      "uf": "MS",
+      "data": "2026-04-24",
+      "orderNumber": 42,
+      "marca": "Practory",
+      "cliente": "Renata Reis",
+      "cidade": "Santos",
+      "uf": "SP",
       "cancelado": false,
       "status": "SENT",
-      "valor": 597.42
+      "valor": 1218.84
     }
   ],
   "_planilhaSnapshot": {
