@@ -7,7 +7,7 @@
     "de": "2026-05-18",
     "ate": "2026-05-19"
   },
-  "geradoEm": "2026-05-20T11:51:44.434186",
+  "geradoEm": "2026-05-20T11:59:21.320871",
   "planilhaArquivo": "AnalisarPostagens-544407-20260519 (1).xlsx",
   "resumo": {
     "ok": 12,
@@ -150,17 +150,17 @@
   "divergencias": [],
   "soPlanilha": [
     {
-      "codigoVolume": "1956465_313",
-      "orderNumber": "313",
-      "cliente": "ANA PAULA LEONARDO DA SILVA",
-      "clienteDoc": "31788535880",
-      "cidade": "SANTO ANDRE9",
-      "uf": "SP",
-      "status": "OBJETO CRIADO",
-      "postagem": 17.09,
+      "codigoVolume": "1956465_300",
+      "orderNumber": "300",
+      "cliente": "MONIQUE ANDRADE",
+      "clienteDoc": "08684244982",
+      "cidade": "FLORIANF3POLIS",
+      "uf": "SC",
+      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
+      "postagem": 20.1,
       "data": "2026-05-19",
-      "remetente": "PORE3",
-      "valorDeclarado": 237.0
+      "remetente": "Porã",
+      "valorDeclarado": 209.0
     },
     {
       "codigoVolume": "1266888_688",
@@ -172,8 +172,47 @@
       "status": "OBJETO CRIADO",
       "postagem": 23.34,
       "data": "2026-05-19",
-      "remetente": "ALINE CONFECE7F5ES",
+      "remetente": "Aline Confecções",
       "valorDeclarado": 490.0
+    },
+    {
+      "codigoVolume": "1956465_313",
+      "orderNumber": "313",
+      "cliente": "ANA PAULA LEONARDO DA SILVA",
+      "clienteDoc": "31788535880",
+      "cidade": "SANTO ANDRE9",
+      "uf": "SP",
+      "status": "OBJETO CRIADO",
+      "postagem": 17.09,
+      "data": "2026-05-19",
+      "remetente": "Porã",
+      "valorDeclarado": 237.0
+    },
+    {
+      "codigoVolume": "1956465_314",
+      "orderNumber": "314",
+      "cliente": "NEIDE SANTOS",
+      "clienteDoc": "15232740857",
+      "cidade": "GUARULHOS",
+      "uf": "SP",
+      "status": "OBJETO CRIADO",
+      "postagem": 15.48,
+      "data": "2026-05-19",
+      "remetente": "Porã",
+      "valorDeclarado": 206.0
+    },
+    {
+      "codigoVolume": "1355848_4270",
+      "orderNumber": "4270",
+      "cliente": "TALITA DE CARVALHO LEITE",
+      "clienteDoc": "07281967608",
+      "cidade": "ARUJE1",
+      "uf": "SP",
+      "status": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO",
+      "postagem": 37.25,
+      "data": "2026-05-19",
+      "remetente": "Arary",
+      "valorDeclarado": 1546.0
     },
     {
       "codigoVolume": "1956465_307",
@@ -185,7 +224,7 @@
       "status": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO",
       "postagem": 26.05,
       "data": "2026-05-19",
-      "remetente": "PORE3",
+      "remetente": "Porã",
       "valorDeclarado": 209.0
     },
     {
@@ -198,47 +237,8 @@
       "status": "OBJETO CRIADO",
       "postagem": 31.49,
       "data": "2026-05-19",
-      "remetente": "ALINE CONFECE7F5ES",
+      "remetente": "Aline Confecções",
       "valorDeclarado": 970.0
-    },
-    {
-      "codigoVolume": "1355848_4270",
-      "orderNumber": "4270",
-      "cliente": "TALITA DE CARVALHO LEITE",
-      "clienteDoc": "07281967608",
-      "cidade": "ARUJE1",
-      "uf": "SP",
-      "status": "ENCAMINHADO PARA O OPERADOR LOGÍSTICO",
-      "postagem": 37.25,
-      "data": "2026-05-19",
-      "remetente": "ARARY",
-      "valorDeclarado": 1546.0
-    },
-    {
-      "codigoVolume": "1956465_300",
-      "orderNumber": "300",
-      "cliente": "MONIQUE ANDRADE",
-      "clienteDoc": "08684244982",
-      "cidade": "FLORIANF3POLIS",
-      "uf": "SC",
-      "status": "ENTRADA NO CENTRO DE DISTRIBUIÇÃO",
-      "postagem": 20.1,
-      "data": "2026-05-19",
-      "remetente": "PORE3",
-      "valorDeclarado": 209.0
-    },
-    {
-      "codigoVolume": "1956465_314",
-      "orderNumber": "314",
-      "cliente": "NEIDE SANTOS",
-      "clienteDoc": "15232740857",
-      "cidade": "GUARULHOS",
-      "uf": "SP",
-      "status": "OBJETO CRIADO",
-      "postagem": 15.48,
-      "data": "2026-05-19",
-      "remetente": "PORE3",
-      "valorDeclarado": 206.0
     }
   ],
   "soFabric": [],

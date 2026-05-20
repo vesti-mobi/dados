@@ -527,9 +527,9 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
         cobranca_marca[dom]["cobrar"] += p["postagem"] * 1.10
     # Anexar nome da marca via companies_data.json
     companies_path = ROOT / "companies_data.json"
+    nome_por_dom = {}
     if companies_path.exists():
         cs = json.loads(companies_path.read_text(encoding="utf-8"))
-        nome_por_dom = {}
         for c in cs:
             d = str(c.get("domain_id") or "")
             if not d:
@@ -595,7 +595,10 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
             "status": p["status"],
             "postagem": round(p["postagem"], 2),
             "data": p.get("data", ""),
-            "remetente": p.get("remetente", ""),
+            # Usa marca de companies_data (mesma string que o painel mostra p/ outros
+            # pedidos da mesma marca) e cai pro remetente da planilha so se nao tiver
+            # match. Garante que pesquisa por marca encontra os pedidos so-planilha.
+            "remetente": nome_por_dom.get(p.get("domainId", "")) or p.get("remetente", ""),
             "valorDeclarado": p.get("valorDeclarado"),
         } for p in only_p],
         "soFabric": [{

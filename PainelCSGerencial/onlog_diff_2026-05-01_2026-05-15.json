@@ -7,7 +7,7 @@
     "de": "2026-05-01",
     "ate": "2026-05-12"
   },
-  "geradoEm": "2026-05-20T11:51:44.893054",
+  "geradoEm": "2026-05-20T12:00:03.170392",
   "planilhaArquivo": "2026-05-12-15-56_AnalisarPostagens-544407-20260512.xlsx",
   "resumo": {
     "ok": 132,
@@ -274,27 +274,6 @@
   },
   "divergencias": [
     {
-      "orderNumber": 3,
-      "marca": "",
-      "campo": "Cancelado",
-      "planilha": "(postado pela Onlog)",
-      "fabric": "CANCELADO no Vesti"
-    },
-    {
-      "orderNumber": 14,
-      "marca": "",
-      "campo": "Cancelado",
-      "planilha": "(postado pela Onlog)",
-      "fabric": "CANCELADO no Vesti"
-    },
-    {
-      "orderNumber": 3,
-      "marca": "DoceVida ",
-      "campo": "Cancelado",
-      "planilha": "(postado pela Onlog)",
-      "fabric": "CANCELADO no Vesti"
-    },
-    {
       "orderNumber": 15,
       "marca": "",
       "campo": "Cancelado",
@@ -314,32 +293,31 @@
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 3,
+      "marca": "DoceVida ",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 14,
+      "marca": "",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 3,
+      "marca": "",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
     }
   ],
   "soPlanilha": [],
   "soFabric": [
-    {
-      "data": "2026-05-12",
-      "orderNumber": 4221,
-      "marca": "Arary",
-      "cliente": "Ana Luiza Pessanha ",
-      "cidade": "Campos dos Goytacazes",
-      "uf": "RJ",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 910.67
-    },
-    {
-      "data": "2026-05-06",
-      "orderNumber": 728,
-      "marca": "FIRE",
-      "cliente": "Dilcelia De Fatima Guimarães Souza",
-      "cidade": "Córrego Fundo",
-      "uf": "MG",
-      "cancelado": false,
-      "status": "WAITING",
-      "valor": 788.35
-    },
     {
       "data": "2026-05-04",
       "orderNumber": 4174,
@@ -350,17 +328,6 @@
       "cancelado": false,
       "status": "DELIVERED",
       "valor": 1137.13
-    },
-    {
-      "data": "2026-05-03",
-      "orderNumber": 4163,
-      "marca": "Arary",
-      "cliente": "Marcely Eduarda da Silva Amorim",
-      "cidade": "Jundiaí",
-      "uf": "SP",
-      "cancelado": false,
-      "status": "SENT",
-      "valor": 1129.0
     },
     {
       "data": "2026-05-07",
@@ -375,14 +342,36 @@
     },
     {
       "data": "2026-05-12",
-      "orderNumber": 13,
-      "marca": "UNBRAND",
-      "cliente": "Lucimar Santos",
-      "cidade": "Aiuruoca",
+      "orderNumber": 4224,
+      "marca": "Arary",
+      "cliente": "Simone Francisca Da Silva",
+      "cidade": "Várzea Grande",
+      "uf": "MT",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1496.56
+    },
+    {
+      "data": "2026-05-06",
+      "orderNumber": 728,
+      "marca": "FIRE",
+      "cliente": "Dilcelia De Fatima Guimarães Souza",
+      "cidade": "Córrego Fundo",
       "uf": "MG",
       "cancelado": false,
       "status": "WAITING",
-      "valor": 305.26
+      "valor": 788.35
+    },
+    {
+      "data": "2026-05-03",
+      "orderNumber": 4163,
+      "marca": "Arary",
+      "cliente": "Marcely Eduarda da Silva Amorim",
+      "cidade": "Jundiaí",
+      "uf": "SP",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1129.0
     },
     {
       "data": "2026-05-12",
@@ -394,6 +383,17 @@
       "cancelado": false,
       "status": "SENT",
       "valor": 408.8
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 13,
+      "marca": "UNBRAND",
+      "cliente": "Lucimar Santos",
+      "cidade": "Aiuruoca",
+      "uf": "MG",
+      "cancelado": false,
+      "status": "WAITING",
+      "valor": 305.26
     },
     {
       "data": "2026-05-11",
@@ -408,14 +408,14 @@
     },
     {
       "data": "2026-05-12",
-      "orderNumber": 4224,
+      "orderNumber": 4221,
       "marca": "Arary",
-      "cliente": "Simone Francisca Da Silva",
-      "cidade": "Várzea Grande",
-      "uf": "MT",
+      "cliente": "Ana Luiza Pessanha ",
+      "cidade": "Campos dos Goytacazes",
+      "uf": "RJ",
       "cancelado": false,
       "status": "SENT",
-      "valor": 1496.56
+      "valor": 910.67
     }
   ],
   "_planilhaSnapshot": {
