@@ -542,6 +542,7 @@ def process_quinzena(raw: list[dict], de: str, ate: str, onlog_data: dict, xlsx_
     total_cobrar = round(custo_diogo * 1.10, 2)
     out = {
         "quinzena": {"de": de, "ate": ate},
+        "rangeCoberto": {"de": pl_de, "ate": pl_ate},
         "geradoEm": datetime.now().isoformat(),
         "planilhaArquivo": xlsx_path.name,
         "resumo": {

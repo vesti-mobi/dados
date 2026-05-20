@@ -3,16 +3,20 @@
     "de": "2026-05-01",
     "ate": "2026-05-15"
   },
-  "geradoEm": "2026-05-15T14:37:42.294608",
+  "rangeCoberto": {
+    "de": "2026-05-01",
+    "ate": "2026-05-12"
+  },
+  "geradoEm": "2026-05-20T11:43:28.553205",
   "planilhaArquivo": "2026-05-12-15-56_AnalisarPostagens-544407-20260512.xlsx",
   "resumo": {
-    "ok": 135,
-    "divergencias": 3,
-    "divergenciasPedidos": 2,
+    "ok": 132,
+    "divergencias": 6,
+    "divergenciasPedidos": 5,
     "soPlanilha": 0,
-    "soFabric": 1,
+    "soFabric": 9,
     "nPlanilha": 138,
-    "nFabric": 90,
+    "nFabric": 180,
     "totalPedidosPostagem": 6227.07,
     "totalPaVesti": 325.84,
     "totalGeralPostagem": 6552.91,
@@ -233,13 +237,6 @@
       "statusOnlog": "OBJETO CRIADO"
     },
     {
-      "orderNumber": 377,
-      "marca": "",
-      "cliente": "Franciele Astrisi",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
       "orderNumber": 1039,
       "marca": " Era Uma Vez",
       "cliente": "Christine Sampaio",
@@ -254,55 +251,6 @@
       "statusOnlog": "OBJETO CRIADO"
     },
     {
-      "orderNumber": 4180,
-      "marca": "Arary",
-      "cliente": "Marcely Eduarda da Silva Amorim",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO EM TRANSFERÊNCIA - POR FAVOR AGUARDE"
-    },
-    {
-      "orderNumber": 4186,
-      "marca": "Arary",
-      "cliente": "Auda de Souza Guedes Pires ",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO POSTADO APÓS O HORÁRIO LIMITE DA UNIDADE"
-    },
-    {
-      "orderNumber": 6274,
-      "marca": "Anne Blánc",
-      "cliente": "Elenice Bazana De Souza",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6275,
-      "marca": "Anne Blánc",
-      "cliente": "Lucimar De Oliveira Quixaba",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6276,
-      "marca": "Anne Blánc",
-      "cliente": "Solange Barbosa De Almeida",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6277,
-      "marca": "Anne Blánc",
-      "cliente": "Jéssica Keli Bastos",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 205,
-      "marca": "Porã",
-      "cliente": "Jaqueline",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
       "orderNumber": 10,
       "marca": "Liberô Style",
       "cliente": "Adriana Peres",
@@ -310,116 +258,42 @@
       "statusOnlog": "OBJETO CRIADO"
     },
     {
-      "orderNumber": 893,
-      "marca": "KAESSI",
-      "cliente": "Priscila M A Darini",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 208,
-      "marca": "Porã",
-      "cliente": "Maria Sineide",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6283,
-      "marca": "Anne Blánc",
-      "cliente": "Gatta Vestuários Ltda",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6284,
-      "marca": "Anne Blánc",
-      "cliente": "Ane Noguti",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 896,
-      "marca": "KAESSI",
-      "cliente": "Andrea M Oliveira",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6285,
-      "marca": "Anne Blánc",
-      "cliente": "Gina Karla Sobreira Nunes",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6289,
-      "marca": "Anne Blánc",
-      "cliente": "Liêz",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6291,
-      "marca": "Anne Blánc",
-      "cliente": "Carolina Regina Da Silva",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 210,
-      "marca": "Porã",
-      "cliente": "Natalia Teixeira Da Silva",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6292,
-      "marca": "Anne Blánc",
-      "cliente": "Neuzete Barbosa",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6293,
-      "marca": "Anne Blánc",
-      "cliente": "Ivana Reis",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6294,
-      "marca": "Anne Blánc",
-      "cliente": "Andreia Luiz Dos Santos",
-      "statusMongo": "WAITING",
-      "statusOnlog": "OBJETO CRIADO"
-    },
-    {
-      "orderNumber": 6295,
-      "marca": "Anne Blánc",
-      "cliente": "Ellen Biondi",
+      "orderNumber": 11,
+      "marca": "Liberô Style",
+      "cliente": "Odília Marques",
       "statusMongo": "WAITING",
       "statusOnlog": "OBJETO CRIADO"
     }
   ],
   "auditEtiqueta": [],
-  "auditFrete": [
-    {
-      "orderNumber": 6283,
-      "marca": "Anne Blánc",
-      "cliente": "Gatta Vestuários Ltda",
-      "postagem": 15.37,
-      "esperado": 16.91,
-      "biaMongo": 15.85,
-      "diferenca": -1.06,
-      "diferencaPct": 6.3
-    }
-  ],
+  "auditFrete": [],
   "auditResumo": {
-    "statusAtrasado": 27,
+    "statusAtrasado": 7,
     "semEtiqueta": 0,
-    "freteDivergente": 1
+    "freteDivergente": 0
   },
   "divergencias": [
+    {
+      "orderNumber": 15,
+      "marca": "",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 3,
+      "marca": "DoceVida ",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
+    {
+      "orderNumber": 14,
+      "marca": "",
+      "campo": "Cancelado",
+      "planilha": "(postado pela Onlog)",
+      "fabric": "CANCELADO no Vesti"
+    },
     {
       "orderNumber": 4,
       "marca": "Asha Plus",
@@ -435,8 +309,8 @@
       "fabric": "CANCELADO no Vesti"
     },
     {
-      "orderNumber": 3,
-      "marca": "DoceVida ",
+      "orderNumber": 2,
+      "marca": "",
       "campo": "Cancelado",
       "planilha": "(postado pela Onlog)",
       "fabric": "CANCELADO no Vesti"
@@ -454,6 +328,94 @@
       "cancelado": false,
       "status": "DELIVERED",
       "valor": 1137.13
+    },
+    {
+      "data": "2026-05-06",
+      "orderNumber": 728,
+      "marca": "FIRE",
+      "cliente": "Dilcelia De Fatima Guimarães Souza",
+      "cidade": "Córrego Fundo",
+      "uf": "MG",
+      "cancelado": false,
+      "status": "WAITING",
+      "valor": 788.35
+    },
+    {
+      "data": "2026-05-03",
+      "orderNumber": 4163,
+      "marca": "Arary",
+      "cliente": "Marcely Eduarda da Silva Amorim",
+      "cidade": "Jundiaí",
+      "uf": "SP",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1129.0
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 4221,
+      "marca": "Arary",
+      "cliente": "Ana Luiza Pessanha ",
+      "cidade": "Campos dos Goytacazes",
+      "uf": "RJ",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 910.67
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 4224,
+      "marca": "Arary",
+      "cliente": "Simone Francisca Da Silva",
+      "cidade": "Várzea Grande",
+      "uf": "MT",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1496.56
+    },
+    {
+      "data": "2026-05-11",
+      "orderNumber": 57,
+      "marca": "Practory",
+      "cliente": "Wanessa Oliveira Lucinari",
+      "cidade": "Sao Paulo",
+      "uf": "SP",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1389.11
+    },
+    {
+      "data": "2026-05-07",
+      "orderNumber": 4197,
+      "marca": "Arary",
+      "cliente": "Ana Regina Schneider",
+      "cidade": "Cruzeiro do Sul",
+      "uf": "RS",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 1433.15
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 13,
+      "marca": "UNBRAND",
+      "cliente": "Lucimar Santos",
+      "cidade": "Aiuruoca",
+      "uf": "MG",
+      "cancelado": false,
+      "status": "WAITING",
+      "valor": 305.26
+    },
+    {
+      "data": "2026-05-12",
+      "orderNumber": 65,
+      "marca": "Shalen Modas",
+      "cliente": "Ester Baldini",
+      "cidade": "Cajuru",
+      "uf": "SP",
+      "cancelado": false,
+      "status": "SENT",
+      "valor": 408.8
     }
   ],
   "_planilhaSnapshot": {

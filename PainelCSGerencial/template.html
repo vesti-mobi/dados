@@ -1446,7 +1446,7 @@ function _onlogTriggerConfRender(){}
 var _onlogDiogoIdx=null;
 function _onlogBuildDiogoIdx(){
     if(_onlogDiogoIdx)return _onlogDiogoIdx;
-    var idx={divergPorPedido:{},quinzenas:[],soPlanilha:[],_reclass:0};
+    var idx={divergPorPedido:{},quinzenas:[],rangesCobertos:[],soPlanilha:[],_reclass:0};
     // Indice dos pedidos Vesti (ONLOG_DATA) p/ detectar falso "so planilha":
     // o ingest casa por dominio_pedido exato e filtra por data da quinzena, entao
     // pedidos que existem no Vesti (dominio divergente ou fora da janela) vinham marcados
@@ -1469,6 +1469,9 @@ function _onlogBuildDiogoIdx(){
     var diffs=(typeof ONLOG_DIFFS!=='undefined'?ONLOG_DIFFS:[]);
     diffs.forEach(function(d){
         if(d.quinzena&&d.quinzena.de&&d.quinzena.ate)idx.quinzenas.push(d.quinzena);
+        // rangeCoberto = sub-range da quinzena que tem planilha ingerida; fallback = quinzena toda (compat com diffs antigos)
+        var rc=(d.rangeCoberto&&d.rangeCoberto.de&&d.rangeCoberto.ate)?d.rangeCoberto:d.quinzena;
+        if(rc&&rc.de&&rc.ate)idx.rangesCobertos.push(rc);
         (d.divergencias||[]).forEach(function(x){
             var k=String(x.orderNumber)+'|'+String(x.marca||'').toLowerCase().trim();
             (idx.divergPorPedido[k]=idx.divergPorPedido[k]||[]).push(x);
@@ -1527,7 +1530,14 @@ function _onlogInQuinzena(date,idx){
 function _onlogPedidoOrigem(p,idx){
     if(p._origem==='planilha-only')return 'planilha-only';
     if(p.postagemFonte==='planilha-diogo')return 'both';
-    if(_onlogInQuinzena(p.data,idx))return 'soFabric';
+    // so e' "soFabric" se a data esta dentro de range coberto por alguma planilha
+    var dt=p.data||'';
+    if(dt){
+        for(var i=0;i<idx.rangesCobertos.length;i++){
+            var r=idx.rangesCobertos[i];
+            if(dt>=r.de&&dt<=r.ate)return 'soFabric';
+        }
+    }
     return 'outOfRange';
 }
 function _onlogDivergsFor(p,idx){
@@ -1578,8 +1588,18 @@ function _onlogFilterRows(od){
             rows=rows.concat(syn);
         }
     } else if(orig==='vesti'){
-        // SO no Vesti (nao tem na planilha): pedidos Vesti que nao foram patcheados pela planilha
-        rows=rows.filter(function(p){return p.postagemFonte!=='planilha-diogo'});
+        // SO no Vesti (nao tem na planilha): pedidos Vesti sem patch da planilha
+        // E que estao em um range coberto por planilha ingerida (senao nao da p/ afirmar
+        // que e' so-vesti - simplesmente nao tem planilha pra comparar naquele dia).
+        rows=rows.filter(function(p){
+            if(p.postagemFonte==='planilha-diogo')return false;
+            var dt=p.data||'';if(!dt)return false;
+            for(var i=0;i<idx.rangesCobertos.length;i++){
+                var r=idx.rangesCobertos[i];
+                if(dt>=r.de&&dt<=r.ate)return true;
+            }
+            return false;
+        });
     } else if(orig==='ambos'){
         // Nos dois (planilha e Vesti): pedidos Vesti com match na planilha
         rows=rows.filter(function(p){return p.postagemFonte==='planilha-diogo'});
