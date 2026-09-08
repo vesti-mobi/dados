@@ -2385,12 +2385,13 @@ function renderPagina(){
       const card = el('div',{class:'card'});
       if(g.categorias) cats[i] = g.categorias(t);
       const itens = g.categorias ? cats[i] : g.s;
-      const leg = itens.map(s=>`<i${s.quem&&s.quem.length?` title="${s.l}: ${escapar(tituloQuem(s.quem))}"`:''}><b style="background:${s.cor}"></b>${s.l}</i>`).join('');
+      const leg = itens.map(s=>`<i${s.quem&&s.quem.length?` data-tip="${escapar(s.l+': '+tituloQuem(s.quem))}"`:''}><b style="background:${s.cor}"></b>${s.l}</i>`).join('');
       card.innerHTML = `<div class="card-head"><h3>${g.t}</h3><div class="legend">${leg}</div></div>
                         <div class="chart-wrap" id="ch-${t.id}-${i}"></div>`;
       wrap.appendChild(card);
     });
     page.appendChild(wrap);
+    ligarTooltips(wrap);
     t.graficos.forEach((g,i)=>{
       const host = document.getElementById(`ch-${t.id}-${i}`);
       if(g.pizza) desenharPizza(host, cats[i]);
@@ -2695,15 +2696,47 @@ const medirTexto = (()=>{
   };
 })();
 const escapar = t => String(t==null?'':t)
-  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-/* Texto do tooltip nativo (title) com a lista de marcas por trás de uma barra
-   ou fatia — mesma régua da Bonificação (quem.slice(0,40).join(', ')), pra
-   não estourar o balãozinho do navegador com centenas de nomes. */
+/* Texto do tooltip com a lista de marcas por trás de uma barra ou fatia —
+   mesma régua da Bonificação (quem.slice(0,40).join(', ')), pra não
+   estourar o balãozinho com centenas de nomes. */
 function tituloQuem(lista){
   if(!lista || !lista.length) return '';
   const CAP = 40;
   return lista.slice(0,CAP).join(', ') + (lista.length>CAP ? ' … +'+(lista.length-CAP)+' mais' : '');
+}
+
+/* Tooltip PRÓPRIO em vez do `title` nativo do navegador: o nativo demora
+   ~1s pra aparecer, é fácil de não perceber (sem estilo, some rápido) e no
+   trackpad qualquer tremor de cursor reseta o timer antes de mostrar — foi
+   reportado como "hover não faz nada" mesmo com o `title` presente no DOM.
+   Uma única <div>, criada uma vez e reaproveitada, aparece na hora e segue
+   o mouse. `ligarTooltips(host)` liga em qualquer elemento com `data-tip`
+   dentro de `host` — chamado depois de montar a legenda e os gráficos. */
+const tooltipHover = (()=>{
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;'
+    + 'background:var(--ink);color:#fff;font-family:"Instrument Sans",sans-serif;'
+    + 'font-size:12.5px;line-height:1.45;padding:8px 12px;border-radius:8px;max-width:360px;'
+    + 'box-shadow:0 8px 24px rgba(0,0,0,.28)';
+  document.body.appendChild(d);
+  return d;
+})();
+function ligarTooltips(host){
+  host.querySelectorAll('[data-tip]').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>{
+      tooltipHover.textContent = el.getAttribute('data-tip');
+      tooltipHover.style.display = 'block';
+    });
+    el.addEventListener('mousemove', e=>{
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const w = tooltipHover.offsetWidth, h = tooltipHover.offsetHeight;
+      tooltipHover.style.left = Math.min(e.clientX+14, vw-w-8) + 'px';
+      tooltipHover.style.top = Math.min(e.clientY+14, vh-h-8) + 'px';
+    });
+    el.addEventListener('mouseleave', ()=>{ tooltipHover.style.display = 'none'; });
+  });
 }
 
 /* --- gráfico de pizza --- SVG puro, como o resto dos gráficos daqui. Só faz
@@ -2729,20 +2762,21 @@ function desenharPizza(host, cats){
         const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
         const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
         const grande = (a1-a0) > Math.PI ? 1 : 0;
-        const tit = c.quem && c.quem.length ? `<title>${c.l}: ${escapar(tituloQuem(c.quem))}</title>` : '';
+        const tip = c.quem && c.quem.length ? ` data-tip="${escapar(c.l+': '+tituloQuem(c.quem))}"` : '';
         // fatia única (100% do total) não desenha em arco — vira o círculo inteiro
         s += frac >= 0.9995
-          ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c.cor}">${tit}</circle>`
-          : `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${grande} 1 ${x1},${y1} Z" fill="${c.cor}" stroke="var(--surface)" stroke-width="1.5">${tit}</path>`;
+          ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c.cor}"${tip}/>`
+          : `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 ${grande} 1 ${x1},${y1} Z" fill="${c.cor}" stroke="var(--surface)" stroke-width="1.5"${tip}/>`;
         if(frac >= 0.045){   // fatia fina demais não cabe o número dentro
           const amid = (a0+a1)/2;
           const lx = cx + r*0.64*Math.cos(amid), ly = cy + r*0.64*Math.sin(amid);
-          s += `<text x="${lx}" y="${ly+4}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="#fff">${fmt.int(c.v)}</text>`;
+          s += `<text x="${lx}" y="${ly+4}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12.5" fill="#fff" style="pointer-events:none">${fmt.int(c.v)}</text>`;
         }
       });
     }
     s += `</svg>`;
     host.innerHTML = s;
+    ligarTooltips(host);
   };
   draw();
   host._redraw = draw;
@@ -2801,14 +2835,15 @@ function desenharCategorias(host, cats){
          reagia. Também é o que deixa o hover funcionar numa barra de 3px ou
          zerada, sem depender de acertar o pixel certo. */
       if(c.quem && c.quem.length){
-        s += `<rect x="0" y="${y}" width="${W-P.r}" height="${linha}" fill="transparent">
-                <title>${c.l}: ${escapar(tituloQuem(c.quem))}</title></rect>`;
+        s += `<rect x="0" y="${y}" width="${W-P.r}" height="${linha}" fill="transparent"
+               data-tip="${escapar(c.l+': '+tituloQuem(c.quem))}"/>`;
       }
     });
     s += `<text x="${P.l}" y="${H-4}" font-family="IBM Plex Mono, monospace" font-size="10"
            fill="var(--ink-3)">${fmt.int(total)} marcas ativas na visão</text>`;
     s += `</svg>`;
     host.innerHTML = s;
+    ligarTooltips(host);
   };
   draw();
   host._redraw = draw;
