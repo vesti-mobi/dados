@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-09-07T23:09:01.096Z",
-  "hoje": "2026-09-07",
+  "gerado_em": "2026-09-08T15:41:15.259Z",
+  "hoje": "2026-09-08",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -18,9 +18,9 @@ window.DADOS = {
     "paradas": 3,
     "com_conta": 11,
     "contas": 10,
-    "produtos_total": 412,
-    "produtos_7d": 64,
-    "descricoes_total": 540,
+    "produtos_total": 415,
+    "produtos_7d": 67,
+    "descricoes_total": 543,
     "total_estimado": true
   },
   "marcas": [
@@ -43,6 +43,24 @@ window.DADOS = {
       "dias": 0
     },
     {
+      "slug": "amiska",
+      "nome": "Amiska",
+      "arquetipo": "sabio",
+      "tem_conta": true,
+      "email": "missmilliebr@gmail.com",
+      "produtos": 82,
+      "estimado": true,
+      "produtos_7d": 10,
+      "ativa": true,
+      "acessos": 10,
+      "buscas": 55,
+      "descricoes": 71,
+      "envios": 64,
+      "primeiro": "2026-07-28T18:41:18.639Z",
+      "ultimo": "2026-09-08T13:36:16.792Z",
+      "dias": 0
+    },
+    {
       "slug": "opera-kids",
       "nome": "Ópera Kids",
       "arquetipo": "inocente",
@@ -58,24 +76,6 @@ window.DADOS = {
       "envios": 118,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-09-02T17:11:58.593Z",
-      "dias": 5
-    },
-    {
-      "slug": "amiska",
-      "nome": "Amiska",
-      "arquetipo": "sabio",
-      "tem_conta": true,
-      "email": "missmilliebr@gmail.com",
-      "produtos": 80,
-      "estimado": true,
-      "produtos_7d": 8,
-      "ativa": true,
-      "acessos": 9,
-      "buscas": 53,
-      "descricoes": 69,
-      "envios": 62,
-      "primeiro": "2026-07-28T18:41:18.639Z",
-      "ultimo": "2026-09-02T15:34:00.156Z",
       "dias": 5
     },
     {
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 12,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-08-20T11:06:21.271Z",
-      "dias": 18
+      "dias": 19
     },
     {
       "slug": "kauly",
@@ -138,17 +138,17 @@ window.DADOS = {
       "arquetipo": "governante",
       "tem_conta": true,
       "email": "marketing@kauly.com.br",
-      "produtos": 7,
+      "produtos": 8,
       "estimado": false,
-      "produtos_7d": 7,
+      "produtos_7d": 8,
       "ativa": true,
       "acessos": 2,
       "buscas": 7,
-      "descricoes": 10,
-      "envios": 8,
+      "descricoes": 11,
+      "envios": 9,
       "primeiro": "2026-09-02T19:08:41.700Z",
-      "ultimo": "2026-09-04T18:02:41.760Z",
-      "dias": 3
+      "ultimo": "2026-09-08T15:00:22.895Z",
+      "dias": 0
     },
     {
       "slug": "optimist-jeans",
@@ -166,7 +166,7 @@ window.DADOS = {
       "envios": 5,
       "primeiro": "2026-08-07T13:23:05.929Z",
       "ultimo": "2026-08-07T14:55:31.596Z",
-      "dias": 31
+      "dias": 32
     },
     {
       "slug": "optimist-feirinha",
@@ -184,7 +184,7 @@ window.DADOS = {
       "envios": 2,
       "primeiro": "2026-08-07T13:33:14.591Z",
       "ultimo": "2026-08-07T14:33:01.598Z",
-      "dias": 31
+      "dias": 32
     },
     {
       "slug": "anne-blanc",
@@ -274,7 +274,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "",
       "ultimo": "2026-09-03T15:12:18.694Z",
-      "dias": 4
+      "dias": 5
     },
     {
       "slug": "murano",
@@ -346,7 +346,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-08-04T14:28:52.117Z",
       "ultimo": "2026-09-01T13:07:03.363Z",
-      "dias": 6
+      "dias": 7
     },
     {
       "slug": "ttng",
@@ -470,9 +470,9 @@ window.DADOS = {
     {
       "inicio": "2026-09-07",
       "fim": "2026-09-13",
-      "produtos": 21,
-      "ativas": 1,
-      "usaram": 1,
+      "produtos": 24,
+      "ativas": 2,
+      "usaram": 3,
       "cadastros": 10,
       "novos": 0
     }
@@ -490,9 +490,9 @@ window.DADOS = {
         "paradas": 2,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 293,
-        "produtos_7d": 56,
-        "descricoes_total": 376,
+        "produtos_total": 294,
+        "produtos_7d": 57,
+        "descricoes_total": 377,
         "total_estimado": true,
         "produtos_atribuidos": 5
       },
@@ -583,18 +583,18 @@ window.DADOS = {
           "arquetipo": "governante",
           "tem_conta": true,
           "email": "marketing@kauly.com.br",
-          "produtos": 7,
+          "produtos": 8,
           "estimado": false,
-          "produtos_7d": 7,
+          "produtos_7d": 8,
           "ativa": true,
           "acessos": 2,
           "buscas": 7,
-          "descricoes": 10,
-          "envios": 8,
+          "descricoes": 11,
+          "envios": 9,
           "primeiro": "2026-09-02T19:08:41.700Z",
-          "ultimo": "2026-09-04T18:02:41.760Z",
-          "dias": 3,
-          "produtos_medidos": 7,
+          "ultimo": "2026-09-08T15:00:22.895Z",
+          "dias": 0,
+          "produtos_medidos": 8,
           "atribuido": 0
         },
         {
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 4,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-08-21T01:32:24.963Z",
-          "dias": 17,
+          "dias": 18,
           "produtos_medidos": 4,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 4,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-08-20T11:06:21.271Z",
-          "dias": 18,
+          "dias": 19,
           "produtos_medidos": 3,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-09-07",
           "fim": "2026-09-13",
-          "produtos": 21,
+          "produtos": 22,
           "ativas": 1,
-          "usaram": 1,
+          "usaram": 2,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 21,
+          "produtos_medidos": 22,
           "atribuido": 0
         }
       ]
@@ -1025,11 +1025,11 @@ window.DADOS = {
         "paradas": 1,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 208,
-        "produtos_7d": 8,
-        "descricoes_total": 74,
+        "produtos_total": 209,
+        "produtos_7d": 10,
+        "descricoes_total": 76,
         "total_estimado": true,
-        "produtos_atribuidos": 181
+        "produtos_atribuidos": 180
       },
       "marcas": [
         {
@@ -1058,18 +1058,18 @@ window.DADOS = {
           "arquetipo": "sabio",
           "tem_conta": true,
           "email": "missmilliebr@gmail.com",
-          "produtos": 77,
+          "produtos": 79,
           "estimado": true,
-          "produtos_7d": 8,
+          "produtos_7d": 10,
           "ativa": true,
-          "acessos": 5,
-          "buscas": 26,
-          "descricoes": 37,
-          "envios": 27,
+          "acessos": 6,
+          "buscas": 28,
+          "descricoes": 39,
+          "envios": 29,
           "primeiro": "2026-08-17T12:54:41.838Z",
-          "ultimo": "2026-09-02T15:33:58.537Z",
-          "dias": 5,
-          "produtos_medidos": 25,
+          "ultimo": "2026-09-08T13:36:15.255Z",
+          "dias": 0,
+          "produtos_medidos": 27,
           "atribuido": 52
         },
         {
@@ -1108,7 +1108,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 18,
+          "dias": 19,
           "produtos_medidos": 0,
           "atribuido": 8
         },
@@ -1131,26 +1131,6 @@ window.DADOS = {
           "dias": null,
           "produtos_medidos": 0,
           "atribuido": 3
-        },
-        {
-          "slug": "kauly",
-          "nome": "Kauly",
-          "arquetipo": "governante",
-          "tem_conta": true,
-          "email": "marketing@kauly.com.br",
-          "produtos": 2,
-          "estimado": true,
-          "produtos_7d": 0,
-          "ativa": false,
-          "acessos": 0,
-          "buscas": 0,
-          "descricoes": 0,
-          "envios": 0,
-          "primeiro": "",
-          "ultimo": "",
-          "dias": null,
-          "produtos_medidos": 0,
-          "atribuido": 2
         },
         {
           "slug": "monnika-marikinha",
@@ -1211,6 +1191,26 @@ window.DADOS = {
           "dias": null,
           "produtos_medidos": 0,
           "atribuido": 2
+        },
+        {
+          "slug": "kauly",
+          "nome": "Kauly",
+          "arquetipo": "governante",
+          "tem_conta": true,
+          "email": "marketing@kauly.com.br",
+          "produtos": 1,
+          "estimado": true,
+          "produtos_7d": 0,
+          "ativa": false,
+          "acessos": 0,
+          "buscas": 0,
+          "descricoes": 0,
+          "envios": 0,
+          "primeiro": "",
+          "ultimo": "",
+          "dias": null,
+          "produtos_medidos": 0,
+          "atribuido": 1
         },
         {
           "slug": "anne-blanc",
@@ -1388,7 +1388,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T11:49:43.332Z",
           "ultimo": "2026-09-01T13:07:03.363Z",
-          "dias": 6,
+          "dias": 7,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1527,23 +1527,23 @@ window.DADOS = {
         {
           "inicio": "2026-08-31",
           "fim": "2026-09-06",
-          "produtos": 13,
+          "produtos": 12,
           "ativas": 1,
           "usaram": 3,
           "cadastros": 10,
           "novos": 1,
           "produtos_medidos": 8,
-          "atribuido": 5
+          "atribuido": 4
         },
         {
           "inicio": "2026-09-07",
           "fim": "2026-09-13",
-          "produtos": 1,
-          "ativas": 0,
-          "usaram": 0,
+          "produtos": 3,
+          "ativas": 1,
+          "usaram": 1,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 0,
+          "produtos_medidos": 2,
           "atribuido": 1
         }
       ]
