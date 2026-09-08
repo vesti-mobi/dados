@@ -3,6 +3,7 @@ name: Atualizar Painel Elisa
 on:
   schedule:
     - cron: '0 11 * * *'   # 08:00 BRT
+    - cron: '30 18 * * *'  # 15:30 BRT
   workflow_dispatch:
 
 jobs:
@@ -38,7 +39,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          FILES="Gambiarra/dashboard_data.js Gambiarra/companies_elisa.json Gambiarra/gmv_elisa.json Gambiarra/cadastros_elisa.json Gambiarra/vestipago_elisa.json Gambiarra/reativacao_elisa.json Gambiarra/links_elisa.json Gambiarra/pagamentos_elisa.json Gambiarra/ambiente_elisa.json Gambiarra/inadimplentes_elisa.json"
+          FILES="Gambiarra/dashboard_data.js Gambiarra/companies_elisa.json Gambiarra/gmv_elisa.json Gambiarra/cadastros_elisa.json Gambiarra/vestipago_elisa.json Gambiarra/reativacao_elisa.json Gambiarra/links_elisa.json Gambiarra/pagamentos_elisa.json Gambiarra/inadimplentes_elisa.json Gambiarra/status_faturas_elisa.json Gambiarra/ambiente_elisa.json"
           MSG="Atualizacao Painel Elisa $(date +'%d/%m/%Y %H:%M')"
           for i in 1 2 3 4 5; do
             git fetch -q origin main

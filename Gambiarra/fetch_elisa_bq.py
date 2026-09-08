@@ -35,6 +35,7 @@ OUT_REATIV    = ROOT / "reativacao_elisa.json"
 OUT_LINKS     = ROOT / "links_elisa.json"
 OUT_PAGTOS    = ROOT / "pagamentos_elisa.json"
 OUT_INADIMP   = ROOT / "inadimplentes_elisa.json"
+OUT_STATUS_FATURAS = ROOT / "status_faturas_elisa.json"
 
 PROJECT = "vesti-data-499015"
 DATASET = "vestilake_BI"
@@ -338,6 +339,56 @@ LEFT JOIN `{PROJECT}.{DATASET}.odbc_angels` ang ON ang.id = d.angel_id
 LEFT JOIN (SELECT id, name FROM (
     SELECT id, name, ROW_NUMBER() OVER(PARTITION BY id ORDER BY updated_at DESC) rn
     FROM `{PROJECT}.{DATASET}.odbc_partners`) WHERE rn = 1) prt ON prt.id = d.partner_id
+"""
+
+# -----------------------------------------------------------------------------
+# 8) STATUS DA ULTIMA FATURA = prova explicita de cancelamento na Iugu.
+#
+#    A ausencia de fatura vencida em SQL_INADIMPLENTES nao prova cancelamento:
+#    ela tambem acontece quando a marca pagou, ainda nao venceu ou nao casou no
+#    mapa customer->dominio. Para a situacao "cancelada", o build exige que o
+#    modulo `vendas` esteja desligado E que a ultima fatura mapeada tenha status
+#    `canceled` na Iugu.
+# -----------------------------------------------------------------------------
+SQL_STATUS_FATURAS = f"""
+WITH faturas_base AS (
+  SELECT DISTINCT id, account_name, customer_id, payer_cpf_cnpj, status,
+    SAFE.PARSE_DATE('%Y-%m-%d', due_date) due_dt,
+    SAFE.PARSE_DATE('%Y-%m-%d', SUBSTR(CAST(created_at_iso AS STRING), 1, 10)) created_dt
+  FROM `{PROJECT}.{DATASET}.iugu_invoices`),
+faturas AS (
+  SELECT * FROM faturas_base
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY customer_id
+    ORDER BY COALESCE(due_dt, created_dt) DESC, created_dt DESC, id DESC) = 1),
+direto AS (
+  SELECT DISTINCT SAFE_CAST(custom_variables_value AS INT64) domain_id, id customer_id, 1 prio
+  FROM `{PROJECT}.{DATASET}.iugu_customers`
+  WHERE LOWER(custom_variables_name) LIKE '%domain%'
+    AND SAFE_CAST(custom_variables_value AS INT64) IS NOT NULL),
+por_cnpj AS (
+  SELECT DISTINCT co.domain_id, cu.id customer_id, 2 prio
+  FROM `{PROJECT}.{DATASET}.odbc_companies` co
+  JOIN `{PROJECT}.{DATASET}.iugu_customers` cu
+    ON REGEXP_REPLACE(co.tax_document, r'[^0-9]', '') = REGEXP_REPLACE(cu.cpf_cnpj, r'[^0-9]', '')
+  WHERE co.tax_document IS NOT NULL AND co.tax_document <> ''
+    AND LENGTH(REGEXP_REPLACE(co.tax_document, r'[^0-9]', '')) >= 11),
+mapa AS (
+  SELECT customer_id, domain_id, MIN(prio) prio
+  FROM (SELECT * FROM direto UNION ALL SELECT * FROM por_cnpj) GROUP BY 1, 2),
+cands AS (
+  SELECT f.id fatura_id, CAST(m.domain_id AS STRING) domain_id, m.prio,
+    f.account_name, f.status, f.due_dt, f.created_dt
+  FROM faturas f JOIN mapa m ON m.customer_id = f.customer_id
+  UNION ALL
+  SELECT f.id, CAST(co.domain_id AS STRING), 3,
+    f.account_name, f.status, f.due_dt, f.created_dt
+  FROM faturas f JOIN `{PROJECT}.{DATASET}.odbc_companies` co
+    ON REGEXP_REPLACE(co.tax_document, r'[^0-9]', '') = REGEXP_REPLACE(IFNULL(f.payer_cpf_cnpj, ''), r'[^0-9]', '')
+  WHERE LENGTH(REGEXP_REPLACE(IFNULL(f.payer_cpf_cnpj, ''), r'[^0-9]', '')) >= 11)
+SELECT c.*, d.created_at dom_created
+FROM cands c
+LEFT JOIN `{PROJECT}.{DATASET}.odbc_domains` d ON CAST(d.ID AS STRING) = c.domain_id
 """
 
 # Regua so' pra este print/relatorio. As TAGS do painel sao decididas no front
@@ -699,6 +750,41 @@ def build_inadimplencia(rows: list[dict], empresas_by_dom: dict[str, dict]) -> d
             "foraDoPainel": fora_lista, "dominios": out}
 
 
+def build_status_faturas(rows: list[dict]) -> dict:
+    """Ultima fatura da Iugu por dominio, com uma fatura atribuida uma unica vez."""
+    def _iso(v):
+        return v.isoformat()[:10] if hasattr(v, "isoformat") else (str(v)[:10] if v else "")
+
+    candidatos: dict[str, list[dict]] = {}
+    for r in rows:
+        candidatos.setdefault(str(r.get("fatura_id") or ""), []).append(r)
+
+    por_dominio: dict[str, dict] = {}
+    for cands in candidatos.values():
+        escolha = sorted(
+            cands,
+            key=lambda c: (int(c.get("prio") or 9),
+                           -(c["dom_created"].toordinal() if c.get("dom_created") else 0)),
+        )[0]
+        dom = str(escolha.get("domain_id") or "")
+        if not dom:
+            continue
+        atual = {
+            "fatura_id": str(escolha.get("fatura_id") or ""),
+            "status": (escolha.get("status") or "").strip().lower(),
+            "vencimento": _iso(escolha.get("due_dt")),
+            "criadaEm": _iso(escolha.get("created_dt")),
+            "subconta": (escolha.get("account_name") or "").strip(),
+        }
+        atual["referencia"] = atual["vencimento"] or atual["criadaEm"]
+        anterior = por_dominio.get(dom)
+        if anterior is None or (atual["referencia"], atual["criadaEm"], atual["fatura_id"]) > (
+                anterior["referencia"], anterior["criadaEm"], anterior["fatura_id"]):
+            por_dominio[dom] = atual
+
+    return {"geradoEm": datetime.now(timezone.utc).isoformat(), "dominios": por_dominio}
+
+
 # =============================================================================
 # BigQuery
 # =============================================================================
@@ -766,6 +852,7 @@ def coletar_do_bq(client: bigquery.Client):
     pag_rows    = run_query(client, SQL_PAGAMENTOS, "datas de pagamento por dominio")
     piso_rows   = run_query(client, SQL_PISO_PAGAMENTOS, "piso do espelho de faturas")
     inad_rows   = run_query(client, SQL_INADIMPLENTES, "faturas vencidas em aberto")
+    status_faturas_rows = run_query(client, SQL_STATUS_FATURAS, "status da ultima fatura por dominio")
 
     # Produtos: so se `odbc_products` estiver ingerido (odbc_product_details NAO serve).
     if _table_exists(client, "odbc_products"):
@@ -777,7 +864,7 @@ def coletar_do_bq(client: bigquery.Client):
               "Ver _MIGRACAO_BQ_STATUS.md.", file=sys.stderr, flush=True)
 
     return (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-            pag_rows, piso_rows, inad_rows)
+            pag_rows, piso_rows, inad_rows, status_faturas_rows)
 
 
 def main() -> None:
@@ -787,7 +874,7 @@ def main() -> None:
 
     prod_disponivel = _table_exists(client, "odbc_products")
     (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-     pag_rows, piso_rows, inad_rows) = coletar_do_bq(client)
+     pag_rows, piso_rows, inad_rows, status_faturas_rows) = coletar_do_bq(client)
 
     empresas = build_empresas(emp_rows)
     OUT_COMPANIES.write_text(json.dumps(empresas, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -839,6 +926,14 @@ def main() -> None:
           f"fora do painel = R$ {inad['semDominio']['valor']:,.2f}; "
           f"{len(fora_lista)} marcas identificadas fora do painel, "
           f"{len(bloqueadas)} bloqueadas)")
+
+    status_faturas = build_status_faturas(status_faturas_rows)
+    OUT_STATUS_FATURAS.write_text(
+        json.dumps(status_faturas, ensure_ascii=False, indent=2), encoding="utf-8")
+    canceladas = sum(
+        1 for f in status_faturas["dominios"].values() if f.get("status") == "canceled")
+    print(f"[write] {OUT_STATUS_FATURAS.name} "
+          f"({len(status_faturas['dominios'])} dominios; {canceladas} com ultima fatura cancelada)")
 
     print("[ok] coleta BQ concluida. Rode fetch_ambiente.py e build_data.py em seguida.")
 

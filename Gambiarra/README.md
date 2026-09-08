@@ -65,11 +65,17 @@ Elisa e Jennyfer). O filtro de CS é montado dinamicamente a partir dos dados.
 ```
 fetch_elisa_bq.py  →  companies_elisa.json, gmv_elisa.json, cadastros_elisa.json,
                       vestipago_elisa.json, reativacao_elisa.json, links_elisa.json,
-                      pagamentos_elisa.json
+                      pagamentos_elisa.json, inadimplentes_elisa.json,
+                      status_faturas_elisa.json
 fetch_ambiente.py  →  ambiente_elisa.json   (lê a planilha do n8n; precisa de
                       pagamentos_elisa.json para separar religamento de "pagou")
 build_data.py      →  dashboard_data.js     (consumido por index.html)
 ```
+
+Na aba **Inadimplentes**, uma marca so e classificada como **Cancelada** quando
+as duas condicoes pertencem ao mesmo dominio: o modulo `vendas` esta desativado
+e a ultima fatura mapeada tem status `canceled` na Iugu. Marca bloqueada ha 11
+dias ou mais continua como **Bloqueada** enquanto sua fatura estiver em aberto.
 
 A ordem importa: `fetch_ambiente.py` depende de `pagamentos_elisa.json`, e
 `build_data.py` depende dos dois.

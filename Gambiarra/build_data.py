@@ -207,7 +207,8 @@ _STARTER_INTERNO = {"starter", "ve vantagens", "proroi", "up", "comfio",
 
 
 def _canceladas(ambiente: dict, empresas_by_dom: dict,
-                inad_dom: dict, inad_fora: list) -> list[dict]:
+                inad_dom: dict, inad_fora: list,
+                status_faturas: dict) -> list[dict]:
     """Marcas CANCELADAS: cancelaram na Iugu e o ambiente foi cortado.
 
     Definicao da Laura (01/09/2026):
@@ -215,10 +216,10 @@ def _canceladas(ambiente: dict, empresas_by_dom: dict,
       - bloqueada  = a partir de 11 dias (o n8n corta o ambiente)
       - cancelada  = cancelaram na Iugu mesmo E o ambiente foi cortado
 
-    Aqui saem as canceladas. Sao reconheciveis pela combinacao: perdeu o modulo
-    `vendas` (ambiente cortado, logo nao esta em companies) E nao tem nenhuma
-    fatura vencida em aberto -- porque a fatura foi cancelada na Iugu. Sem isso
-    elas ficavam invisiveis no painel inteiro.
+    Aqui saem as canceladas. Sao reconheciveis pela intersecao comprovada:
+    perdeu o modulo `vendas` (ambiente cortado, logo nao esta em companies) E a
+    ultima fatura mapeada para o dominio tem status `canceled` na Iugu. A mera
+    ausencia de fatura vencida em aberto nao comprova cancelamento.
 
     Nao basta o log do n8n dizer "desligado": 19 marcas estao desligadas la' com
     o modulo `vendas` intacto e sem divida, o que nao e' cancelamento.
@@ -234,6 +235,9 @@ def _canceladas(ambiente: dict, empresas_by_dom: dict,
             continue
         if dom in empresas_by_dom:      # modulo `vendas` intacto = nao foi cortado
             continue
+        fatura_iugu = status_faturas.get(dom) or {}
+        if (fatura_iugu.get("status") or "").lower() != "canceled":
+            continue                    # sem prova de fatura excluida/cancelada na Iugu
         corte = _parse_iso_date(v.get("update"))
         if not corte:
             continue
@@ -250,6 +254,9 @@ def _canceladas(ambiente: dict, empresas_by_dom: dict,
             "canceladoEm": corte.isoformat(),
             "diasCancelada": dias,
             "semNome": not nome,
+            "faturaIuguStatus": fatura_iugu.get("status") or "",
+            "faturaIuguId": fatura_iugu.get("fatura_id") or "",
+            "faturaIuguVencimento": fatura_iugu.get("vencimento") or "",
         })
     out.sort(key=lambda e: e["diasCancelada"])
     return out
@@ -298,6 +305,13 @@ def main():
     inad      = _load(inad_p) if inad_p.exists() else {"reguaDias": 15, "dominios": {}}
     inad_dom  = inad.get("dominios") or {}
     inad_regua = int(inad.get("reguaDias") or 15)
+    status_faturas_p = ROOT / "status_faturas_elisa.json"
+    status_faturas_dados = (_load(status_faturas_p) if status_faturas_p.exists()
+                            else {"dominios": {}})
+    status_faturas = status_faturas_dados.get("dominios") or {}
+    if not status_faturas:
+        print("[build] AVISO: status_faturas_elisa.json ausente ou vazio; "
+              "nenhuma marca sera inferida como cancelada sem prova da Iugu.")
     # data do corte vem do log do n8n, nao da Iugu -- serve pra CS saber ha
     # quanto tempo a marca esta bloqueada
     inad_fora = inad.get("foraDoPainel") or []
@@ -443,7 +457,8 @@ def main():
         # canceladas na Iugu com o ambiente cortado, dos ultimos 90 dias.
         # Entram na mesma tabela, sem divida em aberto.
         "inadCanceladas": _canceladas(
-            ambiente, {e["domain_id"]: e for e in empresas}, inad_dom, inad_fora),
+            ambiente, {e["domain_id"]: e for e in empresas}, inad_dom, inad_fora,
+            status_faturas),
         "canceladaRecenteDias": CANCELADA_RECENTE_DIAS,
         # faturas vencidas que nao casaram com marca nenhuma (nem cancelada)
         "inadFaturasSemNome": max(0, int((inad.get("semDominio") or {}).get("qtFaturas") or 0)

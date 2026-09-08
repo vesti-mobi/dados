@@ -438,9 +438,9 @@ function inadAtivas() {
                 _subcontas: e.subcontasIugu || []}));
 }
 
-// CANCELADAS QUE AINDA DEVEM: perderam o modulo `vendas` mas tem fatura vencida
-// em aberto. Sao canceladas pela regra (modulo cortado) e mostram o valor real --
-// e' divida viva, nao historico. Sem valor_mensal: a assinatura caiu junto.
+// BLOQUEADAS QUE AINDA DEVEM: perderam o modulo `vendas` por passarem da regua,
+// mas a fatura continua em aberto na Iugu. Nao sao canceladas. Sem valor_mensal:
+// a assinatura caiu junto.
 function inadDesligadas() {
   return foraDoPainelBase()
     .filter(e => state.empresa === "todas" || e.name === state.empresa)
@@ -450,8 +450,8 @@ function inadDesligadas() {
                 valor_mensal: null}));
 }
 
-// CANCELADAS SEM DIVIDA: modulo cortado e a Iugu ja' cancelou a fatura, entao nao
-// ha nada em aberto. Sumiam do painel inteiro. Entram com `_semDivida` -- as
+// CANCELADAS SEM DIVIDA: modulo cortado E ultima fatura explicitamente cancelada
+// na Iugu. Sumiam do painel inteiro. Entram com `_semDivida` -- as
 // colunas de divida mostram "—" em vez de fingir zero.
 // Recorte de 90 dias aplicado no build_data (CANCELADA_RECENTE_DIAS).
 function inadCanceladas() {
@@ -488,15 +488,14 @@ function linhasInadimplentes(minDias, ignorarSituacao) {
   return ignorarSituacao ? todas : todas.filter(e => state.situacoes.has(situacaoDe(e)));
 }
 
-// 3 estados, definicao da Laura (01-02/09/2026):
-//   em alerta = modulo `vendas` ativo, 1 a 10 dias de atraso
-//   bloqueada = modulo `vendas` ativo, a partir de 11 dias -- o n8n
-//               ("Bloqueio e Desbloqueio") corta o acesso, mas a marca segue cliente
-//   cancelada = MODULO `vendas` DESABILITADO. E' assim que a Vesti cancela: tira o
-//               modulo. Vale tendo divida em aberto ou nao -- a Eruthy esta
-//               cancelada ha 337 dias e ainda deve R$ 600.
+// 3 estados, definicao da Laura (ajustada em 08/09/2026):
+//   em alerta = fatura com 1 a 10 dias de atraso
+//   bloqueada = fatura com 11 dias ou mais de atraso (a automacao do n8n bloqueia o
+//               modulo `vendas` ate' o pagamento, mas a marca segue como bloqueada)
+//   cancelada = MODULO `vendas` DESABILITADO JUNTAMENTE COM FATURA CANCELADA na Iugu
+//               (sem divida ativa em aberto no Iugu, _semDivida === true).
 function situacaoDe(r) {
-  if (!r._ativa) return "cancelada";
+  if (!r._ativa && r._semDivida) return "cancelada";
   return (r.diasAtraso || 0) > INAD_LIMITE_ALERTA ? "bloqueada" : "alerta";
 }
 
@@ -1132,7 +1131,7 @@ function renderTabInadTabela(lista) {
     {label:"Valor em aberto", cls:"num", fn:r=>r._semDivida?"—":fmtBRL(r.valorEmAberto||0), sort:r=>r.valorEmAberto||0},
     // desligada nao tem assinatura ativa, entao nao tem mensalidade a cobrar
     {label:"Mensalidade", cls:"num", fn:r=>r.valor_mensal==null?"—":fmtBRL(r.valor_mensal), sort:r=>r.valor_mensal||0},
-  ], lista.map(e=>({...e, _alert: !e._ativa})));
+  ], lista.map(e=>({...e, _alert: situacaoDe(e) === "bloqueada"})));
 }
 
 function renderTabInadimplentes() {
