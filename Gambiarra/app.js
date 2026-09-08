@@ -725,13 +725,17 @@ function renderTabCadastro() {
     : mode === "primeiro" ? "Produtos no 1º mês"
     : `Produtos em ${mode}`;
   renderTable("tbl-cadastro", [
-    {label:"Marca", fn:r=>r.name},
-    {label:"CS", fn:r=>r.cs},
-    {label:"Canal", fn:r=>r.canal},
-    {label:colVal, cls:"num", fn:r=>fmtInt(r._v)},
-    {label:"1º mês", fn:r=>r.primeiroMesCadastro||"—"},
-    {label:"1º mês qtd", cls:"num", fn:r=>fmtInt(r.qtProdutos1oMes||0)},
-    {label:"Total acumulado", cls:"num", fn:r=>fmtInt(r.qtProdutos||0)},
+    {label:"Marca", fn:r=>r.name, sort:r=>r.name},
+    {label:"CS", fn:r=>r.cs, sort:r=>r.cs},
+    {label:"Canal", fn:r=>r.canal, sort:r=>r.canal},
+    {label:colVal, cls:"num", fn:r=>fmtInt(r._v), sort:r=>r._v},
+    {label:"1º mês", fn:r=>r.primeiroMesCadastro||"—", sort:r=>r.primeiroMesCadastro||""},
+    {label:"1º mês qtd", cls:"num", fn:r=>fmtInt(r.qtProdutos1oMes||0), sort:r=>r.qtProdutos1oMes||0},
+    {label:"Total acumulado", cls:"num", fn:r=>fmtInt(r.qtProdutos||0), sort:r=>r.qtProdutos||0},
+    // data do produto mais recente cadastrado -- serve pra ver quem parou de
+    // cadastrar catalogo (marca "travada" tem esse campo velho ou vazio)
+    {label:"Último produto cadastrado", fn:r=>(r.ultimoCadastroProduto||"").slice(0,10)||"—",
+     sort:r=>r.ultimoCadastroProduto||""},
   ], lista);
 }
 

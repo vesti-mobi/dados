@@ -379,6 +379,7 @@ def main():
             "primeiroMesCadastro": c.get("primeiroMes", ""),
             "qtProdutos1oMes": c.get("qtProdutos1oMes", 0),
             "primeiroCadastroProduto": c.get("primeiroCadastroProduto", ""),
+            "ultimoCadastroProduto": c.get("ultimoCadastroProduto", ""),
             "primeiroPedidoCadastrado": c.get("primeiroPedidoCadastrado", ""),
             "primeiraVenda": g.get("primeiraVenda", ""),
             "primeiraVendaPaga": g.get("primeiraVendaPaga", ""),

@@ -147,7 +147,8 @@ GROUP BY domainId, DATE(CAST(settings_createdAt AS TIMESTAMP))
 # Fabric (dbo.ODBC_Products) tambem nao tinha piso.
 SQL_PRODUTOS = f"""
 SELECT domain_id, FORMAT_DATETIME('%Y-%m', CAST(created_at AS DATETIME)) mes,
-  COUNT(*) qt_produtos, MIN(CAST(created_at AS DATETIME)) primeiro_cadastro
+  COUNT(*) qt_produtos, MIN(CAST(created_at AS DATETIME)) primeiro_cadastro,
+  MAX(CAST(created_at AS DATETIME)) ultimo_cadastro
 FROM `{PROJECT}.{DATASET}.odbc_products`
 WHERE created_at IS NOT NULL
 GROUP BY 1, 2
@@ -533,7 +534,9 @@ def build_cadastros(prods: list[dict], primeiros: list[dict],
         mes = r.get("mes") or ""
         qt = int(r.get("qt_produtos") or 0)
         pc = r.get("primeiro_cadastro")
-        slot = out.setdefault(dom, {"qtProdutos": 0, "produtosPorMes": {}, "primeiroCadastroProduto": ""})
+        uc = r.get("ultimo_cadastro")
+        slot = out.setdefault(dom, {"qtProdutos": 0, "produtosPorMes": {},
+                                    "primeiroCadastroProduto": "", "ultimoCadastroProduto": ""})
         slot["qtProdutos"] += qt
         if mes:
             slot["produtosPorMes"][mes] = slot["produtosPorMes"].get(mes, 0) + qt
@@ -541,6 +544,10 @@ def build_cadastros(prods: list[dict], primeiros: list[dict],
             iso = pc.isoformat() if hasattr(pc, "isoformat") else str(pc)
             if not slot["primeiroCadastroProduto"] or iso < slot["primeiroCadastroProduto"]:
                 slot["primeiroCadastroProduto"] = iso
+        if uc:
+            iso_u = uc.isoformat() if hasattr(uc, "isoformat") else str(uc)
+            if not slot["ultimoCadastroProduto"] or iso_u > slot["ultimoCadastroProduto"]:
+                slot["ultimoCadastroProduto"] = iso_u
     for dom, slot in out.items():
         meses = sorted(slot["produtosPorMes"].keys())
         if meses:
@@ -805,7 +812,7 @@ def _table_exists(client: bigquery.Client, name: str) -> bool:
 
 # Campos de Produtos (paridade de schema com o painel antigo).
 _PRODUTOS_KEYS = ("qtProdutos", "produtosPorMes", "primeiroCadastroProduto",
-                  "primeiroMes", "qtProdutos1oMes")
+                  "ultimoCadastroProduto", "primeiroMes", "qtProdutos1oMes")
 
 
 def _garante_campos_produtos(cad: dict) -> None:
@@ -814,6 +821,7 @@ def _garante_campos_produtos(cad: dict) -> None:
         slot.setdefault("qtProdutos", 0)
         slot.setdefault("produtosPorMes", {})
         slot.setdefault("primeiroCadastroProduto", "")
+        slot.setdefault("ultimoCadastroProduto", "")
         slot.setdefault("primeiroMes", "")
         slot.setdefault("qtProdutos1oMes", 0)
 
