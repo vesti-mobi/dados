@@ -2385,7 +2385,7 @@ function renderPagina(){
       const card = el('div',{class:'card'});
       if(g.categorias) cats[i] = g.categorias(t);
       const itens = g.categorias ? cats[i] : g.s;
-      const leg = itens.map(s=>`<i><b style="background:${s.cor}"></b>${s.l}</i>`).join('');
+      const leg = itens.map(s=>`<i${s.quem&&s.quem.length?` title="${s.l}: ${escapar(tituloQuem(s.quem))}"`:''}><b style="background:${s.cor}"></b>${s.l}</i>`).join('');
       card.innerHTML = `<div class="card-head"><h3>${g.t}</h3><div class="legend">${leg}</div></div>
                         <div class="chart-wrap" id="ch-${t.id}-${i}"></div>`;
       wrap.appendChild(card);
@@ -2794,11 +2794,14 @@ function desenharCategorias(host, cats){
              fill="${cabeFora?'var(--ink)':'#fff'}">${fmt.int(c.v)}</text>`;
       s += `<text x="${tx}" y="${y+33}" text-anchor="${anc}" font-family="IBM Plex Mono, monospace" font-size="10"
              fill="${cabeFora?'var(--ink-3)':'var(--ink-3)'}">${pct}%</text>`;
-      /* Faixa invisível cobrindo a linha inteira (rótulo + barra), por cima do
-         resto: é o que deixa o hover funcionar mesmo numa barra de 3px ou
+      /* Faixa invisível cobrindo a linha INTEIRA, do início do rótulo (x=0)
+         até a ponta direita — por cima do resto. Sem ir até x=0, hover em
+         cima do NOME (a área mais óbvia de passar o mouse, e a maior parte
+         da linha quando o rótulo é comprido) não acionava nada; só a barra
+         reagia. Também é o que deixa o hover funcionar numa barra de 3px ou
          zerada, sem depender de acertar o pixel certo. */
       if(c.quem && c.quem.length){
-        s += `<rect x="${P.l-10}" y="${y}" width="${W-P.r-(P.l-10)}" height="${linha}" fill="transparent">
+        s += `<rect x="0" y="${y}" width="${W-P.r}" height="${linha}" fill="transparent">
                 <title>${c.l}: ${escapar(tituloQuem(c.quem))}</title></rect>`;
       }
     });
