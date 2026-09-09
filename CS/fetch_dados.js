@@ -868,12 +868,12 @@ async function puxarHubSpot() {
 
   const tickets = await puxarTickets(owners);
 
-  const onboarding = await puxarOnboarding(pipes, owners).catch(e => {
+  const onboardingResp = await puxarOnboarding(pipes, owners).catch(e => {
     console.log('  onboarding falhou: ' + e.message.slice(0, 160));
-    return [];
+    return { linhas: [], historico: [] };
   });
 
-  return { negocios, reunioes, tickets, onboarding };
+  return { negocios, reunioes, tickets, onboarding: onboardingResp.linhas, estagioHistorico: onboardingResp.historico };
 }
 
 /* ------------------------------------------------------- onboarding (CS)
@@ -891,20 +891,22 @@ async function puxarHubSpot() {
    Traz TODO negócio desses 4 pipelines, em QUALQUER estágio — onboarding em
    andamento, marco de volume pós-implantação (5/25/80 pedidos, 100k) e
    Perdido (Churn) incluídos. Quem decide o que fazer com cada estágio é o
-   painel (Visão geral), não o fetcher — experimento de 08/09/2026 pra
-   comparar Novas vendas/Churn/Marcos de volume medidos pelo HubSpot contra a
-   mesma leitura via BigQuery/Iugu/pedidos pagos.
+   painel (Visão geral), não o fetcher.
 
-   `fechadoEm` é uma APROXIMAÇÃO de "quando entrou no estágio atual": o
-   HubSpot não dá o histórico de troca de estágio sem a API de histórico de
-   propriedades (cara demais pra rodar aqui todo dia), então usa `closedate`
-   quando existe e, sem ela, `hs_lastmodifieddate` — é a mesma limitação que
-   se aplica a "quando esse negócio virou Perdido (Churn)". */
+   `historico` é o HISTÓRICO REAL de troca de estágio — não aproximação. O
+   Eduardo perguntou "de uma semana pra outra, quem entrou em 25 Pedidos
+   Pagos?" e a primeira tentativa (closedate/hs_lastmodifieddate como proxy
+   de "quando chegou") saiu inflada e foi revertida em 09/09/2026. A API de
+   histórico de propriedades do HubSpot (`propertiesWithHistory` no
+   batch/read) resolve de verdade: devolve, por negócio, cada valor que
+   `dealstage` já teve e o timestamp exato da troca — testado em 09/09/2026
+   contra os ~2200 negócios desses 4 pipelines, ~45 lotes de 50 (o teto da
+   API pra esse tipo de consulta), uns 15s no total. */
 async function puxarOnboarding(pipes, owners) {
   const alvo = (pipes.results || [])
     .filter(p => (p.stages || []).some(s => /^implantado$/i.test((s.label || '').trim())));
   console.log('  pipelines de onboarding (têm estágio "Implantado")'.padEnd(44) + String(alvo.length).padStart(8));
-  if (!alvo.length) return [];
+  if (!alvo.length) return { linhas: [], historico: [] };
   alvo.forEach(p => console.log('    - ' + p.label));
 
   const nomeEstagio = {}, nomePipeline = {};
@@ -925,6 +927,7 @@ async function puxarOnboarding(pipes, owners) {
   const linhas = deals.map(d => {
     const p = d.properties;
     return {
+      id: d.id,
       cliente: nomeEmpresa[empresaDo[d.id]] || p.dealname || '(sem empresa)',
       pipeline: nomePipeline[p.pipeline] || '—',
       estagio: nomeEstagio[p.dealstage] || '—',
@@ -934,7 +937,38 @@ async function puxarOnboarding(pipes, owners) {
     };
   });
   console.log('  negócios com pipeline/estágio resolvidos'.padEnd(44) + String(linhas.length).padStart(8));
-  return linhas;
+
+  const porId = {};
+  linhas.forEach(l => { porId[l.id] = l; });
+  const historico = [];
+  const ids = linhas.map(l => l.id);
+  for (let i = 0; i < ids.length; i += 50) {
+    const lote = ids.slice(i, i + 50);
+    let resp;
+    try {
+      resp = await hs('POST', '/crm/v3/objects/deals/batch/read', {
+        inputs: lote.map(id => ({ id })),
+        propertiesWithHistory: ['dealstage'],
+      });
+    } catch (e) {
+      console.log('    ! histórico de estágio falhou nesse lote (' + (i / 50 + 1) + '): ' + e.message.slice(0, 120));
+      continue;
+    }
+    (resp.results || []).forEach(r => {
+      const linha = porId[r.id]; if (!linha) return;
+      const hist = (r.propertiesWithHistory && r.propertiesWithHistory.dealstage) || [];
+      hist.forEach(h => {
+        historico.push({
+          cliente: linha.cliente, pipeline: linha.pipeline, cs: linha.cs,
+          estagio: nomeEstagio[h.value] || h.value,
+          quando: iso(h.timestamp),
+        });
+      });
+    });
+  }
+  console.log('  eventos de troca de estágio (histórico real)'.padEnd(44) + String(historico.length).padStart(8));
+
+  return { linhas, historico };
 }
 
 /* ------------------------------------------------------------- reuniões
@@ -2175,6 +2209,7 @@ function montar(bqd, hsd, tinoDados) {
     reunioes: hsd.reunioes,
     tickets,
     onboarding: hsd.onboarding || [],
+    estagioHistorico: hsd.estagioHistorico || [],
   };
 }
 
@@ -2186,7 +2221,7 @@ function montar(bqd, hsd, tinoDados) {
   const bqd = await puxarBQ();
   const hsd = await puxarHubSpot().catch(e => {
     console.log('  HubSpot falhou: ' + e.message.slice(0, 160));
-    return { negocios: [], reunioes: [], tickets: [], onboarding: [] };
+    return { negocios: [], reunioes: [], tickets: [], onboarding: [], estagioHistorico: [] };
   });
   /* Tino: se a API cair, o painel carrega sem a aba em vez de abortar a carga
      inteira — o resto dos dados não tem nada a ver com ela. */
@@ -2210,6 +2245,7 @@ function montar(bqd, hsd, tinoDados) {
   console.log('  tickets         ' + data.tickets.length
     + ' (' + data.tickets.filter(t => t.situacao === 'Aberto').length + ' abertos)');
   console.log('  onboarding      ' + data.onboarding.length + ' negócios em andamento');
+  console.log('  histórico estágio ' + data.estagioHistorico.length + ' eventos de troca');
   console.log('  canais          ' + data.meta.canais.join(', '));
   console.log('  oráculo         ' + data.oraculo.tabela.length + ' marcas / ' + tam(data.oraculo.series) + ' dias-marca');
   console.log('  tino            ' + data.tino.tabela.length + ' marcas com o produto / '
