@@ -263,6 +263,25 @@ async function puxarBQ() {
       AND ${FILTRO_PERIODO('settings_createdAt')}
     GROUP BY 1,2`);
 
+  /* Marcos de volume (Laura, 09/09/2026): pra achar QUANDO cada marca bateu
+     seus 5/25 primeiros pedidos pagos, e QUANDO cruzou cada faixa de 100 mil
+     de GMV, é preciso o total acumulado DESDE O PRIMEIRO PEDIDO — a janela
+     de ${INICIO} usada em todo o resto da carga não serve aqui: uma marca
+     antiga que já tinha 20 pedidos pagos antes de ${INICIO} pareceria bater
+     "5 pedidos pagos" de novo este ano. Por isso esta consulta não tem
+     filtro de período — pega o histórico completo, por marca × dia, só com
+     o necessário pra reconstruir o acumulado depois em JS. */
+  const pedidosPagosTudo = await q('pedidos pagos por marca × dia (histórico completo p/ marcos)', `
+    SELECT CAST(domainId AS STRING) dom,
+      ${DIA('settings_createdAt')} d,
+      COUNTIF(payment_isPaid='True') pagos,
+      ROUND(SUM(IF(payment_isPaid='True', CAST(summary_total AS FLOAT64), 0)),2) valor
+    FROM ${DS}.MongoDB_Pedidos_Geral
+    WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
+      AND SAFE_CAST(summary_total AS FLOAT64) > 0
+      AND SAFE_CAST(summary_total AS FLOAT64) < ${TETO_PEDIDO}
+    GROUP BY 1,2`);
+
   const ultimoPedido = await q('último pedido por marca', `
     SELECT CAST(domainId AS STRING) dom,
            SUBSTR(CAST(MAX(CAST(settings_createdAt AS TIMESTAMP)) AS STRING),1,10) ultimo
@@ -529,7 +548,7 @@ async function puxarBQ() {
            COUNT(*) empresas, COUNTIF(tipo = 'Varejo') varejo
     FROM ${DS}.confeccao_tipo_empresa`);
 
-  return { cadastro, cadastroFora, pedidos, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
+  return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            temIntegrationOwner: TEM_OWNER };
 }
@@ -868,12 +887,12 @@ async function puxarHubSpot() {
 
   const tickets = await puxarTickets(owners);
 
-  const onboardingResp = await puxarOnboarding(pipes, owners).catch(e => {
+  const onboarding = await puxarOnboarding(pipes, owners).catch(e => {
     console.log('  onboarding falhou: ' + e.message.slice(0, 160));
-    return { linhas: [], historico: [] };
+    return [];
   });
 
-  return { negocios, reunioes, tickets, onboarding: onboardingResp.linhas, estagioHistorico: onboardingResp.historico };
+  return { negocios, reunioes, tickets, onboarding };
 }
 
 /* ------------------------------------------------------- onboarding (CS)
@@ -889,24 +908,23 @@ async function puxarHubSpot() {
    quinto pipeline nessa família amanhã.
 
    Traz TODO negócio desses 4 pipelines, em QUALQUER estágio — onboarding em
-   andamento, marco de volume pós-implantação (5/25/80 pedidos, 100k) e
-   Perdido (Churn) incluídos. Quem decide o que fazer com cada estágio é o
-   painel (Visão geral), não o fetcher.
+   andamento e Perdido (Churn) incluídos. Quem decide o que fazer com cada
+   estágio é o painel (Visão geral), não o fetcher.
 
-   `historico` é o HISTÓRICO REAL de troca de estágio — não aproximação. O
-   Eduardo perguntou "de uma semana pra outra, quem entrou em 25 Pedidos
-   Pagos?" e a primeira tentativa (closedate/hs_lastmodifieddate como proxy
-   de "quando chegou") saiu inflada e foi revertida em 09/09/2026. A API de
-   histórico de propriedades do HubSpot (`propertiesWithHistory` no
-   batch/read) resolve de verdade: devolve, por negócio, cada valor que
-   `dealstage` já teve e o timestamp exato da troca — testado em 09/09/2026
-   contra os ~2200 negócios desses 4 pipelines, ~45 lotes de 50 (o teto da
-   API pra esse tipo de consulta), uns 15s no total. */
+   Marcos de volume (5/25 pedidos pagos, 100k de GMV) NÃO vêm mais daqui —
+   passaram pro BigQuery (ver `pedidosPagosTudo` em puxarBQ, e o cálculo do
+   acumulado em `montar`), pedido da Laura em 09/09/2026: o pedido pago em
+   si é um fato do BigQuery, não do estágio do negócio no HubSpot, e o
+   estágio só reflete a fase manualmente marcada por quem cuida da conta —
+   pode atrasar ou nunca ser atualizado depois que a marca sai do onboarding
+   ativo. Isso substitui o histórico de troca de `dealstage` que chegou a
+   existir aqui (buscado via `propertiesWithHistory` no batch/read), removido
+   junto por ter ficado sem uso. */
 async function puxarOnboarding(pipes, owners) {
   const alvo = (pipes.results || [])
     .filter(p => (p.stages || []).some(s => /^implantado$/i.test((s.label || '').trim())));
   console.log('  pipelines de onboarding (têm estágio "Implantado")'.padEnd(44) + String(alvo.length).padStart(8));
-  if (!alvo.length) return { linhas: [], historico: [] };
+  if (!alvo.length) return [];
   alvo.forEach(p => console.log('    - ' + p.label));
 
   const nomeEstagio = {}, nomePipeline = {};
@@ -938,37 +956,7 @@ async function puxarOnboarding(pipes, owners) {
   });
   console.log('  negócios com pipeline/estágio resolvidos'.padEnd(44) + String(linhas.length).padStart(8));
 
-  const porId = {};
-  linhas.forEach(l => { porId[l.id] = l; });
-  const historico = [];
-  const ids = linhas.map(l => l.id);
-  for (let i = 0; i < ids.length; i += 50) {
-    const lote = ids.slice(i, i + 50);
-    let resp;
-    try {
-      resp = await hs('POST', '/crm/v3/objects/deals/batch/read', {
-        inputs: lote.map(id => ({ id })),
-        propertiesWithHistory: ['dealstage'],
-      });
-    } catch (e) {
-      console.log('    ! histórico de estágio falhou nesse lote (' + (i / 50 + 1) + '): ' + e.message.slice(0, 120));
-      continue;
-    }
-    (resp.results || []).forEach(r => {
-      const linha = porId[r.id]; if (!linha) return;
-      const hist = (r.propertiesWithHistory && r.propertiesWithHistory.dealstage) || [];
-      hist.forEach(h => {
-        historico.push({
-          id: r.id, cliente: linha.cliente, pipeline: linha.pipeline, cs: linha.cs,
-          estagio: nomeEstagio[h.value] || h.value,
-          quando: iso(h.timestamp),
-        });
-      });
-    });
-  }
-  console.log('  eventos de troca de estágio (histórico real)'.padEnd(44) + String(historico.length).padStart(8));
-
-  return { linhas, historico };
+  return linhas;
 }
 
 /* ------------------------------------------------------------- reuniões
@@ -1777,6 +1765,45 @@ function montar(bqd, hsd, tinoDados) {
     ...churnSeries.filter(doAnoCorrente).map(x => x.cliente),
   ]);
   const clientesFinal = clientes.filter(c => ativos.has(c.nome));
+
+  /* Marcos de volume: reconstrói, dia a dia, o acumulado de pedidos pagos e
+     de GMV pago de cada marca (desde o primeiro pedido dela, sem limite de
+     janela) e marca o DIA EXATO em que cada marco foi cruzado pela PRIMEIRA
+     VEZ NA VIDA — "5 Pedidos Pagos", "25 Pedidos Pagos" e "100k de GMV" só
+     disparam uma vez cada (o acumulado nunca desce, então uma vez passado
+     o limiar não cruza de novo).
+     "100k de GMV" chegou a ficar "dispara toda vez que cruza mais um
+     múltiplo de 100 mil" (pedido original da Laura em 09/09/2026), mas
+     rodando contra o BigQuery isso disparava CENTENAS de vezes pras marcas
+     grandes (Alcance Loja Fábrica sozinha gerava 521 eventos na vida) e
+     inflava um mês normal pra 777 contra as ~15-19 dos outros marcos — bem
+     longe de "marco". A própria Laura escolheu voltar pro padrão de
+     primeira-vez-na-vida depois de ver esse número. */
+  const diasPorDom = new Map();
+  bqd.pedidosPagosTudo.forEach(r => {
+    if (!porDom.has(r.dom) || !dataOk(r.d)) return;
+    if (!diasPorDom.has(r.dom)) diasPorDom.set(r.dom, []);
+    diasPorDom.get(r.dom).push({ d: r.d, pagos: num(r.pagos), valor: num(r.valor) });
+  });
+  const marcosVolume = [];
+  diasPorDom.forEach((dias, dom) => {
+    if (!ativos.has(porDom.get(dom).nome)) return;
+    dias.sort((a, b) => a.d.localeCompare(b.d));
+    const nome = porDom.get(dom).nome;
+    let cumPagos = 0, cumValor = 0;
+    dias.forEach(r => {
+      const antesPagos = cumPagos, antesValor = cumValor;
+      cumPagos += r.pagos; cumValor += r.valor;
+      if (antesPagos < 5 && cumPagos >= 5)
+        marcosVolume.push({ dominio: dom, cliente: nome, data: r.d, tipo: '5 Pedidos Pagos' });
+      if (antesPagos < 25 && cumPagos >= 25)
+        marcosVolume.push({ dominio: dom, cliente: nome, data: r.d, tipo: '25 Pedidos Pagos' });
+      if (antesValor < 100000 && cumValor >= 100000)
+        marcosVolume.push({ dominio: dom, cliente: nome, data: r.d, tipo: '100k de GMV' });
+    });
+  });
+  console.log('  marcos de volume (BigQuery)'.padEnd(44) + String(marcosVolume.length).padStart(8));
+
   /* TEM o produto, que não é o mesmo que USA o produto. Para o VestiPago o
      sinal é a CONTA DE PAGAMENTO criada (implVP, de MongoDB_Payment_Companies),
      igual ao Tino, que sai da base do próprio produto. De propósito não é
@@ -2209,7 +2236,7 @@ function montar(bqd, hsd, tinoDados) {
     reunioes: hsd.reunioes,
     tickets,
     onboarding: hsd.onboarding || [],
-    estagioHistorico: hsd.estagioHistorico || [],
+    marcosVolume,
   };
 }
 
@@ -2221,7 +2248,7 @@ function montar(bqd, hsd, tinoDados) {
   const bqd = await puxarBQ();
   const hsd = await puxarHubSpot().catch(e => {
     console.log('  HubSpot falhou: ' + e.message.slice(0, 160));
-    return { negocios: [], reunioes: [], tickets: [], onboarding: [], estagioHistorico: [] };
+    return { negocios: [], reunioes: [], tickets: [], onboarding: [] };
   });
   /* Tino: se a API cair, o painel carrega sem a aba em vez de abortar a carga
      inteira — o resto dos dados não tem nada a ver com ela. */
@@ -2245,7 +2272,7 @@ function montar(bqd, hsd, tinoDados) {
   console.log('  tickets         ' + data.tickets.length
     + ' (' + data.tickets.filter(t => t.situacao === 'Aberto').length + ' abertos)');
   console.log('  onboarding      ' + data.onboarding.length + ' negócios em andamento');
-  console.log('  histórico estágio ' + data.estagioHistorico.length + ' eventos de troca');
+  console.log('  marcos de volume ' + data.marcosVolume.length + ' eventos (BigQuery)');
   console.log('  canais          ' + data.meta.canais.join(', '));
   console.log('  oráculo         ' + data.oraculo.tabela.length + ' marcas / ' + tam(data.oraculo.series) + ' dias-marca');
   console.log('  tino            ' + data.tino.tabela.length + ' marcas com o produto / '

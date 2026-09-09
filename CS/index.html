@@ -1183,11 +1183,12 @@ function periodoAnterior(p){
   return { ini: somarDias(p.ini, -dias), fim: somarDias(p.ini, -1) };
 }
 /* EXPERIMENTO 08/09/2026 (pedido da Laura): "puxar tudo do HubSpot", pra
-   comparar contra a mesma leitura via BigQuery/Iugu/pedidos pagos. Os 4
-   blocos abaixo (Novas vendas, Churn, Marcos de volume, Produtos
-   implantados) trocaram de fonte — cada função diz exatamente de qual
-   campo/estágio do HubSpot tira o número. Ficam só Reuniões e Negócios
-   (cross-sell/upgrade), que já eram HubSpot desde o início.
+   comparar contra a mesma leitura via BigQuery/Iugu/pedidos pagos. Os 3
+   blocos abaixo (Novas vendas, Churn, Produtos implantados) trocaram de
+   fonte — cada função diz exatamente de qual campo/estágio do HubSpot tira
+   o número. Marcos de volume passou por aqui e voltou pro BigQuery em
+   09/09/2026 (ver comentário de `categoriasMarcos`). Ficam só Reuniões e
+   Negócios (cross-sell/upgrade), que já eram HubSpot desde o início.
 
    Fonte única agora: `DATA.onboarding` — TODO negócio dos 4 pipelines de CS
    (Sucesso do Cliente / Integração / Plataforma / CS - Starter), em
@@ -1289,55 +1290,40 @@ function categoriasImplantados(){
     {l:'VestiPago', v:imp.vestiPago.length, cor:'var(--gold)', quem:imp.vestiPago.map(x=>x.cliente)},
   ];
 }
-/* Marcos de volume: quem CHEGOU em cada estágio de pós-implantação dos
-   mesmos 4 pipelines de CS DENTRO DO PERÍODO ESCOLHIDO NO FILTRO — pedido
-   final da Laura em 09/09/2026: bater exatamente com o filtro nativo do
-   HubSpot ("Data que entrou na fase atual" — hs_v2_date_entered_<id do
-   estágio> — dentro do período), não com uma reconstrução de "esteve
-   parado lá". Se ninguém chegou no estágio dentro da janela, o número é 0,
-   igual apareceria no HubSpot.
+/* Marcos de volume: reescrito do zero em 09/09/2026 a pedido da Laura, saindo
+   do HubSpot (estágio de negócio, editado à mão) e passando a vir do
+   BigQuery (fato de pedido/pagamento) — `DATA.marcosVolume`, calculado em
+   fetch_dados.js a partir do acumulado de pedidos pagos e GMV pago de cada
+   marca desde o primeiro pedido dela.
 
-   Validado contra o HubSpot real em 09/09/2026: filtrando os 3 pipelines
-   de "25 Pedidos Pagos" por esse campo nativo, agosto/2026 dá 8 (0 + 5 + 3
-   por pipeline) e os últimos 90 dias dão 15 — os dois batem exato com o
-   que esta função calcula a partir de `DATA.estagioHistorico`. Achado no
-   caminho: os "0" que a Laura viu no HubSpot eram de olhar só UM dos 3
-   pipelines de cada vez — o total certo soma os 3.
-
-   Fonte: `DATA.estagioHistorico` (timestamp exato de cada troca de
-   dealstage, puxado do histórico real do HubSpot). "Chegou" = a troca
-   ACONTECEU dentro do período — não importa se o negócio já saiu desse
-   estágio depois ou se ainda está nele.
-
-   "Pedidos Pagos" e "vendas" são o mesmo marco pra Laura (pedido dela em
-   09/09/2026: "pedidos pagos e vendas sao a mesma coisa, pode juntalos e
-   deixar só como vendas") — os estágios de mesmo número em cada uma das
-   duas escadinhas (três pipelines usam "Pedidos Pagos", o "CS - Starter"
-   usa "vendas") são somados num único rótulo "X vendas". "10 vendas" e
-   "100k - UPgrade" não têm par na escadinha de Pedidos Pagos, então ficam
-   como estão. */
-const MARCOS_CANONICO = {
-  '5 Pedidos Pagos': '5 vendas',
-  '25 Pedidos Pagos': '25 vendas',
-  '80 ou mais Pedidos Pagos': '80 vendas',
-  '10 vendas': '10 vendas',
-  '25 vendas': '25 vendas',
-  '80 Vendas 🚀': '80 vendas',
-  '100k - UPgrade': '100k - UPgrade',
-};
-const ORDEM_MARCOS = ['5 vendas', '10 vendas', '25 vendas', '80 vendas', '100k - UPgrade'];
+   Quatro marcos, todos "primeira vez na vida da marca" (nenhum repete em
+   período seguinte):
+   - "Novas marcas criadas": data de cadastro (`DATA.clientes[].dataCadastro`
+     = odbc_domains.created_at) cai no período.
+   - "5 Pedidos Pagos" / "25 Pedidos Pagos": o dia em que o acumulado de
+     pedidos pagos da marca cruzou 5 (ou 25) pela primeira vez cai no
+     período — passar de novo em setembro não conta de novo o marco de
+     agosto.
+   - "100k de GMV": o dia em que o acumulado de GMV pago da marca cruzou
+     100 mil pela primeira vez cai no período. Chegou a ser pensado pra
+     REPETIR a cada novo múltiplo de 100 mil (100k, depois 200k, 300k...),
+     mas rodando contra o BigQuery isso disparava centenas de vezes pras
+     marcas grandes (Alcance Loja Fábrica sozinha gera 521 desses na vida) e
+     inflava um mês normal pra 777 contra as ~15-19 dos outros marcos — a
+     Laura viu esse número em 09/09/2026 e preferiu voltar pro padrão de
+     primeira-vez-na-vida, igual os outros três. */
+const ORDEM_MARCOS = ['Novas marcas criadas', '5 Pedidos Pagos', '25 Pedidos Pagos', '100k de GMV'];
 function categoriasMarcos(){
   const p = periodo();
-  const eventos = (DATA.estagioHistorico||[]).filter(h=>
-    h.quando && h.quando>=p.ini && h.quando<=p.fim && MARCOS_CANONICO[h.estagio]);
-  const porEstagio = {}, quemPorEstagio = {};
-  eventos.forEach(ev=>{
-    const l = MARCOS_CANONICO[ev.estagio];
-    porEstagio[l]=(porEstagio[l]||0)+1;
-    (quemPorEstagio[l] || (quemPorEstagio[l]=[])).push(ev.cliente);
+  const noPeriodo = d => d && d>=p.ini && d<=p.fim;
+  const quem = { 'Novas marcas criadas': [] };
+  (DATA.clientes||[]).forEach(c=>{ if(noPeriodo(c.dataCadastro)) quem['Novas marcas criadas'].push(c.nome); });
+  (DATA.marcosVolume||[]).forEach(ev=>{
+    if(!noPeriodo(ev.data)) return;
+    (quem[ev.tipo] || (quem[ev.tipo]=[])).push(ev.cliente);
   });
-  const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)'];
-  return ORDEM_MARCOS.map((l,i)=>({l, v:porEstagio[l]||0, cor:cores[i%cores.length], quem:quemPorEstagio[l]||[]}));
+  const cores = ['var(--ink-3)','var(--acc)','var(--acc-2)','var(--gold)'];
+  return ORDEM_MARCOS.map((l,i)=>({l, v:(quem[l]||[]).length, cor:cores[i%cores.length], quem:quem[l]||[]}));
 }
 /* Negócios ganhos por categoria — o mesmo par este-período x período-anterior
    das Novas vendas, só que para Cross-sell (produto novo na carteira) e
@@ -1418,13 +1404,13 @@ const TABS = [
   {
     id:'visaoGeral', grupo:'Visão geral', nav:'Visão geral', cor:'#2E7D46', cor2:'#1E74C8',
     titulo:'Visão geral',
-    desc:'<b>Experimento de 08/09/2026: a maior parte daqui vem do HubSpot agora</b> (Novas vendas, Churn, Funil de onboarding, Marcos de volume, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes — os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. Fonte HubSpot: os 4 pipelines de negócio de CS (Sucesso do Cliente, Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter — achados pelo estágio "Implantado", não pelo nome). Retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. <b>Passe o mouse em qualquer barra ou fatia</b> pra ver quais marcas formam aquele número. '
+    desc:'<b>Experimento de 08/09/2026: parte daqui vem do HubSpot agora</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes — os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. Fonte HubSpot: os 4 pipelines de negócio de CS (Sucesso do Cliente, Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter — achados pelo estágio "Implantado", não pelo nome). <b>Marcos de volume voltou a ser 100% BigQuery</b> (nunca chegou a ser 100% HubSpot: era o estágio de negócio, editado à mão). Retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. <b>Passe o mouse em qualquer barra ou fatia</b> pra ver quais marcas formam aquele número. '
       + '<b>Novas vendas</b> = negócio criado (campo <code>createdate</code>) no período, em qualquer um dos 4 pipelines; Starter = pipeline "CS - Starter", Pro = os outros três (não existe campo de plano nesses negócios). '
       + '<b>Churn</b> = negócio cujo estágio atual é "Perdido (Churn)" (existe nos 4 pipelines); a data é <code>closedate</code> ou, sem ela, <code>hs_lastmodifieddate</code> — o HubSpot não guarda quando o negócio ENTROU nesse estágio, só a última mexida nele. '
       + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, só que fechados no período. '
       + '<b>Funil de onboarding</b> é uma <b>foto do momento</b>: negócios ainda em andamento nesses 4 pipelines, por fase (campo <code>estagio</code> cru do HubSpot, agrupado em 5 nomes). '
       + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho no período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
-      + '<b>Marcos de volume</b> conta quantas marcas CHEGARAM em cada estágio de pós-implantação dentro do período escolhido — mesma lógica do filtro nativo do HubSpot ("Data que entrou na fase atual"), calculada a partir do histórico real de troca de estágio (timestamp exato de cada troca). Se nenhuma marca chegou naquele estágio na janela escolhida, o número é 0, mesmo que outras estejam paradas lá desde muito antes. "Pedidos Pagos" (três dos pipelines) e "vendas" (só o CS - Starter) são o mesmo marco por número — "5/25/80 Pedidos Pagos" somam com "5/25/80 vendas" e aparecem só como <b>"5 → 10 → 25 → 80 → 100k - UPgrade" vendas</b> ("10 vendas" e "100k - UPgrade" não têm par na escadinha de Pedidos Pagos; "100k - UPgrade" é a marca batendo ~100k e virando candidata a upgrade de plano).',
+      + '<b>Marcos de volume</b> vem do BigQuery, não do HubSpot: <b>Novas marcas criadas</b> = data de criação do domínio (<code>odbc_domains.created_at</code>) no período. <b>5 Pedidos Pagos</b>, <b>25 Pedidos Pagos</b> e <b>100k de GMV</b> = o dia em que o acumulado da marca (pedidos pagos ou GMV pago, desde o primeiro pedido dela) cruzou aquele limiar pela primeira vez cai no período — cada marca entra uma única vez na vida em cada um dos quatro marcos, nunca repete em período seguinte. Se nenhuma marca bateu o marco na janela escolhida, o número é 0, mesmo que outras já tenham batido antes.',
     filtros:['periodo'],
     semTabela:true,
     linhas:()=>[],
@@ -1435,7 +1421,7 @@ const TABS = [
       {t:'Negócios por categoria (cross-sell x upgrade)', categorias:()=>categoriasNegocios()},
       {t:'Funil de onboarding (foto do momento)', categorias:()=>funilIntegracoes()},
       {t:'Produtos implantados no período', categorias:()=>categoriasImplantados(), pizza:true},
-      {t:'Marcos de volume no período (HubSpot)', categorias:()=>categoriasMarcos()},
+      {t:'Marcos de volume no período (BigQuery)', categorias:()=>categoriasMarcos()},
     ],
   },
   {
