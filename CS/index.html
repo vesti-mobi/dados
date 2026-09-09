@@ -1309,30 +1309,34 @@ function categoriasImplantados(){
    ACONTECEU dentro do período — não importa se o negócio já saiu desse
    estágio depois ou se ainda está nele.
 
-   Duas escadinhas soltas, cada uma com sua própria régua: "5/25/80 ou mais
-   Pedidos Pagos" em três dos pipelines, e "10/25 vendas"/"80 Vendas"/"100k -
-   UPgrade" só no "CS - Starter" (pipeline de marca Starter — "100k -
-   UPgrade" é quando ela bate ~100k e vira candidata a upgrade de plano).
-   NÃO SÃO A MESMA COISA — a probabilidade configurada em cada estágio no
-   HubSpot difere muito (90% em "Pedidos Pagos" x 20% em "vendas"), sinal de
-   que não foram calibrados como o mesmo marco — os rótulos ficam com o
-   nome exato do HubSpot, sem forçar uma escala única entre pipelines
-   diferentes. A ORDEM é fixa (crescente dentro de cada escadinha, Pedidos
-   Pagos primeiro). */
-const ORDEM_MARCOS = [
-  '5 Pedidos Pagos', '25 Pedidos Pagos', '80 ou mais Pedidos Pagos',
-  '10 vendas', '25 vendas', '80 Vendas 🚀', '100k - UPgrade',
-];
+   "Pedidos Pagos" e "vendas" são o mesmo marco pra Laura (pedido dela em
+   09/09/2026: "pedidos pagos e vendas sao a mesma coisa, pode juntalos e
+   deixar só como vendas") — os estágios de mesmo número em cada uma das
+   duas escadinhas (três pipelines usam "Pedidos Pagos", o "CS - Starter"
+   usa "vendas") são somados num único rótulo "X vendas". "10 vendas" e
+   "100k - UPgrade" não têm par na escadinha de Pedidos Pagos, então ficam
+   como estão. */
+const MARCOS_CANONICO = {
+  '5 Pedidos Pagos': '5 vendas',
+  '25 Pedidos Pagos': '25 vendas',
+  '80 ou mais Pedidos Pagos': '80 vendas',
+  '10 vendas': '10 vendas',
+  '25 vendas': '25 vendas',
+  '80 Vendas 🚀': '80 vendas',
+  '100k - UPgrade': '100k - UPgrade',
+};
+const ORDEM_MARCOS = ['5 vendas', '10 vendas', '25 vendas', '80 vendas', '100k - UPgrade'];
 function categoriasMarcos(){
   const p = periodo();
   const eventos = (DATA.estagioHistorico||[]).filter(h=>
-    h.quando && h.quando>=p.ini && h.quando<=p.fim && ORDEM_MARCOS.includes(h.estagio));
+    h.quando && h.quando>=p.ini && h.quando<=p.fim && MARCOS_CANONICO[h.estagio]);
   const porEstagio = {}, quemPorEstagio = {};
   eventos.forEach(ev=>{
-    porEstagio[ev.estagio]=(porEstagio[ev.estagio]||0)+1;
-    (quemPorEstagio[ev.estagio] || (quemPorEstagio[ev.estagio]=[])).push(ev.cliente);
+    const l = MARCOS_CANONICO[ev.estagio];
+    porEstagio[l]=(porEstagio[l]||0)+1;
+    (quemPorEstagio[l] || (quemPorEstagio[l]=[])).push(ev.cliente);
   });
-  const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)','#B54A72','#1E74C8'];
+  const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)'];
   return ORDEM_MARCOS.map((l,i)=>({l, v:porEstagio[l]||0, cor:cores[i%cores.length], quem:quemPorEstagio[l]||[]}));
 }
 /* Negócios ganhos por categoria — o mesmo par este-período x período-anterior
@@ -1420,7 +1424,7 @@ const TABS = [
       + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, só que fechados no período. '
       + '<b>Funil de onboarding</b> é uma <b>foto do momento</b>: negócios ainda em andamento nesses 4 pipelines, por fase (campo <code>estagio</code> cru do HubSpot, agrupado em 5 nomes). '
       + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho no período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
-      + '<b>Marcos de volume</b> conta quantas marcas CHEGARAM em cada estágio de pós-implantação dentro do período escolhido — mesma lógica do filtro nativo do HubSpot ("Data que entrou na fase atual"), calculada a partir do histórico real de troca de estágio (timestamp exato de cada troca). Se nenhuma marca chegou naquele estágio na janela escolhida, o número é 0, mesmo que outras estejam paradas lá desde muito antes. Duas escadinhas soltas, nessa ordem: "5 → 25 → 80 ou mais Pedidos Pagos" (três dos pipelines) e "10 → 25 → 80 Vendas → 100k - UPgrade" (só o CS - Starter, pipeline de marca Starter — "100k - UPgrade" é ela batendo ~100k e virando candidata a upgrade de plano). <b>"Venda" e "pedido pago" não necessariamente medem a mesma coisa</b>: são nomes de estágio escolhidos por quem montou cada pipeline no HubSpot, sem definição formal registrada em lugar nenhum — os rótulos ficam com o nome exato do HubSpot, sem forçar uma escala única entre pipelines diferentes.',
+      + '<b>Marcos de volume</b> conta quantas marcas CHEGARAM em cada estágio de pós-implantação dentro do período escolhido — mesma lógica do filtro nativo do HubSpot ("Data que entrou na fase atual"), calculada a partir do histórico real de troca de estágio (timestamp exato de cada troca). Se nenhuma marca chegou naquele estágio na janela escolhida, o número é 0, mesmo que outras estejam paradas lá desde muito antes. "Pedidos Pagos" (três dos pipelines) e "vendas" (só o CS - Starter) são o mesmo marco por número — "5/25/80 Pedidos Pagos" somam com "5/25/80 vendas" e aparecem só como <b>"5 → 10 → 25 → 80 → 100k - UPgrade" vendas</b> ("10 vendas" e "100k - UPgrade" não têm par na escadinha de Pedidos Pagos; "100k - UPgrade" é a marca batendo ~100k e virando candidata a upgrade de plano).',
     filtros:['periodo'],
     semTabela:true,
     linhas:()=>[],
