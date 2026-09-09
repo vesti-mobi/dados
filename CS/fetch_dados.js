@@ -959,7 +959,7 @@ async function puxarOnboarding(pipes, owners) {
       const hist = (r.propertiesWithHistory && r.propertiesWithHistory.dealstage) || [];
       hist.forEach(h => {
         historico.push({
-          cliente: linha.cliente, pipeline: linha.pipeline, cs: linha.cs,
+          id: r.id, cliente: linha.cliente, pipeline: linha.pipeline, cs: linha.cs,
           estagio: nomeEstagio[h.value] || h.value,
           quando: iso(h.timestamp),
         });
