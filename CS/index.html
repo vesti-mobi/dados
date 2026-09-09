@@ -1326,28 +1326,6 @@ function categoriasMarcos(){
   const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)','#B54A72','#1E74C8'];
   return ORDEM_MARCOS.map((l,i)=>({l, v:porEstagio[l]||0, cor:cores[i%cores.length], quem:quemPorEstagio[l]||[]}));
 }
-/* Marcos de volume — quem ENTROU em cada estágio DENTRO DO PERÍODO, com o
-   histórico real de troca de dealstage do HubSpot (timestamp exato de cada
-   troca, via propertiesWithHistory no fetch_dados.js) — não é mais
-   aproximação por hs_lastmodifieddate (essa versão foi tentada e revertida
-   em 09/09/2026 por vir inflada). Pergunta do Eduardo em 09/09/2026: "de uma
-   semana pra outra, quem entrou em 25 Pedidos Pagos?" — é exatamente isso.
-   Existe ao lado da "foto do momento" porque respondem perguntas diferentes:
-   uma é "quantas marcas estão nesse estágio agora", a outra é "quantas
-   CHEGARAM nele dentro do período escolhido". */
-function categoriasMarcosNoPeriodo(){
-  const p = periodo();
-  const eventos = (DATA.estagioHistorico||[]).filter(h=>
-    h.quando && h.quando>=p.ini && h.quando<=p.fim && /pedido|venda|100k/i.test(h.estagio||''));
-  const porEstagio = {}, quemPorEstagio = {};
-  eventos.forEach(h=>{
-    const e = h.estagio || '—';
-    porEstagio[e]=(porEstagio[e]||0)+1;
-    (quemPorEstagio[e] || (quemPorEstagio[e]=[])).push(h.cliente);
-  });
-  const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)','#B54A72','#1E74C8'];
-  return ORDEM_MARCOS.map((l,i)=>({l, v:porEstagio[l]||0, cor:cores[i%cores.length], quem:quemPorEstagio[l]||[]}));
-}
 /* Negócios ganhos por categoria — o mesmo par este-período x período-anterior
    das Novas vendas, só que para Cross-sell (produto novo na carteira) e
    Upgrade (expansão do que já tem). Reaproveita negociosGanhosNoPeriodo, que
@@ -1433,7 +1411,7 @@ const TABS = [
       + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, só que fechados no período. '
       + '<b>Funil de onboarding</b> é uma <b>foto do momento</b>: negócios ainda em andamento nesses 4 pipelines, por fase (campo <code>estagio</code> cru do HubSpot, agrupado em 5 nomes). '
       + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho no período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
-      + 'Os dois <b>Marcos de volume</b> olham a mesma régua de estágios, de jeitos diferentes: <b>foto do momento</b> é quais marcas ESTÃO AGORA em cada um; <b>quem entrou no período</b> é quantas CHEGARAM ali dentro do período do filtro, medido pelo histórico real de troca de estágio do HubSpot (timestamp exato de cada troca — não é mais a aproximação por <code>hs_lastmodifieddate</code> que tentamos e revertemos, essa vinha inflada). Duas escadinhas soltas, nessa ordem em ambos: "5 → 25 → 80 ou mais Pedidos Pagos" (três dos pipelines) e "10 → 25 → 80 Vendas → 100k - UPgrade" (só o CS - Starter, pipeline de marca Starter — "100k - UPgrade" é ela batendo ~100k e virando candidata a upgrade de plano). <b>"Venda" e "pedido pago" não necessariamente medem a mesma coisa</b>: são nomes de estágio escolhidos por quem montou cada pipeline no HubSpot, sem definição formal registrada em lugar nenhum — os rótulos ficam com o nome exato do HubSpot, sem forçar uma escala única entre pipelines diferentes.',
+      + '<b>Marcos de volume</b> é <b>foto do momento</b> (não olha o período do filtro): quais marcas ESTÃO AGORA em cada estágio de pós-implantação — duas escadinhas soltas, nessa ordem: "5 → 25 → 80 ou mais Pedidos Pagos" (três dos pipelines) e "10 → 25 → 80 Vendas → 100k - UPgrade" (só o CS - Starter, pipeline de marca Starter — "100k - UPgrade" é ela batendo ~100k e virando candidata a upgrade de plano). Tentamos filtrar por "chegou no período" (via <code>hs_lastmodifieddate</code>) e voltamos atrás: o número saía inflado, porque esse campo muda a qualquer mexida no negócio, não só troca de estágio — sem a API de histórico de propriedades do HubSpot não dá pra saber QUANDO uma marca chegou ali, só ONDE ela está agora. <b>"Venda" e "pedido pago" não necessariamente medem a mesma coisa</b>: são nomes de estágio escolhidos por quem montou cada pipeline no HubSpot, sem definição formal registrada em lugar nenhum — os rótulos ficam com o nome exato do HubSpot, sem forçar uma escala única entre pipelines diferentes.',
     filtros:['periodo'],
     semTabela:true,
     linhas:()=>[],
@@ -1445,7 +1423,6 @@ const TABS = [
       {t:'Funil de onboarding (foto do momento)', categorias:()=>funilIntegracoes()},
       {t:'Produtos implantados no período', categorias:()=>categoriasImplantados(), pizza:true},
       {t:'Marcos de volume — foto do momento (HubSpot)', categorias:()=>categoriasMarcos()},
-      {t:'Marcos de volume — quem entrou no período (HubSpot)', categorias:()=>categoriasMarcosNoPeriodo()},
     ],
   },
   {
