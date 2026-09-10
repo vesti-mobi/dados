@@ -1116,47 +1116,25 @@ function agregarPorCliente(series, campos, derivar){
   return out;
 }
 
-/* Churn: cancelados + inadimplentes + clientes ativos em risco.
-   Uma marca só aparece uma vez, na situação mais grave que couber nela:
-   Cancelado > Inadimplente > Em risco. Sem essa prioridade a mesma marca sairia
-   duas vezes em "Todos" (quem está inadimplente costuma estar em risco também)
-   e a contagem do topo deixaria de bater com a tabela. */
-function situacaoDe(c){
-  if(c.dataChurn) return 'Cancelado';
-  if(c.inadimplente) return 'Inadimplente';
-  return 'Em risco';
-}
-
+/* Churn = a mesma leitura da aba Inadimplentes do PainelElisa (Gambiarra),
+   pedido da Laura em 10/09/2026 — "módulo vendas bloqueado" de verdade, não
+   mais a inferência por fatura vencida que essa aba usava antes. Tudo já
+   vem calculado de `DATA.churn.linhas` (fetch_dados.js — ver o comentário
+   de `carregarChurnGambiarra` lá, incluindo por que a data de bloqueio não
+   sai do BigQuery). Aqui só filtra pela Situação escolhida e ordena. */
 function linhasChurn(){
   const sit = estado.filtros.situacao;
-  const out = DATA.clientes.map(c=>({
-    cliente:c.nome, dominio:c.dominio, cs:c.cs, plano:c.plano,
-    data:c.dataChurn||null, riscoChurn:c.riscoChurn, situacao:situacaoDe(c),
-    /* o racional, em coluna — é o que responde "risco baseado em quê?" */
-    motivosRisco:c.motivosRisco||[], diasSemPedido:c.diasSemPedido??null,
-    ultimoPedido:c.ultimoPedido||null,
-    faturasVencidas:c.faturasVencidas||0, valorEmAberto:c.valorEmAberto||0,
-    diasAtraso:c.diasAtraso??null, vencMaisAntigo:c.vencMaisAntigo||null,
+  const out = (DATA.churn.linhas||[]).map(c=>({
+    ...c,
+    subcontasTxt: (c.subcontas||[]).join(', ')||null,
+    faturasVencidas: c._semDivida ? null : (c.qtFaturas||0),
+    valorEmAbertoV: c._semDivida ? null : (c.valorEmAberto||0),
+    diasAtrasoV: c._semDivida ? null : (c.diasAtraso||0),
   }));
-  const filtrado = sit==='Cancelado'    ? out.filter(x=>x.situacao==='Cancelado')
-                 : sit==='Inadimplente' ? out.filter(x=>x.situacao==='Inadimplente')
-                 /* "Em risco" esconde quem está Baixo: a lista existe para
-                    virar trabalho da CS, e risco baixo não vira ligação. */
-                 : sit==='Em risco'     ? out.filter(x=>x.situacao==='Em risco' && x.riscoChurn!=='Baixo')
-                 : out;
-  const ordemRisco = {Alto:0, 'Médio':1, Baixo:2};
-  return filtrado.sort((a,b)=>{
-    /* cancelado primeiro (mais recente no topo), depois inadimplente pelo
-       maior atraso, depois o resto pelo risco. */
-    if(a.data && b.data) return b.data.localeCompare(a.data);
-    if(a.data) return -1;
-    if(b.data) return 1;
-    const ia = a.situacao==='Inadimplente', ib = b.situacao==='Inadimplente';
-    if(ia && ib) return (b.diasAtraso||0)-(a.diasAtraso||0);
-    if(ia) return -1;
-    if(ib) return 1;
-    return (ordemRisco[a.riscoChurn]??9)-(ordemRisco[b.riscoChurn]??9);
-  });
+  const filtrado = sit==='todos' ? out : out.filter(x=>x.situacao===sit);
+  const peso = {alerta:0, bloqueada:1, cancelada:2};
+  return filtrado.sort((a,b)=>
+    (peso[a.situacao]??9)-(peso[b.situacao]??9) || (b.diasAtraso||0)-(a.diasAtraso||0));
 }
 
 /* ============================================================================
@@ -1628,62 +1606,40 @@ const TABS = [
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
     titulo:'Churn',
-    desc:'Três situações na mesma tabela, pelo filtro <b>Situação</b>. '
-      + '<b>Cancelado</b> vem do Iugu — sem fatura paga há mais de 45 dias <i>e</i> sem fatura futura em aberto; '
-      + 'não existe cancelamento formalizado no HubSpot chegando ao painel. '
-      + '<b>Inadimplente</b> = fatura do Iugu vencida há mais de 10 dias e não paga (fatura cancelada e estornada '
-      + 'ficam de fora — essas não são dívida do lojista); os dias contam do vencimento <i>mais antigo</i> em aberto. '
-      + '<b>Risco de churn</b> é regra fixa, não modelo: <b>Alto</b> se nunca vendeu, ou está sem pedido há +45 dias, '
-      + 'ou sem fatura paga há +45 dias, ou inadimplente; <b>Médio</b> se está sem pedido há +15 dias, ou sem nenhuma '
-      + 'fatura futura em aberto, ou com fatura vencida ainda dentro da régua dos 10 dias; <b>Baixo</b> se nada disso '
-      + 'bate. A coluna <b>Por que</b> mostra o que disparou em cada marca, e as colunas ao lado trazem os números '
-      + 'crus. Quem já cancelou fica sem risco: medir risco de quem já saiu não diz nada.',
-    filtros:['cliente','cs','canal','periodo','situacao'],
-    tabela:'Clientes', chaveCliente:'cliente',
+    desc:'Mesma leitura da aba <b>Inadimplentes</b> do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa (Gambiarra)</a> — pedido da Laura em 10/09/2026: "módulo vendas bloqueado" de verdade, não mais a inferência por fatura vencida que esta aba usava antes. É uma <b>foto de hoje</b>, não do período do filtro. '
+      + '<b>Em alerta</b> = módulo vendas ligado, fatura vencida há 1-10 dias. '
+      + '<b>Bloqueada</b> = módulo vendas ligado com fatura vencida há 11+ dias, OU módulo já cortado mas com a fatura ainda em aberto na Iugu (sem prova de cancelamento). '
+      + '<b>Cancelada</b> = módulo vendas cortado <i>e</i> a última fatura mapeada da marca tem status <code>canceled</code> na Iugu — a mera ausência de fatura vencida não comprova cancelamento. '
+      + 'Marca que pagou fatura mais nova DEPOIS do vencimento em aberto (só pendurou uma fatura velha) sai da lista, igual quem não paga nada há mais de 60 dias (virou caso de cancelamento, não de cobrança). '
+      + '<b>Bloqueado em</b> vem de uma planilha alimentada por automação (n8n) que corta o ambiente — não existe essa data no BigQuery (confirmado em 09/09/2026, buscando nas 3 datasets do projeto); é a mesma fonte que o Painel Elisa já lê. '
+      + 'Dados vêm dos JSONs que o Painel Elisa gera todo dia — se ele ainda não rodou hoje, esta aba reflete a última carga dele, não a da CS.',
+    filtros:['cliente','cs','canal','situacao'],
+    tabela:'Marcas', chaveCliente:'cliente',
     colunas:[
-      {k:'cliente', l:'Cliente', tipo:'cliente'},
-      {k:'dominio', l:'Domínio', tipo:'dominio'},
-      COL_CS,
-      {k:'plano', l:'Plano', tipo:'tag'},
+      {k:'cliente', l:'Marca', tipo:'cliente'},
       {k:'situacao', l:'Situação', tipo:'situacaoChurn'},
-      {k:'data', l:'Data do churn', tipo:'date'},
-      {k:'riscoChurn', l:'Risco de churn', tipo:'risco'},
-      /* O racional pedido pela Laura: a etiqueta Alto/Médio/Baixo sozinha não
-         diz em cima de quê, então cada critério que disparou vira uma frase. */
-      {k:'motivosRisco', l:'Por que', tipo:'motivos'},
-      {k:'diasSemPedido', l:'Sem pedido há', tipo:'diasPedido', r:true},
-      {k:'faturasVencidas', l:'Faturas vencidas', tipo:'vencidas', r:true},
-      {k:'valorEmAberto', l:'Valor em aberto', tipo:'money', r:true, forte:true},
+      COL_CS,
+      {k:'canal', l:'Canal', tipo:'tag'},
+      {k:'dominio', l:'Domínio', tipo:'dominio'},
+      {k:'bloqueadoEm', l:'Bloqueado em', tipo:'date'},
+      {k:'vencMaisAntigo', l:'Venc. mais antigo', tipo:'date'},
+      {k:'ultimoPagamento', l:'Último pagamento', tipo:'date'},
+      {k:'diasSemPagar', l:'Dias sem pagar', tipo:'diasSemPagar', r:true},
+      {k:'diasAtrasoV', l:'Dias em atraso', tipo:'int0traco', r:true},
+      {k:'faturasVencidas', l:'Faturas vencidas', tipo:'int0traco', r:true},
+      {k:'subcontasTxt', l:'Subconta Iugu', tipo:'texto'},
+      {k:'valorEmAbertoV', l:'Valor em aberto', tipo:'money0traco', r:true, forte:true},
+      {k:'valorMensal', l:'Mensalidade', tipo:'money0traco', r:true},
     ],
     linhas:()=>linhasChurn(),
-    series:()=>DATA.churn.series,
-    duasColunas:true,
-    graficos:[
-      {t:'Cancelamentos no período', s:[{k:'churns', l:'Cancelamentos', tipo:'bar', cor:'var(--acc)', f:fmt.int}]},
-      /* Risco é uma foto de HOJE, não um histórico — por isso não entra no eixo
-         do tempo. Obedece ao filtro de cliente, mas não ao de situação: senão
-         o gráfico sumiria justamente na visão de cancelados. */
-      {t:'Risco de churn na base', categorias:(t)=>{
-        const escopo = escopoClientes(t);
-        const base = DATA.clientes.filter(c=>!c.dataChurn && escopo.has(c.nome));
-        return [
-          {l:'Alto',  v:base.filter(c=>c.riscoChurn==='Alto').length,  cor:'var(--neg)'},
-          {l:'Médio', v:base.filter(c=>c.riscoChurn==='Médio').length, cor:'var(--gold)'},
-          {l:'Baixo', v:base.filter(c=>c.riscoChurn==='Baixo').length, cor:'var(--pos)'},
-        ];
-      }},
-    ],
-    /* Os KPIs de inadimplência olham a BASE inteira, não as linhas filtradas:
-       são uma foto de hoje, como o risco. Se seguissem o filtro de Situação,
-       o número de inadimplentes zeraria justamente na visão de cancelados. */
-    kpis:(rows,serie)=>{
-      const inad = DATA.clientes.filter(c=>!c.dataChurn && c.inadimplente);
-      const emAberto = inad.reduce((s,c)=>s+(c.valorEmAberto||0),0);
+    kpis:(rows)=>{
+      const todas = DATA.churn.linhas||[];
+      const emAberto = todas.filter(c=>!c._semDivida).reduce((s,c)=>s+(c.valorEmAberto||0),0);
       return [
-        {l:'Cancelamentos', v:fmt.int(soma(serie,'churns')), s:'no período'},
-        {l:'Inadimplentes', v:fmt.int(inad.length), s:`vencido há +${DATA.meta.diasInadimplencia||10} dias`},
-        {l:'Valor em aberto', v:fmt.moneyCompact(emAberto), s:'faturas vencidas não pagas'},
-        {l:'Em risco alto', v:fmt.int(DATA.clientes.filter(c=>!c.dataChurn&&c.riscoChurn==='Alto').length), s:'clientes ativos hoje'},
+        {l:'Em alerta', v:fmt.int(todas.filter(c=>c.situacao==='alerta').length), s:'1-10 dias de atraso'},
+        {l:'Bloqueadas', v:fmt.int(todas.filter(c=>c.situacao==='bloqueada').length), s:'11+ dias, ou módulo já cortado'},
+        {l:'Canceladas', v:fmt.int(todas.filter(c=>c.situacao==='cancelada').length), s:`últimos ${DATA.meta.canceladaRecenteDias||90} dias`},
+        {l:'Valor em aberto', v:fmt.moneyCompact(emAberto), s:'alerta + bloqueada, todas as marcas'},
       ];
     }
   },
@@ -2139,7 +2095,7 @@ function kpisDeal(rows){
 /* ============================================================================
    5. ESTADO
    ========================================================================== */
-const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'Cancelado',
+const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
@@ -2482,8 +2438,8 @@ function renderFiltros(t){
       estado.filtros.resultadoReuniao, v=>estado.filtros.resultadoReuniao=v));
   }
   if(t.filtros.includes('situacao')){
-    add('Situação', sel([['Cancelado','Cancelados'],['Inadimplente','Inadimplentes'],
-      ['Em risco','Em risco (ativos)'],['todos','Todos']],
+    add('Situação', sel([['todos','Todas'],['alerta','Em alerta'],
+      ['bloqueada','Bloqueadas'],['cancelada','Canceladas']],
       estado.filtros.situacao, v=>estado.filtros.situacao=v));
   }
   if(t.filtros.includes('statusTicket')){
@@ -3026,9 +2982,14 @@ function celula(r,c){
       const cls = v==='Alto'?'bad':v==='Médio'?'warn':'ok';
       td.innerHTML = v?`<span class="pill ${cls}"><i></i>${v}</span>`
         : '<span class="pill off"><i></i>—</span><span class="cell-sub">já cancelou</span>'; break }
+    /* 3 estados (PainelElisa/Gambiarra, mesma leitura): alerta = 1-10 dias de
+       atraso com módulo ligado; bloqueada = 11+ dias com módulo ligado, OU
+       módulo cortado com dívida ainda em aberto (sem prova de cancelamento
+       na Iugu); cancelada = módulo cortado + fatura mapeada 'canceled'. */
     case 'situacaoChurn': {
-      const cls = v==='Cancelado'?'bad':v==='Inadimplente'?'warn':'open';
-      td.innerHTML = `<span class="pill ${cls}"><i></i>${v}</span>`; break }
+      const cls = v==='cancelada'?'off':v==='bloqueada'?'bad':'warn';
+      const label = v==='cancelada'?'Cancelada':v==='bloqueada'?'Bloqueada':'Em alerta';
+      td.innerHTML = `<span class="pill ${cls}"><i></i>${label}</span>`; break }
     /* O racional do risco. Cada critério que disparou é uma linha própria —
        empilhado lê melhor que uma frase corrida, e é o que a CS vai bater o
        olho antes de ligar para a marca. */
@@ -3215,6 +3176,17 @@ function celula(r,c){
       const origem = r.implantadoOrigem ? ' · '+r.implantadoOrigem : '';
       td.innerHTML = `<span class="cell-main">${fmt.date(v)}</span>`
         + `<span class="cell-sub${novo?' novo':''}">${novo?'entrou neste período':tempoDeCasa(v)+origem}</span>`;
+      break }
+    /* Churn (PainelElisa): marca cancelada não tem dívida em aberto, então
+       "fingir zero" mentiria — fica travessão, igual a Gambiarra faz. */
+    case 'money0traco': td.textContent = v==null ? '—' : fmt.money(v); break;
+    case 'int0traco': td.textContent = v==null ? '—' : fmt.int(v); break;
+    /* Dias sem pagar nada: quem nunca pagou conta da ENTRADA na Vesti, não do
+       vencimento — o rodapé avisa qual dos dois é a referência. */
+    case 'diasSemPagar': {
+      if(v==null){ td.textContent = '—'; break }
+      td.innerHTML = `<span class="cell-main">${fmt.int(v)} d</span>`
+        + (r.ultimoPagamento ? '' : `<span class="cell-sub">desde a entrada</span>`);
       break }
     /* Descrição/resumo da atividade (hs_meeting_body). Corta na tela pra não
        esticar a linha da tabela — o texto inteiro aparece ao passar o mouse. */

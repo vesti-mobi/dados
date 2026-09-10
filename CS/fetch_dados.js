@@ -1310,6 +1310,146 @@ function empacotar(linhas) {
   return { _p: 1, c: cols, dic: dicPlano, r };
 }
 
+/* ============================================================ CHURN (via Painel Elisa)
+   Pedido da Laura, 10/09/2026: a aba Churn passa a mostrar quem tem o módulo
+   `vendas` de verdade BLOQUEADO — não mais a inferência por fatura vencida que
+   esta aba usava antes. "Bloqueado" tem 3 estados (mesma régua do Painel Elisa
+   / Gambiarra, ../Gambiarra/app.js): Em alerta (módulo ligado, 1-10 dias de
+   fatura vencida), Bloqueada (módulo ligado com 11+ dias, OU módulo já cortado
+   mas ainda com fatura em aberto na Iugu) e Cancelada (módulo cortado E a
+   última fatura mapeada da marca tem status 'canceled' na Iugu).
+
+   A DATA exata em que o módulo foi cortado não existe em lugar nenhum do
+   BigQuery — confirmado em 09/09/2026 vasculhando as 3 datasets do projeto
+   (vestilake_BI + as 2 do Oráculo) atrás de qualquer coluna/tabela de
+   histórico ou auditoria de `modulos`: não existe. Ela vem de uma planilha
+   Google Sheets alimentada pelo workflow n8n "Bloqueio e Desbloqueio", e o
+   Painel Elisa já lê essa planilha todo dia (fetch_ambiente.py). Em vez de
+   duplicar esse fetch aqui (precisaria da mesma permissão de leitor na
+   planilha), esta função LÊ os JSONs que o Painel Elisa já gera e roda a
+   MESMA lógica de negócio de build_data.py (_canceladas) e app.js
+   (seguePagando/diasSemPagar/abandonou/situacaoDe) — pra não ter dois
+   painéis calculando "quem está bloqueado" de jeitos diferentes.
+
+   O Painel Elisa roda às 08:00 e 15:30 BRT; este painel roda às 04:00 BRT.
+   Se o Painel Elisa ainda não rodou hoje, esta aba reflete a carga mais
+   recente dele, não uma nova — aceitável, é o mesmo compromisso que outras
+   fontes externas deste painel já assumem.
+
+   Consequência do descompasso de horário: `porDom` (módulo `vendas` ligado
+   AGORA, desta carga) pode discordar de `inad.dominios`/`ambiente` (retrato
+   de quando o Painel Elisa rodou) para uma marca que acabou de ser cortada
+   ou reativada entre as duas cargas — ela pode sumir de um grupo sem ainda
+   aparecer no outro. Validado em 10/09/2026: "Em alerta" bate exato com o
+   Painel Elisa (34); "Bloqueada"/"Cancelada" saem uns 2-3 números abaixo,
+   toda a diferença concentrada em marcas nesse limbo — não é bug de lógica,
+   é foto tirada em momentos diferentes. Tende a sumir na carga seguinte. */
+const CANCELADA_RECENTE_DIAS = 90;
+const INAD_LIMITE_ALERTA = 10;
+const INAD_ABANDONO_DIAS = 60;
+
+function carregarChurnGambiarra(porDom, faturaDaMarca) {
+  const dirElisa = path.join(RAIZ, 'Gambiarra');
+  const leJson = (arquivo, padrao) => {
+    try { return JSON.parse(fs.readFileSync(path.join(dirElisa, arquivo), 'utf8')); }
+    catch (e) { console.log('  [churn] ' + arquivo + ' indisponível: ' + e.message.slice(0, 100)); return padrao; }
+  };
+  const inad = leJson('inadimplentes_elisa.json', null);
+  if (!inad) { console.log('  [churn] Painel Elisa indisponível — aba Churn fica vazia'); return []; }
+  const statusFaturas = (leJson('status_faturas_elisa.json', { dominios: {} }) || {}).dominios || {};
+  const ambiente = leJson('ambiente_elisa.json', {}) || {};
+  const pagamentos = (leJson('pagamentos_elisa.json', { dominios: {} }) || {}).dominios || {};
+
+  const diasEntreDatas = (a, b) => Math.floor((a - b) / 864e5);
+  const parseData = s => { const v = iso(s); return v ? new Date(v + 'T00:00:00') : null; };
+  const linhas = [];
+
+  /* ---- ATIVAS: módulo `vendas` ligado (está na carteira desta CS) e com
+     fatura vencida em aberto na Iugu. Sai quem pagou uma fatura MAIS NOVA
+     depois do vencimento em aberto (só pendurou uma fatura velha, continua
+     cliente pagante) e quem não paga nada há mais de 60 dias (virou caso de
+     cancelamento, não de cobrança — regra da Laura no Painel Elisa). */
+  const domsAtivas = new Set();
+  Object.entries(inad.dominios || {}).forEach(([dom, slot]) => {
+    const m = porDom.get(dom);
+    if (!m) return;   // módulo vendas ligado só na base do Painel Elisa, não nesta CS
+    domsAtivas.add(dom);
+    const ultimoPagamento = ((pagamentos[dom] || {}).datas || []).slice(-1)[0] || null;
+    const vencMaisAntigo = slot.vencimentoMaisAntigo || null;
+    const seguePagando = !!(vencMaisAntigo && ultimoPagamento && ultimoPagamento > vencMaisAntigo);
+    const refDias = ultimoPagamento || (m.criacao || '').slice(0, 10);
+    const diasSemPagar = refDias ? diasEntreDatas(HOJE, new Date(refDias + 'T00:00:00')) : null;
+    const abandonou = diasSemPagar != null && diasSemPagar > INAD_ABANDONO_DIAS;
+    if (seguePagando || abandonou) return;
+    const fat = faturaDaMarca(m);
+    linhas.push({
+      cliente: m.nome, dominio: dom, cs: m.cs || '', canal: m.canal || 'Sem canal',
+      situacao: (slot.diasAtraso || 0) > INAD_LIMITE_ALERTA ? 'bloqueada' : 'alerta',
+      bloqueadoEm: null, vencMaisAntigo, ultimoPagamento, diasSemPagar,
+      diasAtraso: slot.diasAtraso || 0, qtFaturas: slot.qtFaturas || 0,
+      subcontas: slot.subcontas || [], valorEmAberto: slot.valorEmAberto || 0,
+      valorMensal: (fat && fat.ultima) ? r2(num(fat.ultima.cents) / 100) : null,
+      _semDivida: false, _ativa: true,
+    });
+  });
+
+  /* ---- DESLIGADAS: perderam o módulo `vendas` (por isso saem da carteira
+     desta CS, ver cadastro em puxarBQ) mas a fatura segue em aberto na Iugu,
+     sem prova de cancelamento. `bloqueadoEm` vem do log do n8n; na falta
+     dele, usa o vencimento mais antigo (fatura vencida há 338 dias é sinal
+     de que ninguém pagou nada desde então). Recorte de 90 dias: bloqueio
+     muito antigo é histórico, não é mais cobrança ativa. */
+  const foraFiltrado = (inad.foraDoPainel || []).map(f => Object.assign({}, f,
+    { bloqueadoEm: ((ambiente[f.domain_id] || {}).update) || null }))
+    .filter(f => {
+      const ref = parseData(f.bloqueadoEm) || parseData(f.vencimentoMaisAntigo);
+      return !!ref && diasEntreDatas(HOJE, ref) <= CANCELADA_RECENTE_DIAS;
+    });
+  const domsForaDoPainel = new Set(foraFiltrado.map(f => f.domain_id));
+  foraFiltrado.forEach(f => {
+    linhas.push({
+      cliente: f.name, dominio: f.domain_id, cs: f.cs || '', canal: f.partner_raw || 'Sem canal',
+      situacao: 'bloqueada',
+      bloqueadoEm: f.bloqueadoEm || null, vencMaisAntigo: f.vencimentoMaisAntigo || null,
+      ultimoPagamento: null, diasSemPagar: null, diasAtraso: f.diasAtraso || 0,
+      qtFaturas: f.qtFaturas || 0, subcontas: f.subcontas || [],
+      valorEmAberto: f.valorEmAberto || 0, valorMensal: null,
+      _semDivida: false, _ativa: false,
+    });
+  });
+
+  /* ---- CANCELADAS: módulo `vendas` cortado E a última fatura mapeada para o
+     domínio tem status 'canceled' na Iugu — a mera ausência de fatura vencida
+     em aberto NÃO comprova cancelamento (também acontece com quem pagou, quem
+     ainda não venceu, ou quem não casou no mapa fatura->domínio do Iugu). */
+  const jaNaTabela = new Set([...domsAtivas, ...domsForaDoPainel]);
+  Object.entries(ambiente).forEach(([dom, v]) => {
+    if (v.ligado !== false) return;
+    if (jaNaTabela.has(dom) || porDom.has(dom)) return;
+    const faturaIugu = statusFaturas[dom] || {};
+    if ((faturaIugu.status || '').toLowerCase() !== 'canceled') return;
+    const corte = parseData(v.update);
+    if (!corte) return;
+    const dias = diasEntreDatas(HOJE, corte);
+    if (dias > CANCELADA_RECENTE_DIAS) return;
+    const nome = (v.nomePlanilha || '').trim();
+    linhas.push({
+      cliente: nome || ('Domínio ' + dom), dominio: dom, cs: '', canal: v.canalPlanilha || 'Sem canal',
+      situacao: 'cancelada',
+      bloqueadoEm: corte.toISOString().slice(0, 10), vencMaisAntigo: null,
+      ultimoPagamento: null, diasSemPagar: null, diasAtraso: 0,
+      qtFaturas: 0, subcontas: [], valorEmAberto: 0, valorMensal: null,
+      _semDivida: true, _ativa: false,
+    });
+  });
+
+  console.log('  [churn] em alerta / bloqueadas / canceladas'.padEnd(44)
+    + (linhas.filter(l => l.situacao === 'alerta').length + ' / '
+       + linhas.filter(l => l.situacao === 'bloqueada').length + ' / '
+       + linhas.filter(l => l.situacao === 'cancelada').length).padStart(8));
+  return linhas;
+}
+
 function montar(bqd, hsd, tinoDados) {
   console.log('\n[montagem]');
   /* Toda série é (marca × dia). A guarda troca "semana entre 1 e a atual" por
@@ -1478,6 +1618,8 @@ function montar(bqd, hsd, tinoDados) {
     || fatPorNome.get(chaveMarca(m.nome || ''))
     || fatPorNome.get(chaveMarca(m.social || ''))
     || null;
+
+  const churnLinhas = carregarChurnGambiarra(porDom, faturaDaMarca);
 
   const hojeIso = HOJE.toISOString().slice(0, 10);
   const limiteChurn = new Date(HOJE.getTime() - DIAS_CHURN * 864e5).toISOString().slice(0, 10);
@@ -2132,6 +2274,7 @@ function montar(bqd, hsd, tinoDados) {
       fatorAntecipacaoVesti: FATOR_ANTECIPACAO_VESTI,
       diasChurn: DIAS_CHURN,
       diasInadimplencia: DIAS_INADIMPLENCIA,
+      canceladaRecenteDias: CANCELADA_RECENTE_DIAS,
       tetoPedido: TETO_PEDIDO,
       avisos: {
         periodo: 'O painel passou a ser filtrado por DATA de início e fim (26/08/2026), no lugar da '
@@ -2227,7 +2370,7 @@ function montar(bqd, hsd, tinoDados) {
     tino: { tabela: tinoTab, series: empacotar(tinoSeries.filter(doAnoCorrente)),
             kpis: tinoKpis, tiposDeEvento: tinoTipos },
     vestiPago: { tabela: vpTab, series: empacotar(vpSeries.filter(doAnoCorrente)) },
-    churn: { series: churnSeries.filter(doAnoCorrente) },
+    churn: { linhas: churnLinhas },
     bonificacao: {
       meses: bonMeses,
       metricas: METRICAS,
@@ -2287,7 +2430,7 @@ function montar(bqd, hsd, tinoDados) {
   console.log('  tino            ' + data.tino.tabela.length + ' marcas com o produto / '
     + tam(data.tino.series) + ' dias-marca');
   console.log('  vesti pago      ' + data.vestiPago.tabela.length + ' marcas / ' + tam(data.vestiPago.series));
-  console.log('  churn           ' + data.churn.series.length);
+  console.log('  churn           ' + data.churn.linhas.length + ' marcas (alerta+bloqueada+cancelada)');
   console.log('  bonificação     ' + data.bonificacao.linhas.length + ' linhas / '
     + data.bonificacao.meses.length + ' meses / ' + data.bonificacao.metricas.length + ' regras');
 })().catch(e => { console.error('\nFALHOU:', e.message); process.exit(1); });

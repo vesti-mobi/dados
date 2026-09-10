@@ -137,10 +137,11 @@ de layout continua indo por `node publicar.js`.
 | VestiPago | links | pedidos com `settings_source = 'Link de cobrança'` |
 | Tino / VestiPago / Oráculo | Implantado em | Tino: `created_at` da marca na base do produto. VestiPago: `MongoDB_Payment_Companies.createdAt`. Oráculo: a menor entre `o-configurations.created_at` e o primeiro atendimento |
 | Bonificação | tudo | agregado por CS e por mês, calculado no fetcher (ver abaixo) |
-| Churn | data | derivado do Iugu (ver abaixo) |
+| Churn | situação / bloqueado em / etc. | Painel Elisa/Gambiarra — módulo `vendas` bloqueado de verdade, não mais inferência por fatura vencida (ver abaixo) |
 | Reuniões | reunião / data / responsável | HubSpot `meetings` (`hs_meeting_start_time` + owner) |
 | Reuniões | Cliente | empresa associada à reunião no HubSpot |
 | Reuniões | Resultado | negócio ganho (qualquer pipeline) creditado à última reunião daquela empresa antes do fechamento |
+| Reuniões | Resumo | `hs_meeting_body` (descrição/notas da reunião no HubSpot), sem o HTML do editor |
 | Tickets | ticket / pipeline / estágio | HubSpot `tickets`, todos os pipelines |
 | Tickets | Situação | estágio marcado como fechado (`metadata.ticketState`) ou `closed_date` preenchida |
 | Tickets | Cliente e Canal | empresa associada ao ticket → marca do cadastro (nome, nome sem ruído ou CNPJ) |
@@ -386,10 +387,24 @@ por medição pedido a pedido (ressalva 4).
      sozinho a cada dia que passa. Os dois arquivos são commitados pelo workflow:
      sem isso o retrato nasceria vazio a cada execução e nada seria detectado.
 
-7. **Churn é derivado, não é um campo.** Regra: sem fatura Iugu paga há mais de 45
-   dias **e** sem fatura futura em aberto; a data do churn é a última fatura paga +
-   45 dias. Dá 48 cancelamentos em 2026. Quando as `iugu_subscriptions`
-   estabilizarem, trocar por cancelamento de assinatura é mais direto.
+7. **Churn (10/09/2026) passou a ser a mesma leitura da aba Inadimplentes do
+   Painel Elisa/Gambiarra**, não mais a inferência por fatura vencida deste
+   item (histórico, mantido aqui pelo contexto). 3 estados: Em alerta (módulo
+   `vendas` ligado, 1-10 dias de fatura vencida), Bloqueada (módulo ligado
+   11+ dias, OU módulo já cortado com fatura ainda em aberto na Iugu) e
+   Cancelada (módulo cortado **e** a última fatura mapeada tem status
+   `canceled` na Iugu — a mera ausência de fatura vencida não comprova
+   cancelamento). A data exata em que o módulo `vendas` foi cortado **não
+   existe em nenhuma tabela do BigQuery** (confirmado em 09/09/2026, buscando
+   nas 3 datasets do projeto) — vem de uma planilha Google Sheets alimentada
+   por um workflow n8n, que o Painel Elisa já lê. Em vez de duplicar esse
+   fetch aqui, `carregarChurnGambiarra` (fetch_dados.js) lê os JSONs que o
+   Painel Elisa já gera todo dia (`../Gambiarra/inadimplentes_elisa.json`,
+   `status_faturas_elisa.json`, `ambiente_elisa.json`, `pagamentos_elisa.json`)
+   e replica a mesma lógica de negócio. Os dois painéis rodam em horários
+   diferentes (Elisa 08:00/15:30 BRT, CS 04:00 BRT), então um domínio pode
+   ficar num limbo de 1 carga — visto e documentado no código, tende a sumir
+   sozinho na carga seguinte.
 
 8. **Cross-sell × upsell sai do nome do negócio.** A API não liberou escopo de
    `line_items` (403), então a classificação usa os padrões em `REGRAS_PRODUTO`.
