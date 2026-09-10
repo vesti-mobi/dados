@@ -119,6 +119,13 @@ function diaDoPeriodo(p) {
 const fmtBR = v => 'R$ ' + Math.round(num(v)).toLocaleString('pt-BR');
 const r2 = v => Math.round(num(v) * 100) / 100;
 const soDigitos = v => String(v || '').replace(/\D/g, '');
+/* hs_meeting_body chega como HTML do editor rico do HubSpot (<p>, <br>, &nbsp;
+   etc.) — pra tabela do painel só interessa o texto. */
+const semHtml = v => String(v || '')
+  .replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n')
+  .replace(/<[^>]+>/g, '')
+  .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+  .replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 /* 'YYYY-MM' menos n meses. Serve o comparativo da bonificação: mês anterior
    (n=1) e mesmo mês do ano passado (n=12). */
 function mesAntes(mes, n) {
@@ -972,7 +979,7 @@ async function puxarOnboarding(pipes, owners) {
 async function puxarReunioes(owners) {
   const desde = Date.UTC(ANO, 0, 1);
   const brutas = await buscarTudo('meetings',
-    ['hs_meeting_title', 'hs_meeting_start_time', 'hs_meeting_outcome', 'hubspot_owner_id'],
+    ['hs_meeting_title', 'hs_meeting_start_time', 'hs_meeting_outcome', 'hs_meeting_body', 'hubspot_owner_id'],
     [{ filters: [{ propertyName: 'hs_meeting_start_time', operator: 'GTE', value: String(desde) }] }],
     [{ propertyName: 'hs_meeting_start_time', direction: 'DESCENDING' }]);
 
@@ -988,6 +995,8 @@ async function puxarReunioes(owners) {
     resultado: 'Sem negócio',
     negocio: null,
     valor: 0,
+    // descrição/resumo da atividade (hs_meeting_body), sem o HTML do editor do HubSpot
+    resumo: semHtml(m.properties.hs_meeting_body),
   })).filter(r => r.data && Number(r.data.slice(0, 4)) === ANO && CS_TIME.includes(r.cs));
   console.log('  reuniões (só o time de CS)'.padEnd(44) + String(reunioes.length).padStart(8));
 

@@ -356,6 +356,7 @@ td.strong{font-weight:600}
 /* Racional do risco de churn: um critério por linha, com um tracinho na frente.
    Coluna larga o suficiente para a frase não quebrar no meio do número de dias. */
 .motivos{display:flex;flex-direction:column;gap:2px;min-width:20ch;max-width:34ch}
+.cell-resumo{display:inline-block;max-width:46ch;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;color:var(--ink-2)}
 .motivos span{
   font-size:11.5px;line-height:1.35;color:var(--ink-2);
   padding-left:9px;position:relative;
@@ -801,7 +802,8 @@ const MOCK = (function buildMock(){
     const resultado = data>dia(0) ? 'Agendada' : (r()<0.25?'Fechou negócio':'Sem negócio');
     return { reuniao: tipo, data, cliente: c.nome, cs: c.cs, resultado,
              negocio: resultado==='Fechou negócio' ? 'Upgrade de plano — '+c.nome : null,
-             valor: resultado==='Fechou negócio' ? int(400,4000) : 0 };
+             valor: resultado==='Fechou negócio' ? int(400,4000) : 0,
+             resumo: 'Conversamos sobre '+tipo.toLowerCase()+' com '+c.nome+'. Próximos passos combinados com o time.' };
   }).sort((a,b)=>b.data.localeCompare(a.data));
 
   clientes.forEach(c=>{ delete c._plano; delete c._inativo; delete c._semAcesso; delete c._semPedido });
@@ -1688,13 +1690,14 @@ const TABS = [
   {
     id:'reunioes', grupo:'Operação', nav:'Reuniões', cor:'#B54A72', cor2:'#1E74C8',
     titulo:'Reuniões',
-    desc:'Reuniões realizadas pelo time de CS e o negócio fechado depois delas — a mesma leitura do painel <b>Reuniões × Negócios</b>. O negócio ganho é creditado à <b>última reunião daquela empresa antes do fechamento</b>, para uma empresa com cinco reuniões e um negócio não virar cinco negócios.',
+    desc:'Reuniões realizadas pelo time de CS e o negócio fechado depois delas — a mesma leitura do painel <b>Reuniões × Negócios</b>. O negócio ganho é creditado à <b>última reunião daquela empresa antes do fechamento</b>, para uma empresa com cinco reuniões e um negócio não virar cinco negócios. <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor; passe o mouse pra ler inteiro quando cortar.',
     filtros:['cliente','cs','periodo','resultadoReuniao'],
     tabela:'Reuniões', chaveCliente:'cliente',
     colunas:[
       {k:'cliente', l:'Cliente', tipo:'cliente'},
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       {k:'reuniao', l:'Reunião', tipo:'texto'},
+      {k:'resumo', l:'Resumo', tipo:'resumo'},
       {k:'data', l:'Data', tipo:'dataRel'},
       {k:'resultado', l:'Resultado', tipo:'resultadoReuniao'},
       {k:'valor', l:'Valor do negócio', tipo:'money', r:true},
@@ -3213,6 +3216,10 @@ function celula(r,c){
       td.innerHTML = `<span class="cell-main">${fmt.date(v)}</span>`
         + `<span class="cell-sub${novo?' novo':''}">${novo?'entrou neste período':tempoDeCasa(v)+origem}</span>`;
       break }
+    /* Descrição/resumo da atividade (hs_meeting_body). Corta na tela pra não
+       esticar a linha da tabela — o texto inteiro aparece ao passar o mouse. */
+    case 'resumo': td.innerHTML = v ? `<span class="cell-resumo" title="${escapar(v)}">${escapar(v)}</span>`
+      : '<span class="cell-sub">—</span>'; break;
     default: td.textContent = v==null?'—':v;
   }
   return td;
