@@ -1130,6 +1130,11 @@ function linhasChurn(){
     faturasVencidas: c._semDivida ? null : (c.qtFaturas||0),
     valorEmAbertoV: c._semDivida ? null : (c.valorEmAberto||0),
     diasAtrasoV: c._semDivida ? null : (c.diasAtraso||0),
+    /* Data de referência pro filtro de período: quando o módulo foi cortado
+       (bloqueadoEm), ou — quem ainda está no painel, alerta ou bloqueada por
+       atraso, nunca teve o módulo cortado — o vencimento mais antigo em
+       aberto (data em que a situação começou). */
+    data: c.bloqueadoEm || c.vencMaisAntigo || null,
   }));
   const filtrado = sit==='todos' ? out : out.filter(x=>x.situacao===sit);
   const peso = {alerta:0, bloqueada:1, cancelada:2};
@@ -1606,14 +1611,14 @@ const TABS = [
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
     titulo:'Churn',
-    desc:'Mesma leitura da aba <b>Inadimplentes</b> do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa (Gambiarra)</a> — pedido da Laura em 10/09/2026: "módulo vendas bloqueado" de verdade, não mais a inferência por fatura vencida que esta aba usava antes. É uma <b>foto de hoje</b>, não do período do filtro. '
+    desc:'Mesma leitura da aba <b>Inadimplentes</b> do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa (Gambiarra)</a> — pedido da Laura em 10/09/2026: "módulo vendas bloqueado" de verdade, não mais a inferência por fatura vencida que esta aba usava antes. A lista em si é uma <b>foto de hoje</b> (quem está em cada situação agora); o <b>filtro de período</b> recorta por <b>quando a situação começou</b> — "Bloqueado em" pra quem já teve o módulo cortado, "Venc. mais antigo" pra quem ainda está no painel (alerta ou bloqueada só por atraso, nunca cortada). '
       + '<b>Em alerta</b> = módulo vendas ligado, fatura vencida há 1-10 dias. '
       + '<b>Bloqueada</b> = módulo vendas ligado com fatura vencida há 11+ dias, OU módulo já cortado mas com a fatura ainda em aberto na Iugu (sem prova de cancelamento). '
       + '<b>Cancelada</b> = módulo vendas cortado <i>e</i> a última fatura mapeada da marca tem status <code>canceled</code> na Iugu — a mera ausência de fatura vencida não comprova cancelamento. '
       + 'Marca que pagou fatura mais nova DEPOIS do vencimento em aberto (só pendurou uma fatura velha) sai da lista, igual quem não paga nada há mais de 60 dias (virou caso de cancelamento, não de cobrança). '
       + '<b>Bloqueado em</b> vem de uma planilha alimentada por automação (n8n) que corta o ambiente — não existe essa data no BigQuery (confirmado em 09/09/2026, buscando nas 3 datasets do projeto); é a mesma fonte que o Painel Elisa já lê. '
       + 'Dados vêm dos JSONs que o Painel Elisa gera todo dia — se ele ainda não rodou hoje, esta aba reflete a última carga dele, não a da CS.',
-    filtros:['cliente','cs','canal','situacao'],
+    filtros:['cliente','cs','canal','situacao','periodo'],
     tabela:'Marcas', chaveCliente:'cliente',
     colunas:[
       {k:'cliente', l:'Marca', tipo:'cliente'},
