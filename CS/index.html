@@ -2694,7 +2694,7 @@ const tooltipHover = (()=>{
   d.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;'
     + 'background:var(--ink);color:#fff;font-family:"Instrument Sans",sans-serif;'
     + 'font-size:12.5px;line-height:1.45;padding:8px 12px;border-radius:8px;max-width:360px;'
-    + 'box-shadow:0 8px 24px rgba(0,0,0,.28)';
+    + 'white-space:pre-wrap;box-shadow:0 8px 24px rgba(0,0,0,.28)';
   document.body.appendChild(d);
   return d;
 })();
@@ -2964,6 +2964,7 @@ function renderTabela(t, rows){
   table.appendChild(tbody);
   scroll.appendChild(table);
   card.appendChild(scroll);
+  ligarTooltips(card);
   return card;
 }
 
@@ -3195,7 +3196,7 @@ function celula(r,c){
       break }
     /* Descrição/resumo da atividade (hs_meeting_body). Corta na tela pra não
        esticar a linha da tabela — o texto inteiro aparece ao passar o mouse. */
-    case 'resumo': td.innerHTML = v ? `<span class="cell-resumo" title="${escapar(v)}">${escapar(v)}</span>`
+    case 'resumo': td.innerHTML = v ? `<span class="cell-resumo" data-tip="${escapar(v)}">${escapar(v)}</span>`
       : '<span class="cell-sub">—</span>'; break;
     default: td.textContent = v==null?'—':v;
   }
