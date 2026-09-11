@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-09-11T15:33:26.558Z",
+  "gerado_em": "2026-09-11T22:54:01.349Z",
   "hoje": "2026-09-11",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -15,7 +15,7 @@ window.DADOS = {
     "ativas": 5,
     "usando": 11,
     "nunca_usaram": 8,
-    "paradas": 4,
+    "paradas": 5,
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 659,
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 77,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-09-09T18:45:10.199Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "monnika-marikinha",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 11,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-09-03T17:32:55.872Z",
-      "dias": 7
+      "dias": 8
     },
     {
       "slug": "kauly",
@@ -487,7 +487,7 @@ window.DADOS = {
         "ativas": 5,
         "usando": 7,
         "nunca_usaram": 12,
-        "paradas": 1,
+        "paradas": 2,
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 341,
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 23,
           "primeiro": "2026-08-27T10:08:32.689Z",
           "ultimo": "2026-09-09T19:08:27.197Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 23,
           "atribuido": 0
         },
@@ -573,7 +573,7 @@ window.DADOS = {
           "envios": 10,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-09-03T17:32:55.872Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 10,
           "atribuido": 0
         },
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1068,7 +1068,7 @@ window.DADOS = {
           "envios": 39,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-09-09T17:14:09.598Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 37,
           "atribuido": 49
         },
@@ -1188,7 +1188,7 @@ window.DADOS = {
           "envios": 3,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-09-10T18:14:41.472Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 2,
           "atribuido": 0
         },
