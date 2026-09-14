@@ -1,0 +1,112 @@
+# Busca de movimentacao de estoque, sob demanda.
+#
+# So' roda por workflow_dispatch (formulario manual na aba Actions) -- nao tem
+# schedule, porque a consulta e' por produto+empresa, nao um "trazer tudo"
+# diario como os outros paineis. Quem pedir preenche empresa (UUID), codigo do
+# produto e o periodo; o workflow chama stock-logs.py (Loki + APIs Vesti) e
+# soma o resultado ao historico do painel em stock-logs/dados.js.
+#
+# Fonte real: Loki (container app_core_stock_logs) + apivesti.vesti.mobi
+# (nomes de usuario e numero de pedido). NAO e' o mesmo `stock_logs` do
+# Postgres que o CS/ingerir_stock_logs.js espelha -- aquele parou de receber
+# gravacao em 21/08/2026; a suspeita (14/09/2026, com a Laura) e' que o log de
+# movimentacao migrou do Postgres pra ca (Loki). `stocks` (saldo) no Postgres
+# continua normal o tempo todo, so' o LOG que mudou de casa.
+#
+# Token: VESTI_ORDER_TOKEN (JWT de servico sem expiracao, ja' usado por outros
+# scripts deste repo contra apivesti.vesti.mobi/order/v1/...) -- e' o melhor
+# candidato que tinhamos no dia (14/09/2026), mas NUNCA foi testado contra o
+# endpoint /appvendas/v1/users/{id} que este script tambem chama. Se os logs
+# do run mostrarem "[erro] 401 em .../appvendas/..." enquanto /order/v1/
+# funciona, o token certo pra usuarios precisa vir de quem mantem o app
+# vendas -- trocar aqui embaixo por um secret VESTI_TOKEN novo quando tiver.
+#
+# Publicado (pedido da Laura, 14/09/2026): o dados.js vai pro GitHub Pages,
+# atras da mesma senha-tranca "Mudar123" dos outros paineis (CS, Gambiarra).
+# O CSV/rows tem nome de usuario e IP de quem mexeu no estoque -- mesma
+# categoria de risco que o CS/dados.js ja assume (nomes de CS, negocios etc),
+# aceita pela Laura no mesmo padrao.
+
+name: Stock Logs (busca)
+
+on:
+  workflow_dispatch:
+    inputs:
+      company_id:
+        description: "UUID da empresa (--company-id)"
+        required: true
+      product_code:
+        description: "Codigo do produto (--product-code), ex: KR9182625229"
+        required: true
+      start:
+        description: "Inicio do periodo, ex: 2026-08-01T00:00:00"
+        required: true
+      end:
+        description: "Fim do periodo, ex: 2026-09-01T00:00:00"
+        required: true
+
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: pip install requests
+
+      - name: Rodar stock-logs.py (Loki + APIs Vesti)
+        working-directory: stock-logs
+        env:
+          VESTI_TOKEN: ${{ secrets.VESTI_ORDER_TOKEN }}
+        run: |
+          python3 stock-logs.py \
+            --start="${{ inputs.start }}" \
+            --end="${{ inputs.end }}" \
+            --product-code="${{ inputs.product_code }}" \
+            --company-id="${{ inputs.company_id }}" \
+            --out-dir=saida
+
+      - name: Somar ao historico do painel (dados.js)
+        working-directory: stock-logs
+        run: |
+          CSV=$(ls saida/*.csv | head -1)
+          python3 merge_para_painel.py "$CSV" \
+            --company-id="${{ inputs.company_id }}" \
+            --product-code="${{ inputs.product_code }}" \
+            --start="${{ inputs.start }}" \
+            --end="${{ inputs.end }}" \
+            --triggered-by="${{ github.actor }}"
+
+      # o .log/.csv brutos ficam so' como artefato do run (baixavel por quem
+      # tem acesso ao repo), NAO vao pro dados.js publicado nem sao commitados
+      - name: Guardar log/csv brutos como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: stock-logs-${{ inputs.company_id }}-${{ inputs.product_code }}
+          path: stock-logs/saida/
+          retention-days: 90
+
+      - name: Commit e push do dados.js
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          MSG="Stock Logs: busca ${{ inputs.product_code }} / ${{ inputs.company_id }} ($(date +'%d/%m/%Y %H:%M'))"
+          # git reset (sem --hard) nao mexe no working tree, so' desfaz o commit/stage --
+          # o dados.js que o merge_para_painel.py acabou de escrever sobrevive as tentativas
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main
+            git reset -q origin/main
+            git add stock-logs/dados.js
+            if git diff --cached --quiet; then echo "sem mudancas"; exit 0; fi
+            git commit -q -m "$MSG"
+            if git push; then echo "push ok (tentativa $i)"; exit 0; fi
+            echo "push falhou (tentativa $i), re-sincronizando..."
+            sleep 3
+          done
+          echo "push falhou apos varias tentativas"; exit 1

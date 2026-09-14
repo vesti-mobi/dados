@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movimentações de Estoque</title>
+<style>
+:root{--dark:#0B0E13;--dark-2:#151A21;--brand-2:#17BFB3;--r-sm:8px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--dark);color:#F2F4F7;font:14px/1.5 system-ui,-apple-system,sans-serif}
+
+/* ---- login: mesma logica e visual do Painel de Clientes CS ---- */
+#loginScreen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--dark);padding:20px}
+.login-box{width:330px;max-width:100%;text-align:center;padding:38px 32px 32px;
+  background:var(--dark-2);border:1px solid #262D36;border-radius:14px;
+  box-shadow:0 24px 60px -30px rgba(0,0,0,.9)}
+.login-box h1{font-size:17px;font-weight:600;margin:0 0 3px;letter-spacing:-.02em;color:#F2F4F7}
+.login-box p{margin:0 0 24px;font-size:12.5px;color:#8A93A0}
+.login-box input{width:100%;border:1px solid #2E353F;background:#141920;color:#F2F4F7;
+  border-radius:var(--r-sm);padding:10px 11px;font-size:14px;text-align:center}
+.login-box input::placeholder{color:#69727E}
+.login-box input:focus{border-color:var(--brand-2);outline:none;background:#171D25}
+.login-box button{width:100%;margin-top:12px;border:0;background:var(--brand-2);color:#fff;
+  border-radius:var(--r-sm);padding:11px;font-size:13.5px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:#15AAA0}
+#loginError{display:none;margin-top:10px;font-size:12px;color:#F08A80}
+
+#app{display:none;max-width:1200px;margin:0 auto;padding:28px 20px 60px}
+header.top{margin-bottom:22px}
+header.top h1{font-size:20px;margin:0 0 4px}
+header.top p{margin:0;color:#8A93A0;font-size:13px}
+
+.card{background:var(--dark-2);border:1px solid #262D36;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.hint{color:#8A93A0;font-size:12.5px}
+.hint code{background:#1B222B;padding:1px 5px;border-radius:4px}
+
+.selrow{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.selrow label{display:block;font-size:12px;color:#8A93A0;margin-bottom:5px}
+select,input.busca{background:#141920;color:#F2F4F7;border:1px solid #2E353F;border-radius:var(--r-sm);
+  padding:9px 10px;font-size:13.5px;min-width:260px}
+input.busca{min-width:220px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--dark-2);border:1px solid #262D36;border-radius:12px;padding:14px 16px}
+.kpi .n{font-size:22px;font-weight:700}
+.kpi .l{font-size:11.5px;color:#8A93A0;margin-top:2px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:#8A93A0;font-weight:600;font-size:11px;text-transform:uppercase;
+  letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid #262D36;position:sticky;top:0;background:var(--dark-2)}
+td{padding:7px 10px;border-bottom:1px solid #1B222B;white-space:nowrap}
+tr:hover td{background:#171D25}
+.tbl-wrap{max-height:560px;overflow:auto;border:1px solid #262D36;border-radius:10px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.pill-INSERT{background:#123B2E;color:#4ADE80}
+.pill-UPDATE{background:#1E2E4A;color:#7DA6FF}
+.pill-DELETE{background:#3B1414;color:#F08A80}
+.empty{padding:30px;text-align:center;color:#8A93A0}
+a{color:var(--brand-2)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Movimentações de Estoque</h1>
+    <p>Buscas de log de estoque (Loki)</p>
+    <input type="password" id="loginPass" placeholder="Senha" autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="loginError">Senha incorreta</div>
+    <button onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <h1>📦 Movimentações de Estoque</h1>
+    <p>Log de <code>StockLog</code> por produto/empresa, extraído do Loki. Cada busca nesta lista foi pedida por alguém do time — ver "Pedir uma busca nova" abaixo.</p>
+  </header>
+
+  <div class="card" id="cardPedir">
+    <strong>Pedir uma busca nova</strong>
+    <p class="hint" style="margin:6px 0 0">
+      Não dá para digitar aqui e buscar na hora — a consulta roda no GitHub Actions (precisa de um token de serviço que não pode ficar no navegador).
+      Vá em <a href="https://github.com/vesti-mobi/dados/actions/workflows/stock-logs.yml" target="_blank" rel="noopener">Actions → Stock Logs (busca) → Run workflow</a>,
+      preencha empresa (UUID), código do produto e o período, e espere ~1-2 min. O resultado aparece aqui na próxima vez que a página recarregar.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="selrow">
+      <div>
+        <label for="selBusca">Busca</label>
+        <select id="selBusca" onchange="selecionar()"></select>
+      </div>
+      <div>
+        <label for="filtro">Filtrar (SKU, usuário, ação, origem, pedido…)</label>
+        <input class="busca" id="filtro" placeholder="digite para filtrar" oninput="renderTabela()">
+      </div>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <div class="tbl-wrap">
+      <table id="tbl">
+        <thead><tr>
+          <th>Data/hora</th><th>Ação</th><th>Origem</th><th>SKU</th>
+          <th>Qtd (antes→depois)</th><th>Saldo (antes→depois)</th>
+          <th>Usuário</th><th>Pedido</th><th>IP</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="dados.js"></script>
+<script>
+/* Login. ATENÇÃO: isto é uma tranca de porta, não um cofre — a checagem roda no
+   navegador e o dados.js fica acessível por URL direta, com nome de usuário e
+   IP de quem mexeu no estoque. Só serve para evitar abrir o painel por acaso;
+   não protege o conteúdo. Mesmo modelo do Painel de Clientes CS. */
+function _ss(acao, val){
+  try{ return acao==='get' ? sessionStorage.getItem('sl_auth') : sessionStorage.setItem('sl_auth', val) }
+  catch(e){ return null }
+}
+function doLogin(){
+  if(document.getElementById('loginPass').value === 'Mudar123'){
+    _ss('set','1');
+    entrar();
+  } else {
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('loginPass').style.borderColor='#C0453B';
+  }
+}
+function entrar(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  boot();
+}
+if(_ss('get')==='1'){ document.addEventListener('DOMContentLoaded', entrar); }
+
+// ---------------- painel ----------------
+const D = (typeof STOCK_LOGS_DADOS !== 'undefined') ? STOCK_LOGS_DADOS : {geradoEm:null, buscas:[]};
+let atual = null;
+
+function fmtDt(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('pt-BR'); }catch(e){ return iso; }
+}
+
+function boot(){
+  const sel = document.getElementById('selBusca');
+  if(!D.buscas || !D.buscas.length){
+    sel.innerHTML = '<option>nenhuma busca ainda</option>';
+    document.getElementById('kpis').innerHTML =
+      '<div class="empty" style="grid-column:1/-1">Nenhuma busca feita ainda. Use "Pedir uma busca nova" acima.</div>';
+    return;
+  }
+  sel.innerHTML = D.buscas.map((b,i) =>
+    `<option value="${i}">${b.productCode} · ${b.companyId.slice(0,8)}… · ${(b.periodoInicio||'').slice(0,10)} a ${(b.periodoFim||'').slice(0,10)} (${b.totalLinhas} linhas)</option>`
+  ).join('');
+  selecionar();
+}
+
+function selecionar(){
+  const i = +document.getElementById('selBusca').value || 0;
+  atual = D.buscas[i];
+  renderKpis();
+  renderTabela();
+}
+
+function renderKpis(){
+  const el = document.getElementById('kpis');
+  if(!atual){ el.innerHTML=''; return; }
+  const porAcao = Object.entries(atual.porAcao||{}).sort((a,b)=>b[1]-a[1]);
+  const porOrigem = Object.entries(atual.porOrigem||{}).sort((a,b)=>b[1]-a[1]);
+  const cards = [
+    {n: atual.totalLinhas, l: 'movimentações'},
+    {n: porAcao.length, l: 'tipos de ação'},
+    {n: porOrigem.length, l: 'origens diferentes'},
+    {n: fmtDt(atual.geradoEm), l: 'buscado em'},
+  ];
+  if(atual.solicitadoPor) cards.push({n: atual.solicitadoPor, l: 'pedido por'});
+  el.innerHTML = cards.map(c => `<div class="kpi"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
+}
+
+function renderTabela(){
+  const tbody = document.querySelector('#tbl tbody');
+  if(!atual){ tbody.innerHTML=''; return; }
+  const termo = (document.getElementById('filtro').value||'').toLowerCase();
+  const rows = (atual.rows||[]).filter(r => !termo || Object.values(r).some(v =>
+    String(v||'').toLowerCase().includes(termo)));
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhuma linha ${termo?'para esse filtro':'nessa busca'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.action_date||'—'}</td>
+    <td><span class="pill pill-${r.action}">${r.action||'—'}</span></td>
+    <td>${r.origin||'—'}</td>
+    <td>${r.sku||'—'}</td>
+    <td>${r.old_qty||'—'} → ${r.new_qty||'—'}</td>
+    <td>${r.old_balance||'—'} → ${r.new_balance||'—'}</td>
+    <td>${r.user_name||'<span class="hint">automático</span>'}</td>
+    <td>${r.order_number||'—'}</td>
+    <td>${r.ip||'—'}</td>
+  </tr>`).join('');
+}
+</script>
+</body>
+</html>
