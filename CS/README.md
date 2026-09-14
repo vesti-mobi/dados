@@ -8,6 +8,7 @@ publicar.js         sobe para vesti-mobi/dados/CS via Git Data API
 dados.js            dados reais gerados pelo fetcher — window.PAINEL_DATA
 fetch_dados.js      carga: BigQuery + HubSpot + Tino -> dados.js
 sincronizar_cs.js    roda ANTES do fetch: corrige angel_id no BigQuery comparando com a produção (Metabase)
+ingerir_stock_logs.js  roda ANTES do fetch: espelha public.stock_logs (Postgres) pra vestilake_BI.postgres_stock_logs
 carregar_tipo_empresa.js   leva a classificação Atacado × Varejo para o BigQuery
 integracoes_snapshot.json  retrato de quem tem integração, da última carga
 integracoes_novas.json     histórico das integrações detectadas como novas
@@ -68,9 +69,9 @@ Precisa de:
 - **Tino** — `TINO_USER` / `TINO_PASS`, a mesma credencial do painel
   `admin.tino.vesti.com.br`. **Sem valor padrão no código de propósito**: o
   `vesti-mobi/dados` é público.
-- **Metabase** (opcional) — `METABASE_URL` / `METABASE_API_KEY`, só para o
-  `sincronizar_cs.js`. Sem eles esse passo é pulado e o `angel_id` fica do jeito
-  que estava no espelho — o resto da carga roda igual.
+- **Metabase** (opcional) — `METABASE_URL` / `METABASE_API_KEY`, para o
+  `sincronizar_cs.js` e o `ingerir_stock_logs.js`. Sem eles os dois passos são
+  pulados — o resto da carga roda igual.
 
 Sem HubSpot o painel carrega mesmo assim: Cross-sell, Upsell, Reuniões e Tickets
 ficam vazias (e, na Bonificação, a coluna de reuniões). Sem a credencial do Tino, a aba do Tino e a coluna "Tino" da
@@ -94,6 +95,32 @@ linhas que divergem — nunca a tabela inteira. Isso conserta o dado na fonte
 que o painel lê, então beneficia qualquer outro painel da Vesti que também use
 `odbc_domains`, não só este. Se o Metabase cair ou faltar credencial, o passo
 avisa e segue sem corrigir nada — não trava a carga.
+
+### Log de movimentação de estoque (stock_logs), espelhado (14/09/2026)
+
+A Laura pediu pra trazer `public.stock_logs` (Postgres de produção) pro
+BigQuery — a pergunta salva do Metabase (#439, "USAR COM SABEDORIA") exige
+`domainId` + `companyId` + `productId` pra rodar, então não serve como fonte
+de espelho completo; o `ingerir_stock_logs.js` lê a mesma tabela sem esses
+filtros, direto por SQL nativo.
+
+**Retenção curta na origem**: medido no dia da implementação, a produção só
+tinha 6 dias de log (15/08 a 21/08/2026, 250.547 linhas — pico de 52.592
+num dia só, 17/08). Não é histórico completo, é uma janela que roda. Rodando
+todo dia, `vestilake_BI.postgres_stock_logs` vira o **único** histórico que
+sobrevive — se o workflow ficar mais dias que a retenção da origem sem rodar,
+aquele intervalo se perde de vez, sem como recuperar depois.
+
+Carga incremental, sem duplicar: descobre `MAX(created_at)` já no BigQuery,
+subtrai 24h de colchão (linha atrasada / relógio dessincronizado), busca no
+Metabase em janelas de 1 dia (evita qualquer teto de linhas por resposta que
+o Metabase possa ter — não confirmado, só por cautela) e insere só os `id`
+que ainda não existem no intervalo. Tabela particionada por `DATE(created_at)`.
+
+**Não filtra por carteira ativa** — ao contrário do `sincronizar_cs.js`, que só
+olha domínio com "vendas" nos módulos. Ingere tudo que aparecer em
+`stock_logs`, loja de teste incluída. Quem for consumir e precisar só da
+carteira ativa, filtra no JOIN com `odbc_domains` na hora da leitura.
 
 ### Automático, todo dia às 04:00 BRT
 
