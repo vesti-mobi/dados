@@ -48,6 +48,32 @@ _DECODER = json.JSONDecoder()
 # --------------------------------------------------------------------------- #
 # 1. Loki
 # --------------------------------------------------------------------------- #
+def _get_loki_with_retry(params, max_retries=6):
+    """GET no Loki com retry/backoff pra 429/5xx -- respeita Retry-After quando
+    vem. Sem isso uma janela reprovada por rate limit ('too many outstanding
+    requests', medido em producao 14/09/2026 apos ~10 janelas de 1 dia) aborta
+    o script inteiro na hora, igual o antigo `raise SystemExit` fazia. Mesmo
+    padrao ja usado em AsyncFetcher.get_json pras chamadas as APIs Vesti --
+    so' que sincrono, porque fetch_loki roda fora do asyncio."""
+    delay = 2.0
+    for attempt in range(max_retries):
+        response = requests.get(LOKI_URL, params=params, timeout=120)
+        if response.status_code == 200:
+            return response
+        retryable = response.status_code == 429 or response.status_code >= 500
+        if not retryable or attempt == max_retries - 1:
+            raise SystemExit(
+                f"Erro ao consultar Loki: {response.status_code} - {response.text}"
+            )
+        wait = float(response.headers.get("Retry-After") or delay)
+        print(f"  [aviso] Loki respondeu {response.status_code} "
+              f"(tentativa {attempt + 1}/{max_retries}), esperando {wait:.0f}s...",
+              file=sys.stderr, flush=True)
+        time.sleep(wait)
+        delay *= 2
+    raise SystemExit("Erro ao consultar Loki: esgotou as tentativas")
+
+
 def fetch_loki(product_code, company_id, start_time, end_time, interval_minutes,
                limit, sleep_seconds, output_file):
     """Consulta o Loki em janelas e grava o resultado bruto em .log (JSONL)."""
@@ -69,12 +95,7 @@ def fetch_loki(product_code, company_id, start_time, end_time, interval_minutes,
             print(f"[loki] {current_time:%Y-%m-%d %H:%M} -> {window_end:%Y-%m-%d %H:%M}",
                   flush=True)
 
-            response = requests.get(LOKI_URL, params=params, timeout=120)
-            if response.status_code != 200:
-                raise SystemExit(
-                    f"Erro ao consultar Loki: {response.status_code} - {response.text}"
-                )
-
+            response = _get_loki_with_retry(params)
             result = response.json().get("data", {}).get("result", [])
             chunk_entries = 0
             for entry in result:
