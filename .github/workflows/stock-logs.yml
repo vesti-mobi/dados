@@ -14,12 +14,11 @@
 # continua normal o tempo todo, so' o LOG que mudou de casa.
 #
 # Token: VESTI_ORDER_TOKEN (JWT de servico sem expiracao, ja' usado por outros
-# scripts deste repo contra apivesti.vesti.mobi/order/v1/...) -- e' o melhor
-# candidato que tinhamos no dia (14/09/2026), mas NUNCA foi testado contra o
-# endpoint /appvendas/v1/users/{id} que este script tambem chama. Se os logs
-# do run mostrarem "[erro] 401 em .../appvendas/..." enquanto /order/v1/
-# funciona, o token certo pra usuarios precisa vir de quem mantem o app
-# vendas -- trocar aqui embaixo por um secret VESTI_TOKEN novo quando tiver.
+# scripts deste repo contra apivesti.vesti.mobi/order/v1/...). Testado em
+# producao em 14/09/2026 (run 34879787173): resolve tanto /order/v1/orders
+# quanto /appvendas/v1/users/{id}, nao precisou de token novo. Se um dia parar
+# (token revogado/trocado), o log do run mostra "[erro] 401 em .../order/..."
+# ou ".../appvendas/..." -- troque o secret aqui embaixo.
 #
 # Publicado (pedido da Laura, 14/09/2026): o dados.js vai pro GitHub Pages,
 # atras da mesma senha-tranca "Mudar123" dos outros paineis (CS, Gambiarra).

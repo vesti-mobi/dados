@@ -58,17 +58,15 @@ confirmar isso com o time de backend, vale anotar aqui.
 
 O workflow usa o secret `VESTI_ORDER_TOKEN` — um JWT de serviço sem expiração,
 já usado por outros scripts deste repo contra `apivesti.vesti.mobi/order/v1/…`
-(`relatoriostarkbank/fetch_data.py`). Foi o melhor candidato disponível em
-14/09/2026, quando isto foi montado, mas **nunca foi testado contra o endpoint
-`/appvendas/v1/users/{id}`** que este script também chama — só contra
-`/order/v1/orders`.
+(`relatoriostarkbank/fetch_data.py`). **Testado em produção em 14/09/2026**
+(run `34879787173`): resolve tanto `/order/v1/orders` quanto
+`/appvendas/v1/users/{id}` (`[users] 1/1 resolvidos`, `[orders] 1/1
+resolvidos`) — não precisou de um token novo.
 
-Se o log do workflow mostrar `[erro] 401 em .../appvendas/...` enquanto
-`/order/v1/orders` funciona (`[orders] N/N resolvidos` mas `[users] 0/N
-resolvidos`), o token certo para o endpoint de usuários precisa vir de quem
-mantém o app vendas — troque o secret `VESTI_ORDER_TOKEN` por um
-`VESTI_TOKEN` novo e atualize a env do passo "Rodar stock-logs.py" no
-workflow.
+Se um dia parar de funcionar (token revogado/trocado), o sintoma no log do
+workflow é `[erro] 401 em .../appvendas/...` ou `.../order/...`; troque o
+secret `VESTI_ORDER_TOKEN` (ou aponte a env `VESTI_TOKEN` do passo "Rodar
+stock-logs.py" para um secret novo).
 
 ## ⚠️ A senha é uma tranca, não um cofre
 
