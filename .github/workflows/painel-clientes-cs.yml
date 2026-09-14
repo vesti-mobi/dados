@@ -24,12 +24,13 @@
 #
 # ingerir_stock_logs.js (pedido da Laura, 14/09/2026) espelha public.stock_logs
 # (log de movimentação de estoque) pra vestilake_BI.postgres_stock_logs, mesmo
-# mecanismo Metabase -> BigQuery. Roda todo dia, sozinho: a produção só guarda
-# ~6 dias desse log (medido em 14/09/2026), então esta é a única cópia com
-# histórico — se o workflow ficar mais dias que isso parado, o intervalo perdido
-# não tem como ser recuperado depois. Não tem relação com o painel de CS em si;
-# mora aqui só por reaproveitar os secrets e o agendamento diário já prontos.
-# Mesma resiliência: falha e segue sem travar a carga do painel.
+# mecanismo Metabase -> BigQuery. Roda todo dia, sozinho. A origem tinha só
+# 15/08-21/08/2026 (250.547 linhas) e não recebeu nenhuma linha nova depois
+# disso (confirmado com now() do próprio banco em 14/09/2026) — enquanto isso
+# não mudar, este espelho é a única cópia com esses dados. Não tem relação com
+# o painel de CS em si; mora aqui só por reaproveitar os secrets e o
+# agendamento diário já prontos. Mesma resiliência: falha e segue sem travar
+# a carga do painel.
 
 name: Painel de Clientes CS
 

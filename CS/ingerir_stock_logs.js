@@ -8,11 +8,19 @@
  * espelho completo. Este script faz a MESMA leitura da tabela, sem os filtros,
  * direto por SQL nativo no Metabase (mesmo mecanismo do sincronizar_cs.js).
  *
- * RETENÇÃO CURTA NA ORIGEM: medido em 14/09/2026, a produção só tinha 6 dias
- * de log (15/08 a 21/08/2026, 250.547 linhas) -- não é histórico completo, é
- * uma janela que roda. Rodando todo dia, este espelho vira o ÚNICO histórico
- * que sobrevive; se o workflow ficar mais dias que a retenção da origem sem
- * rodar, aquele intervalo se perde de vez (não tem como recuperar depois).
+ * ORIGEM PARADA (descoberto em 14/09/2026): os dados existentes vao de
+ * 15/08 a 21/08/2026 (6 dias, 250.547 linhas) e NENHUMA linha nova foi escrita
+ * depois disso -- confirmado com `now()` do proprio banco (bate com a data
+ * real de hoje, entao nao e' sessao/cache velho: a tabela mesmo ficou 24 dias
+ * sem receber gravacao). Nao sei dizer se e' uma limpeza que tambem varreu
+ * tudo antes de 15/08, ou so' a janela em que o que grava esse log esteve
+ * ativo -- so' da' pra afirmar que, HOJE, nao chega linha nova. Por isso a
+ * janela de busca (ver JANELA_DIAS) e' ancorada no MAX(created_at) da PROPRIA
+ * ORIGEM, nunca em Date.now(): se fosse "ultimos N dias a partir de agora",
+ * o script nunca mais acharia nada enquanto a tabela ficar parada. Se um dia
+ * ela voltar a receber gravacao, a ancoragem no MAX da origem segue sozinha.
+ * Enquanto ninguem mexer nisso, este espelho E' o unico registro completo
+ * que existe desses 6 dias.
  *
  * TETO DE LINHAS DA API DO METABASE (descoberto na 1a carga em produção,
  * 14/09/2026): `/api/dataset` devolve NO MÁXIMO 2000 linhas por resposta,
@@ -35,9 +43,10 @@
  * Estratégia de carga (idempotente, sem staging table):
  *   1. Garante a tabela (CREATE TABLE IF NOT EXISTS, particionada por
  *      DATE(created_at) -- ela só cresce, particionar mantém custo baixo).
- *   2. SEMPRE revarre uma JANELA FIXA de dias corridos (JANELA_DIAS, folga
- *      generosa sobre os ~6 dias de retenção observados) a partir de hoje --
- *      não tenta ser esperto calculando "desde a última carga" por MAX(...):
+ *   2. SEMPRE revarre uma JANELA FIXA de dias corridos (JANELA_DIAS) ANCORADA
+ *      no MAX(created_at) da PROPRIA ORIGEM (Metabase), nunca em Date.now() --
+ *      ver "ORIGEM PARADA" acima. Não tenta ser esperto calculando "desde a
+ *      última carga" pelo MAX(...) do NOSSO ESPELHO no BigQuery:
  *      depois do teto de linhas ter mascarado uma carga incompleta sem erro
  *      nenhum, confiar no próprio histórico do espelho é arriscado. Revarrer
  *      é barato (dedupe por id) e AUTO-CURA qualquer buraco deixado por uma
@@ -72,8 +81,11 @@ const TABELA_FQN = `\`${PROJETO}.${DATASET}.${TABELA}\``;
 const METABASE_URL = (process.env.METABASE_URL || '').replace(/\/+$/, '');
 const METABASE_API_KEY = process.env.METABASE_API_KEY;
 
-// Folga generosa sobre os ~6 dias de retencao observados na origem (14/09/2026)
-// -- cobre fim de semana / execucao que falhou sem deixar buraco permanente.
+// Folga sobre os 6 dias de dados observados na origem (14/09/2026) -- cobre
+// fim de semana / execucao que falhou sem deixar buraco permanente. Ancorada
+// no MAX(created_at) da ORIGEM (nao em Date.now(), ver "ORIGEM PARADA" no topo
+// do arquivo), entao continua fazendo sentido se a escrita ficar parada ou
+// se um dia voltar.
 const JANELA_DIAS = 10;
 // Teto real medido da API do Metabase (/api/dataset), 14/09/2026. Paginar
 // LIMIT/OFFSET nesse tamanho ate' vir pagina incompleta.
@@ -149,7 +161,7 @@ async function garanteTabela() {
       created_at TIMESTAMP, updated_at TIMESTAMP, ingerido_em TIMESTAMP
     )
     PARTITION BY DATE(created_at)
-    OPTIONS (description = "Espelho de public.stock_logs (Postgres de producao da Vesti), via Metabase. RETENCAO CURTA NA ORIGEM (~6 dias medidos em 14/09/2026) -- este e' o unico historico que sobrevive. Ingestao incremental diaria, sempre revarrendo os ultimos dias (nao confia em MAX(created_at) proprio -- ver CS/ingerir_stock_logs.js): CS/ingerir_stock_logs.js.")
+    OPTIONS (description = "Espelho de public.stock_logs (Postgres de producao da Vesti), via Metabase. Origem tinha so' 15/08-21/08/2026 (250.547 linhas) e parou de escrever depois disso, confirmado em 14/09/2026 -- ver CS/ingerir_stock_logs.js. Ingestao incremental diaria, janela ancorada no MAX(created_at) da origem (nao confia no MAX proprio nem em Date.now()).")
   `);
 }
 
@@ -171,9 +183,17 @@ async function main() {
   await garanteTabela();
   const dbId = await buscarDatabaseId();
 
-  const desde = new Date(Date.now() - JANELA_DIAS * 24 * 3600 * 1000);
-  const desdeISO = desde.toISOString();
-  console.log('  revarrendo os últimos ' + JANELA_DIAS + ' dias, desde ' + desdeISO);
+  // Ancorado no MAX(created_at) da PROPRIA ORIGEM, nao em Date.now(): descoberto
+  // ao rodar em producao (14/09/2026) que stock_logs esta parada ha 24 dias
+  // (ultima linha 21/08/2026, 09:40 -- confirmado com now() do proprio banco,
+  // que bate com a data real de hoje, entao nao e' cache/sessao velha). Se a
+  // janela fosse "ultimos N dias a partir de agora", nunca mais acharia nada
+  // enquanto a tabela ficar parada. Ancorando no MAX da origem, a janela segue
+  // sozinha pra onde os dados realmente estao -- parada ou nao.
+  const [{ mx } = {}] = await mbQuery(dbId, 'SELECT MAX(created_at) mx FROM stock_logs');
+  if (!mx) { console.log('  stock_logs não devolveu nenhuma linha na origem — nada a fazer'); return; }
+  const desdeISO = new Date(new Date(mx).getTime() - JANELA_DIAS * 24 * 3600 * 1000).toISOString();
+  console.log('  mais recente na origem: ' + mx + ' — revarrendo ' + JANELA_DIAS + ' dias antes disso, desde ' + desdeISO);
 
   const [linhas, existentes] = await Promise.all([
     buscaTudoPaginado(dbId, desdeISO),

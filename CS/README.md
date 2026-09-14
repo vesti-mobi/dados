@@ -104,18 +104,32 @@ BigQuery — a pergunta salva do Metabase (#439, "USAR COM SABEDORIA") exige
 de espelho completo; o `ingerir_stock_logs.js` lê a mesma tabela sem esses
 filtros, direto por SQL nativo.
 
-**Retenção curta na origem**: medido no dia da implementação, a produção só
-tinha 6 dias de log (15/08 a 21/08/2026, 250.547 linhas — pico de 52.592
-num dia só, 17/08). Não é histórico completo, é uma janela que roda. Rodando
-todo dia, `vestilake_BI.postgres_stock_logs` vira o **único** histórico que
-sobrevive — se o workflow ficar mais dias que a retenção da origem sem rodar,
-aquele intervalo se perde de vez, sem como recuperar depois.
+**A origem parou de escrever** — descoberto rodando em produção pela 1ª vez
+(14/09/2026): os dados vão de 15/08 a 21/08/2026 (6 dias, 250.547 linhas, pico
+de 52.592 num dia só, 17/08) e nenhuma linha nova chegou depois disso.
+Confirmado contra `now()` do próprio banco (bate com a data real, não é sessão
+velha) — a tabela mesmo ficou parada. Não dá para saber se é uma limpeza que
+também varreu tudo antes de 15/08 ou só a janela em que o que grava esse log
+esteve ativo. Enquanto isso não mudar, `vestilake_BI.postgres_stock_logs` é a
+**única** cópia completa que existe desses 6 dias.
 
-Carga incremental, sem duplicar: descobre `MAX(created_at)` já no BigQuery,
-subtrai 24h de colchão (linha atrasada / relógio dessincronizado), busca no
-Metabase em janelas de 1 dia (evita qualquer teto de linhas por resposta que
-o Metabase possa ter — não confirmado, só por cautela) e insere só os `id`
-que ainda não existem no intervalo. Tabela particionada por `DATE(created_at)`.
+**Achado na 1ª carga real (mesmo dia)**: a API `/api/dataset` do Metabase tem
+teto de **2000 linhas por resposta e não avisa que truncou** — a 1ª versão do
+script pedia o dia inteiro numa query só e recebeu sempre exatos 2000, mesmo
+em dias com 50 mil+ linhas reais. Só 14.000 das 250.547 linhas (5,6%) entraram
+naquela carga, sem erro nenhum no log. Corrigido paginando de verdade
+(`LIMIT`/`OFFSET` em blocos de 2000, `ORDER BY created_at, id` para paginação
+determinística) até vir uma página incompleta — confirmado ao vivo que o teto
+é só na resposta, a query aceita `OFFSET` normalmente.
+
+Carga incremental, sem duplicar: pergunta ao Metabase o `MAX(created_at)` da
+**origem** (não do nosso espelho — depois do teto de linhas ter mascarado uma
+carga incompleta sem erro nenhum, confiar no histórico do próprio espelho
+ficou arriscado), revarre os 10 dias antes disso, e insere só os `id` que
+ainda não existem no BigQuery dentro dessa janela. A âncora no `MAX` da
+origem (em vez de "hoje") é o que permite o script continuar fazendo sentido
+com a tabela parada — usar `Date.now()` faria a janela derivar para longe de
+onde os dados realmente estão. Tabela particionada por `DATE(created_at)`.
 
 **Não filtra por carteira ativa** — ao contrário do `sincronizar_cs.js`, que só
 olha domínio com "vendas" nos módulos. Ingere tudo que aparecer em
