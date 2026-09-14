@@ -124,15 +124,14 @@ carteira ativa, filtra no JOIN com `odbc_domains` na hora da leitura.
 
 ### Automático, todo dia às 04:00 BRT
 
-O workflow `.github/workflows/painel-clientes-cs.yml` no `vesti-mobi/dados` roda
-`node CS/sincronizar_cs.js` e depois `node CS/fetch_dados.js` às 07:00 UTC, e
-commita o `CS/dados.js`. Como o painel inteiro — todas as abas, tabelas e
-gráficos — lê desse único arquivo, uma carga atualiza tudo. Usa os secrets
-`GCP_SA_KEY`, `HUBSPOT_TOKEN`, `METABASE_URL` e `METABASE_API_KEY`, que já
-existem no repositório, e aborta sem commitar se o `dados.js` sair com menos de
-1 MB (sinal de que alguma fonte falhou). Dá para rodar na mão pela aba Actions
-("Painel de Clientes CS" → Run workflow). A cópia local do arquivo é o
-`atualizar-painel.yml` aqui na pasta.
+O workflow `.github/workflows/painel-clientes-cs.yml` no `vesti-mobi/dados` roda,
+nessa ordem, `node CS/sincronizar_cs.js`, `node CS/ingerir_stock_logs.js` e
+`node CS/fetch_dados.js` às 07:00 UTC, e commita o `CS/dados.js`. Como o painel
+inteiro — todas as abas, tabelas e gráficos — lê desse único arquivo, uma carga
+atualiza tudo. Usa os secrets `GCP_SA_KEY`, `HUBSPOT_TOKEN`, `METABASE_URL` e
+`METABASE_API_KEY`, que já existem no repositório, e aborta sem commitar se o
+`dados.js` sair com menos de 1 MB (sinal de que alguma fonte falhou). Dá para
+rodar na mão pela aba Actions ("Painel de Clientes CS" → Run workflow).
 
 ⚠️ O `index.html` e o `README.md` **não** são publicados pelo workflow — mudança
 de layout continua indo por `node publicar.js`.
