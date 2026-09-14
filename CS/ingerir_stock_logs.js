@@ -14,6 +14,17 @@
  * que sobrevive; se o workflow ficar mais dias que a retenção da origem sem
  * rodar, aquele intervalo se perde de vez (não tem como recuperar depois).
  *
+ * TETO DE LINHAS DA API DO METABASE (descoberto na 1a carga em produção,
+ * 14/09/2026): `/api/dataset` devolve NO MÁXIMO 2000 linhas por resposta,
+ * sem avisar que truncou -- a 1a versão deste script pedia o dia inteiro numa
+ * query só e recebeu sempre exatos 2000, mesmo em dias com 50k+ linhas reais
+ * (medido ao vivo: 15/08=22.825, 16/08=21.377, 17/08=52.592, 18/08=51.299,
+ * 19/08=51.791, 20/08=45.478, 21/08=5.185 -- total 250.547). Resultado: só
+ * 14.000 linhas (5,6%) foram ingeridas naquela carga. Confirmado que o teto é
+ * so' na RESPOSTA, nao na query: `LIMIT 2000 OFFSET 2000` devolve a proxima
+ * pagina cheia. A partir desta versao, TODA leitura pagina em blocos de
+ * PAGINA_METABASE ate' vir uma pagina incompleta.
+ *
  * NÃO FILTRA por domain_id / carteira ativa -- ao contrário do
  * sincronizar_cs.js, que só olha quem tem "vendas" nos módulos. Ingere TODO
  * mundo que aparecer em stock_logs (loja de teste incluída). Se algum painel
@@ -21,19 +32,22 @@
  * leitura (JOIN com odbc_domains) em vez de aqui -- assim quem quiser os
  * dados crus ainda consegue.
  *
- * Estratégia de carga (incremental, sem duplicar):
+ * Estratégia de carga (idempotente, sem staging table):
  *   1. Garante a tabela (CREATE TABLE IF NOT EXISTS, particionada por
  *      DATE(created_at) -- ela só cresce, particionar mantém custo baixo).
- *   2. Descobre o corte: MAX(created_at) já no BigQuery, menos um colchão de
- *      24h (linha que chegou atrasada / relógio dessincronizado). Espelho
- *      vazio = primeira carga: pergunta ao Metabase o MIN/MAX real da origem
- *      em vez de chutar uma data.
- *   3. Busca no Metabase em janelas de 1 DIA (não um SELECT só): a pergunta
- *      #439 é rotulada "USAR COM SABEDORIA" e eu não sei se o Metabase tem um
- *      teto de linhas por resposta aqui -- ir por dia deixa cada request
- *      pequeno e não arrisca truncar sem avisar.
- *   4. Por dia, pergunta ao BigQuery quais `id` daquele intervalo já existem
- *      e insere só o que falta (streaming insert, em lotes).
+ *   2. SEMPRE revarre uma JANELA FIXA de dias corridos (JANELA_DIAS, folga
+ *      generosa sobre os ~6 dias de retenção observados) a partir de hoje --
+ *      não tenta ser esperto calculando "desde a última carga" por MAX(...):
+ *      depois do teto de linhas ter mascarado uma carga incompleta sem erro
+ *      nenhum, confiar no próprio histórico do espelho é arriscado. Revarrer
+ *      é barato (dedupe por id) e AUTO-CURA qualquer buraco deixado por uma
+ *      carga anterior incompleta, sem precisar saber que ela foi incompleta.
+ *   3. Busca no Metabase PAGINADO (LIMIT/OFFSET, ORDER BY created_at, id --
+ *      o `id` como desempate torna a paginação determinística mesmo com
+ *      created_at repetido) até uma página vir com menos que PAGINA_METABASE
+ *      linhas.
+ *   4. Pergunta ao BigQuery, numa query só, quais `id` da janela inteira já
+ *      existem, e insere (streaming, em lotes) só o que falta.
  *
  * Falha em qualquer etapa: avisa e sai sem travar a carga do painel (mesmo
  * comportamento do sincronizar_cs.js e do Tino/HubSpot em fetch_dados.js).
@@ -58,9 +72,17 @@ const TABELA_FQN = `\`${PROJETO}.${DATASET}.${TABELA}\``;
 const METABASE_URL = (process.env.METABASE_URL || '').replace(/\/+$/, '');
 const METABASE_API_KEY = process.env.METABASE_API_KEY;
 
-// colchão de re-varredura: linha que chegou atrasada na origem (relogio,
-// commit assincrono) ainda entra, e o dedupe por id evita duplicar.
-const BUFFER_HORAS = 24;
+// Folga generosa sobre os ~6 dias de retencao observados na origem (14/09/2026)
+// -- cobre fim de semana / execucao que falhou sem deixar buraco permanente.
+const JANELA_DIAS = 10;
+// Teto real medido da API do Metabase (/api/dataset), 14/09/2026. Paginar
+// LIMIT/OFFSET nesse tamanho ate' vir pagina incompleta.
+const PAGINA_METABASE = 2000;
+// trava de sanidade: nunca deveria passar disso (JANELA_DIAS * pico diario
+// observado de ~53k ainda caberia em ~270 paginas). Se estourar, algo esta
+// errado (paginacao nao terminando) -- para e avisa em vez de rodar pra sempre.
+const MAX_PAGINAS = 2000;
+
 const LOTE_INSERT = 2000; // margem confortavel sob o limite de streaming da API
 
 const COLUNAS = ['id', 'domain_id', 'company_id', 'stock_id', 'product_id', 'user_id',
@@ -96,8 +118,26 @@ async function mbQuery(dbId, sql) {
   return resp.data.rows.map(r => Object.fromEntries(cols.map((c, i) => [c, r[i]])));
 }
 
-function diaISO(d) { return d.toISOString().slice(0, 10); }
-function addDias(d, n) { const x = new Date(d); x.setUTCDate(x.getUTCDate() + n); return x; }
+// Busca TODAS as linhas de stock_logs desde `desdeISO`, paginando em blocos de
+// PAGINA_METABASE (ver comentario no topo -- a API trunca sem avisar acima
+// disso). ORDER BY created_at, id: o id garante ordem estavel mesmo quando
+// varias linhas tem o mesmo created_at, senao OFFSET poderia repetir ou pular
+// linha entre paginas.
+async function buscaTudoPaginado(dbId, desdeISO) {
+  const todas = [];
+  for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+    const offset = pagina * PAGINA_METABASE;
+    const bloco = await mbQuery(dbId,
+      `SELECT ${COLUNAS.join(', ')} FROM stock_logs
+       WHERE created_at >= '${desdeISO}'
+       ORDER BY created_at ASC, id ASC
+       LIMIT ${PAGINA_METABASE} OFFSET ${offset}`);
+    todas.push(...bloco);
+    if (bloco.length < PAGINA_METABASE) return todas; // ultima pagina
+  }
+  console.log('  ⚠ atingiu o limite de ' + MAX_PAGINAS + ' páginas sem terminar — parando por segurança, pode ter ficado linha de fora');
+  return todas;
+}
 
 async function garanteTabela() {
   await bq.query(`
@@ -109,21 +149,14 @@ async function garanteTabela() {
       created_at TIMESTAMP, updated_at TIMESTAMP, ingerido_em TIMESTAMP
     )
     PARTITION BY DATE(created_at)
-    OPTIONS (description = "Espelho de public.stock_logs (Postgres de producao da Vesti), via Metabase. RETENCAO CURTA NA ORIGEM (~6 dias medidos em 14/09/2026) -- este e' o unico historico que sobrevive. Ingestao incremental diaria: CS/ingerir_stock_logs.js.")
+    OPTIONS (description = "Espelho de public.stock_logs (Postgres de producao da Vesti), via Metabase. RETENCAO CURTA NA ORIGEM (~6 dias medidos em 14/09/2026) -- este e' o unico historico que sobrevive. Ingestao incremental diaria, sempre revarrendo os ultimos dias (nao confia em MAX(created_at) proprio -- ver CS/ingerir_stock_logs.js): CS/ingerir_stock_logs.js.")
   `);
 }
 
-async function buscaCorte() {
-  const [rows] = await bq.query(
-    `SELECT MAX(created_at) corte FROM ${TABELA_FQN}`
-  ).catch(() => [[{ corte: null }]]);
-  return rows[0] && rows[0].corte ? new Date(rows[0].corte.value || rows[0].corte) : null;
-}
-
-async function idsExistentes(inicioISO, fimISO) {
+async function idsExistentes(desdeISO) {
   const [rows] = await bq.query({
-    query: `SELECT id FROM ${TABELA_FQN} WHERE created_at >= @ini AND created_at < @fim`,
-    params: { ini: inicioISO, fim: fimISO },
+    query: `SELECT id FROM ${TABELA_FQN} WHERE created_at >= @desde`,
+    params: { desde: desdeISO },
   });
   return new Set(rows.map(r => r.id));
 }
@@ -138,52 +171,27 @@ async function main() {
   await garanteTabela();
   const dbId = await buscarDatabaseId();
 
-  let inicio = await buscaCorte();
-  if (inicio) {
-    inicio = new Date(inicio.getTime() - BUFFER_HORAS * 3600 * 1000);
-    console.log('  corte (MAX(created_at) no BigQuery, menos ' + BUFFER_HORAS + 'h de colchão): ' + inicio.toISOString());
-  } else {
-    console.log('  tabela nova/vazia — perguntando o intervalo real ao Metabase');
-    const [{ mn, mx } = {}] = await mbQuery(dbId, 'SELECT MIN(created_at) mn, MAX(created_at) mx FROM stock_logs');
-    if (!mn) { console.log('  stock_logs não devolveu nenhuma linha na origem — nada a fazer'); return; }
-    inicio = new Date(mn);
-    console.log('  primeira carga: origem vai de ' + mn + ' até ' + mx);
+  const desde = new Date(Date.now() - JANELA_DIAS * 24 * 3600 * 1000);
+  const desdeISO = desde.toISOString();
+  console.log('  revarrendo os últimos ' + JANELA_DIAS + ' dias, desde ' + desdeISO);
+
+  const [linhas, existentes] = await Promise.all([
+    buscaTudoPaginado(dbId, desdeISO),
+    idsExistentes(desdeISO),
+  ]);
+  console.log('  ' + linhas.length + ' linhas na origem dentro da janela');
+
+  const novas = linhas.filter(l => !existentes.has(l.id));
+  console.log('  ' + existentes.size + ' já espelhadas, ' + novas.length + ' novas');
+
+  if (!novas.length) { console.log('  nada para inserir'); return; }
+
+  const agora = new Date().toISOString();
+  const linhasBQ = novas.map(l => ({ ...l, ingerido_em: agora }));
+  for (let i = 0; i < linhasBQ.length; i += LOTE_INSERT) {
+    await bq.dataset(DATASET).table(TABELA).insert(linhasBQ.slice(i, i + LOTE_INSERT), { raw: false });
   }
-
-  const hoje = new Date();
-  let totalBuscado = 0, totalNovo = 0, totalJaExistia = 0;
-
-  for (let dia = new Date(Date.UTC(inicio.getUTCFullYear(), inicio.getUTCMonth(), inicio.getUTCDate()));
-       dia <= hoje;
-       dia = addDias(dia, 1)) {
-    const fimDia = addDias(dia, 1);
-    const iniISO = dia.toISOString(), fimISO = fimDia.toISOString();
-
-    const linhas = await mbQuery(dbId,
-      `SELECT ${COLUNAS.join(', ')} FROM stock_logs
-       WHERE created_at >= '${iniISO}' AND created_at < '${fimISO}'
-       ORDER BY created_at ASC`);
-    totalBuscado += linhas.length;
-    if (!linhas.length) continue;
-    if (linhas.length > 100000) {
-      console.log('  ⚠ ' + diaISO(dia) + ': ' + linhas.length + ' linhas num dia só — desconfiar de teto de resposta do Metabase truncando sem avisar');
-    }
-
-    const existentes = await idsExistentes(iniISO, fimISO);
-    const novas = linhas.filter(l => !existentes.has(l.id));
-    totalJaExistia += linhas.length - novas.length;
-    if (!novas.length) { console.log('  ' + diaISO(dia) + ': ' + linhas.length + ' na origem, tudo já espelhado'); continue; }
-
-    const agora = new Date().toISOString();
-    const linhasBQ = novas.map(l => ({ ...l, ingerido_em: agora }));
-    for (let i = 0; i < linhasBQ.length; i += LOTE_INSERT) {
-      await bq.dataset(DATASET).table(TABELA).insert(linhasBQ.slice(i, i + LOTE_INSERT), { raw: false });
-    }
-    totalNovo += novas.length;
-    console.log('  ' + diaISO(dia) + ': ' + linhas.length + ' na origem, ' + novas.length + ' novas inseridas');
-  }
-
-  console.log('  total: ' + totalBuscado + ' na origem (janela varrida), ' + totalNovo + ' inseridas, ' + totalJaExistia + ' já existiam');
+  console.log('  ' + novas.length + ' linhas inseridas');
 }
 
 if (require.main === module) {
