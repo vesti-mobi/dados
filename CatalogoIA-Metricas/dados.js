@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-09-15T15:57:17.557Z",
+  "gerado_em": "2026-09-15T23:16:51.295Z",
   "hoje": "2026-09-15",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 11,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-09-03T17:32:55.872Z",
-      "dias": 11
+      "dias": 12
     },
     {
       "slug": "kauly",
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 23,
           "primeiro": "2026-08-27T10:08:32.689Z",
           "ultimo": "2026-09-09T19:08:27.197Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 23,
           "atribuido": 0
         },
@@ -573,7 +573,7 @@ window.DADOS = {
           "envios": 10,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-09-03T17:32:55.872Z",
-          "dias": 11,
+          "dias": 12,
           "produtos_medidos": 10,
           "atribuido": 0
         },
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1188,7 +1188,7 @@ window.DADOS = {
           "envios": 3,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-09-10T18:14:41.472Z",
-          "dias": 4,
+          "dias": 5,
           "produtos_medidos": 2,
           "atribuido": 0
         },
