@@ -185,6 +185,7 @@ de layout continua indo por `node publicar.js`.
 | Tickets | ticket / pipeline / estágio | HubSpot `tickets`, todos os pipelines |
 | Tickets | Situação | estágio marcado como fechado (`metadata.ticketState`) ou `closed_date` preenchida |
 | Tickets | Cliente e Canal | empresa associada ao ticket → marca do cadastro (nome, nome sem ruído ou CNPJ) |
+| Carteira por CS | tudo | não é fonte nova: reagrupa por pessoa (Thamiris, Luana, Cristiane) o que já existe em Tabela geral, Cross-sell/Upsell, Reuniões, Marcos de volume, Churn e Bonificação — pedido da Laura em 15/09/2026 pra ver "como está indo o trabalho" de cada CS num lugar só |
 
 ### Domínio nas abas
 

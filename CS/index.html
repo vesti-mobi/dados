@@ -1318,7 +1318,10 @@ function categoriasNegocios(){
   const p = periodo(), ant = periodoAnterior(p);
   const linha = (l,categoria,per,cor) => {
     const ns = negociosGanhosNoPeriodo(categoria,per);
-    return {l, v:ns.length, cor, quem:ns.map(n=>n.cliente)};
+    /* Título do negócio (ex.: "Ellice Fitness - Filial"), não só o nome da
+       empresa — é o que aparece no board do HubSpot, pedido da Laura em
+       15/09/2026 pra bater o hover com o que ela vê lá. */
+    return {l, v:ns.length, cor, quem:ns.map(n=>n.negocio || n.cliente)};
   };
   return [
     linha('Cross-sell — este período', 'cross', p, 'var(--acc)'),
@@ -1799,7 +1802,142 @@ const TABS = [
       }},
     ],
   },
+  {
+    id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
+    titulo:'Carteira por CS',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, fechados no período; <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, no último mês fechado — só aparece pra quem participa dela.',
+    filtros:['csFoco','periodo'],
+    semTabela:true,
+    linhas:()=>[],
+    kpis:()=>kpisCarteiraCs(),
+    duasColunas:true,
+    seriePropria:true,
+    series:()=>DATA.clientesSeries.filter(x=>CS_POR_CLIENTE[x.cliente]===estado.filtros.csFoco),
+    graficos:[
+      {t:'GMV da carteira', s:[{k:'valorPedidos', l:'GMV', tipo:'bar', cor:'var(--acc)', f:fmt.moneyCompact}]},
+      {t:'Cross-sell x Upsell fechados', categorias:()=>categoriasNegociosCs()},
+    ],
+    extra:()=>extraCarteiraCs(),
+  },
 ];
+
+/* ==========================================================================
+   CARTEIRA POR CS — helpers da aba acima. As 3 pessoas que hoje respondem
+   por carteira de marca (Laura, 15/09/2026) — não é a mesma lista de quem
+   pontua na Bonificação (CS_PONTUADOS, mais abaixo), são coisas diferentes:
+   uma é "de quem são essas marcas", a outra é "quem recebe bônus". */
+const CS_CARTEIRA = ['Thamiris Ribeiro', 'Luana Coutinho', 'Cristiane Canatelli'];
+
+function carteiraDoCs(cs){
+  return clientesAgregados().filter(c=>c.cs===cs);
+}
+function negociosDoCs(categoria, cs, p){
+  return negociosGanhosNoPeriodo(categoria, p).filter(n=>normalizarCs(n.cs)===cs);
+}
+function reunioesDoCs(cs, p){
+  return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && normalizarCs(r.cs)===cs);
+}
+/* Marcos de volume (BigQuery) atribuídos pela MARCA que bateu o marco, não
+   por um campo de CS que esse evento não carrega — a mesma ponte que o resto
+   do painel usa (CS_POR_CLIENTE) pra herdar responsável em dado que não tem. */
+function marcosDoCs(cs, p){
+  const novasMarcas = (DATA.clientes||[]).filter(c=>c.cs===cs && c.dataCadastro
+    && c.dataCadastro>=p.ini && c.dataCadastro<=p.fim);
+  const eventos = (DATA.marcosVolume||[]).filter(ev=>ev.data && ev.data>=p.ini && ev.data<=p.fim
+    && CS_POR_CLIENTE[ev.cliente]===cs);
+  return [
+    ...novasMarcas.map(c=>({cliente:c.nome, tipo:'Nova marca criada', data:c.dataCadastro})),
+    ...eventos.map(ev=>({cliente:ev.cliente, tipo:ev.tipo, data:ev.data})),
+  ].sort((a,b)=>b.data.localeCompare(a.data));
+}
+/* Situação de churn é FOTO DE HOJE (não do período) — mesma régua da aba
+   Churn. Só entram linhas com CS preenchido: a marca "fora do painel" ou
+   "cancelada" que a aba Churn também lista não tem CS (perdeu a carteira
+   junto com o módulo), então não tem como atribuir aqui. */
+function churnDoCs(cs){
+  return (DATA.churn.linhas||[]).filter(c=>c.cs && normalizarCs(c.cs)===cs);
+}
+function categoriasNegociosCs(){
+  const cs = estado.filtros.csFoco;
+  const p = periodo(), ant = periodoAnterior(p);
+  const linha = (l,categoria,per,cor) => {
+    const ns = negociosDoCs(categoria,cs,per);
+    return {l, v:ns.length, cor, quem:ns.map(n=>n.negocio||n.cliente)};
+  };
+  return [
+    linha('Cross-sell — este período', 'cross', p, 'var(--acc)'),
+    linha('Cross-sell — período anterior', 'cross', ant, 'var(--acc-2)'),
+    linha('Upgrade — este período', 'up', p, 'var(--acc)'),
+    linha('Upgrade — período anterior', 'up', ant, 'var(--acc-2)'),
+  ];
+}
+function kpisCarteiraCs(){
+  const cs = estado.filtros.csFoco;
+  const p = periodo();
+  const carteira = carteiraDoCs(cs);
+  const ativas = carteira.filter(c=>c.status==='ativo');
+  const gmv = soma(carteira,'valorPedidos');
+  const cross = negociosDoCs('cross',cs,p), up = negociosDoCs('up',cs,p);
+  const reun = reunioesDoCs(cs,p);
+  const fechouReuniao = reun.filter(r=>r.resultado==='Fechou negócio').length;
+  const churnLinhas = churnDoCs(cs);
+  const bloqueadas = churnLinhas.filter(c=>c.situacao==='bloqueada').length;
+  const canceladas = churnLinhas.filter(c=>c.situacao==='cancelada').length;
+  const riscoAlto = ativas.filter(c=>c.riscoChurn==='Alto').length;
+  const linhaBon = linhasBonificacao().find(r=>r.cs===cs);
+  const pontos = (linhaBon && ehPontuado(cs))
+    ? REGRAS_PONTOS.reduce((t,g)=>t+((g.calc(linhaBon)||{}).p||0),0) : null;
+  return [
+    {l:'Marcas na carteira', v:fmt.int(ativas.length), s:fmt.int(carteira.length-ativas.length)+' inativas na base'},
+    {l:'GMV no período', v:fmt.moneyCompact(gmv), s:'soma da carteira dela'},
+    {l:'Cross-sell + Upsell', v:fmt.int(cross.length+up.length), s:fmt.moneyCompact(soma([...cross,...up],'valor'))+' fechados no período'},
+    {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
+    {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
+    {l:'Bloqueadas / canceladas', v:fmt.int(bloqueadas)+' / '+fmt.int(canceladas), s:'situação de churn hoje'},
+    pontos!=null
+      ? {l:'Pontuação do mês', v:fmt.int(pontos)+' pts', s:rotuloMes(mesBonificacao())}
+      : {l:'Pontuação', v:'—', s:'não participa da bonificação hoje'},
+  ];
+}
+/* 5 blocos empilhados, cada um a mesma leitura da aba original — só que já
+   filtrada pra uma pessoa. `cardLista` é o mesmo componente das abas
+   Reuniões/Cross-sell/Upsell, sem invenção de layout novo. */
+function extraCarteiraCs(){
+  const cs = estado.filtros.csFoco;
+  const p = periodo();
+  const wrap = el('div',{});
+
+  const carteira = carteiraDoCs(cs).sort((a,b)=>(b.valorPedidos||0)-(a.valorPedidos||0));
+  wrap.appendChild(cardLista('Marcas da carteira', carteira,
+    [{k:'nome', l:'Marca'}, {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
+     {k:'status', l:'Status', f:v=>v==='ativo'?'Ativo':'Inativo'},
+     {k:'valorPedidos', l:'GMV no período', r:true, f:fmt.moneyCompact},
+     {k:'riscoChurn', l:'Risco de churn', f:v=>v||'—'}]));
+
+  const negocios = [...negociosDoCs('cross',cs,p), ...negociosDoCs('up',cs,p)]
+    .sort((a,b)=>b.data.localeCompare(a.data));
+  wrap.appendChild(cardLista('Cross-sell e Upsell fechados no período', negocios,
+    [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
+     {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
+     {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Fechado em', f:fmt.date}]));
+
+  wrap.appendChild(cardLista('Reuniões no período', reunioesDoCs(cs,p),
+    [{k:'reuniao', l:'Reunião'}, {k:'cliente', l:'Cliente'},
+     {k:'data', l:'Data', f:fmt.date}, {k:'resultado', l:'Resultado'}]));
+
+  wrap.appendChild(cardLista('Marcos de volume no período', marcosDoCs(cs,p),
+    [{k:'cliente', l:'Marca'}, {k:'tipo', l:'Marco'}, {k:'data', l:'Data', f:fmt.date}]));
+
+  const churnLinhas = churnDoCs(cs).sort((a,b)=>(b.diasAtraso||0)-(a.diasAtraso||0));
+  const rotSit = {alerta:'Em alerta', bloqueada:'Bloqueada', cancelada:'Cancelada'};
+  wrap.appendChild(cardLista('Situação de churn hoje', churnLinhas,
+    [{k:'cliente', l:'Marca'}, {k:'situacao', l:'Situação', f:v=>rotSit[v]||v},
+     {k:'bloqueadoEm', l:'Bloqueado em', f:v=>v?fmt.date(v):'—'},
+     {k:'vencMaisAntigo', l:'Venc. mais antigo', f:v=>v?fmt.date(v):'—'},
+     {k:'valorEmAberto', l:'Valor em aberto', r:true, f:v=>v?fmt.money(v):'—'}]));
+
+  return wrap;
+}
 
 /* Catálogo das regras. Vem do dados.js (é o fetcher que sabe medir cada uma);
    a lista abaixo é só o que fazer se o arquivo for antigo e não tiver a aba. */
@@ -2104,7 +2242,7 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', metricaBonificacao:'' };
+  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -2446,6 +2584,9 @@ function renderFiltros(t){
     add('Situação', sel([['todos','Todas'],['alerta','Em alerta'],
       ['bloqueada','Bloqueadas'],['cancelada','Canceladas']],
       estado.filtros.situacao, v=>estado.filtros.situacao=v));
+  }
+  if(t.filtros.includes('csFoco')){
+    add('CS', sel(CS_CARTEIRA.map(n=>[n,n]), estado.filtros.csFoco, v=>estado.filtros.csFoco=v));
   }
   if(t.filtros.includes('statusTicket')){
     add('Situação', sel([['todos','Abertos e encerrados'],['abertos','Só abertos'],['encerrados','Só encerrados']],
