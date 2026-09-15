@@ -701,11 +701,14 @@ const MOCK = (function buildMock(){
   const STATUS_DEAL = ['Ganho','Ganho','Ganho','Perdido','Perdido','Em aberto'];
   const negocios = Array.from({length:44},()=>{
     const c = pick(clientes), p = pick(PRODUTOS);
+    const status = pick(STATUS_DEAL);
+    const estagio = status==='Ganho' ? 'Ganho (Expand)' : status==='Perdido' ? 'Perdido (Expand)'
+      : pick(['Reunião agendada','Montar proposta / Negociação']);
     return {
       cliente: c.nome, produto: p.nome, categoria: p.cat,
       negocio: p.nome+' — '+c.nome,
       valor: int(900,18000),
-      status: pick(STATUS_DEAL),
+      status, estagio,
       data: dia(int(0,150)),
       cs: c.cs,
     };
@@ -1395,9 +1398,9 @@ const TABS = [
     desc:'<b>Experimento de 08/09/2026: parte daqui vem do HubSpot agora</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes — os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. Fonte HubSpot: os 4 pipelines de negócio de CS (Sucesso do Cliente, Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter — achados pelo estágio "Implantado", não pelo nome). <b>Marcos de volume voltou a ser 100% BigQuery</b> (nunca chegou a ser 100% HubSpot: era o estágio de negócio, editado à mão). Retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. <b>Passe o mouse em qualquer barra ou fatia</b> pra ver quais marcas formam aquele número. '
       + '<b>Novas vendas</b> = negócio criado (campo <code>createdate</code>) no período, em qualquer um dos 4 pipelines; Starter = pipeline "CS - Starter", Pro = os outros três (não existe campo de plano nesses negócios). '
       + '<b>Churn</b> = negócio cujo estágio atual é "Perdido (Churn)" (existe nos 4 pipelines); a data é <code>closedate</code> ou, sem ela, <code>hs_lastmodifieddate</code> — o HubSpot não guarda quando o negócio ENTROU nesse estágio, só a última mexida nele. '
-      + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, só que fechados no período. '
+      + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, ganhos e <b>criados</b> dentro do período (data de <code>createdate</code>, não de fechamento). '
       + '<b>Funil de onboarding</b> é uma <b>foto do momento</b>: negócios ainda em andamento nesses 4 pipelines, por fase (campo <code>estagio</code> cru do HubSpot, agrupado em 5 nomes). '
-      + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho no período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
+      + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho, criado dentro do período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
       + '<b>Marcos de volume</b> vem do BigQuery, não do HubSpot: <b>Novas marcas criadas</b> = data de criação do domínio (<code>odbc_domains.created_at</code>) no período. <b>5 Pedidos Pagos</b>, <b>25 Pedidos Pagos</b> e <b>100k de GMV</b> = o dia em que o acumulado da marca (pedidos pagos ou GMV pago, desde o primeiro pedido dela) cruzou aquele limiar pela primeira vez cai no período — cada marca entra uma única vez na vida em cada um dos quatro marcos, nunca repete em período seguinte. Se nenhuma marca bateu o marco na janela escolhida, o número é 0, mesmo que outras já tenham batido antes.',
     filtros:['periodo'],
     semTabela:true,
@@ -1454,7 +1457,7 @@ const TABS = [
   {
     id:'crossSell', grupo:'Crescimento', nav:'Cross-sell', cor:'#4048B8', cor2:'#12968D',
     titulo:'Cross-sell',
-    desc:'Negócios de produto novo na carteira existente. Vêm do pipeline <b>Expand (Upgrades)</b> do HubSpot, onde cross-sell e upsell ficam juntos — a categoria sai do produto no nome do negócio.',
+    desc:'Negócios de produto novo na carteira existente. Vêm do pipeline <b>Expand (Upgrades)</b> do HubSpot, onde cross-sell e upsell ficam juntos — a categoria sai do produto no nome do negócio. <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois).',
     filtros:['cliente','cs','periodo','statusDeal'],
     tabela:'Negócios', chaveCliente:'cliente',
     colunas:[
@@ -1462,7 +1465,7 @@ const TABS = [
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       COL_CS,
       {k:'valor', l:'Valor', tipo:'money', r:true, forte:true},
-      {k:'status', l:'Status', tipo:'ganho'},
+      {k:'estagio', l:'Estágio', tipo:'tag'},
     ],
     linhas:()=>negociosDe('cross'),
     kpis:(rows)=>kpisDeal(rows),
@@ -1474,7 +1477,7 @@ const TABS = [
   {
     id:'upsell', grupo:'Crescimento', nav:'Upsell', cor:'#8046C4', cor2:'#12968D',
     titulo:'Upsell',
-    desc:'Expansões do que o cliente já tem — filial, multiloja, upgrade de plano. Mesmo pipeline <b>Expand (Upgrades)</b> do cross-sell; fechado é só o estágio "Ganho (Expand)".',
+    desc:'Expansões do que o cliente já tem — filial, multiloja, upgrade de plano. Mesmo pipeline <b>Expand (Upgrades)</b> do cross-sell; fechado é só o estágio "Ganho (Expand)". <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois).',
     filtros:['cliente','cs','periodo','statusDeal'],
     tabela:'Negócios', chaveCliente:'cliente',
     colunas:[
@@ -1482,7 +1485,7 @@ const TABS = [
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       COL_CS,
       {k:'valor', l:'Valor', tipo:'money', r:true, forte:true},
-      {k:'status', l:'Status', tipo:'ganho'},
+      {k:'estagio', l:'Estágio', tipo:'tag'},
     ],
     linhas:()=>negociosDe('up'),
     kpis:(rows)=>kpisDeal(rows),
@@ -1805,7 +1808,7 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, fechados no período; <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, no último mês fechado — só aparece pra quem participa dela.',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, ganhos e criados dentro do período;<b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, no último mês fechado — só aparece pra quem participa dela.',
     filtros:['csFoco','periodo'],
     semTabela:true,
     linhas:()=>[],

@@ -858,9 +858,10 @@ async function puxarHubSpot() {
 
   const pipes = await hs('GET', '/crm/v3/pipelines/deals');
   const expand = pipes.results.find(p => /^expand/i.test(p.label));
-  const estagio = {};
+  const estagio = {}, nomeEstagioExpand = {};
   expand.stages.forEach(s => {
     estagio[s.id] = /ganho/i.test(s.label) ? 'Ganho' : /perdido/i.test(s.label) ? 'Perdido' : 'Em aberto';
+    nomeEstagioExpand[s.id] = (s.label || '').trim();
   });
 
   const deals = await buscarTudo('deals',
@@ -874,6 +875,15 @@ async function puxarHubSpot() {
     await empresasAssociadas('deals', deals.map(d => d.id));
   console.log('  empresas associadas'.padEnd(44) + String(Object.keys(nomeEmpresa).length).padStart(8));
 
+  /* Data do negócio = CRIAÇÃO, não fechamento (pedido da Laura, 15/09/2026) —
+     vale para Cross-sell, Upsell e "Negócios por categoria" na Visão geral,
+     que leem todos deste mesmo `data`. Um negócio criado em julho e ganho em
+     outubro agora conta em julho, não em outubro; é a métrica de quando o
+     negócio ENTROU no funil, não de quando ele fechou.
+     `estagio` guarda o nome cru do estágio do HubSpot (ex.: "Reunião
+     agendada", "Ganho (Expand)"), pra tabela mostrar onde o negócio está —
+     `status` continua Ganho/Perdido/Em aberto, é o que o filtro da página
+     usa (Em aberto = qualquer estágio que não seja um desses dois). */
   const negocios = deals.map(d => {
     const p = d.properties;
     const cls = classificar(p.dealname);
@@ -885,7 +895,8 @@ async function puxarHubSpot() {
       negocio: p.dealname || '',
       valor: r2(p.amount),
       status: estagio[p.dealstage] || 'Em aberto',
-      data: iso(p.closedate) || iso(p.createdate),
+      estagio: nomeEstagioExpand[p.dealstage] || '—',
+      data: iso(p.createdate),
       cs: owners[p.hubspot_owner_id] || '',
     };
   }).filter(n => n.data && Number(n.data.slice(0, 4)) === ANO);
