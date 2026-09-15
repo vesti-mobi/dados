@@ -1808,7 +1808,7 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, ganhos e criados dentro do período;<b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, no último mês fechado — só aparece pra quem participa dela.',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, <b>todo negócio criado no período</b> — ganho, em aberto ou perdido, com o valor de cada grupo; <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
     filtros:['csFoco','periodo'],
     semTabela:true,
     linhas:()=>[],
@@ -1836,6 +1836,13 @@ function carteiraDoCs(cs){
 }
 function negociosDoCs(categoria, cs, p){
   return negociosGanhosNoPeriodo(categoria, p).filter(n=>normalizarCs(n.cs)===cs);
+}
+/* Todo negócio (cross + upsell) CRIADO no período, qualquer status — não só
+   ganho. Pedido da Laura, 15/09/2026: "senti falta de negócios abertos no
+   período, e perdidos também". */
+function negociosTodosDoCs(cs, p){
+  return [...negociosDe('cross'), ...negociosDe('up')]
+    .filter(n=>n.data>=p.ini && n.data<=p.fim && n.cs===cs);
 }
 function reunioesDoCs(cs, p){
   return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && normalizarCs(r.cs)===cs);
@@ -1880,26 +1887,37 @@ function kpisCarteiraCs(){
   const carteira = carteiraDoCs(cs);
   const ativas = carteira.filter(c=>c.status==='ativo');
   const gmv = soma(carteira,'valorPedidos');
-  const cross = negociosDoCs('cross',cs,p), up = negociosDoCs('up',cs,p);
+  const negocios = negociosTodosDoCs(cs,p);
+  const ganhos = negocios.filter(n=>n.status==='Ganho');
+  const abertos = negocios.filter(n=>n.status==='Em aberto');
+  const perdidos = negocios.filter(n=>n.status==='Perdido');
   const reun = reunioesDoCs(cs,p);
   const fechouReuniao = reun.filter(r=>r.resultado==='Fechou negócio').length;
   const churnLinhas = churnDoCs(cs);
   const bloqueadas = churnLinhas.filter(c=>c.situacao==='bloqueada').length;
   const canceladas = churnLinhas.filter(c=>c.situacao==='cancelada').length;
   const riscoAlto = ativas.filter(c=>c.riscoChurn==='Alto').length;
-  const linhaBon = linhasBonificacao().find(r=>r.cs===cs);
+  /* Pontuação segue o MÊS DO PERÍODO escolhido no filtro (fim do período),
+     não o "mês fechado" independente da aba Bonificação — pedido da Laura,
+     15/09/2026: filtrou setembro e via pontuação de outubro. */
+  const mesDoPeriodo = p.fim.slice(0,7);
+  const linhaBon = linhasBonificacao(mesDoPeriodo).find(r=>r.cs===cs);
   const pontos = (linhaBon && ehPontuado(cs))
     ? REGRAS_PONTOS.reduce((t,g)=>t+((g.calc(linhaBon)||{}).p||0),0) : null;
   return [
     {l:'Marcas na carteira', v:fmt.int(ativas.length), s:fmt.int(carteira.length-ativas.length)+' inativas na base'},
     {l:'GMV no período', v:fmt.moneyCompact(gmv), s:'soma da carteira dela'},
-    {l:'Cross-sell + Upsell', v:fmt.int(cross.length+up.length), s:fmt.moneyCompact(soma([...cross,...up],'valor'))+' fechados no período'},
+    {l:'Valor ganho (cross + up)', v:fmt.moneyCompact(soma(ganhos,'valor')), s:fmt.int(ganhos.length)+' negócios ganhos no período'},
+    {l:'Negócios em aberto', v:fmt.int(abertos.length), s:fmt.moneyCompact(soma(abertos,'valor'))+' em negociação'},
+    {l:'Negócios perdidos', v:fmt.int(perdidos.length), s:fmt.moneyCompact(soma(perdidos,'valor'))+' no período'},
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
     {l:'Bloqueadas / canceladas', v:fmt.int(bloqueadas)+' / '+fmt.int(canceladas), s:'situação de churn hoje'},
     pontos!=null
-      ? {l:'Pontuação do mês', v:fmt.int(pontos)+' pts', s:rotuloMes(mesBonificacao())}
-      : {l:'Pontuação', v:'—', s:'não participa da bonificação hoje'},
+      ? {l:'Pontuação do mês', v:fmt.int(pontos)+' pts', s:rotuloMes(mesDoPeriodo)}
+      : ehPontuado(cs)
+        ? {l:'Pontuação', v:'—', s:'sem dados de bonificação em '+rotuloMes(mesDoPeriodo)}
+        : {l:'Pontuação', v:'—', s:'não participa da bonificação'},
   ];
 }
 /* 5 blocos empilhados, cada um a mesma leitura da aba original — só que já
@@ -1917,12 +1935,17 @@ function extraCarteiraCs(){
      {k:'valorPedidos', l:'GMV no período', r:true, f:fmt.moneyCompact},
      {k:'riscoChurn', l:'Risco de churn', f:v=>v||'—'}]));
 
-  const negocios = [...negociosDoCs('cross',cs,p), ...negociosDoCs('up',cs,p)]
-    .sort((a,b)=>b.data.localeCompare(a.data));
-  wrap.appendChild(cardLista('Cross-sell e Upsell fechados no período', negocios,
+  /* Todo negócio criado no período, qualquer status — não só ganho (pedido
+     da Laura, 15/09/2026). Ganho primeiro, depois em aberto, perdido por
+     último; dentro de cada grupo, mais recente primeiro. */
+  const pesoStatus = {Ganho:0, 'Em aberto':1, Perdido:2};
+  const negocios = negociosTodosDoCs(cs,p)
+    .sort((a,b)=>(pesoStatus[a.status]??9)-(pesoStatus[b.status]??9) || b.data.localeCompare(a.data));
+  wrap.appendChild(cardLista('Cross-sell e Upsell criados no período', negocios,
     [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
      {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
-     {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Fechado em', f:fmt.date}]));
+     {k:'estagio', l:'Estágio'},
+     {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}]));
 
   wrap.appendChild(cardLista('Reuniões no período', reunioesDoCs(cs,p),
     [{k:'reuniao', l:'Reunião'}, {k:'cliente', l:'Cliente'},
@@ -1960,9 +1983,13 @@ function METRICAS(){
    número. */
 const MARCA_DAGUA = new Set(['tino60','mensalidade','integracoesAtivas']);
 
-function linhasBonificacao(){
+function linhasBonificacao(mesForcado){
   const b = DATA.bonificacao || {linhas:[], detalhe:[], meses:[]};
-  const mes = mesBonificacao();
+  /* `mesForcado` existe pra Carteira por CS conseguir pedir o mês do período
+     que a Laura escolheu no filtro, em vez do mês "fechado" independente que
+     mesBonificacao() usa (a aba Bonificação continua chamando sem argumento,
+     comportamento igual). */
+  const mes = mesForcado || mesBonificacao();
   const met = METRICAS();
   /* Recorde de cada CS ANTES do mês escolhido. O próprio mês fica de fora de
      propósito: incluí-lo faria a diferença ser sempre zero ou negativa e
