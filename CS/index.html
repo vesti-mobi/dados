@@ -1808,8 +1808,8 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas, <b>todo negócio criado no período</b> — ganho, em aberto ou perdido, com o valor de cada grupo; <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
-    filtros:['csFoco','periodo'],
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Etapa</b> recorta esse "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"); <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
+    filtros:['csFoco','periodo','estagioFoco'],
     semTabela:true,
     linhas:()=>[],
     kpis:()=>kpisCarteiraCs(),
@@ -1829,7 +1829,7 @@ const TABS = [
    por carteira de marca (Laura, 15/09/2026) — não é a mesma lista de quem
    pontua na Bonificação (CS_PONTUADOS, mais abaixo), são coisas diferentes:
    uma é "de quem são essas marcas", a outra é "quem recebe bônus". */
-const CS_CARTEIRA = ['Thamiris Ribeiro', 'Luana Coutinho', 'Cristiane Canatelli'];
+const CS_CARTEIRA = ['Thamiris Ribeiro', 'Luana Coutinho', 'Gabriella Busto'];
 
 function carteiraDoCs(cs){
   return clientesAgregados().filter(c=>c.cs===cs);
@@ -1843,6 +1843,22 @@ function negociosDoCs(categoria, cs, p){
 function negociosTodosDoCs(cs, p){
   return [...negociosDe('cross'), ...negociosDe('up')]
     .filter(n=>n.data>=p.ini && n.data<=p.fim && n.cs===cs);
+}
+/* Negócios ABERTOS AGORA, foto do momento — de propósito SEM filtro de
+   período: "aberto" é um estado atual, não um evento com data (ao contrário
+   de ganho/perdido). Um negócio criado há 4 meses e ainda em aberto tem que
+   aparecer aqui mesmo filtrando "este mês" (pedido da Laura, 15/09/2026: "ele
+   pode estar aberto e não foi criado nesse período"). `estagioFiltro` deixa
+   ver só uma etapa (ex.: só "Montar proposta / Negociação"). */
+function negociosAbertosAgoraDoCs(cs, estagioFiltro){
+  return [...negociosDe('cross'), ...negociosDe('up')].filter(n=>n.status==='Em aberto' && n.cs===cs
+    && (!estagioFiltro || estagioFiltro==='todos' || n.estagio===estagioFiltro));
+}
+/* Etapas abertas que existem de verdade nos dados, pro filtro nunca oferecer
+   uma opção que não devolve nada. */
+function estagiosAbertosDisponiveis(){
+  return [...new Set((DATA.negocios||[]).filter(n=>n.status==='Em aberto').map(n=>n.estagio))]
+    .filter(Boolean).sort();
 }
 function reunioesDoCs(cs, p){
   return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && normalizarCs(r.cs)===cs);
@@ -1889,8 +1905,9 @@ function kpisCarteiraCs(){
   const gmv = soma(carteira,'valorPedidos');
   const negocios = negociosTodosDoCs(cs,p);
   const ganhos = negocios.filter(n=>n.status==='Ganho');
-  const abertos = negocios.filter(n=>n.status==='Em aberto');
   const perdidos = negocios.filter(n=>n.status==='Perdido');
+  const estagioFiltro = estado.filtros.estagioFoco;
+  const abertosAgora = negociosAbertosAgoraDoCs(cs, estagioFiltro);
   const reun = reunioesDoCs(cs,p);
   const fechouReuniao = reun.filter(r=>r.resultado==='Fechou negócio').length;
   const churnLinhas = churnDoCs(cs);
@@ -1908,7 +1925,8 @@ function kpisCarteiraCs(){
     {l:'Marcas na carteira', v:fmt.int(ativas.length), s:fmt.int(carteira.length-ativas.length)+' inativas na base'},
     {l:'GMV no período', v:fmt.moneyCompact(gmv), s:'soma da carteira dela'},
     {l:'Valor ganho (cross + up)', v:fmt.moneyCompact(soma(ganhos,'valor')), s:fmt.int(ganhos.length)+' negócios ganhos no período'},
-    {l:'Negócios em aberto', v:fmt.int(abertos.length), s:fmt.moneyCompact(soma(abertos,'valor'))+' em negociação'},
+    {l:'Negócios em aberto agora', v:fmt.int(abertosAgora.length), s:fmt.moneyCompact(soma(abertosAgora,'valor'))
+      +(estagioFiltro && estagioFiltro!=='todos' ? ' · '+estagioFiltro : ' · foto de hoje, não do período')},
     {l:'Negócios perdidos', v:fmt.int(perdidos.length), s:fmt.moneyCompact(soma(perdidos,'valor'))+' no período'},
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
@@ -1945,6 +1963,16 @@ function extraCarteiraCs(){
     [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
      {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
      {k:'estagio', l:'Estágio'},
+     {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}]));
+
+  /* Foto de agora, sem filtro de período — ver comentário de
+     negociosAbertosAgoraDoCs. Respeita o filtro de Etapa quando escolhido. */
+  const abertosAgora = negociosAbertosAgoraDoCs(cs, estado.filtros.estagioFoco)
+    .sort((a,b)=>b.data.localeCompare(a.data));
+  wrap.appendChild(cardLista('Negócios em aberto agora (foto de hoje)', abertosAgora,
+    [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
+     {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
+     {k:'estagio', l:'Etapa'},
      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}]));
 
   wrap.appendChild(cardLista('Reuniões no período', reunioesDoCs(cs,p),
@@ -2272,7 +2300,7 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro' };
+  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -2617,6 +2645,11 @@ function renderFiltros(t){
   }
   if(t.filtros.includes('csFoco')){
     add('CS', sel(CS_CARTEIRA.map(n=>[n,n]), estado.filtros.csFoco, v=>estado.filtros.csFoco=v));
+  }
+  if(t.filtros.includes('estagioFoco')){
+    add('Etapa (negócios em aberto)', sel(
+      [['todos','Todas as etapas'], ...estagiosAbertosDisponiveis().map(e=>[e,e])],
+      estado.filtros.estagioFoco, v=>estado.filtros.estagioFoco=v));
   }
   if(t.filtros.includes('statusTicket')){
     add('Situação', sel([['todos','Abertos e encerrados'],['abertos','Só abertos'],['encerrados','Só encerrados']],
