@@ -399,6 +399,43 @@ function renderTable(tableId, columns, rows) {
   });
 }
 
+// Exporta o que esta NA TELA (thead/tbody ja renderizados) -- lendo do DOM em
+// vez de recalcular os dados, o CSV sempre bate com os filtros e a ordenacao
+// que a pessoa esta vendo, sem precisar duplicar logica de filtro aqui.
+// Separador ";" (nao ",") porque e' o padrao regional pt-BR que o Excel espera
+// pra abrir direto com um duplo-clique sem vir tudo numa coluna so'.
+function csvCell(v) {
+  const s = String(v ?? "").trim();
+  if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+function exportTableToExcel(tableId, filename) {
+  const tbl = document.getElementById(tableId);
+  if (!tbl) return;
+  const linhas = [];
+  tbl.querySelectorAll("thead th").forEach((th, i) => {
+    linhas[0] = linhas[0] || [];
+    linhas[0][i] = csvCell(th.textContent);
+  });
+  tbl.querySelectorAll("tbody tr").forEach(tr => {
+    linhas.push(Array.from(tr.querySelectorAll("td")).map(td => csvCell(td.textContent)));
+  });
+  const csv = linhas.map(l => l.join(";")).join("\r\n");
+  // BOM no inicio -- sem isso o Excel abre acento (ã, ç, é) quebrado
+  const blob = new Blob(["﻿" + csv], {type: "text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function baixarInadimplentesExcel() {
+  exportTableToExcel("tbl-inadimplentes", `inadimplentes_${new Date().toISOString().slice(0,10)}.csv`);
+}
+
 // ---------- HOME KPIs ----------
 // Marcas com fatura vencida e ainda em aberto ha mais dias que a regua.
 // Nao depende do filtro de periodo -- e' uma foto de hoje, igual Sem VP/Travadas.
