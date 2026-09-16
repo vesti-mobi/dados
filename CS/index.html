@@ -1843,8 +1843,8 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Etapa</b> recorta esse "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"); <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
-    filtros:['csFoco','periodo','estagioFoco'],
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
+    filtros:['csFoco','periodo','produtoFoco','estagioFoco'],
     semTabela:true,
     linhas:()=>[],
     kpis:()=>kpisCarteiraCs(),
@@ -1869,15 +1869,28 @@ const CS_CARTEIRA = ['Thamiris Ribeiro', 'Luana Coutinho', 'Gabriella Busto'];
 function carteiraDoCs(cs){
   return clientesAgregados().filter(c=>c.cs===cs);
 }
+/* Filtro de Produto (Tino/Varejo/Filial/...) da aba — pedido da Laura,
+   16/09/2026: "ver só os negócios desse produto". `estado.filtros.produtoFoco`
+   entra em toda função de negócio desta aba, pra não ter que repetir o
+   filtro em cada card/KPI. */
+function passaProduto(n){
+  const pf = estado.filtros.produtoFoco;
+  return !pf || pf==='todos' || n.produto===pf;
+}
+/* Produtos que existem de verdade nos negócios, pro filtro nunca oferecer
+   uma opção que não devolve nada. */
+function produtosDisponiveis(){
+  return [...new Set((DATA.negocios||[]).map(n=>n.produto))].filter(Boolean).sort();
+}
 function negociosDoCs(categoria, cs, p){
-  return negociosGanhosNoPeriodo(categoria, p).filter(n=>normalizarCs(n.cs)===cs);
+  return negociosGanhosNoPeriodo(categoria, p).filter(n=>normalizarCs(n.cs)===cs && passaProduto(n));
 }
 /* Todo negócio (cross + upsell) CRIADO no período, qualquer status — não só
    ganho. Pedido da Laura, 15/09/2026: "senti falta de negócios abertos no
    período, e perdidos também". */
 function negociosTodosDoCs(cs, p){
   return [...negociosDe('cross'), ...negociosDe('up')]
-    .filter(n=>n.data>=p.ini && n.data<=p.fim && n.cs===cs);
+    .filter(n=>n.data>=p.ini && n.data<=p.fim && n.cs===cs && passaProduto(n));
 }
 /* Negócios ABERTOS AGORA, foto do momento — de propósito SEM filtro de
    período: "aberto" é um estado atual, não um evento com data (ao contrário
@@ -1887,12 +1900,12 @@ function negociosTodosDoCs(cs, p){
    ver só uma etapa (ex.: só "Montar proposta / Negociação"). */
 function negociosAbertosAgoraDoCs(cs, estagioFiltro){
   return [...negociosDe('cross'), ...negociosDe('up')].filter(n=>n.status==='Em aberto' && n.cs===cs
-    && (!estagioFiltro || estagioFiltro==='todos' || n.estagio===estagioFiltro));
+    && (!estagioFiltro || estagioFiltro==='todos' || n.estagio===estagioFiltro) && passaProduto(n));
 }
 /* Etapas abertas que existem de verdade nos dados, pro filtro nunca oferecer
    uma opção que não devolve nada. */
 function estagiosAbertosDisponiveis(){
-  return [...new Set((DATA.negocios||[]).filter(n=>n.status==='Em aberto').map(n=>n.estagio))]
+  return [...new Set((DATA.negocios||[]).filter(n=>n.status==='Em aberto' && passaProduto(n)).map(n=>n.estagio))]
     .filter(Boolean).sort();
 }
 function reunioesDoCs(cs, p){
@@ -2335,7 +2348,7 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos' };
+  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -2681,6 +2694,11 @@ function renderFiltros(t){
   }
   if(t.filtros.includes('csFoco')){
     add('CS', sel(CS_CARTEIRA.map(n=>[n,n]), estado.filtros.csFoco, v=>estado.filtros.csFoco=v));
+  }
+  if(t.filtros.includes('produtoFoco')){
+    add('Produto', sel(
+      [['todos','Todos os produtos'], ...produtosDisponiveis().map(p=>[p,p])],
+      estado.filtros.produtoFoco, v=>estado.filtros.produtoFoco=v));
   }
   if(t.filtros.includes('estagioFoco')){
     add('Etapa (negócios em aberto)', sel(
