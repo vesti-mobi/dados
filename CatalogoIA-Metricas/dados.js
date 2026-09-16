@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-09-16T15:48:20.086Z",
+  "gerado_em": "2026-09-16T23:23:04.474Z",
   "hoje": "2026-09-16",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -20,7 +20,7 @@ window.DADOS = {
     "contas": 10,
     "produtos_total": 687,
     "produtos_7d": 179,
-    "descricoes_total": 907,
+    "descricoes_total": 908,
     "total_estimado": true
   },
   "marcas": [
@@ -36,10 +36,10 @@ window.DADOS = {
       "ativa": true,
       "acessos": 5,
       "buscas": 283,
-      "descricoes": 288,
-      "envios": 293,
+      "descricoes": 289,
+      "envios": 294,
       "primeiro": "2026-08-27T10:08:32.689Z",
-      "ultimo": "2026-09-16T15:32:09.728Z",
+      "ultimo": "2026-09-16T16:01:07.318Z",
       "dias": 0
     },
     {
@@ -490,9 +490,9 @@ window.DADOS = {
         "paradas": 1,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 360,
-        "produtos_7d": 51,
-        "descricoes_total": 459,
+        "produtos_total": 361,
+        "produtos_7d": 52,
+        "descricoes_total": 460,
         "total_estimado": true,
         "produtos_atribuidos": 5
       },
@@ -543,18 +543,18 @@ window.DADOS = {
           "arquetipo": "inocente",
           "tem_conta": true,
           "email": "anderson@mundotaci.com.br",
-          "produtos": 29,
+          "produtos": 30,
           "estimado": false,
-          "produtos_7d": 6,
+          "produtos_7d": 7,
           "ativa": true,
           "acessos": 0,
           "buscas": 0,
-          "descricoes": 29,
-          "envios": 29,
+          "descricoes": 30,
+          "envios": 30,
           "primeiro": "2026-08-27T10:08:32.689Z",
-          "ultimo": "2026-09-16T15:32:09.728Z",
+          "ultimo": "2026-09-16T16:01:07.318Z",
           "dias": 0,
-          "produtos_medidos": 29,
+          "produtos_medidos": 30,
           "atribuido": 0
         },
         {
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 6,
+          "dias": 7,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-09-14",
           "fim": "2026-09-20",
-          "produtos": 19,
+          "produtos": 20,
           "ativas": 3,
           "usaram": 3,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 19,
+          "produtos_medidos": 20,
           "atribuido": 0
         }
       ]
@@ -1188,7 +1188,7 @@ window.DADOS = {
           "envios": 3,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-09-10T18:14:41.472Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 2,
           "atribuido": 0
         },
