@@ -709,6 +709,7 @@ const MOCK = (function buildMock(){
       negocio: p.nome+' — '+c.nome,
       valor: int(900,18000),
       status, estagio,
+      temperatura: pick(['🔥 Quente','🟡 Morno','❄️ Frio']),
       data: dia(int(0,150)),
       cs: c.cs,
     };
@@ -1492,7 +1493,7 @@ const TABS = [
   {
     id:'crossSell', grupo:'Crescimento', nav:'Cross-sell', cor:'#4048B8', cor2:'#12968D',
     titulo:'Cross-sell',
-    desc:'Negócios de produto novo na carteira existente. Vêm do pipeline <b>Expand (Upgrades)</b> do HubSpot, onde cross-sell e upsell ficam juntos — a categoria sai do produto no nome do negócio. <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois).',
+    desc:'Negócios de produto novo na carteira existente. Vêm do pipeline <b>Expand (Upgrades)</b> do HubSpot, onde cross-sell e upsell ficam juntos — a categoria sai do produto no nome do negócio. <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois). <b>Temperatura</b> = propriedade <code>temperatura_do_negocio</code> do HubSpot (🔥 Quente / 🟡 Morno / ❄️ Frio), criada pela Laura em 16/09/2026.',
     filtros:['cliente','cs','periodo','statusDeal'],
     tabela:'Negócios', chaveCliente:'cliente',
     colunas:[
@@ -1501,6 +1502,7 @@ const TABS = [
       COL_CS,
       {k:'valor', l:'Valor', tipo:'money', r:true, forte:true},
       {k:'estagio', l:'Estágio', tipo:'tag'},
+      {k:'temperatura', l:'Temperatura', tipo:'texto'},
     ],
     linhas:()=>negociosDe('cross'),
     kpis:(rows)=>kpisDeal(rows),
@@ -1512,7 +1514,7 @@ const TABS = [
   {
     id:'upsell', grupo:'Crescimento', nav:'Upsell', cor:'#8046C4', cor2:'#12968D',
     titulo:'Upsell',
-    desc:'Expansões do que o cliente já tem — filial, multiloja, upgrade de plano. Mesmo pipeline <b>Expand (Upgrades)</b> do cross-sell; fechado é só o estágio "Ganho (Expand)". <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois).',
+    desc:'Expansões do que o cliente já tem — filial, multiloja, upgrade de plano. Mesmo pipeline <b>Expand (Upgrades)</b> do cross-sell; fechado é só o estágio "Ganho (Expand)". <b>O período filtra pela data de criação do negócio (<code>createdate</code>), não pela de fechamento</b> — pedido da Laura em 15/09/2026. <b>Estágio</b> mostra o estágio atual do negócio no pipeline; o filtro <b>Status</b> continua Ganho/Perdido/Aberto (Aberto = qualquer estágio que não seja um desses dois). <b>Temperatura</b> = propriedade <code>temperatura_do_negocio</code> do HubSpot (🔥 Quente / 🟡 Morno / ❄️ Frio), criada pela Laura em 16/09/2026.',
     filtros:['cliente','cs','periodo','statusDeal'],
     tabela:'Negócios', chaveCliente:'cliente',
     colunas:[
@@ -1521,6 +1523,7 @@ const TABS = [
       COL_CS,
       {k:'valor', l:'Valor', tipo:'money', r:true, forte:true},
       {k:'estagio', l:'Estágio', tipo:'tag'},
+      {k:'temperatura', l:'Temperatura', tipo:'texto'},
     ],
     linhas:()=>negociosDe('up'),
     kpis:(rows)=>kpisDeal(rows),
@@ -2010,7 +2013,7 @@ function extraCarteiraCs(){
   wrap.appendChild(cardLista('Cross-sell e Upsell criados no período', negocios,
     [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
      {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
-     {k:'estagio', l:'Estágio'},
+     {k:'estagio', l:'Estágio'}, {k:'temperatura', l:'Temperatura'},
      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}]));
 
   /* Foto de agora, sem filtro de período — ver comentário de
@@ -2020,7 +2023,7 @@ function extraCarteiraCs(){
   wrap.appendChild(cardLista('Negócios em aberto agora (foto de hoje)', abertosAgora,
     [{k:'negocio', l:'Negócio'}, {k:'cliente', l:'Cliente'}, {k:'produto', l:'Produto'},
      {k:'categoria', l:'Categoria', f:v=>v==='cross'?'Cross-sell':'Upgrade'},
-     {k:'estagio', l:'Etapa'},
+     {k:'estagio', l:'Etapa'}, {k:'temperatura', l:'Temperatura'},
      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}]));
 
   wrap.appendChild(cardLista('Reuniões no período', reunioesDoCs(cs,p),

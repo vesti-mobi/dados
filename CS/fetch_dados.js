@@ -865,7 +865,7 @@ async function puxarHubSpot() {
   });
 
   const deals = await buscarTudo('deals',
-    ['dealname', 'amount', 'dealstage', 'closedate', 'createdate', 'hubspot_owner_id'],
+    ['dealname', 'amount', 'dealstage', 'closedate', 'createdate', 'hubspot_owner_id', 'temperatura_do_negocio'],
     [{ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: expand.id }] }],
     [{ propertyName: 'createdate', direction: 'DESCENDING' }]);
   console.log('  negócios (pipeline Expand)'.padEnd(44) + String(deals.length).padStart(8));
@@ -883,7 +883,9 @@ async function puxarHubSpot() {
      `estagio` guarda o nome cru do estágio do HubSpot (ex.: "Reunião
      agendada", "Ganho (Expand)"), pra tabela mostrar onde o negócio está —
      `status` continua Ganho/Perdido/Em aberto, é o que o filtro da página
-     usa (Em aberto = qualquer estágio que não seja um desses dois). */
+     usa (Em aberto = qualquer estágio que não seja um desses dois).
+     `temperatura` = propriedade nova da Laura, 16/09/2026 (🔥 Quente / 🟡
+     Morno / ❄️ Frio) — sai pura do HubSpot, sem tradução. */
   const negocios = deals.map(d => {
     const p = d.properties;
     const cls = classificar(p.dealname);
@@ -896,10 +898,19 @@ async function puxarHubSpot() {
       valor: r2(p.amount),
       status: estagio[p.dealstage] || 'Em aberto',
       estagio: nomeEstagioExpand[p.dealstage] || '—',
+      temperatura: p.temperatura_do_negocio || '',
       data: iso(p.createdate),
       cs: owners[p.hubspot_owner_id] || '',
     };
-  }).filter(n => n.data && Number(n.data.slice(0, 4)) === ANO);
+  })
+    /* Negócio ABERTO é estado, não evento — filtrar pelo ano de criação
+       derrubava do ar qualquer negócio aberto há mais de 1 ano (Eduardo
+       Vaineras reportou em 16/09/2026: HubSpot mostrava 30 negócios abertos
+       da Thamiris, o painel só 9 — 22 desses 30 tinham sido criados em 2025
+       ou antes e sumiam aqui). Ganho/Perdido continuam só do ano corrente —
+       são eventos datados, o próprio filtro de período de cada aba decide o
+       resto. */
+    .filter(n => n.data && (n.status === 'Em aberto' || Number(n.data.slice(0, 4)) === ANO));
 
   const reunioes = await puxarReunioes(owners);
 
