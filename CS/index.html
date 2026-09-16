@@ -1380,13 +1380,48 @@ function cardLista(titulo, linhas, colunas){
       `<h4>Nada por aqui com esses filtros</h4><p>Amplie o período ou limpe a busca para ver registros.</p>`));
     return card;
   }
-  const scroll = el('div',{class:'table-scroll'});
-  let html = '<table><thead><tr>'+colunas.map(c=>`<th${c.r?' class="r"':''}>${c.l}</th>`).join('')+'</tr></thead><tbody>';
-  linhas.forEach(r=>{
-    html += '<tr>'+colunas.map(c=>`<td${c.r?' class="r num"':''}>${c.f?c.f(r[c.k]):(r[c.k]??'—')}</td>`).join('')+'</tr>';
+  /* Clique na coluna ordena — mesma mecânica do renderTabela das tabelas
+     principais, com estado próprio por card (uma aba pode ter várias listas,
+     cada uma com sua ordenação independente, chaveada pelo título). Pedido
+     da Laura, 15/09/2026, na aba Carteira por CS. */
+  const o = estado.ordemCard[titulo];
+  const linhasOrdenadas = linhas.slice();
+  if(o) linhasOrdenadas.sort((a,b)=>{
+    let x=a[o.k], y=b[o.k];
+    if(x==null && y==null) return 0;
+    if(x==null) return 1;
+    if(y==null) return -1;
+    if(typeof x==='number'&&typeof y==='number') return o.dir*(x-y);
+    return o.dir*String(x).localeCompare(String(y),'pt-BR');
   });
-  html += '</tbody></table>';
-  scroll.innerHTML = html;
+  const scroll = el('div',{class:'table-scroll'});
+  const table = el('table');
+  const thead = el('thead'); const trh = el('tr');
+  colunas.forEach(c=>{
+    const th = el('th', c.r?{class:'r'}:{});
+    if(o && o.k===c.k) th.setAttribute('data-sorted','');
+    const seta = o && o.k===c.k ? (o.dir===1?'▲':'▼') : '▲';
+    th.innerHTML = `<button class="th-btn" type="button">${c.l}<span class="arw">${seta}</span></button>`;
+    th.querySelector('button').onclick=()=>{
+      const cur = estado.ordemCard[titulo];
+      estado.ordemCard[titulo] = (cur && cur.k===c.k) ? {k:c.k, dir:cur.dir*-1} : {k:c.k, dir:c.r?-1:1};
+      renderPagina();
+    };
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh); table.appendChild(thead);
+  const tbody = el('tbody');
+  linhasOrdenadas.forEach(r=>{
+    const tr = el('tr');
+    colunas.forEach(c=>{
+      const td = el('td', c.r?{class:'r num'}:{});
+      td.innerHTML = c.f ? c.f(r[c.k]) : (r[c.k] ?? '—');
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  scroll.appendChild(table);
   card.appendChild(scroll);
   return card;
 }
@@ -2309,6 +2344,7 @@ const estado = {
   aba: 'visaoGeral',
   filtros: filtrosPadrao(),
   ordem: {}, // { abaId: {k, dir} }
+  ordemCard: {}, // { tituloDoCard: {k, dir} } — ordenação própria de cada cardLista
 };
 let ultimoRender = { rows:[], colunas:[] };
 
