@@ -1424,6 +1424,7 @@ function cardLista(titulo, linhas, colunas){
   table.appendChild(tbody);
   scroll.appendChild(table);
   card.appendChild(scroll);
+  ligarTooltips(card);
   return card;
 }
 
@@ -1846,7 +1847,7 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões; <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões, mas só as que têm <b>empresa associada</b> — reunião de agenda pessoal (1:1, interna) sem marca vinculada no HubSpot fica de fora (pedido da Laura, 17/09/2026); <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor. <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
     filtros:['csFoco','periodo','produtoFoco','estagioFoco'],
     semTabela:true,
     linhas:()=>[],
@@ -1911,8 +1912,16 @@ function estagiosAbertosDisponiveis(){
   return [...new Set((DATA.negocios||[]).filter(n=>n.status==='Em aberto' && passaProduto(n)).map(n=>n.estagio))]
     .filter(Boolean).sort();
 }
+/* Só reunião com empresa associada no HubSpot — sem isso entrava item de
+   agenda pessoal (reunião interna, 1:1, etc.) que não é atendimento de
+   marca nenhuma. Pedido da Laura, 17/09/2026: "quero só as reuniões com as
+   marcas". `empresaId` cru não sobrevive até o dados.js (fetch_dados.js
+   descarta de propósito no fim de puxarReunioes), então o sinal que resta
+   é o próprio `cliente`: fica "(sem empresa)" quando a reunião não tem
+   empresa associada no HubSpot. */
 function reunioesDoCs(cs, p){
-  return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && normalizarCs(r.cs)===cs);
+  return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim
+    && normalizarCs(r.cs)===cs && r.cliente !== '(sem empresa)');
 }
 /* Marcos de volume (BigQuery) atribuídos pela MARCA que bateu o marco, não
    por um campo de CS que esse evento não carrega — a mesma ponte que o resto
@@ -2028,6 +2037,7 @@ function extraCarteiraCs(){
 
   wrap.appendChild(cardLista('Reuniões no período', reunioesDoCs(cs,p),
     [{k:'reuniao', l:'Reunião'}, {k:'cliente', l:'Cliente'},
+     {k:'resumo', l:'Resumo', f:v=>v ? `<span class="cell-resumo" data-tip="${escapar(v)}">${escapar(v)}</span>` : '<span class="cell-sub">—</span>'},
      {k:'data', l:'Data', f:fmt.date}, {k:'resultado', l:'Resultado'}]));
 
   wrap.appendChild(cardLista('Marcos de volume no período', marcosDoCs(cs,p),
