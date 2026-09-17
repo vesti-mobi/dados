@@ -900,6 +900,13 @@ async function puxarHubSpot() {
       estagio: nomeEstagioExpand[p.dealstage] || '—',
       temperatura: p.temperatura_do_negocio || '',
       data: iso(p.createdate),
+      /* Data de FECHAMENTO, ao lado da de criação. As abas Cross-sell e Upsell
+         continuam filtrando por `data` (createdate), como a Laura pediu em
+         15/09/2026; `fechadoEm` existe para a aba Gerencial poder separar
+         "oportunidade criada no mês" de "negócio ganho no mês" — um negócio
+         criado em julho e ganho em agosto conta nos dois meses, cada um no seu
+         lugar. Vazio enquanto o negócio não fecha. */
+      fechadoEm: iso(p.closedate),
       cs: owners[p.hubspot_owner_id] || '',
     };
   })

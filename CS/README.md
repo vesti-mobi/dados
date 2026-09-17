@@ -213,16 +213,35 @@ JSONs próprios. Pedido da Laura em 17/09/2026.
 O que mudou em relação ao painel antigo:
 
 - **saíram** os cards de Frete Onlog e de Satisfação (CSAT + NPS);
-- **entraram** dois cards que lá não existiam: **Cross-sell** e **Upsell**;
+- **entraram** cinco que lá não existiam: **Reuniões**, **Novo Tino**, **Novo
+  Oráculo**, **Cross-sell** e **Upsell**;
+- a aba inteira é a **carteira das três CS** — Thamiris, Luana e Gabriella
+  (segundo pedido da Laura, 17/09/2026: "vi gente que não é Gabi/Thamiris/Luana,
+  quero só as marcas delas"). Marca de outra CS não entra em card nenhum. O
+  seletor de CS no topo estreita para uma delas; sem nada marcado valem as três;
 - o recorte é um **mês civil**, escolhido no filtro `Mês` da própria aba — o
   painel antigo misturava "desde jan/2026" com "mês atual", card a card;
-- cada card é **clicável**: abre embaixo os KPIs daquele número e a tabela com as
-  linhas que o formam, ordenável coluna a coluna como as outras tabelas.
+- cada card é **clicável**: abre embaixo os KPIs daquele número, o **gráfico dos
+  últimos 12 meses** daquela métrica e a tabela com as linhas que o formam,
+  ordenável coluna a coluna como as outras tabelas.
+
+### O gráfico de comparação
+
+Pedido da Laura em 17/09/2026: "ao clicar no card, ver um gráfico comparando pra
+saber se o mês está melhor ou pior". Ao abrir qualquer card vem uma barra por mês
+(até 12, ou o que existir no arquivo — as séries que vão para o navegador só têm
+o ano corrente), com **o mês escolhido em cor cheia** e os outros em tom claro,
+mais uma linha de texto do tipo *"Reuniões realizadas: 14 · 56% acima do mês
+anterior (9) · 40% acima da média dos 6 meses anteriores (10)"*. Cards com duas
+métricas — Cross-sell e Upsell — desenham as duas barras lado a lado.
 
 ### O que cada card mede
 
 | Card | Definição | Tabela / objeto de origem |
 |---|---|---|
+| Reuniões | reuniões realizadas no mês (agendamento futuro não entra) e quantas fecharam negócio | HubSpot `meetings` — `hs_meeting_start_time` e o dono; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento, igual à aba Reuniões |
+| Novo Tino | marcas que entraram na base do Tino no mês, se já logaram e quantos eventos geraram | API do Tino — `created_at` da marca lá dentro + série diária de eventos |
+| Novo Oráculo | marcas que passaram a ter o Oráculo no mês, com atendimentos e GMV iniciado | a MENOR entre `o-configurations.created_at` e o primeiro atendimento; a coluna Origem diz qual valeu. **Janeiro/2026 é atípico**: 699 dos 1.055 domínios têm configuração criada no mês em que a tabela nasceu no espelho — ali a data é do espelho, não da venda |
 | **KPIs do topo** | GMV, mensalidade faturada, marcas novas e quem entrou em churn no mês | `MongoDB_Pedidos_Geral` (GMV e pedidos), linhas de plano das faturas Iugu, `odbc_domains.created_at` e a mesma lista da aba Churn |
 | Novos VestiPago | marcas com conta de pagamento criada no mês, e quanto elas já transacionaram | `MongoDB_Payment_Companies.createdAt` (a coluna "Implantado em" da aba VestiPago) + série diária do VestiPago (`MongoDB_Pedidos_Geral` com provider VestiPago) |
 | Churn VestiPago | marcas cuja **última** transação no VestiPago caiu no mês e que seguem paradas: entra na lista com 30+ dias sem transacionar, vira churn confirmado aos 45 (`meta.diasChurn`) | série diária do VestiPago — última data com valor transacionado por marca |
@@ -230,8 +249,24 @@ O que mudou em relação ao painel antigo:
 | GMV do 1º mês completo | marcas que viveram no mês o primeiro mês civil **inteiro** de Vesti (cadastro no mês anterior, ou no dia 1º deste), e o GMV que fizeram nele | `odbc_domains.created_at` + `MongoDB_Pedidos_Geral` |
 | Clientes 80+ pedidos/mês | marcas com 80 ou mais pedidos no mês — **todos** os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado é só dos pagos | `MongoDB_Pedidos_Geral`, por data de criação do pedido |
 | Receita T3+ | mensalidade faturada no mês dos clientes **não-Starter** (plano do cadastro que não casa com `/starter/i`) | linhas de **plano** das faturas Iugu pagas, casadas por CNPJ (as mesmas da coluna Mensalidade da tabela geral) |
-| Cross-sell | negócios de produto novo **ganhos** no mês, pela data de criação — a mesma régua da aba Cross-sell | HubSpot, pipeline **Expand (Upgrades)**, categoria cross |
-| Upsell | **a diferença** que a Vesti passou a ganhar com os upgrades do mês | HubSpot (valor do negócio de upgrade) − faturas Iugu no BigQuery (mensalidade anterior da marca) |
+| Cross-sell | oportunidades de produto novo **criadas** e **ganhas** no mês, contadas separadas | HubSpot, pipeline **Expand (Upgrades)**, categoria cross |
+| Upsell | upgrades **criados** e **ganhos** no mês, e **a diferença** que a Vesti passou a ganhar com os ganhos | HubSpot (valor do negócio de upgrade) − faturas Iugu no BigQuery (mensalidade anterior da marca) |
+
+### Criadas × ganhas (Cross-sell e Upsell)
+
+Terceiro pedido da Laura em 17/09/2026: "senti falta das oportunidades criadas
+além das ganhas". Um negócio tem duas datas, e elas caem em meses diferentes:
+
+- **criada** conta pela data de criação do negócio (`createdate`);
+- **ganha** conta pela data de fechamento (`closedate`).
+
+Assim um negócio criado em julho e ganho em agosto aparece em cada mês no seu
+lugar, em vez de sumir de um deles. A tabela do card lista tudo que **tocou** o
+mês — criado nele, fechado nele, ou os dois — e a coluna *Momento* diz qual foi o
+caso. As abas Cross-sell e Upsell continuam filtrando só por `createdate`, como a
+Laura pediu em 15/09/2026; quem passou a trazer o `closedate` para o `dados.js`
+foi esta aba. Com um `dados.js` anterior a 17/09/2026 o fechamento cai na data de
+criação, que era o comportamento antigo.
 
 ### GMV aqui é pedido PAGO (por que 79 mi e não 106 mi)
 
