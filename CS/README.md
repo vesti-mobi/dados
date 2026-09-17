@@ -162,7 +162,7 @@ de layout continua indo por `node publicar.js`.
 | Todas | Canal | `odbc_domains.partner_id` → `odbc_partners.name` |
 | Tabela geral | Plano | item mais caro da última fatura Iugu paga (tirando desconto/Oráculo) |
 | Tabela geral | Último pedido | `MAX(MongoDB_Pedidos_Geral.settings_createdAt)` |
-| Tabela geral | Pedidos / Valor / Ticket | `MongoDB_Pedidos_Geral`, pagos, por semana |
+| Tabela geral | Pedidos / Valor / Ticket | `MongoDB_Pedidos_Geral`, por dia. Atenção: **Pedidos conta todos** (`COUNT(*)`) e **Valor soma só os pagos** (`payment_isPaid = 'True'`), com teto de R$ 50 mil por pedido |
 | Tabela geral | Interchange | `vestipago_transaction_detail`: `mdrVestiValue + antifraudValue` — fee **já sem a taxa do banco** |
 | Tabela geral | Mensalidade | linhas de **plano** das faturas Iugu pagas, casadas por CNPJ |
 | Tabela geral | Outros (Iugu) | demais linhas da fatura: Oráculo, Filial, Assistente, Ativação |
@@ -221,16 +221,41 @@ O que mudou em relação ao painel antigo:
 
 ### O que cada card mede
 
-| Card | Definição | Fonte |
+| Card | Definição | Tabela / objeto de origem |
 |---|---|---|
-| Novos VestiPago | marcas com conta de pagamento criada no mês, e quanto elas já transacionaram | `MongoDB_Payment_Companies.createdAt` + série do VestiPago |
-| Churn VestiPago | marcas cuja **última** transação no VestiPago caiu no mês e que seguem paradas: entra na lista com 30+ dias sem transacionar, vira churn confirmado aos 45 (`meta.diasChurn`) | série diária do VestiPago |
-| Churn Geral | marcas que entraram em alerta, bloqueio ou cancelamento no mês | a mesma leitura da aba Churn (módulo de vendas + Iugu) |
-| GMV do 1º mês completo | marcas que viveram no mês o primeiro mês civil **inteiro** de Vesti (cadastro no mês anterior, ou no dia 1º deste), e o GMV que fizeram nele | `odbc_domains.created_at` + pedidos pagos |
-| Clientes 80+ pedidos/mês | marcas com 80 ou mais pedidos pagos dentro do mês | série diária da carteira |
-| Receita T3+ | mensalidade faturada no mês dos clientes **não-Starter** (plano que não casa com `/starter/i`) | linhas de plano da fatura Iugu |
-| Cross-sell | negócios de produto novo **ganhos** no mês, pela data de criação — a mesma régua da aba Cross-sell | HubSpot, pipeline Expand (Upgrades) |
-| Upsell | **a diferença** que a Vesti passou a ganhar com os upgrades do mês | HubSpot (valor do plano novo) − Iugu/BigQuery (mensalidade anterior) |
+| **KPIs do topo** | GMV, mensalidade faturada, marcas novas e quem entrou em churn no mês | `MongoDB_Pedidos_Geral` (GMV e pedidos), linhas de plano das faturas Iugu, `odbc_domains.created_at` e a mesma lista da aba Churn |
+| Novos VestiPago | marcas com conta de pagamento criada no mês, e quanto elas já transacionaram | `MongoDB_Payment_Companies.createdAt` (a coluna "Implantado em" da aba VestiPago) + série diária do VestiPago (`MongoDB_Pedidos_Geral` com provider VestiPago) |
+| Churn VestiPago | marcas cuja **última** transação no VestiPago caiu no mês e que seguem paradas: entra na lista com 30+ dias sem transacionar, vira churn confirmado aos 45 (`meta.diasChurn`) | série diária do VestiPago — última data com valor transacionado por marca |
+| Churn Geral | marcas que entraram em alerta, bloqueio ou cancelamento no mês (data do bloqueio, ou o vencimento mais antigo em aberto de quem ainda não foi cortado) | a mesma leitura da aba Churn: módulo `vendas` bloqueado (planilha da automação, via Painel Elisa) + status das faturas na Iugu |
+| GMV do 1º mês completo | marcas que viveram no mês o primeiro mês civil **inteiro** de Vesti (cadastro no mês anterior, ou no dia 1º deste), e o GMV que fizeram nele | `odbc_domains.created_at` + `MongoDB_Pedidos_Geral` |
+| Clientes 80+ pedidos/mês | marcas com 80 ou mais pedidos no mês — **todos** os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado é só dos pagos | `MongoDB_Pedidos_Geral`, por data de criação do pedido |
+| Receita T3+ | mensalidade faturada no mês dos clientes **não-Starter** (plano do cadastro que não casa com `/starter/i`) | linhas de **plano** das faturas Iugu pagas, casadas por CNPJ (as mesmas da coluna Mensalidade da tabela geral) |
+| Cross-sell | negócios de produto novo **ganhos** no mês, pela data de criação — a mesma régua da aba Cross-sell | HubSpot, pipeline **Expand (Upgrades)**, categoria cross |
+| Upsell | **a diferença** que a Vesti passou a ganhar com os upgrades do mês | HubSpot (valor do negócio de upgrade) − faturas Iugu no BigQuery (mensalidade anterior da marca) |
+
+### GMV aqui é pedido PAGO (por que 79 mi e não 106 mi)
+
+Pergunta da Laura em 17/09/2026: agosto/2026 dá **R$ 79 mi** nesta aba e mais de
+**R$ 100 mi** no Painel Elisa e no painel de Sucesso do Cliente. Os dois estão
+certos — medem coisas diferentes:
+
+| | Regra | Agosto/2026 |
+|---|---|---|
+| Painel de Clientes CS (esta aba e a tabela geral) | `SUM(summary_total)` **só onde `payment_isPaid = 'True'`**, pedido abaixo de R$ 50 mil, marcas da carteira (módulo `vendas`), pela data de **criação** do pedido | **R$ 79,3 mi** — 60.851 pedidos |
+| Painel Elisa (`gmv_elisa.json`) | `valTotal` — todo pedido criado no mês, pago, pendente ou cancelado | R$ 106,0 mi |
+| Sucesso do Cliente (`mensal[].valTotal`) | idem | R$ 106,3 mi |
+| Sucesso do Cliente (`mensal[].valPagos`) | só pagos — **a mesma régua daqui** | R$ 79,4 mi |
+
+Os R$ 79,4 mi de pagos do painel de Sucesso do Cliente batem com os R$ 79,3 mi
+daqui (a sobra é o teto de R$ 50 mil por pedido e as marcas fora da carteira), o que
+confirma que a diferença é **pago × criado**, e não erro de carga.
+
+A contagem de pedidos, porém, sempre foi a CHEIA (`COUNT(*)`) — na primeira versão
+desta aba eu a rotulei de "pedidos pagos", o que estava errado. Corrigido em
+17/09/2026: a carga passou a mandar também `pedidosPagos` na série, a aba mostra as
+duas contagens e o ticket médio divide GMV pago por pedido pago. Enquanto o
+`dados.js` publicado for anterior a essa carga, a coluna *Pagos* aparece como `—` e
+o rótulo diz de onde o número está saindo.
 
 ### O número do card de Upsell
 

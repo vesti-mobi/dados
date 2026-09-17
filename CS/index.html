@@ -1225,8 +1225,15 @@ const idxMensal = (()=>{
       const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
       const mes = String(x.data).slice(0,7);
       const k = dom+'|'+mes;
-      const a = carteira[k] || (carteira[k] = {pedidos:0, gmv:0, mensalidade:0, cliente:x.cliente, dominio:x.dominio||null});
+      const a = carteira[k] || (carteira[k] = {pedidos:0, pagos:0, gmv:0, mensalidade:0, cliente:x.cliente, dominio:x.dominio||null});
+      /* `pedidos` é a contagem CHEIA do dia (pago, pendente, cancelado) e `gmv`
+         soma só o que foi pago — a carga sempre separou assim. `pedidosPagos`
+         só existe nas cargas a partir de 17/09/2026; num dados.js mais velho
+         ele vem ausente e as colunas de pedido pago aparecem como "—", em vez
+         de fingir que todo pedido foi pago. */
       a.pedidos += Number(x.pedidos)||0;
+      if(x.pedidosPagos!=null) a.pagos += Number(x.pedidosPagos)||0;
+      else a.pagos = null;
       a.gmv += Number(x.valorPedidos)||0;
       a.mensalidade += Number(x.receitaMensalidade)||0;
     });
@@ -1343,8 +1350,10 @@ function linhasGmvPrimeiroMes(m){
   return DATA.clientes.filter(c=>primeiroMesCompleto(c.dataCadastro)===m).map(c=>{
     const a = carteira[(c.dominio||c.nome)+'|'+m] || {};
     return {nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
-      cadastro:c.dataCadastro, pedidos:a.pedidos||0, gmv:a.gmv||0,
-      ticket: a.pedidos ? a.gmv/a.pedidos : 0};
+      /* marca estreante que não vendeu nada no mês não tem linha na série: aí
+         são zero pedidos pagos, não "a carga não separa pago". */
+      cadastro:c.dataCadastro, pedidos:a.pedidos||0, pagos:('pagos' in a ? a.pagos : 0), gmv:a.gmv||0,
+      ticket: a.pagos ? a.gmv/a.pagos : (a.pedidos ? a.gmv/a.pedidos : 0)};
   }).sort((a,b)=>b.gmv-a.gmv);
 }
 
@@ -1358,7 +1367,8 @@ function linhasTop80(m){
     if(mes!==m || (a.pedidos||0) < META_PEDIDOS_MES) return;
     const marca = marcaDoDominio(dom, a.cliente);
     out.push({nome:marca.nome, cs:marca.cs, dominio:marca.dominio, canal:marca.canal,
-      pedidos:a.pedidos, gmv:a.gmv, ticket: a.pedidos ? a.gmv/a.pedidos : 0});
+      pedidos:a.pedidos, pagos:a.pagos, gmv:a.gmv,
+      ticket: a.pagos ? a.gmv/a.pagos : (a.pedidos ? a.gmv/a.pedidos : 0)});
   });
   return out.sort((a,b)=>b.pedidos-a.pedidos);
 }
@@ -1485,7 +1495,7 @@ const CARDS_GERENCIAL = [
   {
     id:'gmv1', titulo:'GMV do 1º mês completo', cor:'#1E74C8',
     capa:'Marcas que viveram neste mês o primeiro mês civil inteiro de Vesti',
-    fonte:'BigQuery — data de criação do domínio + pedidos pagos da marca no mês.',
+    fonte:'BigQuery — data de criação do domínio (<code>odbc_domains.created_at</code>) + pedidos da marca no mês (<code>MongoDB_Pedidos_Geral</code>, pela data de criação do pedido). O GMV conta só pedido PAGO; a contagem de pedidos mostra os dois.',
     resumo:m=>{ const l = linhasGmvPrimeiroMes(m);
       return {v:fmt.moneyCompact(soma(l,'gmv')), s: l.length ? `${l.length} marca(s) · ${fmt.int(soma(l,'pedidos'))} pedidos` : 'nenhuma marca estreando no mês'}; },
     kpis:m=>{ const l = linhasGmvPrimeiroMes(m); const comVenda = l.filter(x=>x.pedidos>0);
@@ -1493,30 +1503,38 @@ const CARDS_GERENCIAL = [
         {l:'GMV do 1º mês', v:fmt.moneyCompact(soma(l,'gmv')), s:'todas as marcas estreando'},
         {l:'Marcas no 1º mês', v:fmt.int(l.length), s:'cadastro no mês anterior'},
         {l:'Venderam algo', v:fmt.int(comVenda.length), s:pctTexto(comVenda.length,l.length)+' das estreantes'},
-        {l:'Pedidos pagos', v:fmt.int(soma(l,'pedidos')), s:'somados no mês'},
+        {l:'Pedidos no mês', v:fmt.int(soma(l,'pedidos')), s: l.some(x=>x.pagos==null) ? 'pagos e não pagos'
+          : fmt.int(soma(l,'pagos'))+' pagos (o GMV é só deles)'},
       ]; },
     colunas:[COL_NOME, COL_CS_CARD, {k:'canal', l:'Canal'}, {k:'cadastro', l:'Cadastro', f:fmt.date},
-      {k:'pedidos', l:'Pedidos', r:true, f:fmt.int}, {k:'gmv', l:'GMV do mês', r:true, f:fmt.money},
+      {k:'pedidos', l:'Pedidos', r:true, f:fmt.int},
+      {k:'pagos', l:'Pagos', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'gmv', l:'GMV pago no mês', r:true, f:fmt.money},
       {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
     linhas:linhasGmvPrimeiroMes,
   },
   {
     id:'top80', titulo:'Clientes 80+ pedidos/mês', cor:'#B7791F',
-    capa:'Marcas que bateram 80 pedidos pagos dentro do mês',
-    fonte:'BigQuery — pedidos pagos por marca no mês (mesma base da tabela geral).',
+    capa:'Marcas que bateram 80 pedidos dentro do mês',
+    fonte:'BigQuery — <code>MongoDB_Pedidos_Geral</code>, pedidos por marca no mês (mesma base da tabela geral). A meta de 80 conta <b>todos</b> os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado soma só os pagos.',
     resumo:m=>{ const l = linhasTop80(m);
-      return {v:fmt.int(l.length), s: l.length ? `${fmt.int(soma(l,'pedidos'))} pedidos · ${fmt.moneyCompact(soma(l,'gmv'))}` : 'ninguém bateu a meta no mês'}; },
+      return {v:fmt.int(l.length), s: l.length ? `${fmt.int(soma(l,'pedidos'))} pedidos · ${fmt.moneyCompact(soma(l,'gmv'))} pagos` : 'ninguém bateu a meta no mês'}; },
     kpis:m=>{ const l = linhasTop80(m);
       const ativas = DATA.clientes.filter(c=>c.status==='ativo').length;
       return [
         {l:'Marcas 80+', v:fmt.int(l.length), s:pctTexto(l.length, ativas)+' da carteira ativa'},
-        {l:'Pedidos dessas marcas', v:fmt.int(soma(l,'pedidos')), s:'no mês'},
-        {l:'GMV dessas marcas', v:fmt.moneyCompact(soma(l,'gmv')), s:'no mês'},
-        {l:'Ticket médio', v:fmt.money(soma(l,'pedidos') ? soma(l,'gmv')/soma(l,'pedidos') : 0), s:'GMV ÷ pedidos'},
+        {l:'Pedidos dessas marcas', v:fmt.int(soma(l,'pedidos')), s: l.some(x=>x.pagos==null) ? 'pagos e não pagos'
+          : fmt.int(soma(l,'pagos'))+' pagos no mês'},
+        {l:'GMV pago dessas marcas', v:fmt.moneyCompact(soma(l,'gmv')), s:'só pedido pago entra'},
+        (()=>{ const semPagos = l.some(x=>x.pagos==null);
+          const base = semPagos ? soma(l,'pedidos') : soma(l,'pagos');
+          return {l:'Ticket médio', v:fmt.money(base ? soma(l,'gmv')/base : 0),
+            s: semPagos ? 'GMV pago ÷ pedidos (esta carga não separa pago)' : 'GMV pago ÷ pedidos pagos'}; })(),
       ]; },
     colunas:[COL_NOME, COL_CS_CARD, {k:'canal', l:'Canal'},
       {k:'pedidos', l:'Pedidos no mês', r:true, f:fmt.int},
-      {k:'gmv', l:'GMV no mês', r:true, f:fmt.money},
+      {k:'pagos', l:'Pagos', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'gmv', l:'GMV pago no mês', r:true, f:fmt.money},
       {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
     linhas:linhasTop80,
   },
@@ -1592,13 +1610,16 @@ function cardGerencial(id){ return CARDS_GERENCIAL.find(c=>c.id===id) }
 function kpisGerencial(){
   const m = mesGerencial();
   const {carteira} = idxMensal();
-  let gmv=0, pedidos=0, receita=0;
+  let gmv=0, pedidos=0, pagos=0, temPagos=true, receita=0;
   Object.entries(carteira).forEach(([k,a])=>{ if(!k.endsWith('|'+m)) return;
-    gmv += a.gmv||0; pedidos += a.pedidos||0; receita += a.mensalidade||0 });
+    gmv += a.gmv||0; pedidos += a.pedidos||0; receita += a.mensalidade||0;
+    if(a.pagos==null) temPagos=false; else pagos += a.pagos });
   const novas = DATA.clientes.filter(c=>String(c.dataCadastro||'').slice(0,7)===m).length;
   const churn = linhasChurnGeral(m).length;
   return [
-    {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s:fmt.int(pedidos)+' pedidos pagos no mês'},
+    {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s: temPagos
+      ? fmt.int(pagos)+' pedidos pagos de '+fmt.int(pedidos)+' no mês'
+      : fmt.int(pedidos)+' pedidos no mês (pagos e não pagos)'},
     {l:'Mensalidade faturada', v:fmt.moneyCompact(receita), s:'linhas de plano do Iugu'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
     {l:'Entraram em churn', v:fmt.int(churn), s:'alerta, bloqueio ou cancelamento'},
@@ -1967,6 +1988,7 @@ const TABS = [
     titulo:'Gerencial',
     desc:'Os mesmos cards do <a href="https://vesti-mobi.github.io/dados/PainelCSGerencial/" target="_blank" rel="noopener">Painel CS Gerencial</a>, refeitos em cima do <b>BigQuery</b> que já alimenta este painel — o antigo lia Fabric e planilhas. <b>Cada card abre os dados por trás dele</b>: clique e a tabela aparece embaixo, com os KPIs daquele número. '
       + 'Saiu o card de <b>Frete Onlog</b> e entraram <b>Cross-sell</b> e <b>Upsell</b>. No de Upsell o número é a <b>diferença</b>, não o valor do plano novo: a marca que pagava 499 e foi para 1.299 entra como 800 — valor do negócio de upgrade no HubSpot menos a última mensalidade dela no Iugu antes do upgrade. Quem não tinha mensalidade no Iugu (paga por fora, canal parceiro) fica com o ganho em branco e é contada à parte, para não inflar o total. '
+      + '<b>GMV aqui é só pedido PAGO</b>, com teto de R$ 50 mil por pedido e pela data de criação do pedido — a mesma régua do resto deste painel. Por isso o número é menor que o do Painel Elisa e o do painel de Sucesso do Cliente, que somam todo pedido criado, inclusive pendente e cancelado: agosto/2026 dá R$ 79 mi aqui e R$ 106 mi lá. A contagem de pedidos mostra os dois lados (total e pagos). '
       + 'Tudo é recortado pelo <b>mês</b> escolhido no filtro, mês civil fechado. Também ficou de fora o card de <b>Satisfação (CSAT + NPS)</b> do painel antigo: era o único número que não existe no BigQuery (vinha de planilhas e de um formulário do HubSpot), e a Laura pediu que não viesse.',
     filtros:['mesGerencial'],
     semTabela:true,

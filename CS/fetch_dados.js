@@ -1612,7 +1612,14 @@ function montar(bqd, hsd, tinoDados) {
     const m = porDom.get(dom);
     clientesSeries.push({
       data: dia, cliente: m.nome, dominio: dom,
-      pedidos: v.pedidos || 0, valorPedidos: v.valorPedidos || 0,
+      /* `pedidos` conta TODOS os pedidos do dia e `valorPedidos` soma só os
+         PAGOS — é assim desde sempre, e é o que faz o GMV do painel (pago) ser
+         menor que o dos painéis que somam pedido pendente e cancelado junto.
+         `pedidosPagos` passou a viajar na série em 17/09/2026 para a aba
+         Gerencial poder mostrar as duas contagens e um ticket médio que divida
+         GMV pago por pedido pago. */
+      pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
+      valorPedidos: v.valorPedidos || 0,
       receitaInterchange: v.receitaInterchange || 0,
       receitaMensalidade: v.receitaMensalidade || 0,
       receitaOutrosIugu: v.receitaOutrosIugu || 0,
