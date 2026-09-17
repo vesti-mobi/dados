@@ -404,6 +404,33 @@ td.strong{font-weight:600}
 .section-label .eyebrow{white-space:nowrap}
 .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
+/* --- cards da aba Gerencial --- */
+.gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:22px}
+.gcard{
+  display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
+  background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gc,var(--acc));
+  border-radius:var(--r-lg);box-shadow:var(--shadow);padding:15px 17px 14px;
+  font-family:inherit;color:inherit;transition:transform .13s ease,box-shadow .13s ease,background .13s ease;
+}
+.gcard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(17,20,24,.05), 0 16px 28px -18px rgba(17,20,24,.45)}
+.gcard.on{background:var(--gc-soft,var(--acc-soft));border-color:var(--gc,var(--acc))}
+.gc-t{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc,var(--ink-3))}
+.gc-v{font-family:var(--f-display);font-size:25px;font-weight:600;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;line-height:1.1;margin-top:5px}
+.gc-s{font-size:11.5px;color:var(--ink-3);line-height:1.35}
+.gc-go{margin-top:9px;font-size:11.5px;font-weight:600;color:var(--gc,var(--acc))}
+
+.gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
+.gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+.gdet-head .eyebrow{color:var(--gc,var(--acc))}
+.gdet-head h2{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
+.gdet-head p{margin:0;color:var(--ink-2);font-size:12.5px;max-width:78ch}
+.gdet-head .btn{margin-left:auto}
+.gdetalhe .kpis{border-top-color:var(--gc,var(--acc))}
+.gdetalhe .kpi:first-child{background:var(--surface)}
+.gdetalhe .kpi:first-child .eyebrow{color:var(--ink-3)}
+.gdetalhe .kpi:first-child .kpi-val{color:var(--gc,var(--acc))}
+
 /* --- responsivo --- */
 @media (max-width:1080px){
   .app{grid-template-columns:1fr}
@@ -1147,6 +1174,487 @@ function linhasChurn(){
 }
 
 /* ============================================================================
+   3b. ABA GERENCIAL — os mesmos números do Painel CS Gerencial
+   (https://vesti-mobi.github.io/dados/PainelCSGerencial/), refeitos aqui em
+   cima do BigQuery que já alimenta o resto deste painel, em vez do Fabric +
+   planilhas do painel antigo. Pedido da Laura em 17/09/2026.
+
+   Diferenças de propósito em relação ao painel antigo:
+     · fora o card de Frete Onlog (a Laura pediu que não viesse);
+     · entram dois cards novos, Cross-sell e Upsell, que o painel antigo não
+       tinha — o de Upsell mostra a DIFERENÇA que a Vesti passou a ganhar com
+       o upgrade, não o valor cheio do plano novo;
+     · o recorte é um MÊS civil (o painel antigo misturava "desde jan/2026"
+       com "mês atual" card a card);
+     · fora também o card de Satisfação (CSAT + NPS), tirado a pedido da Laura
+       em 17/09/2026: era o único que não saía do BigQuery — dependia das
+       planilhas de OKR/NPS e do formulário do HubSpot.
+   ========================================================================== */
+
+/* Meses oferecidos no filtro: do começo da janela de dados até o mês do último
+   dia carregado, do mais recente para o mais antigo (quem abre a aba quer o
+   mês que acabou de fechar). */
+const MESES_GERENCIAL = (()=>{
+  const out = [];
+  let m = LIMITE_DADOS.ini.slice(0,7);
+  const fim = LIMITE_DADOS.fim.slice(0,7);
+  while(m <= fim){
+    out.push(m);
+    const [y,mm] = m.split('-').map(Number);
+    m = new Date(Date.UTC(y, mm, 1)).toISOString().slice(0,7);
+  }
+  return out.reverse();
+})();
+function mesGerencial(){ return estado.filtros.mesGerencial || MESES_GERENCIAL[0] }
+function mesAnterior(m){ const [y,mm]=m.split('-').map(Number);
+  return new Date(Date.UTC(y, mm-2, 1)).toISOString().slice(0,7) }
+function janelaDoMes(m){ return {ini:m+'-01', fim:ultimoDiaDoMes(m+'-01')} }
+
+const CLIENTE_POR_DOM = (()=>{ const m={}; DATA.clientes.forEach(c=>{ if(c.dominio) m[c.dominio]=c }); return m })();
+
+/* Índice mês a mês das séries diárias. As séries têm ~85 mil linhas e a aba
+   volta a somar tudo a cada clique de card — então o índice é montado uma vez
+   só, na primeira abertura da aba, e reaproveitado. */
+const idxMensal = (()=>{
+  let cache = null;
+  return ()=>{
+    if(cache) return cache;
+    const carteira = {};      // dom|mês -> {pedidos, gmv, mensalidade}
+    const mensalPorDom = {};  // dom -> [[mês, mensalidade], ...] em ordem
+    DATA.clientesSeries.forEach(x=>{
+      const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
+      const mes = String(x.data).slice(0,7);
+      const k = dom+'|'+mes;
+      const a = carteira[k] || (carteira[k] = {pedidos:0, gmv:0, mensalidade:0, cliente:x.cliente, dominio:x.dominio||null});
+      a.pedidos += Number(x.pedidos)||0;
+      a.gmv += Number(x.valorPedidos)||0;
+      a.mensalidade += Number(x.receitaMensalidade)||0;
+    });
+    Object.entries(carteira).forEach(([k,a])=>{
+      if(a.mensalidade <= 0) return;
+      const [dom, mes] = k.split('|');
+      (mensalPorDom[dom] || (mensalPorDom[dom]=[])).push([mes, a.mensalidade]);
+    });
+    Object.values(mensalPorDom).forEach(l=>l.sort((x,y)=>x[0].localeCompare(y[0])));
+
+    const vp = {};       // dom|mês -> {valor, cartao, pix, pagos}
+    const ultimaVp = {}; // dom -> última data com valor transacionado
+    const nomeVp = {};   // dom -> nome do cliente na série do VestiPago
+    (DATA.vestiPago.series||[]).forEach(x=>{
+      const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
+      const dia = String(x.data).slice(0,10);
+      const k = dom+'|'+dia.slice(0,7);
+      const a = vp[k] || (vp[k] = {valor:0, cartao:0, pix:0, pagos:0});
+      a.valor += Number(x.valor)||0;
+      a.cartao += Number(x.valorCartao)||0;
+      a.pix += Number(x.valorPix)||0;
+      a.pagos += Number(x.linksPagos)||0;
+      if(x.cliente) nomeVp[dom] = x.cliente;
+      if((Number(x.valor)||0) > 0 && (!ultimaVp[dom] || dia > ultimaVp[dom])) ultimaVp[dom] = dia;
+    });
+    return (cache = {carteira, mensalPorDom, vp, ultimaVp, nomeVp});
+  };
+})();
+
+/* Nome, CS e canal de um domínio — as séries trazem o nome, mas quem manda é
+   o cadastro (mesma régua das outras abas). */
+function marcaDoDominio(dom, nomeReserva){
+  const c = CLIENTE_POR_DOM[dom];
+  return { nome: (c && c.nome) || nomeReserva || dom,
+           cs: (c && c.cs) || CS_POR_DOM[dom] || 'Sem CS',
+           canal: (c && c.canal) || 'Sem canal',
+           plano: (c && c.plano) || null,
+           status: c ? c.status : null,
+           dominio: CLIENTE_POR_DOM[dom] ? dom : (/^\d+$/.test(String(dom)) ? dom : null) };
+}
+
+/* Mensalidade cobrada da marca ANTES de uma data — a última fatura de plano do
+   Iugu em mês anterior ao do upgrade. É a base do ganho do card de Upsell. */
+function mensalidadeAntesDe(dom, mes){
+  const l = idxMensal().mensalPorDom[dom]; if(!l || !l.length) return null;
+  let achou = null;
+  for(const [m, v] of l){ if(m < mes) achou = {mes:m, valor:v}; else break }
+  return achou;
+}
+
+/* --- 1. Novos VestiPago --------------------------------------------------- */
+function linhasVpNovos(m){
+  const {vp} = idxMensal();
+  return (DATA.vestiPago.tabela||[]).filter(v=>String(v.implantado||'').slice(0,7)===m)
+    .map(v=>{
+      const dom = v.dominio || v.cliente;
+      const s = vp[dom+'|'+m] || {};
+      const marca = marcaDoDominio(dom, v.cliente);
+      return {nome:marca.nome, cs:v.cs||marca.cs, dominio:marca.dominio, implantado:v.implantado,
+        valor:s.valor||0, pix:s.pix||0, cartao:s.cartao||0, pagos:s.pagos||0};
+    })
+    .sort((a,b)=>b.valor-a.valor || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+}
+
+/* --- 2. Churn VestiPago ---------------------------------------------------
+   Marca cuja ÚLTIMA transação no VestiPago caiu no mês escolhido — ou seja,
+   parou ali. Ninguém entra na lista no calor do momento: só depois de
+   `DIAS_SUMIDO_VP` dias sem transação (um ciclo mensal inteiro), porque uma
+   semana sem link pago é rotina, não churn. Acima de `diasChurn` (45 por
+   padrão, o mesmo número que o resto do painel usa) vira churn confirmado;
+   entre um e outro fica como "em observação". Por isso o mês corrente
+   aparece quase vazio: a marca que parou ontem ainda não é churn. */
+const DIAS_SUMIDO_VP = 30;
+function linhasVpChurn(m){
+  const {ultimaVp, vp, nomeVp} = idxMensal();
+  const lim = DATA.meta.diasChurn || 45;
+  return Object.entries(ultimaVp).filter(([,d])=>d.slice(0,7)===m).map(([dom,d])=>{
+    const marca = marcaDoDominio(dom, nomeVp[dom]);
+    const s = vp[dom+'|'+m] || {};
+    const dias = diasDe(d);
+    return {nome:marca.nome, cs:marca.cs, dominio:marca.dominio, ultima:d, dias,
+      confirmado: dias!=null && dias>=lim,
+      estagio: dias!=null && dias>=lim ? 'Churn confirmado' : 'Em observação',
+      situacao: marca.status==='ativo' ? 'Ativa na Vesti' : 'Inativa na Vesti',
+      valor:s.valor||0, pix:s.pix||0, cartao:s.cartao||0, pagos:s.pagos||0};
+  }).filter(x=>x.dias!=null && x.dias>=DIAS_SUMIDO_VP)
+    .sort((a,b)=>b.valor-a.valor);
+}
+
+/* --- 3. Churn Geral -------------------------------------------------------
+   Mesma leitura da aba Churn (módulo de vendas cortado + fatura do Iugu),
+   recortada pelo mês em que a situação começou. */
+function linhasChurnGeral(m){
+  return (DATA.churn.linhas||[]).filter(c=>String(c.bloqueadoEm||c.vencMaisAntigo||'').slice(0,7)===m)
+    .map(c=>({nome:c.cliente, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
+      situacao:c.situacao, desde:c.bloqueadoEm||c.vencMaisAntigo,
+      ultimoPagamento:c.ultimoPagamento, mensalidade:c.valorMensal||0,
+      emAberto:c._semDivida ? 0 : (c.valorEmAberto||0)}))
+    .sort((a,b)=>(b.mensalidade||0)-(a.mensalidade||0));
+}
+
+/* --- 4. GMV do 1º mês completo -------------------------------------------
+   Marca cadastrada no mês anterior (ou no dia 1º deste mês) faz aqui o seu
+   primeiro mês civil inteiro de Vesti — é esse GMV que o painel antigo
+   acompanhava para saber se a marca nova "engrenou". */
+function primeiroMesCompleto(dataCadastro){
+  if(!dataCadastro) return null;
+  const [y,m,d] = dataCadastro.split('-').map(Number);
+  if(d === 1) return dataCadastro.slice(0,7);
+  return new Date(Date.UTC(y, m, 1)).toISOString().slice(0,7);
+}
+function linhasGmvPrimeiroMes(m){
+  const {carteira} = idxMensal();
+  return DATA.clientes.filter(c=>primeiroMesCompleto(c.dataCadastro)===m).map(c=>{
+    const a = carteira[(c.dominio||c.nome)+'|'+m] || {};
+    return {nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
+      cadastro:c.dataCadastro, pedidos:a.pedidos||0, gmv:a.gmv||0,
+      ticket: a.pedidos ? a.gmv/a.pedidos : 0};
+  }).sort((a,b)=>b.gmv-a.gmv);
+}
+
+/* --- 5. Clientes 80+ pedidos no mês --------------------------------------- */
+const META_PEDIDOS_MES = 80;
+function linhasTop80(m){
+  const {carteira} = idxMensal();
+  const out = [];
+  Object.entries(carteira).forEach(([k,a])=>{
+    const [dom, mes] = k.split('|');
+    if(mes!==m || (a.pedidos||0) < META_PEDIDOS_MES) return;
+    const marca = marcaDoDominio(dom, a.cliente);
+    out.push({nome:marca.nome, cs:marca.cs, dominio:marca.dominio, canal:marca.canal,
+      pedidos:a.pedidos, gmv:a.gmv, ticket: a.pedidos ? a.gmv/a.pedidos : 0});
+  });
+  return out.sort((a,b)=>b.pedidos-a.pedidos);
+}
+
+/* --- 6. Receita T3+ (mensalidade dos não-Starter) -------------------------
+   Mesma pergunta do painel antigo: quanto de mensalidade os clientes que não
+   são Starter pagaram no mês. A fonte aqui é a fatura do Iugu já classificada
+   pela carga (só as linhas de plano entram em `receitaMensalidade`). */
+function ehStarter(plano){ return /starter/i.test(String(plano||'')) }
+function linhasT3Plus(m){
+  const {carteira} = idxMensal();
+  const ant = mesAnterior(m);
+  const out = [];
+  Object.entries(carteira).forEach(([k,a])=>{
+    const [dom, mes] = k.split('|');
+    if(mes!==m || (a.mensalidade||0) <= 0) return;
+    const marca = marcaDoDominio(dom, a.cliente);
+    if(ehStarter(marca.plano)) return;
+    const antes = carteira[dom+'|'+ant];
+    out.push({nome:marca.nome, cs:marca.cs, dominio:marca.dominio, plano:marca.plano||'—',
+      mensalidade:a.mensalidade, anterior:(antes && antes.mensalidade)||0,
+      variacao: a.mensalidade - ((antes && antes.mensalidade)||0)});
+  });
+  return out.sort((a,b)=>b.mensalidade-a.mensalidade);
+}
+
+/* --- 7. Cross-sell -------------------------------------------------------- */
+function linhasCrossMes(m){
+  return negociosGanhosNoPeriodo('cross', janelaDoMes(m)).map(n=>({
+    nome:n.cliente, cs:n.cs, produto:n.produto||'—', negocio:n.negocio,
+    valor:n.valor||0, data:n.data, dominio:n.dominio}))
+    .sort((a,b)=>b.valor-a.valor);
+}
+
+/* --- 8. Upsell: a diferença que a Vesti passou a ganhar --------------------
+   O negócio de upgrade no HubSpot carrega o valor do plano NOVO (1.100, por
+   exemplo). O que interessa aqui é o quanto isso aumentou a conta da marca:
+   plano novo MENOS a última mensalidade que ela pagava no Iugu antes do
+   upgrade (BigQuery). Marca sem mensalidade anterior no Iugu — paga por fora,
+   canal parceiro, cadastro sem plano — fica com o ganho em branco e é contada
+   à parte no KPI; somar o valor cheio nesses casos inflaria o número.
+   Escolha da Laura em 17/09/2026, contra a alternativa de comparar a fatura
+   depois com a de antes: o ganho apareceria só um ou dois meses depois, e ela
+   quer ver no mês em que o upgrade foi fechado. */
+function linhasUpsellMes(m){
+  return negociosGanhosNoPeriodo('up', janelaDoMes(m)).map(n=>{
+    const dom = n.dominio || DOM_POR_CLIENTE[n.cliente];
+    const antes = dom ? mensalidadeAntesDe(dom, m) : null;
+    return {nome:n.cliente, cs:n.cs, negocio:n.negocio, dominio:n.dominio, data:n.data,
+      valor:n.valor||0, antes: antes ? antes.valor : null, mesAntes: antes ? antes.mes : null,
+      ganho: antes ? (n.valor||0) - antes.valor : null};
+  }).sort((a,b)=>(b.ganho??-1)-(a.ganho??-1));
+}
+
+/* ---------------------------------------------------------------------------
+   Os oito cards. Cada um diz o que mostra na capa (`resumo`), o que mede
+   quando é aberto (`kpis`) e a tabela que abre embaixo (`colunas` + `linhas`).
+   --------------------------------------------------------------------------- */
+const COL_NOME = {k:'nome', l:'Marca'};
+const COL_CS_CARD = {k:'cs', l:'CS'};
+
+const CARDS_GERENCIAL = [
+  {
+    id:'vpNovos', titulo:'Novos VestiPago', cor:'#00B894',
+    capa:'Marcas com conta de pagamento criada dentro do mês',
+    fonte:'BigQuery — criação da conta de pagamento (mesma data da coluna "Implantado em" da aba VestiPago).',
+    resumo:m=>{ const l = linhasVpNovos(m);
+      return {v:fmt.int(l.length), s: l.length ? fmt.moneyCompact(soma(l,'valor'))+' transacionados no mês' : 'nenhuma marca nova no mês'}; },
+    kpis:m=>{ const l = linhasVpNovos(m);
+      return [
+        {l:'Marcas novas no VestiPago', v:fmt.int(l.length), s:'conta criada no mês'},
+        {l:'Transacionado no mês', v:fmt.moneyCompact(soma(l,'valor')), s:'só as marcas novas'},
+        {l:'PIX', v:fmt.moneyCompact(soma(l,'pix')), s:pctTexto(soma(l,'pix'),soma(l,'valor'))+' do volume'},
+        {l:'Cartão', v:fmt.moneyCompact(soma(l,'cartao')), s:pctTexto(soma(l,'cartao'),soma(l,'valor'))+' do volume'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'implantado', l:'Conta criada em', f:fmt.date},
+      {k:'valor', l:'Transacionado no mês', r:true, f:fmt.money},
+      {k:'pix', l:'PIX', r:true, f:fmt.money}, {k:'cartao', l:'Cartão', r:true, f:fmt.money},
+      {k:'pagos', l:'Links pagos', r:true, f:fmt.int}],
+    linhas:linhasVpNovos,
+  },
+  {
+    id:'vpChurn', titulo:'Churn VestiPago', cor:'#E17055',
+    capa:'Marcas cuja última transação no VestiPago foi neste mês e que seguem sem transacionar',
+    fonte:'BigQuery — série diária do VestiPago (última data com valor transacionado por marca). Entra na lista quem está há '+DIAS_SUMIDO_VP+'+ dias sem transacionar; vira churn confirmado aos '+(DATA.meta.diasChurn||45)+'.',
+    resumo:m=>{ const l = linhasVpChurn(m); const conf = l.filter(x=>x.confirmado).length;
+      return {v:fmt.int(l.length), s: l.length ? `${conf} confirmado(s) · ${fmt.moneyCompact(soma(l,'valor'))} no último mês`
+        : (diasDe(ultimoDiaDoMes(m+'-01')) < DIAS_SUMIDO_VP ? 'mês recente demais para afirmar churn' : 'ninguém parou no mês')}; },
+    kpis:m=>{ const l = linhasVpChurn(m); const lim = DATA.meta.diasChurn||45;
+      const conf = l.filter(x=>x.confirmado), ativas = l.filter(x=>x.situacao==='Ativa na Vesti');
+      return [
+        {l:'Marcas que pararam', v:fmt.int(l.length), s:`última transação no mês, ${DIAS_SUMIDO_VP}+ dias sem transacionar`},
+        {l:'Churn confirmado', v:fmt.int(conf.length), s:`${lim}+ dias sem transacionar`},
+        {l:'Ainda clientes da Vesti', v:fmt.int(ativas.length), s:'pararam só o VestiPago'},
+        {l:'Volume do último mês', v:fmt.moneyCompact(soma(l,'valor')), s:'o que deixou de passar por mês'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'estagio', l:'Estágio'}, {k:'situacao', l:'Situação na Vesti'},
+      {k:'ultima', l:'Última transação', f:fmt.date},
+      {k:'dias', l:'Sem transacionar há', r:true, f:v=>v==null?'—':fmt.int(v)+' d'},
+      {k:'valor', l:'Volume no mês', r:true, f:fmt.money},
+      {k:'pix', l:'PIX', r:true, f:fmt.money}, {k:'cartao', l:'Cartão', r:true, f:fmt.money}],
+    linhas:linhasVpChurn,
+  },
+  {
+    id:'churnGeral', titulo:'Churn Geral', cor:'#C0453B',
+    capa:'Marcas que entraram em alerta, bloqueio ou cancelamento no mês',
+    fonte:'Mesma leitura da aba Churn: módulo de vendas cortado (planilha da automação) + fatura do Iugu no BigQuery.',
+    resumo:m=>{ const l = linhasChurnGeral(m); const canc = l.filter(x=>x.situacao==='cancelada').length;
+      return {v:fmt.int(l.length), s: l.length ? `${canc} cancelada(s) · ${fmt.moneyCompact(soma(l,'mensalidade'))}/mês em risco` : 'ninguém entrou em churn no mês'}; },
+    kpis:m=>{ const l = linhasChurnGeral(m);
+      const por = s=>l.filter(x=>x.situacao===s);
+      return [
+        {l:'Marcas afetadas', v:fmt.int(l.length), s:'situação começou neste mês'},
+        {l:'Canceladas', v:fmt.int(por('cancelada').length), s:'módulo cortado e fatura cancelada'},
+        {l:'Bloqueadas', v:fmt.int(por('bloqueada').length), s:'11+ dias, ou módulo já cortado'},
+        {l:'Mensalidade em risco', v:fmt.moneyCompact(soma(l,'mensalidade')), s:fmt.moneyCompact(soma(l,'emAberto'))+' em aberto'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'situacao', l:'Situação'}, {k:'canal', l:'Canal'},
+      {k:'desde', l:'Desde', f:fmt.date}, {k:'ultimoPagamento', l:'Último pagamento', f:fmt.date},
+      {k:'mensalidade', l:'Mensalidade', r:true, f:fmt.money},
+      {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
+    linhas:linhasChurnGeral,
+  },
+  {
+    id:'gmv1', titulo:'GMV do 1º mês completo', cor:'#1E74C8',
+    capa:'Marcas que viveram neste mês o primeiro mês civil inteiro de Vesti',
+    fonte:'BigQuery — data de criação do domínio + pedidos pagos da marca no mês.',
+    resumo:m=>{ const l = linhasGmvPrimeiroMes(m);
+      return {v:fmt.moneyCompact(soma(l,'gmv')), s: l.length ? `${l.length} marca(s) · ${fmt.int(soma(l,'pedidos'))} pedidos` : 'nenhuma marca estreando no mês'}; },
+    kpis:m=>{ const l = linhasGmvPrimeiroMes(m); const comVenda = l.filter(x=>x.pedidos>0);
+      return [
+        {l:'GMV do 1º mês', v:fmt.moneyCompact(soma(l,'gmv')), s:'todas as marcas estreando'},
+        {l:'Marcas no 1º mês', v:fmt.int(l.length), s:'cadastro no mês anterior'},
+        {l:'Venderam algo', v:fmt.int(comVenda.length), s:pctTexto(comVenda.length,l.length)+' das estreantes'},
+        {l:'Pedidos pagos', v:fmt.int(soma(l,'pedidos')), s:'somados no mês'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'canal', l:'Canal'}, {k:'cadastro', l:'Cadastro', f:fmt.date},
+      {k:'pedidos', l:'Pedidos', r:true, f:fmt.int}, {k:'gmv', l:'GMV do mês', r:true, f:fmt.money},
+      {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
+    linhas:linhasGmvPrimeiroMes,
+  },
+  {
+    id:'top80', titulo:'Clientes 80+ pedidos/mês', cor:'#B7791F',
+    capa:'Marcas que bateram 80 pedidos pagos dentro do mês',
+    fonte:'BigQuery — pedidos pagos por marca no mês (mesma base da tabela geral).',
+    resumo:m=>{ const l = linhasTop80(m);
+      return {v:fmt.int(l.length), s: l.length ? `${fmt.int(soma(l,'pedidos'))} pedidos · ${fmt.moneyCompact(soma(l,'gmv'))}` : 'ninguém bateu a meta no mês'}; },
+    kpis:m=>{ const l = linhasTop80(m);
+      const ativas = DATA.clientes.filter(c=>c.status==='ativo').length;
+      return [
+        {l:'Marcas 80+', v:fmt.int(l.length), s:pctTexto(l.length, ativas)+' da carteira ativa'},
+        {l:'Pedidos dessas marcas', v:fmt.int(soma(l,'pedidos')), s:'no mês'},
+        {l:'GMV dessas marcas', v:fmt.moneyCompact(soma(l,'gmv')), s:'no mês'},
+        {l:'Ticket médio', v:fmt.money(soma(l,'pedidos') ? soma(l,'gmv')/soma(l,'pedidos') : 0), s:'GMV ÷ pedidos'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'canal', l:'Canal'},
+      {k:'pedidos', l:'Pedidos no mês', r:true, f:fmt.int},
+      {k:'gmv', l:'GMV no mês', r:true, f:fmt.money},
+      {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
+    linhas:linhasTop80,
+  },
+  {
+    id:'t3plus', titulo:'Receita T3+', cor:'#2D3436',
+    capa:'Mensalidade dos clientes que não são Starter',
+    fonte:'BigQuery — linhas de plano da fatura do Iugu, mesma régua da coluna Mensalidade da tabela geral.',
+    resumo:m=>{ const l = linhasT3Plus(m);
+      return {v:fmt.moneyCompact(soma(l,'mensalidade')), s: l.length ? `${l.length} empresa(s) não-Starter` : 'sem mensalidade no mês'}; },
+    kpis:m=>{ const l = linhasT3Plus(m), ant = linhasT3Plus(mesAnterior(m));
+      const tot = soma(l,'mensalidade'), totAnt = soma(ant,'mensalidade');
+      const dif = tot - totAnt;
+      return [
+        {l:'Mensalidade no mês', v:fmt.moneyCompact(tot), s:'clientes não-Starter'},
+        {l:'Mês anterior', v:fmt.moneyCompact(totAnt), s:(dif>=0?'+':'')+fmt.moneyCompact(dif)+' vs '+rotuloMes(mesAnterior(m))},
+        {l:'Empresas no mês', v:fmt.int(l.length), s:(ant.length?fmt.int(l.length-ant.length):'—')+' vs mês anterior'},
+        {l:'Mensalidade média', v:fmt.money(l.length ? tot/l.length : 0), s:'por empresa'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'plano', l:'Plano'},
+      {k:'mensalidade', l:'Mensalidade no mês', r:true, f:fmt.money},
+      {k:'anterior', l:'Mês anterior', r:true, f:fmt.money},
+      {k:'variacao', l:'Variação', r:true, f:v=>(v>0?'+':'')+fmt.money(v)}],
+    linhas:linhasT3Plus,
+  },
+  {
+    id:'cross', titulo:'Cross-sell', cor:'#4048B8',
+    capa:'Negócios de produto novo ganhos no mês',
+    fonte:'HubSpot — pipeline Expand (Upgrades), negócios ganhos, pela data de criação (mesma régua da aba Cross-sell).',
+    resumo:m=>{ const l = linhasCrossMes(m);
+      return {v:fmt.int(l.length), s: l.length ? fmt.moneyCompact(soma(l,'valor'))+' em negócios ganhos' : 'nenhum cross-sell ganho no mês'}; },
+    kpis:m=>{ const l = linhasCrossMes(m);
+      const p = janelaDoMes(m);
+      const todos = negociosDe('cross').filter(n=>n.data>=p.ini && n.data<=p.fim);
+      const abertos = todos.filter(n=>n.status==='Em aberto');
+      const produtos = [...new Set(l.map(x=>x.produto))].filter(Boolean);
+      return [
+        {l:'Cross-sell ganho', v:fmt.int(l.length), s:'negócios fechados no mês'},
+        {l:'Valor ganho', v:fmt.moneyCompact(soma(l,'valor')), s:'soma dos negócios'},
+        {l:'Em aberto no mês', v:fmt.int(abertos.length), s:fmt.moneyCompact(soma(abertos,'valor'))+' em jogo'},
+        {l:'Produtos vendidos', v:fmt.int(produtos.length), s:produtos.slice(0,3).join(', ')||'—'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'produto', l:'Produto'}, {k:'negocio', l:'Negócio'},
+      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'data', l:'Criado em', f:fmt.date}],
+    linhas:linhasCrossMes,
+  },
+  {
+    id:'up', titulo:'Upsell — ganho no upgrade', cor:'#8046C4',
+    capa:'Quanto a mais por mês a Vesti passou a receber com os upgrades',
+    fonte:'HubSpot (valor do plano novo) menos a última mensalidade da marca no Iugu/BigQuery antes do upgrade.',
+    resumo:m=>{ const l = linhasUpsellMes(m); const com = l.filter(x=>x.ganho!=null);
+      return {v:fmt.moneyCompact(soma(com,'ganho')), s: l.length ? `${l.length} upgrade(s) · ${fmt.moneyCompact(soma(com,'ganho')*12)}/ano` : 'nenhum upgrade ganho no mês'}; },
+    kpis:m=>{ const l = linhasUpsellMes(m); const com = l.filter(x=>x.ganho!=null);
+      const ganho = soma(com,'ganho');
+      return [
+        {l:'Ganho a mais por mês', v:fmt.moneyCompact(ganho), s:'plano novo − mensalidade anterior'},
+        {l:'Upgrades ganhos', v:fmt.int(l.length), s:fmt.moneyCompact(soma(l,'valor'))+' em planos novos'},
+        {l:'Ganho anualizado', v:fmt.moneyCompact(ganho*12), s:'se todos seguirem 12 meses'},
+        {l:'Sem base anterior', v:fmt.int(l.length-com.length), s:'sem mensalidade no Iugu antes do upgrade'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'negocio', l:'Negócio'},
+      {k:'valor', l:'Plano novo', r:true, f:fmt.money},
+      {k:'antes', l:'Mensalidade anterior', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'ganho', l:'Ganho por mês', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'mesAntes', l:'Base da comparação', f:v=>v?rotuloMes(v):'—'},
+      {k:'data', l:'Ganho em', f:fmt.date}],
+    linhas:linhasUpsellMes,
+  },
+];
+
+function cardGerencial(id){ return CARDS_GERENCIAL.find(c=>c.id===id) }
+
+/* KPIs do topo da aba: o retrato do mês antes de abrir qualquer card. */
+function kpisGerencial(){
+  const m = mesGerencial();
+  const {carteira} = idxMensal();
+  let gmv=0, pedidos=0, receita=0;
+  Object.entries(carteira).forEach(([k,a])=>{ if(!k.endsWith('|'+m)) return;
+    gmv += a.gmv||0; pedidos += a.pedidos||0; receita += a.mensalidade||0 });
+  const novas = DATA.clientes.filter(c=>String(c.dataCadastro||'').slice(0,7)===m).length;
+  const churn = linhasChurnGeral(m).length;
+  return [
+    {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s:fmt.int(pedidos)+' pedidos pagos no mês'},
+    {l:'Mensalidade faturada', v:fmt.moneyCompact(receita), s:'linhas de plano do Iugu'},
+    {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
+    {l:'Entraram em churn', v:fmt.int(churn), s:'alerta, bloqueio ou cancelamento'},
+  ];
+}
+
+/* Grade de cards + o detalhe do card aberto. É o `extra` da aba: a aba não tem
+   tabela principal, o conteúdo inteiro é isto. */
+function renderGerencial(){
+  const m = mesGerencial();
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'section-label'},
+    `<span class="eyebrow">Cards de ${rotuloMes(m)} · clique para abrir os dados</span>`));
+
+  const grid = el('div',{class:'gcards'});
+  CARDS_GERENCIAL.forEach(c=>{
+    const r = c.resumo(m);
+    const aberto = estado.cardGerencial===c.id;
+    const btn = el('button',{class:'gcard'+(aberto?' on':''), type:'button',
+      style:`--gc:${c.cor};--gc-soft:${tint(c.cor,.10)}`, 'aria-expanded':String(aberto)},
+      `<span class="gc-t">${c.titulo}</span>
+       <span class="gc-v">${r.v}</span>
+       <span class="gc-s">${r.s}</span>
+       <span class="gc-go">${aberto?'fechar':'ver os dados →'}</span>`);
+    btn.onclick=()=>{ estado.cardGerencial = aberto ? null : c.id; renderPagina();
+      if(!aberto) requestAnimationFrame(()=>{ const d=$('#gdetalhe'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }) };
+    grid.appendChild(btn);
+  });
+  wrap.appendChild(grid);
+
+  const c = cardGerencial(estado.cardGerencial);
+  if(!c) return wrap;
+
+  const det = el('div',{class:'gdetalhe', id:'gdetalhe', style:`--gc:${c.cor}`});
+  const head = el('div',{class:'gdet-head'});
+  head.innerHTML = `<div><span class="eyebrow">${rotuloMes(m)}</span><h2>${c.titulo}</h2>
+                    <p>${c.capa}. <b>Fonte:</b> ${c.fonte}</p></div>`;
+  const fechar = el('button',{class:'btn btn-ghost',type:'button'},'Fechar card');
+  fechar.onclick=()=>{ estado.cardGerencial=null; renderPagina() };
+  head.appendChild(fechar);
+  det.appendChild(head);
+
+  const kpis = c.kpis(m);
+  if(kpis.length){
+    const box = el('div',{class:'kpis'});
+    kpis.forEach(k=>box.appendChild(el('div',{class:'kpi'},
+      `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
+    det.appendChild(box);
+  }
+  det.appendChild(cardLista(c.titulo+' · '+rotuloMes(m), c.linhas(m), c.colunas,
+    `<h4>Nenhum registro em ${rotuloMes(m)}</h4><p>${c.vazio || 'Escolha outro mês no filtro acima.'}</p>`));
+  wrap.appendChild(det);
+  return wrap;
+}
+
+/* ============================================================================
    4. CONFIGURAÇÃO DAS ABAS
    ========================================================================== */
 const COL_CS = {k:'cs', l:'CS', tipo:'cs'};
@@ -1371,14 +1879,16 @@ function resumoPorCliente(rows, chave, campoData){
 /* Card de lista simples — mesma casca visual da tabela principal
    (table-card/table-scroll), sem ordenação nem export: é um resumo, não uma
    tabela de trabalho nova. */
-function cardLista(titulo, linhas, colunas){
+function cardLista(titulo, linhas, colunas, vazio){
   const card = el('div',{class:'table-card'});
   const head = el('div',{class:'table-head'});
   head.innerHTML = `<h3>${titulo}</h3><span class="count">${linhas.length} ${linhas.length===1?'registro':'registros'}</span>`;
   card.appendChild(head);
   if(!linhas.length){
-    card.appendChild(el('div',{class:'empty'},
-      `<h4>Nada por aqui com esses filtros</h4><p>Amplie o período ou limpe a busca para ver registros.</p>`));
+    /* `vazio` deixa cada chamador explicar o próprio vazio — na aba Gerencial
+       "amplie o período" não ajuda, porque lá o recorte é um mês só. */
+    card.appendChild(el('div',{class:'empty'}, vazio
+      || `<h4>Nada por aqui com esses filtros</h4><p>Amplie o período ou limpe a busca para ver registros.</p>`));
     return card;
   }
   /* Clique na coluna ordena — mesma mecânica do renderTabela das tabelas
@@ -1451,6 +1961,18 @@ const TABS = [
       {t:'Produtos implantados no período', categorias:()=>categoriasImplantados(), pizza:true},
       {t:'Marcos de volume no período (BigQuery)', categorias:()=>categoriasMarcos()},
     ],
+  },
+  {
+    id:'gerencial', grupo:'Visão geral', nav:'Gerencial', cor:'#6C5CE7', cor2:'#00B894',
+    titulo:'Gerencial',
+    desc:'Os mesmos cards do <a href="https://vesti-mobi.github.io/dados/PainelCSGerencial/" target="_blank" rel="noopener">Painel CS Gerencial</a>, refeitos em cima do <b>BigQuery</b> que já alimenta este painel — o antigo lia Fabric e planilhas. <b>Cada card abre os dados por trás dele</b>: clique e a tabela aparece embaixo, com os KPIs daquele número. '
+      + 'Saiu o card de <b>Frete Onlog</b> e entraram <b>Cross-sell</b> e <b>Upsell</b>. No de Upsell o número é a <b>diferença</b>, não o valor do plano novo: a marca que pagava 499 e foi para 1.299 entra como 800 — valor do negócio de upgrade no HubSpot menos a última mensalidade dela no Iugu antes do upgrade. Quem não tinha mensalidade no Iugu (paga por fora, canal parceiro) fica com o ganho em branco e é contada à parte, para não inflar o total. '
+      + 'Tudo é recortado pelo <b>mês</b> escolhido no filtro, mês civil fechado. Também ficou de fora o card de <b>Satisfação (CSAT + NPS)</b> do painel antigo: era o único número que não existe no BigQuery (vinha de planilhas e de um formulário do HubSpot), e a Laura pediu que não viesse.',
+    filtros:['mesGerencial'],
+    semTabela:true,
+    linhas:()=>[],
+    kpis:()=>kpisGerencial(),
+    extra:()=>renderGerencial(),
   },
   {
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
@@ -2361,7 +2883,7 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
+  mesBonificacao:'', mesGerencial:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -2371,6 +2893,7 @@ const estado = {
   filtros: filtrosPadrao(),
   ordem: {}, // { abaId: {k, dir} }
   ordemCard: {}, // { tituloDoCard: {k, dir} } — ordenação própria de cada cardLista
+  cardGerencial: null, // card aberto na aba Gerencial (null = só a grade)
 };
 let ultimoRender = { rows:[], colunas:[] };
 
@@ -2671,6 +3194,12 @@ function renderFiltros(t){
       estado.filtros.pipeline, v=>estado.filtros.pipeline=v));
   }
   if(t.filtros.includes('periodo')) add('Período', seletorDePeriodo());
+  if(t.filtros.includes('mesGerencial')){
+    /* Mês civil fechado, do mais recente para o mais antigo — a aba Gerencial
+       responde "como foi o mês", não "os últimos N dias". */
+    add('Mês', sel(MESES_GERENCIAL.map(m=>[m, rotuloMes(m)]),
+      mesGerencial(), v=>{estado.filtros.mesGerencial=v}));
+  }
   if(t.filtros.includes('mesBonificacao')){
     const meses = (DATA.bonificacao||{}).meses || [];
     /* Do mais recente para o mais antigo: quem abre a aba quer o mês que
@@ -3851,6 +4380,13 @@ function atualizarTopo(){
   if(t && t.filtros && !t.filtros.includes('periodo') && t.filtros.includes('mesBonificacao')){
     $('#wkNow').textContent = rotuloMes(mesBonificacao());
     $('#wkRange').textContent = 'mês fechado';
+    return;
+  }
+  /* Mesmo caso na aba Gerencial: o recorte dela é um mês civil. */
+  if(t && t.filtros && t.filtros.includes('mesGerencial')){
+    const m = mesGerencial();
+    $('#wkNow').textContent = rotuloMes(m);
+    $('#wkRange').textContent = m === LIMITE_DADOS.fim.slice(0,7) ? 'mês em andamento' : 'mês fechado';
     return;
   }
   const p = periodo();

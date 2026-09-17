@@ -1,6 +1,7 @@
 # Painel de Clientes — CS
 
-Painel estático de **10 abas**, grão de **dia**, filtrado por **data de início e fim**.
+Painel estático de **13 abas**, grão de **dia**, filtrado por **data de início e fim** —
+menos a de Bonificação e a Gerencial, que trabalham em **mês civil fechado**.
 
 ```
 index.html          o painel (layout + lógica, sem dependência externa)
@@ -185,6 +186,7 @@ de layout continua indo por `node publicar.js`.
 | Tickets | ticket / pipeline / estágio | HubSpot `tickets`, todos os pipelines |
 | Tickets | Situação | estágio marcado como fechado (`metadata.ticketState`) ou `closed_date` preenchida |
 | Tickets | Cliente e Canal | empresa associada ao ticket → marca do cadastro (nome, nome sem ruído ou CNPJ) |
+| Gerencial | tudo | não é fonte nova: recorta por mês civil o que já existe em séries da carteira, VestiPago, Churn, cadastro e negócios do HubSpot |
 | Carteira por CS | tudo | não é fonte nova: reagrupa por pessoa (Thamiris, Luana, Cristiane) o que já existe em Tabela geral, Cross-sell/Upsell, Reuniões, Marcos de volume, Churn e Bonificação — pedido da Laura em 15/09/2026 pra ver "como está indo o trabalho" de cada CS num lugar só |
 
 ### Domínio nas abas
@@ -200,6 +202,62 @@ documentada na linha "Cliente e Canal" da tabela acima, não um defeito da colun
 
 Inventar um id quando o nome não casa seria pior do que deixar em branco: a coluna
 existe justamente para ser colada na busca do admin.
+
+## Aba Gerencial (17/09/2026)
+
+Traz para dentro deste painel os cards do
+[Painel CS Gerencial](https://vesti-mobi.github.io/dados/PainelCSGerencial/),
+**com a fonte trocada para o BigQuery** — o painel antigo lia Fabric, planilhas e
+JSONs próprios. Pedido da Laura em 17/09/2026.
+
+O que mudou em relação ao painel antigo:
+
+- **saíram** os cards de Frete Onlog e de Satisfação (CSAT + NPS);
+- **entraram** dois cards que lá não existiam: **Cross-sell** e **Upsell**;
+- o recorte é um **mês civil**, escolhido no filtro `Mês` da própria aba — o
+  painel antigo misturava "desde jan/2026" com "mês atual", card a card;
+- cada card é **clicável**: abre embaixo os KPIs daquele número e a tabela com as
+  linhas que o formam, ordenável coluna a coluna como as outras tabelas.
+
+### O que cada card mede
+
+| Card | Definição | Fonte |
+|---|---|---|
+| Novos VestiPago | marcas com conta de pagamento criada no mês, e quanto elas já transacionaram | `MongoDB_Payment_Companies.createdAt` + série do VestiPago |
+| Churn VestiPago | marcas cuja **última** transação no VestiPago caiu no mês e que seguem paradas: entra na lista com 30+ dias sem transacionar, vira churn confirmado aos 45 (`meta.diasChurn`) | série diária do VestiPago |
+| Churn Geral | marcas que entraram em alerta, bloqueio ou cancelamento no mês | a mesma leitura da aba Churn (módulo de vendas + Iugu) |
+| GMV do 1º mês completo | marcas que viveram no mês o primeiro mês civil **inteiro** de Vesti (cadastro no mês anterior, ou no dia 1º deste), e o GMV que fizeram nele | `odbc_domains.created_at` + pedidos pagos |
+| Clientes 80+ pedidos/mês | marcas com 80 ou mais pedidos pagos dentro do mês | série diária da carteira |
+| Receita T3+ | mensalidade faturada no mês dos clientes **não-Starter** (plano que não casa com `/starter/i`) | linhas de plano da fatura Iugu |
+| Cross-sell | negócios de produto novo **ganhos** no mês, pela data de criação — a mesma régua da aba Cross-sell | HubSpot, pipeline Expand (Upgrades) |
+| Upsell | **a diferença** que a Vesti passou a ganhar com os upgrades do mês | HubSpot (valor do plano novo) − Iugu/BigQuery (mensalidade anterior) |
+
+### O número do card de Upsell
+
+O negócio de upgrade no HubSpot carrega o **valor do plano novo**. O card mostra o
+que interessa para a conversa de gestão: **quanto a mais por mês** a marca passou a
+pagar. Marca que pagava 499 e foi para 1.299 entra como **800**, não como 1.299.
+
+A base da subtração é a **última mensalidade que a marca pagou no Iugu em mês
+anterior ao upgrade** (BigQuery), e a coluna *Base da comparação* mostra de que mês
+ela saiu. Marca **sem mensalidade no Iugu antes do upgrade** — paga por fora, canal
+parceiro, cadastro sem plano — fica com o ganho em branco e é contada no KPI
+*Sem base anterior*: somar o valor cheio nesses casos inflaria o total.
+
+A alternativa considerada (comparar a fatura do mês seguinte ao upgrade contra a do
+mês anterior, tudo no BigQuery) foi descartada com a Laura em 17/09/2026: é mais
+fiel ao caixa, mas o ganho só apareceria um ou dois meses depois — os upgrades de
+agosto e setembro de 2026 ainda não estavam na fatura no dia em que a aba foi
+escrita.
+
+### A aba é 100% BigQuery
+
+O painel antigo tinha um card de **Satisfação (CSAT + NPS)**, e ele **não veio** —
+decisão da Laura em 17/09/2026. Era o único número da tela que não existe no lake:
+NPS e CSAT do Oráculo moram em planilhas (a do Oráculo, em comentários de célula) e
+o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da mesma
+carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
+números forem para o BigQuery, o card volta como os outros.
 
 ## Ressalvas que mudam a leitura do número
 
