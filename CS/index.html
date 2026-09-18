@@ -1255,7 +1255,7 @@ const idxMensal = (()=>{
       const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
       const mes = String(x.data).slice(0,7);
       const k = dom+'|'+mes;
-      const a = carteira[k] || (carteira[k] = {pedidos:0, pagos:0, gmv:0, mensalidade:0, cliente:x.cliente, dominio:x.dominio||null});
+      const a = carteira[k] || (carteira[k] = {pedidos:0, pagos:0, gmv:0, mensalidade:0, outrosIugu:0, cliente:x.cliente, dominio:x.dominio||null});
       /* `pedidos` é a contagem CHEIA do dia (pago, pendente, cancelado) e `gmv`
          soma só o que foi pago — a carga sempre separou assim. `pedidosPagos`
          só existe nas cargas a partir de 17/09/2026; num dados.js mais velho
@@ -1266,6 +1266,7 @@ const idxMensal = (()=>{
       else a.pagos = null;
       a.gmv += Number(x.valorPedidos)||0;
       a.mensalidade += Number(x.receitaMensalidade)||0;
+      a.outrosIugu += Number(x.receitaOutrosIugu)||0;
     });
     Object.entries(carteira).forEach(([k,a])=>{
       if(a.mensalidade <= 0) return;
@@ -1472,10 +1473,19 @@ function linhasTop80(m){
   return out.sort((a,b)=>b.pedidos-a.pedidos);
 }
 
-/* --- 9. Receita T3+ (mensalidade dos não-Starter) -------------------------
-   Mesma pergunta do painel antigo: quanto de mensalidade os clientes que não
-   são Starter pagaram no mês. A fonte aqui é a fatura do Iugu já classificada
-   pela carga (só as linhas de plano entram em `receitaMensalidade`). */
+/* --- 9. Receita T3+ (a fatura inteira dos não-Starter) --------------------
+   Mesma pergunta do painel antigo: quanto os clientes que não são Starter
+   pagaram no mês. Entra QUALQUER marca cujo plano do cadastro não case com
+   /starter/i — não é um tier específico: Pro, Avançado, Profissional,
+   Essencial, Básico, Portal Têxtil, Light, Conecta, todos contam.
+
+   Desde 18/09/2026 (pergunta e decisão da Laura) o valor é a FATURA INTEIRA do
+   Iugu, e não só a linha de plano: `receitaMensalidade` (plano e integração) +
+   `receitaOutrosIugu` (Oráculo, filial, assistente, ativação e setup). É o que
+   o `fetch_t3plus.py` do painel antigo somava. As colunas mostram as duas
+   partes separadas, porque a conversa de upgrade é sobre o plano e a de
+   cross-sell é sobre o resto. Desconto concedido entra como linha negativa da
+   própria fatura, então já sai descontado. */
 function ehStarter(plano){ return /starter/i.test(String(plano||'')) }
 function linhasT3Plus(m){
   const {carteira} = idxMensal();
@@ -1484,15 +1494,18 @@ function linhasT3Plus(m){
   const out = [];
   Object.entries(carteira).forEach(([k,a])=>{
     const [dom, mes] = k.split('|');
-    if(mes!==m || (a.mensalidade||0) <= 0 || !doms.has(dom)) return;
+    if(mes!==m || !doms.has(dom)) return;
+    const total = (a.mensalidade||0) + (a.outrosIugu||0);
+    if(total <= 0) return;
     const marca = marcaDoDominio(dom, a.cliente);
     if(ehStarter(marca.plano)) return;
-    const antes = carteira[dom+'|'+ant];
+    const b = carteira[dom+'|'+ant];
+    const antes = b ? (b.mensalidade||0) + (b.outrosIugu||0) : 0;
     out.push({nome:marca.nome, cs:marca.cs, dominio:marca.dominio, plano:marca.plano||'—',
-      valorMensalidade:a.mensalidade, anterior:(antes && antes.mensalidade)||0,
-      variacao: a.mensalidade - ((antes && antes.mensalidade)||0)});
+      valorPlano:a.mensalidade||0, valorOutros:a.outrosIugu||0, valorTotal:total,
+      anterior:antes, variacao: total - antes});
   });
-  return out.sort((a,b)=>b.valorMensalidade-a.valorMensalidade);
+  return out.sort((a,b)=>b.valorTotal-a.valorTotal);
 }
 
 /* --- 10/11. Cross-sell e Upsell: criadas E ganhas -------------------------
@@ -1730,23 +1743,28 @@ const CARDS_GERENCIAL = [
   },
   {
     id:'t3plus', titulo:'Receita T3+', cor:'#2D3436',
-    capa:'Mensalidade dos clientes que não são Starter',
-    fonte:'BigQuery — linhas de plano da fatura do Iugu, mesma régua da coluna Mensalidade da tabela geral.',
+    capa:'A fatura inteira do Iugu dos clientes que não são Starter',
+    fonte:'BigQuery — faturas pagas do Iugu, mês do vencimento. Soma a fatura toda: <b>plano</b> (com integração) + <b>outros itens</b> (Oráculo, filial, assistente, ativação, setup); desconto concedido é linha negativa da própria fatura e já sai abatido. <b>Não é um tier específico</b>: entra toda marca cujo plano no cadastro não contenha "starter" — Pro, Avançado, Profissional, Essencial, Básico, Portal Têxtil, Light, Conecta.',
     linhas:linhasT3Plus,
-    resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valorMensalidade')),
-      s: rows.length ? `${rows.length} empresa(s) não-Starter` : 'sem mensalidade no mês'}),
+    resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valorTotal')),
+      s: rows.length ? `${rows.length} empresa(s) não-Starter · fatura inteira` : 'sem fatura paga no mês'}),
     kpis:(rows,m)=>{ const ant = linhasDoCard(cardGerencial('t3plus'), mesAnterior(m));
-      const tot = soma(rows,'valorMensalidade'), totAnt = soma(ant,'valorMensalidade');
+      const tot = soma(rows,'valorTotal'), totAnt = soma(ant,'valorTotal');
       const dif = tot - totAnt;
       return [
-        {l:'Mensalidade no mês', v:fmt.moneyCompact(tot), s:'clientes não-Starter'},
+        {l:'Faturado no mês', v:fmt.moneyCompact(tot), s:'fatura inteira, clientes não-Starter'},
         {l:'Mês anterior', v:fmt.moneyCompact(totAnt), s:(dif>=0?'+':'')+fmt.moneyCompact(dif)+' vs '+rotuloMes(mesAnterior(m))},
-        {l:'Empresas no mês', v:fmt.int(rows.length), s:(ant.length?fmt.int(rows.length-ant.length):'—')+' vs mês anterior'},
-        {l:'Mensalidade média', v:fmt.money(rows.length ? tot/rows.length : 0), s:'por empresa'},
+        {l:'Do que é feito', v:fmt.moneyCompact(soma(rows,'valorPlano')), s:'em plano · '+fmt.moneyCompact(soma(rows,'valorOutros'))+' em Oráculo, filial, assistente e ativação'},
+        {l:'Fatura média', v:fmt.money(rows.length ? tot/rows.length : 0), s:fmt.int(rows.length)+' empresas no mês'},
       ]; },
-    metricas:[{k:'valorMensalidade', l:'Mensalidade no mês', f:fmt.money, v:rows=>soma(rows,'valorMensalidade')}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'plano', l:'Plano'},
-      {k:'valorMensalidade', l:'Mensalidade no mês', r:true, f:fmt.money},
+    metricas:[
+      {k:'valorTotal', l:'Fatura inteira', f:fmt.money, v:rows=>soma(rows,'valorTotal')},
+      {k:'valorPlano', l:'Só o plano', f:fmt.money, v:rows=>soma(rows,'valorPlano')},
+    ],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'plano', l:'Plano contratado'},
+      {k:'valorPlano', l:'Mensalidade do plano', r:true, f:fmt.money},
+      {k:'valorOutros', l:'Outros itens', r:true, f:fmt.money},
+      {k:'valorTotal', l:'Total no mês', r:true, forte:true, f:fmt.money},
       {k:'anterior', l:'Mês anterior', r:true, f:fmt.money},
       {k:'variacao', l:'Variação', r:true, f:v=>(v>0?'+':'')+fmt.money(v)}],
   },
@@ -1823,11 +1841,12 @@ function kpisGerencial(){
   const m = mesGerencial();
   const {carteira} = idxMensal();
   const doms = domsDoFoco();
-  let gmv=0, pedidos=0, pagos=0, temPagos=true, receita=0;
+  let gmv=0, pedidos=0, pagos=0, temPagos=true, plano=0, outros=0;
   Object.entries(carteira).forEach(([k,a])=>{
     const [dom, mes] = k.split('|');
     if(mes!==m || !doms.has(dom)) return;
-    gmv += a.gmv||0; pedidos += a.pedidos||0; receita += a.mensalidade||0;
+    gmv += a.gmv||0; pedidos += a.pedidos||0;
+    plano += a.mensalidade||0; outros += a.outrosIugu||0;
     if(a.pagos==null) temPagos=false; else pagos += a.pagos;
   });
   const cs = csDoFoco();
@@ -1837,7 +1856,7 @@ function kpisGerencial(){
     {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s: temPagos
       ? fmt.int(pagos)+' pedidos pagos de '+fmt.int(pedidos)+' no mês'
       : fmt.int(pedidos)+' pedidos no mês (pagos e não pagos)'},
-    {l:'Mensalidade faturada', v:fmt.moneyCompact(receita), s:'linhas de plano do Iugu'},
+    {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
     {l:'Entraram em churn', v:fmt.int(churn), s:'alerta, bloqueio ou cancelamento'},
   ];
@@ -1874,7 +1893,10 @@ function comparativoTexto(dados, met, m){
     if(ref==null) return '';
     const dif = atual - ref;
     if(dif === 0) return `igual ${ao} (${met.f(ref)})`;
-    const quanto = ref ? Math.abs(Math.round(dif/ref*100))+'%' : met.f(Math.abs(dif));
+    const pct = ref ? Math.abs(Math.round(dif/ref*100)) : null;
+    /* Abaixo de 1% o arredondamento vira "0% acima", que não quer dizer nada. */
+    if(pct === 0) return `praticamente igual ${ao} (${met.f(ref)})`;
+    const quanto = pct==null ? met.f(Math.abs(dif)) : pct+'%';
     return `${quanto} ${dif > 0 ? 'acima' : 'abaixo'} ${de} (${met.f(ref)})`;
   };
   const nMeses = anteriores.length;

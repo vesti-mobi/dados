@@ -248,7 +248,7 @@ métricas — Cross-sell e Upsell — desenham as duas barras lado a lado.
 | Churn Geral | marcas que entraram em alerta, bloqueio ou cancelamento no mês (data do bloqueio, ou o vencimento mais antigo em aberto de quem ainda não foi cortado) | a mesma leitura da aba Churn: módulo `vendas` bloqueado (planilha da automação, via Painel Elisa) + status das faturas na Iugu |
 | GMV do 1º mês completo | marcas que viveram no mês o primeiro mês civil **inteiro** de Vesti (cadastro no mês anterior, ou no dia 1º deste), e o GMV que fizeram nele | `odbc_domains.created_at` + `MongoDB_Pedidos_Geral` |
 | Clientes 80+ pedidos/mês | marcas com 80 ou mais pedidos no mês — **todos** os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado é só dos pagos | `MongoDB_Pedidos_Geral`, por data de criação do pedido |
-| Receita T3+ | mensalidade faturada no mês dos clientes **não-Starter** (plano do cadastro que não casa com `/starter/i`) | linhas de **plano** das faturas Iugu pagas, casadas por CNPJ (as mesmas da coluna Mensalidade da tabela geral) |
+| Receita T3+ | a **fatura inteira** do mês dos clientes **não-Starter** (plano do cadastro que não casa com `/starter/i`) | faturas Iugu pagas, pelo mês do vencimento, casadas por CNPJ — plano + integração + Oráculo + filial + assistente + ativação, com o desconto concedido já abatido |
 | Cross-sell | oportunidades de produto novo **criadas** e **ganhas** no mês, contadas separadas | HubSpot, pipeline **Expand (Upgrades)**, categoria cross |
 | Upsell | upgrades **criados** e **ganhos** no mês, e **a diferença** que a Vesti passou a ganhar com os ganhos | HubSpot (valor do negócio de upgrade) − faturas Iugu no BigQuery (mensalidade anterior da marca) |
 
@@ -267,6 +267,28 @@ caso. As abas Cross-sell e Upsell continuam filtrando só por `createdate`, como
 Laura pediu em 15/09/2026; quem passou a trazer o `closedate` para o `dados.js`
 foi esta aba. Com um `dados.js` anterior a 17/09/2026 o fechamento cai na data de
 criação, que era o comportamento antigo.
+
+### Receita T3+ não é um tier, é "todo mundo menos Starter"
+
+Pergunta da Laura em 18/09/2026: "o T3+ é de tudo ou só de algum tier
+específico?". É de tudo — a régua é uma exclusão só: entra toda marca cujo campo
+`plano` do cadastro **não** contenha "starter". Pro, Avançado, Profissional,
+Essencial, Básico, Portal Têxtil, Vesti Light, Conecta, Enterprise, todos contam.
+Em agosto/2026 os maiores pedaços eram Vesti Pro (R$ 58 mil), plano_profissional
+(R$ 52 mil), plano_avançado (R$ 40 mil) e Básico (R$ 31 mil).
+
+Na mesma conversa a Laura decidiu: **somar a fatura toda**, não só a linha de
+plano. Desde 18/09/2026 o card mostra plano + integração + Oráculo + filial +
+assistente + ativação (o desconto concedido é linha negativa da própria fatura e
+já sai abatido) — que era o que o `fetch_t3plus.py` do painel antigo fazia. As
+colunas separam *Mensalidade do plano* de *Outros itens*, porque a conversa de
+upgrade é sobre o primeiro e a de cross-sell é sobre o segundo. Em agosto/2026,
+carteira das três CS: R$ 347 mil de fatura inteira, dos quais R$ 245 mil de plano
+e R$ 102 mil de Oráculo, filial, assistente e ativação.
+
+Uma diferença que sobra em relação ao painel antigo: ele também excluía os planos
+**Vesti Light e Vesti Start** por descrição da fatura, e os canais Trial e Treino.
+Aqui esses entram — eram R$ 16 mil em agosto/2026, dentro do não-Starter.
 
 ### GMV aqui é pedido PAGO (por que 79 mi e não 106 mi)
 
