@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-09-18T15:28:25.896Z",
+  "gerado_em": "2026-09-18T22:56:38.244Z",
   "hoje": "2026-09-18",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -15,12 +15,12 @@ window.DADOS = {
     "ativas": 4,
     "usando": 11,
     "nunca_usaram": 8,
-    "paradas": 5,
+    "paradas": 4,
     "com_conta": 11,
     "contas": 10,
-    "produtos_total": 688,
-    "produtos_7d": 37,
-    "descricoes_total": 909,
+    "produtos_total": 689,
+    "produtos_7d": 38,
+    "descricoes_total": 910,
     "total_estimado": true
   },
   "marcas": [
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 294,
       "primeiro": "2026-08-27T10:08:32.689Z",
       "ultimo": "2026-09-16T16:01:07.318Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "nicoboco",
@@ -52,13 +52,13 @@ window.DADOS = {
       "estimado": false,
       "produtos_7d": 0,
       "ativa": false,
-      "acessos": 64,
-      "buscas": 329,
+      "acessos": 65,
+      "buscas": 330,
       "descricoes": 228,
       "envios": 254,
       "primeiro": "2026-08-10T19:02:35.392Z",
-      "ultimo": "2026-09-10T13:42:14.709Z",
-      "dias": 8
+      "ultimo": "2026-09-18T16:18:07.151Z",
+      "dias": 0
     },
     {
       "slug": "opera-kids",
@@ -76,7 +76,7 @@ window.DADOS = {
       "envios": 150,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-09-17T18:46:40.708Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "amiska",
@@ -120,17 +120,17 @@ window.DADOS = {
       "arquetipo": "amante",
       "tem_conta": true,
       "email": "monnikamarikinhaloja@gmail.com",
-      "produtos": 16,
+      "produtos": 17,
       "estimado": false,
-      "produtos_7d": 5,
+      "produtos_7d": 6,
       "ativa": true,
       "acessos": 2,
       "buscas": 1,
-      "descricoes": 16,
-      "envios": 16,
+      "descricoes": 17,
+      "envios": 17,
       "primeiro": "2026-08-06T14:16:43.085Z",
-      "ultimo": "2026-09-16T14:41:09.234Z",
-      "dias": 2
+      "ultimo": "2026-09-18T16:10:36.275Z",
+      "dias": 0
     },
     {
       "slug": "andressa-vesti",
@@ -470,9 +470,9 @@ window.DADOS = {
     {
       "inicio": "2026-09-14",
       "fim": "2026-09-20",
-      "produtos": 37,
+      "produtos": 38,
       "ativas": 4,
-      "usaram": 6,
+      "usaram": 7,
       "cadastros": 10,
       "novos": 0
     }
@@ -487,12 +487,12 @@ window.DADOS = {
         "ativas": 3,
         "usando": 7,
         "nunca_usaram": 12,
-        "paradas": 3,
+        "paradas": 2,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 362,
-        "produtos_7d": 21,
-        "descricoes_total": 461,
+        "produtos_total": 363,
+        "produtos_7d": 22,
+        "descricoes_total": 462,
         "total_estimado": true,
         "produtos_atribuidos": 5
       },
@@ -507,13 +507,13 @@ window.DADOS = {
           "estimado": false,
           "produtos_7d": 0,
           "ativa": false,
-          "acessos": 55,
-          "buscas": 289,
+          "acessos": 56,
+          "buscas": 290,
           "descricoes": 225,
           "envios": 229,
           "primeiro": "2026-08-11T18:28:02.542Z",
-          "ultimo": "2026-09-10T13:42:14.709Z",
-          "dias": 8,
+          "ultimo": "2026-09-18T16:18:07.151Z",
+          "dias": 0,
           "produtos_medidos": 177,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 135,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-09-17T18:46:38.788Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 108,
           "atribuido": 5
         },
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 30,
           "primeiro": "2026-08-27T10:08:32.689Z",
           "ultimo": "2026-09-16T16:01:07.318Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 30,
           "atribuido": 0
         },
@@ -583,18 +583,18 @@ window.DADOS = {
           "arquetipo": "amante",
           "tem_conta": true,
           "email": "monnikamarikinhaloja@gmail.com",
-          "produtos": 15,
+          "produtos": 16,
           "estimado": false,
-          "produtos_7d": 5,
+          "produtos_7d": 6,
           "ativa": true,
           "acessos": 0,
           "buscas": 0,
-          "descricoes": 15,
-          "envios": 15,
+          "descricoes": 16,
+          "envios": 16,
           "primeiro": "2026-08-21T01:34:17.651Z",
-          "ultimo": "2026-09-16T14:41:09.234Z",
-          "dias": 2,
-          "produtos_medidos": 15,
+          "ultimo": "2026-09-18T16:10:36.275Z",
+          "dias": 0,
+          "produtos_medidos": 16,
           "atribuido": 0
         },
         {
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 8,
+          "dias": 9,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-09-14",
           "fim": "2026-09-20",
-          "produtos": 21,
+          "produtos": 22,
           "ativas": 3,
-          "usaram": 4,
+          "usaram": 5,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 21,
+          "produtos_medidos": 22,
           "atribuido": 0
         }
       ]
@@ -1022,14 +1022,14 @@ window.DADOS = {
         "ativas": 2,
         "usando": 10,
         "nunca_usaram": 9,
-        "paradas": 1,
+        "paradas": 2,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 436,
+        "produtos_total": 439,
         "produtos_7d": 21,
         "descricoes_total": 358,
         "total_estimado": true,
-        "produtos_atribuidos": 150
+        "produtos_atribuidos": 153
       },
       "marcas": [
         {
@@ -1078,7 +1078,7 @@ window.DADOS = {
           "arquetipo": "explorador",
           "tem_conta": true,
           "email": "nicoboco.shop@nicoboco.com.br",
-          "produtos": 84,
+          "produtos": 87,
           "estimado": true,
           "produtos_7d": 0,
           "ativa": false,
@@ -1090,7 +1090,7 @@ window.DADOS = {
           "ultimo": "",
           "dias": null,
           "produtos_medidos": 0,
-          "atribuido": 84
+          "atribuido": 87
         },
         {
           "slug": "andressa-vesti",
@@ -1188,7 +1188,7 @@ window.DADOS = {
           "envios": 3,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-09-10T18:14:41.472Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 2,
           "atribuido": 0
         },
@@ -1494,13 +1494,13 @@ window.DADOS = {
         {
           "inicio": "2026-08-17",
           "fim": "2026-08-23",
-          "produtos": 16,
+          "produtos": 19,
           "ativas": 2,
           "usaram": 4,
           "cadastros": 9,
           "novos": 0,
           "produtos_medidos": 12,
-          "atribuido": 4
+          "atribuido": 7
         },
         {
           "inicio": "2026-08-24",
