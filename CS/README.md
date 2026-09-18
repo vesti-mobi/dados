@@ -203,6 +203,41 @@ documentada na linha "Cliente e Canal" da tabela acima, não um defeito da colun
 Inventar um id quando o nome não casa seria pior do que deixar em branco: a coluna
 existe justamente para ser colada na busca do admin.
 
+## A grade de cards (Visão geral e Gerencial)
+
+As duas abas do grupo **Visão geral** usam o mesmo componente: uma grade de
+cards clicáveis, e o card aberto mostra embaixo os KPIs daquele número, um
+gráfico de comparação e a tabela com as linhas que o formam. A Gerencial nasceu
+assim em 17/09/2026; a Visão geral passou a usar o mesmo desenho em 18/09/2026,
+a pedido da Laura.
+
+A diferença entre as duas está só no **recorte**, e é ele que decide o formato do
+gráfico de comparação:
+
+| | Recorte | Gráfico do card | Comparação |
+|---|---|---|---|
+| Visão geral | janela de datas (o filtro Período) | uma barra por dia, semana ou mês, conforme o tamanho da janela | contra o **período anterior** de mesmo tamanho em dias corridos |
+| Gerencial | mês civil | uma barra por mês, até 12, com o mês escolhido em cor cheia | contra o **mês anterior** e a média da janela |
+
+No código, quem carrega essa diferença é o `ctx` (`ctxPeriodo()` ou
+`ctxGerencial()`); o card em si não sabe de que aba ele é — recebe o ctx e
+devolve linhas, KPIs e métricas. Um card novo é um objeto em `CARDS_VISAO` ou
+`CARDS_GERENCIAL`, sem mexer no render.
+
+### O que mudou na Visão geral (18/09/2026)
+
+Os cinco gráficos que ficavam soltos na aba (novas vendas por plano, negócios por
+categoria, funil de onboarding, produtos implantados e marcos de volume) **não
+sumiram**: cada um virou o gráfico de composição do card a que pertence, e agora
+vem com a lista de marcas por trás do número — que antes só existia no hover. A
+fileira de KPIs do topo saiu porque repetia os quatro primeiros cards, que já
+mostram o mesmo número com a comparação junto.
+
+Os sete cards: **Novas vendas**, **Churn**, **Reuniões realizadas**, **Negócios
+ganhos**, **Funil de onboarding**, **Produtos implantados** e **Marcos de
+volume**. O funil é o único que não obedece ao período — é foto do momento, a
+contagem de quem está parado em cada fase agora.
+
 ## Aba Gerencial (17/09/2026)
 
 Traz para dentro deste painel os cards do

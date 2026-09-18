@@ -1567,7 +1567,7 @@ const CARDS_GERENCIAL = [
     id:'reunioes', titulo:'Reuniões', cor:'#B54A72',
     capa:'Reuniões realizadas com as marcas da carteira no mês',
     fonte:'HubSpot — <code>meetings</code> (data de início da reunião e dono). Agendamentos futuros não entram; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento, igual à aba Reuniões.',
-    linhas:linhasReunioesMes,
+    linhas:ctx=>linhasReunioesMes(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(r=>r.resultado==='Fechou negócio').length} fecharam negócio · ${fmt.moneyCompact(soma(rows.filter(r=>r.resultado==='Fechou negócio'),'valor'))}`
                      : 'nenhuma reunião no mês'}),
@@ -1590,7 +1590,7 @@ const CARDS_GERENCIAL = [
     id:'vpNovos', titulo:'Novos VestiPago', cor:'#00B894',
     capa:'Marcas com conta de pagamento criada dentro do mês',
     fonte:'BigQuery — criação da conta de pagamento (mesma data da coluna "Implantado em" da aba VestiPago).',
-    linhas:linhasVpNovos,
+    linhas:ctx=>linhasVpNovos(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? fmt.moneyCompact(soma(rows,'valor'))+' transacionados no mês' : 'nenhuma marca nova no mês'}),
     kpis:rows=>[
@@ -1609,7 +1609,7 @@ const CARDS_GERENCIAL = [
     id:'tinoNovos', titulo:'Novo Tino', cor:'#B7791F',
     capa:'Marcas que entraram na base do Tino dentro do mês',
     fonte:'API do Tino — <code>created_at</code> da marca lá dentro (a coluna "Implantado em" da aba Uso do Tino). Ter o Tino não é usar: as colunas ao lado mostram se a marca já logou e quantos eventos ela gerou no mês.',
-    linhas:linhasTinoNovos,
+    linhas:ctx=>linhasTinoNovos(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(r=>r.jaLogou).length} já logaram · ${fmt.compact(soma(rows,'eventos'))} eventos no mês`
                      : 'nenhuma marca nova no mês'}),
@@ -1631,7 +1631,7 @@ const CARDS_GERENCIAL = [
     id:'oraculoNovos', titulo:'Novo Oráculo', cor:'#1E74C8',
     capa:'Marcas que passaram a ter o Oráculo dentro do mês',
     fonte:'BigQuery — a MENOR entre a criação da configuração do produto (<code>o-configurations.created_at</code>) e o primeiro atendimento registrado; a coluna Origem diz qual das duas valeu. <b>Cuidado com janeiro/2026</b>: 699 dos 1.055 domínios têm configuração criada naquele mês, que é quando a tabela nasceu no espelho — ali a data é do espelho, não da venda.',
-    linhas:linhasOraculoNovos,
+    linhas:ctx=>linhasOraculoNovos(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${fmt.compact(soma(rows,'atendimentos'))} atendimentos no mês` : 'nenhuma marca nova no mês'}),
     kpis:rows=>{ const comUso = rows.filter(r=>r.atendimentos>0);
@@ -1653,10 +1653,10 @@ const CARDS_GERENCIAL = [
     id:'vpChurn', titulo:'Churn VestiPago', cor:'#E17055',
     capa:'Marcas cuja última transação no VestiPago foi neste mês e que seguem sem transacionar',
     fonte:'BigQuery — série diária do VestiPago (última data com valor transacionado por marca). Entra na lista quem está há '+DIAS_SUMIDO_VP+'+ dias sem transacionar; vira churn confirmado aos '+(DATA.meta.diasChurn||45)+'.',
-    linhas:linhasVpChurn,
-    resumo:(rows,m)=>({v:fmt.int(rows.length),
+    linhas:ctx=>linhasVpChurn(ctx.m),
+    resumo:(rows,ctx)=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(x=>x.confirmado).length} confirmado(s) · ${fmt.moneyCompact(soma(rows,'valor'))} no último mês`
-        : (diasDe(ultimoDiaDoMes(m+'-01')) < DIAS_SUMIDO_VP ? 'mês recente demais para afirmar churn' : 'ninguém parou no mês')}),
+        : (diasDe(ultimoDiaDoMes(ctx.m+'-01')) < DIAS_SUMIDO_VP ? 'mês recente demais para afirmar churn' : 'ninguém parou no mês')}),
     kpis:rows=>{ const lim = DATA.meta.diasChurn||45;
       const conf = rows.filter(x=>x.confirmado), ativas = rows.filter(x=>x.situacao==='Ativa na Vesti');
       return [
@@ -1676,7 +1676,7 @@ const CARDS_GERENCIAL = [
     id:'churnGeral', titulo:'Churn Geral', cor:'#C0453B',
     capa:'Marcas que entraram em alerta, bloqueio ou cancelamento no mês',
     fonte:'Mesma leitura da aba Churn: módulo de vendas cortado (planilha da automação) + fatura do Iugu no BigQuery.',
-    linhas:linhasChurnGeral,
+    linhas:ctx=>linhasChurnGeral(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(x=>x.situacao==='cancelada').length} cancelada(s) · ${fmt.moneyCompact(soma(rows,'mensalidade'))}/mês em risco`
                      : 'ninguém entrou em churn no mês'}),
@@ -1697,7 +1697,7 @@ const CARDS_GERENCIAL = [
     id:'gmv1', titulo:'GMV do 1º mês completo', cor:'#0E7A73',
     capa:'Marcas que viveram neste mês o primeiro mês civil inteiro de Vesti',
     fonte:'BigQuery — data de criação do domínio (<code>odbc_domains.created_at</code>) + pedidos da marca no mês (<code>MongoDB_Pedidos_Geral</code>, pela data de criação do pedido). O GMV conta só pedido PAGO; a contagem de pedidos mostra os dois.',
-    linhas:linhasGmvPrimeiroMes,
+    linhas:ctx=>linhasGmvPrimeiroMes(ctx.m),
     resumo:rows=>({v:fmt.moneyCompact(soma(rows,'gmv')),
       s: rows.length ? `${rows.length} marca(s) · ${fmt.int(soma(rows,'pedidos'))} pedidos` : 'nenhuma marca estreando no mês'}),
     kpis:rows=>{ const comVenda = rows.filter(x=>x.pedidos>0);
@@ -1720,7 +1720,7 @@ const CARDS_GERENCIAL = [
     id:'top80', titulo:'Clientes 80+ pedidos/mês', cor:'#7A4FB5',
     capa:'Marcas que bateram 80 pedidos dentro do mês',
     fonte:'BigQuery — <code>MongoDB_Pedidos_Geral</code>, pedidos por marca no mês (mesma base da tabela geral). A meta de 80 conta <b>todos</b> os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado soma só os pagos.',
-    linhas:linhasTop80,
+    linhas:ctx=>linhasTop80(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${fmt.int(soma(rows,'pedidos'))} pedidos · ${fmt.moneyCompact(soma(rows,'gmv'))} pagos` : 'ninguém bateu a meta no mês'}),
     kpis:rows=>{ const ativas = DATA.clientes.filter(c=>c.status==='ativo' && csDoFoco().has(c.cs)).length;
@@ -1745,15 +1745,15 @@ const CARDS_GERENCIAL = [
     id:'t3plus', titulo:'Receita T3+', cor:'#2D3436',
     capa:'A fatura inteira do Iugu dos clientes que não são Starter',
     fonte:'BigQuery — faturas pagas do Iugu, mês do vencimento. Soma a fatura toda: <b>plano</b> (com integração) + <b>outros itens</b> (Oráculo, filial, assistente, ativação, setup); desconto concedido é linha negativa da própria fatura e já sai abatido. <b>Não é um tier específico</b>: entra toda marca cujo plano no cadastro não contenha "starter" — Pro, Avançado, Profissional, Essencial, Básico, Portal Têxtil, Light, Conecta.',
-    linhas:linhasT3Plus,
+    linhas:ctx=>linhasT3Plus(ctx.m),
     resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valorTotal')),
       s: rows.length ? `${rows.length} empresa(s) não-Starter · fatura inteira` : 'sem fatura paga no mês'}),
-    kpis:(rows,m)=>{ const ant = linhasDoCard(cardGerencial('t3plus'), mesAnterior(m));
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('t3plus'), ctxGerencial(mesAnterior(ctx.m)));
       const tot = soma(rows,'valorTotal'), totAnt = soma(ant,'valorTotal');
       const dif = tot - totAnt;
       return [
         {l:'Faturado no mês', v:fmt.moneyCompact(tot), s:'fatura inteira, clientes não-Starter'},
-        {l:'Mês anterior', v:fmt.moneyCompact(totAnt), s:(dif>=0?'+':'')+fmt.moneyCompact(dif)+' vs '+rotuloMes(mesAnterior(m))},
+        {l:'Mês anterior', v:fmt.moneyCompact(totAnt), s:(dif>=0?'+':'')+fmt.moneyCompact(dif)+' vs '+rotuloMes(mesAnterior(ctx.m))},
         {l:'Do que é feito', v:fmt.moneyCompact(soma(rows,'valorPlano')), s:'em plano · '+fmt.moneyCompact(soma(rows,'valorOutros'))+' em Oráculo, filial, assistente e ativação'},
         {l:'Fatura média', v:fmt.money(rows.length ? tot/rows.length : 0), s:fmt.int(rows.length)+' empresas no mês'},
       ]; },
@@ -1772,7 +1772,7 @@ const CARDS_GERENCIAL = [
     id:'cross', titulo:'Cross-sell', cor:'#4048B8',
     capa:'Oportunidades de produto novo criadas e ganhas no mês',
     fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, categoria cross-sell. <b>Criada</b> usa a data de criação do negócio (<code>createdate</code>); <b>ganha</b> usa a de fechamento (<code>closedate</code>), então um negócio criado em julho e ganho em agosto conta em cada mês no seu lugar.',
-    linhas:m=>linhasNegociosMes('cross', m),
+    linhas:ctx=>linhasNegociosMes('cross', ctx.m),
     resumo:rows=>{ const cri = rows.filter(r=>r.criado), gan = rows.filter(r=>r.ganho);
       return {v:`${fmt.int(cri.length)} / ${fmt.int(gan.length)}`,
         s: rows.length ? `criadas / ganhas · ${fmt.moneyCompact(soma(gan,'valor'))} ganhos` : 'nenhum cross-sell no mês'}; },
@@ -1797,7 +1797,7 @@ const CARDS_GERENCIAL = [
     id:'up', titulo:'Upsell — ganho no upgrade', cor:'#8046C4',
     capa:'Upgrades criados e ganhos no mês, e quanto a mais por mês a Vesti passou a receber',
     fonte:'HubSpot (valor do plano novo, por <code>createdate</code> para as criadas e <code>closedate</code> para as ganhas) menos a última mensalidade da marca no Iugu/BigQuery antes do upgrade.',
-    linhas:linhasUpsellMes,
+    linhas:ctx=>linhasUpsellMes(ctx.m),
     resumo:rows=>{ const cri = rows.filter(r=>r.criado), gan = rows.filter(r=>r.ganho);
       const ganho = soma(gan.filter(r=>r.ganhoMes!=null),'ganhoMes');
       return {v:fmt.moneyCompact(ganho),
@@ -1826,19 +1826,209 @@ const CARDS_GERENCIAL = [
 
 function cardGerencial(id){ return CARDS_GERENCIAL.find(c=>c.id===id) }
 
-/* A lista de um card em um mês é pedida várias vezes no mesmo render (capa,
-   KPIs, tabela e as doze barras do gráfico). Calcula uma vez e guarda; a chave
-   inclui as CS em foco, senão trocar o filtro devolveria a lista antiga. */
+/* ============================================================================
+   3c. A GRADE DE CARDS — componente comum da Visão geral e da Gerencial
+   A Gerencial nasceu com ela em 17/09/2026; a Laura pediu o mesmo desenho na
+   Visão geral no dia seguinte. As duas abas passam a mesma coisa: uma lista de
+   cards e um CONTEXTO (`ctx`), que diz qual é o recorte. A diferença entre elas
+   está toda no ctx:
+     · Gerencial     -> ctx.tipo 'mes'    , ctx.m  = '2026-08'
+     · Visão geral   -> ctx.tipo 'periodo', ctx.p  = {ini, fim}
+   O card não sabe de qual aba ele é: recebe o ctx, devolve linhas, KPIs e
+   métricas. Quem decide o formato do gráfico de comparação é o tipo do ctx.
+   ========================================================================== */
+
+/* A lista de um card num recorte é pedida várias vezes no mesmo render (capa,
+   KPIs, tabela e cada barra do gráfico). Calcula uma vez e guarda; a chave
+   inclui o recorte e o que mais o ctx disser (na Gerencial, as CS em foco),
+   senão trocar o filtro devolveria a lista antiga. */
 const cacheCards = new Map();
-function linhasDoCard(c, m){
-  const k = c.id+'|'+m+'|'+[...csDoFoco()].sort().join(',');
-  if(!cacheCards.has(k)) cacheCards.set(k, c.linhas(m));
+function linhasDoCard(c, ctx){
+  const k = c.id+'|'+ctx.chave;
+  if(!cacheCards.has(k)) cacheCards.set(k, c.linhas(ctx));
   return cacheCards.get(k);
 }
+function ctxGerencial(m){
+  m = m || mesGerencial();
+  return {tipo:'mes', m, chave:'mes:'+m+'|cs:'+[...csDoFoco()].sort().join(','), rotulo:rotuloMes(m)};
+}
+function ctxPeriodo(p){
+  p = p || periodo();
+  return {tipo:'periodo', p, chave:'per:'+p.ini+'_'+p.fim, rotulo:rotuloPeriodo(p)};
+}
 
-/* KPIs do topo da aba: o retrato do mês antes de abrir qualquer card. */
+/* --- gráfico de comparação ------------------------------------------------
+   Pedido da Laura em 17/09/2026: "ao clicar no card, ver um gráfico comparando
+   pra saber se o mês está melhor ou pior". Duas formas, conforme o recorte:
+     · mês     -> uma barra por mês, até 12, com o mês escolhido em cor cheia;
+     · período -> uma barra por dia/semana/mês (o grão que o próprio período
+                  pede), e a comparação de texto vai contra o PERÍODO ANTERIOR
+                  de mesmo tamanho, que é a régua que a Visão geral sempre usou.
+   --------------------------------------------------------------------------- */
+function serieMensalDoCard(c, ctx){
+  const crescente = MESES_GERENCIAL.slice().reverse();
+  const i = crescente.indexOf(ctx.m);
+  const janela = crescente.slice(Math.max(0, i-11), i+1);
+  return janela.map(mes=>{
+    const rows = linhasDoCard(c, ctxGerencial(mes));
+    const o = {bucket:mes, rotulo:fmt.mes(mes+'-01'), grao:'mes'};
+    c.metricas.forEach(x=>{ o[x.k] = x.v(rows, mes) });
+    return o;
+  });
+}
+function seriePorBucketDoCard(c, ctx, rows){
+  const grao = grãoDoPeriodo(ctx.p);
+  const mapa = new Map();
+  bucketsDoPeriodo(ctx.p, grao).forEach(b=>mapa.set(b, []));
+  rows.forEach(r=>{
+    const d = String(r[c.campoData]||'').slice(0,10); if(!d) return;
+    const b = bucketDe(d, grao);
+    if(mapa.has(b)) mapa.get(b).push(r);
+  });
+  return [...mapa.entries()].map(([b, lista])=>{
+    const o = {bucket:b, rotulo:rotuloBucket(b, grao), grao};
+    c.metricas.forEach(x=>{ o[x.k] = x.v(lista, ctx) });
+    return o;
+  });
+}
+function frasesComparativas(met, atual, refs){
+  const frase = (ref, de, ao)=>{
+    if(ref==null) return '';
+    const dif = atual - ref;
+    if(dif === 0) return `igual ${ao} (${met.f(ref)})`;
+    const pct = ref ? Math.abs(Math.round(dif/ref*100)) : null;
+    /* Abaixo de 1% o arredondamento vira "0% acima", que não quer dizer nada. */
+    if(pct === 0) return `praticamente igual ${ao} (${met.f(ref)})`;
+    const quanto = pct==null ? met.f(Math.abs(dif)) : pct+'%';
+    return `${quanto} ${dif > 0 ? 'acima' : 'abaixo'} ${de} (${met.f(ref)})`;
+  };
+  return [`<b>${met.l}: ${met.f(atual)}</b>`, ...refs.map(r=>frase(r.v, r.de, r.ao))]
+    .filter(Boolean).join(' · ');
+}
+function graficoDoCard(c, ctx, rows){
+  if(!c.metricas || !c.metricas.length) return null;
+  if(ctx.tipo === 'periodo' && !c.campoData) return null;
+
+  const dados = ctx.tipo === 'mes' ? serieMensalDoCard(c, ctx) : seriePorBucketDoCard(c, ctx, rows);
+  const corSerie = i => i ? tint(c.cor,.58) : c.cor;
+  const destaque = ctx.tipo === 'mes' ? ctx.m : null;
+
+  const comparacoes = c.metricas.map(met=>{
+    if(ctx.tipo === 'mes'){
+      const i = dados.findIndex(d=>d.bucket===ctx.m);
+      if(i < 0) return '';
+      const anteriores = dados.slice(0, i).map(d=>d[met.k]||0);
+      const media = anteriores.length ? Math.round(anteriores.reduce((a,b)=>a+b,0)/anteriores.length) : null;
+      const n = anteriores.length;
+      return frasesComparativas(met, dados[i][met.k]||0, [
+        {v: i > 0 ? (dados[i-1][met.k]||0) : null, de:'do mês anterior', ao:'ao mês anterior'},
+        {v: media, de:`da média dos ${n} ${n===1?'mês anterior':'meses anteriores'}`,
+                   ao:`à média dos ${n} ${n===1?'mês anterior':'meses anteriores'}`},
+      ]);
+    }
+    /* Período: a comparação é contra a mesma janela deslocada para trás, em
+       dias corridos — a mesma conta dos KPIs do topo da Visão geral. */
+    const ant = ctxPeriodo(periodoAnterior(ctx.p));
+    const atual = met.v(rows, ctx), antes = met.v(linhasDoCard(c, ant), ant);
+    return frasesComparativas(met, atual, [{v:antes, de:'do período anterior', ao:'ao período anterior'}]);
+  }).filter(Boolean);
+
+  const card = el('div',{class:'card'});
+  const leg = c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
+  const titulo = ctx.tipo === 'mes' ? `Últimos ${dados.length} meses`
+    : 'No período, ' + ({dia:'dia a dia', semana:'por semana', mes:'por mês'}[grãoDoPeriodo(ctx.p)]);
+  card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><div class="legend">${leg}</div></div>
+                    <div class="chart-wrap" id="gch-${c.id}"></div>
+                    <div class="gcomp">${comparacoes.join('<br>')}</div>`;
+  const host = card.querySelector('#gch-'+c.id);
+  const series = c.metricas.map((x,i)=>{
+    const cor = corSerie(i);
+    return {k:x.k, l:x.l, tipo:'bar', cor, f:x.f,
+      /* no recorte de mês, o mês escolhido fica em cor cheia e o resto apagado:
+         é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
+      corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : null};
+  });
+  /* o desenho mede a largura do host, e ela só existe depois que o `extra`
+     inteiro foi pendurado na página — por isso o desenho vai para o fim da
+     fila, com setTimeout e não requestAnimationFrame: em aba de segundo plano
+     o navegador segura o rAF e o gráfico nunca sairia. */
+  setTimeout(()=>desenhar(host, dados, series), 0);
+  return card;
+}
+
+/* Gráfico de composição (barras por categoria ou pizza) — é o desenho que a
+   Visão geral já usava antes de virar grade de cards; cada card que tem
+   `categorias` leva o seu para dentro do detalhe. */
+function graficoDeCategorias(c, ctx){
+  const cats = c.categorias(ctx);
+  const card = el('div',{class:'card'});
+  const leg = cats.map(s=>`<i${s.quem&&s.quem.length?` data-tip="${escapar(s.l+': '+tituloQuem(s.quem))}"`:''}><b style="background:${s.cor}"></b>${s.l}</i>`).join('');
+  card.innerHTML = `<div class="card-head"><h3>${c.tituloCategorias||'Composição'}</h3><div class="legend">${leg}</div></div>
+                    <div class="chart-wrap" id="gcat-${c.id}"></div>`;
+  const host = card.querySelector('#gcat-'+c.id);
+  ligarTooltips(card);
+  setTimeout(()=>{ c.pizza ? desenharPizza(host, cats) : desenharCategorias(host, cats) }, 0);
+  return card;
+}
+
+/* A grade em si: um botão por card e, embaixo, o detalhe do que estiver aberto.
+   `abaId` separa o card aberto de cada aba, para ir e voltar sem perder o que
+   estava na tela. */
+function renderGradeCards(abaId, cards, ctx){
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'section-label'},
+    `<span class="eyebrow">Cards de ${ctx.rotulo} · clique para abrir os dados</span>`));
+
+  const abertoId = estado.cardAberto[abaId] || null;
+  const grid = el('div',{class:'gcards'});
+  cards.forEach(c=>{
+    const r = c.resumo(linhasDoCard(c, ctx), ctx);
+    const aberto = abertoId===c.id;
+    const btn = el('button',{class:'gcard'+(aberto?' on':''), type:'button',
+      style:`--gc:${c.cor};--gc-soft:${tint(c.cor,.10)}`, 'aria-expanded':String(aberto)},
+      `<span class="gc-t">${c.titulo}</span>
+       <span class="gc-v">${r.v}</span>
+       <span class="gc-s">${r.s}</span>
+       <span class="gc-go">${aberto?'fechar':'ver os dados →'}</span>`);
+    btn.onclick=()=>{ estado.cardAberto[abaId] = aberto ? null : c.id; renderPagina();
+      if(!aberto) setTimeout(()=>{ const d=$('#gdetalhe'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0) };
+    grid.appendChild(btn);
+  });
+  wrap.appendChild(grid);
+
+  const c = cards.find(x=>x.id===abertoId);
+  if(!c) return wrap;
+  const rows = linhasDoCard(c, ctx);
+
+  const det = el('div',{class:'gdetalhe', id:'gdetalhe', style:`--gc:${c.cor}`});
+  const head = el('div',{class:'gdet-head'});
+  head.innerHTML = `<div><span class="eyebrow">${ctx.rotulo}</span><h2>${c.titulo}</h2>
+                    <p>${c.capa}. <b>Fonte:</b> ${c.fonte}</p></div>`;
+  const fechar = el('button',{class:'btn btn-ghost',type:'button'},'Fechar card');
+  fechar.onclick=()=>{ estado.cardAberto[abaId]=null; renderPagina() };
+  head.appendChild(fechar);
+  det.appendChild(head);
+
+  const kpis = c.kpis(rows, ctx);
+  if(kpis.length){
+    const box = el('div',{class:'kpis'});
+    kpis.forEach(k=>box.appendChild(el('div',{class:'kpi'},
+      `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
+    det.appendChild(box);
+  }
+  const g = graficoDoCard(c, ctx, rows);
+  if(g) det.appendChild(g);
+  if(c.categorias) det.appendChild(graficoDeCategorias(c, ctx));
+  det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
+    `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
+  wrap.appendChild(det);
+  return wrap;
+}
+
+/* KPIs do topo da aba Gerencial: o retrato do mês antes de abrir qualquer card. */
 function kpisGerencial(){
-  const m = mesGerencial();
+  const ctx = ctxGerencial();
+  const m = ctx.m;
   const {carteira} = idxMensal();
   const doms = domsDoFoco();
   let gmv=0, pedidos=0, pagos=0, temPagos=true, plano=0, outros=0;
@@ -1851,7 +2041,7 @@ function kpisGerencial(){
   });
   const cs = csDoFoco();
   const novas = DATA.clientes.filter(c=>cs.has(c.cs) && String(c.dataCadastro||'').slice(0,7)===m).length;
-  const churn = linhasDoCard(cardGerencial('churnGeral'), m).length;
+  const churn = linhasDoCard(cardGerencial('churnGeral'), ctx).length;
   return [
     {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s: temPagos
       ? fmt.int(pagos)+' pedidos pagos de '+fmt.int(pedidos)+' no mês'
@@ -1862,125 +2052,215 @@ function kpisGerencial(){
   ];
 }
 
-/* --- o gráfico de comparação --------------------------------------------
-   Pedido da Laura em 17/09/2026: "ao clicar no card, ver um gráfico comparando
-   pra saber se o mês está melhor ou pior". São os últimos 12 meses da mesma
-   métrica do card, com o mês escolhido em cor cheia e os outros em tom claro,
-   mais uma linha de texto dizendo quanto ele está acima ou abaixo do mês
-   anterior e da média da janela. */
-function serieDoCard(c, m){
-  const crescente = MESES_GERENCIAL.slice().reverse();
-  const i = crescente.indexOf(m);
-  const janela = crescente.slice(Math.max(0, i-11), i+1);
-  return janela.map(mes=>{
-    const rows = linhasDoCard(c, mes);
-    const o = {bucket:mes, rotulo:fmt.mes(mes+'-01'), grao:'mes'};
-    c.metricas.forEach(x=>{ o[x.k] = x.v(rows, mes) });
-    return o;
-  });
-}
-function comparativoTexto(dados, met, m){
-  const i = dados.findIndex(d=>d.bucket===m);
-  if(i < 0) return '';
-  const atual = dados[i][met.k] || 0;
-  const antes = i > 0 ? (dados[i-1][met.k] || 0) : null;
-  const anteriores = dados.slice(0, i).map(d=>d[met.k]||0);
-  const media = anteriores.length ? anteriores.reduce((a,b)=>a+b,0)/anteriores.length : null;
-  /* "17% abaixo do mês anterior (6)" / "igual ao mês anterior (6)". Sem base de
-     comparação (referência zerada) a variação sai em número absoluto, senão
-     dividiria por zero e mostraria Infinity. */
-  const frase = (ref, de, ao)=>{
-    if(ref==null) return '';
-    const dif = atual - ref;
-    if(dif === 0) return `igual ${ao} (${met.f(ref)})`;
-    const pct = ref ? Math.abs(Math.round(dif/ref*100)) : null;
-    /* Abaixo de 1% o arredondamento vira "0% acima", que não quer dizer nada. */
-    if(pct === 0) return `praticamente igual ${ao} (${met.f(ref)})`;
-    const quanto = pct==null ? met.f(Math.abs(dif)) : pct+'%';
-    return `${quanto} ${dif > 0 ? 'acima' : 'abaixo'} ${de} (${met.f(ref)})`;
-  };
-  const nMeses = anteriores.length;
-  const partes = [`<b>${met.l}: ${met.f(atual)}</b>`];
-  if(antes!=null) partes.push(frase(antes, 'do mês anterior', 'ao mês anterior'));
-  if(media!=null) partes.push(frase(Math.round(media),
-    `da média dos ${nMeses} ${nMeses===1?'mês anterior':'meses anteriores'}`,
-    `à média dos ${nMeses} ${nMeses===1?'mês anterior':'meses anteriores'}`));
-  return partes.filter(Boolean).join(' · ');
-}
-function graficoDoCard(c, m){
-  const dados = serieDoCard(c, m);
-  const card = el('div',{class:'card'});
-  const corSerie = i => i ? tint(c.cor,.58) : c.cor;
-  const leg = c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
-  card.innerHTML = `<div class="card-head"><h3>Últimos ${dados.length} meses</h3><div class="legend">${leg}</div></div>
-                    <div class="chart-wrap" id="gch-${c.id}"></div>
-                    <div class="gcomp">${c.metricas.map(x=>comparativoTexto(dados, x, m)).filter(Boolean).join('<br>')}</div>`;
-  const host = card.querySelector('#gch-'+c.id);
-  const series = c.metricas.map((x,i)=>{
-    const cor = corSerie(i);
-    return {k:x.k, l:x.l, tipo:'bar', cor, f:x.f,
-      /* mês escolhido em cor cheia, o resto apagado: é o que faz o "melhor ou
-         pior" saltar sem precisar ler o eixo. */
-      corDe:(d)=> d.bucket===m ? cor : tint(cor,.38)};
-  });
-  /* o desenho mede a largura do host, e ela só existe depois que o `extra`
-     inteiro foi pendurado na página — por isso o desenho vai para o fim da
-     fila, com setTimeout e não requestAnimationFrame: em aba de segundo plano
-     o navegador segura o rAF e o gráfico nunca sairia. */
-  setTimeout(()=>desenhar(host, dados, series), 0);
-  return card;
-}
+function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL, ctxGerencial()) }
 
-/* Grade de cards + o detalhe do card aberto. É o `extra` da aba: a aba não tem
-   tabela principal, o conteúdo inteiro é isto. */
-function renderGerencial(){
-  const m = mesGerencial();
-  const wrap = el('div',{});
-  wrap.appendChild(el('div',{class:'section-label'},
-    `<span class="eyebrow">Cards de ${rotuloMes(m)} · clique para abrir os dados</span>`));
-
-  const grid = el('div',{class:'gcards'});
-  CARDS_GERENCIAL.forEach(c=>{
-    const r = c.resumo(linhasDoCard(c, m), m);
-    const aberto = estado.cardGerencial===c.id;
-    const btn = el('button',{class:'gcard'+(aberto?' on':''), type:'button',
-      style:`--gc:${c.cor};--gc-soft:${tint(c.cor,.10)}`, 'aria-expanded':String(aberto)},
-      `<span class="gc-t">${c.titulo}</span>
-       <span class="gc-v">${r.v}</span>
-       <span class="gc-s">${r.s}</span>
-       <span class="gc-go">${aberto?'fechar':'ver os dados →'}</span>`);
-    btn.onclick=()=>{ estado.cardGerencial = aberto ? null : c.id; renderPagina();
-      if(!aberto) setTimeout(()=>{ const d=$('#gdetalhe'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0) };
-    grid.appendChild(btn);
-  });
-  wrap.appendChild(grid);
-
-  const c = cardGerencial(estado.cardGerencial);
-  if(!c) return wrap;
-  const rows = linhasDoCard(c, m);
-
-  const det = el('div',{class:'gdetalhe', id:'gdetalhe', style:`--gc:${c.cor}`});
-  const head = el('div',{class:'gdet-head'});
-  head.innerHTML = `<div><span class="eyebrow">${rotuloMes(m)}</span><h2>${c.titulo}</h2>
-                    <p>${c.capa}. <b>Fonte:</b> ${c.fonte}</p></div>`;
-  const fechar = el('button',{class:'btn btn-ghost',type:'button'},'Fechar card');
-  fechar.onclick=()=>{ estado.cardGerencial=null; renderPagina() };
-  head.appendChild(fechar);
-  det.appendChild(head);
-
-  const kpis = c.kpis(rows, m);
-  if(kpis.length){
-    const box = el('div',{class:'kpis'});
-    kpis.forEach(k=>box.appendChild(el('div',{class:'kpi'},
-      `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
-    det.appendChild(box);
-  }
-  det.appendChild(graficoDoCard(c, m));
-  det.appendChild(cardLista(c.titulo+' · '+rotuloMes(m), rows, c.colunas,
-    `<h4>Nenhum registro em ${rotuloMes(m)}</h4><p>${c.vazio || 'Escolha outro mês no filtro acima, ou outra CS.'}</p>`));
-  wrap.appendChild(det);
-  return wrap;
-}
+/* ============================================================================
+   3d. CARDS DA VISÃO GERAL
+   Mesmo desenho da Gerencial (pedido da Laura, 18/09/2026: "podemos fazer o
+   mesmo design de cards para a aba Visão geral?"), com duas diferenças que vêm
+   do recorte: aqui o filtro é uma JANELA DE DATAS, não um mês, e por isso a
+   comparação de cada card é contra o PERÍODO ANTERIOR de mesmo tamanho em dias
+   corridos — a régua que esta aba sempre usou. Os cinco gráficos que a aba
+   mostrava soltos (novas vendas por plano, negócios por categoria, funil,
+   produtos implantados e marcos) não sumiram: cada um virou o gráfico de
+   composição do card a que pertence, e agora vem acompanhado da lista de
+   marcas por trás do número, que antes só existia no hover.
+   ========================================================================== */
+const CARDS_VISAO = [
+  {
+    id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
+    capa:'Negócios criados nos quatro pipelines de CS dentro do período',
+    fonte:'HubSpot — <code>createdate</code> do negócio, em qualquer um dos 4 pipelines de CS (Sucesso do Cliente, Integração, Plataforma e CS - Starter). O plano sai do pipeline: Starter é o "CS - Starter", Pro são os outros três — não existe campo de plano nesses negócios.',
+    campoData:'data',
+    linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
+      plano:planoBucketHS(o.pipeline), pipeline:o.pipeline, estagio:o.estagio, data:o.data}))
+      .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>({v:fmt.int(rows.length),
+      s: rows.length ? `${rows.filter(r=>r.plano==='Starter').length} Starter · ${rows.filter(r=>r.plano==='Pro').length} Pro`
+                     : 'nenhuma venda nova no período'}),
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('novasVendas'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const st = rows.filter(r=>r.plano==='Starter'), pro = rows.filter(r=>r.plano==='Pro');
+      const dif = rows.length - ant.length;
+      return [
+        {l:'Novas vendas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Starter', v:fmt.int(st.length), s:pctTexto(st.length, rows.length)+' das novas'},
+        {l:'Pro', v:fmt.int(pro.length), s:pctTexto(pro.length, rows.length)+' das novas'},
+        {l:'Marcas distintas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas diferentes no período'},
+      ]; },
+    metricas:[
+      {k:'starter', l:'Starter', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Starter').length},
+      {k:'pro', l:'Pro', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Pro').length},
+    ],
+    colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'plano', l:'Plano'}, {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
+  },
+  {
+    id:'churnCs', titulo:'Churn', cor:'#C0453B',
+    capa:'Negócios que estão hoje no estágio "Perdido (Churn)" e foram mexidos dentro do período',
+    fonte:'HubSpot — estágio atual "Perdido (Churn)", que existe nos 4 pipelines de CS. A data é a de fechamento (<code>closedate</code>) ou, sem ela, a da última alteração: o HubSpot não guarda quando o negócio ENTROU nesse estágio sem a API de histórico de propriedades.',
+    campoData:'fechadoEm',
+    linhas:ctx=>churnsNoPeriodo(ctx.p).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
+      pipeline:o.pipeline, estagio:o.estagio, fechadoEm:o.fechadoEm, data:o.data}))
+      .sort((a,b)=>String(b.fechadoEm).localeCompare(String(a.fechadoEm))),
+    resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const dif = rows.length - ant.length;
+      return {v:fmt.int(rows.length),
+        s: rows.length ? (dif===0 ? 'igual ao período anterior' : (dif>0?'+':'')+fmt.int(dif)+' vs período anterior')
+                       : 'nenhum churn no período'}; },
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const novas = linhasDoCard(cardVisao('novasVendas'), ctx);
+      const dif = rows.length - ant.length;
+      return [
+        {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Período anterior', v:fmt.int(ant.length), s:rotuloPeriodo(periodoAnterior(ctx.p))},
+        {l:'Contra as novas vendas', v:pctTexto(rows.length, novas.length), s:fmt.int(novas.length)+' vendas novas no mesmo período'},
+        {l:'Marcas distintas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas diferentes'},
+      ]; },
+    metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
+    colunas:[{k:'fechadoEm', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'pipeline', l:'Pipeline'}, {k:'data', l:'Negócio criado em', f:fmt.date}],
+  },
+  {
+    id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
+    capa:'Reuniões do time de CS já realizadas dentro do período',
+    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
+    campoData:'data',
+    linhas:ctx=>reunioesNoPeriodo(ctx.p).map(r=>({nome:r.cliente||'(sem empresa)',
+      cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS', data:r.data, resultado:r.resultado,
+      negocio:r.negocio||'—', valor:r.valor||0, resumo:r.resumo||''}))
+      .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>({v:fmt.int(rows.length),
+      s: rows.length ? `${rows.filter(r=>r.resultado==='Fechou negócio').length} fecharam negócio` : 'nenhuma reunião no período'}),
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('reunioesVg'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
+      const dif = rows.length - ant.length;
+      return [
+        {l:'Reuniões realizadas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
+        {l:'Valor fechado', v:fmt.moneyCompact(soma(fechou,'valor')), s:'negócios creditados a essas reuniões'},
+        {l:'Marcas atendidas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas distintas'},
+      ]; },
+    metricas:[
+      {k:'qtd', l:'Reuniões realizadas', f:fmt.int, v:rows=>rows.length},
+      {k:'fechou', l:'Com negócio fechado', f:fmt.int, v:rows=>rows.filter(r=>r.resultado==='Fechou negócio').length},
+    ],
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'resultado', l:'Resultado'},
+      {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
+  },
+  {
+    id:'negociosVg', titulo:'Negócios ganhos', cor:'#4048B8',
+    capa:'Cross-sell e upgrade ganhos, criados dentro do período',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, negócios com estágio de ganho. <b>Conta pela data de criação</b> (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell — a aba Gerencial, essa sim, separa criado de fechado.',
+    campoData:'data',
+    linhas:ctx=>[...negociosGanhosNoPeriodo('cross', ctx.p).map(n=>({...n, categoriaTxt:'Cross-sell'})),
+                 ...negociosGanhosNoPeriodo('up', ctx.p).map(n=>({...n, categoriaTxt:'Upgrade'}))]
+      .map(n=>({nome:n.cliente, cs:n.cs, categoriaTxt:n.categoriaTxt, produto:n.produto||'—',
+        negocio:n.negocio, valor:n.valor||0, data:n.data, estagio:n.estagio}))
+      .sort((a,b)=>b.valor-a.valor),
+    resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valor')),
+      s: rows.length ? `${rows.length} negócio(s) · ${rows.filter(r=>r.categoriaTxt==='Cross-sell').length} cross · ${rows.filter(r=>r.categoriaTxt==='Upgrade').length} upgrade`
+                     : 'nenhum negócio ganho no período'}),
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('negociosVg'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const cross = rows.filter(r=>r.categoriaTxt==='Cross-sell'), up = rows.filter(r=>r.categoriaTxt==='Upgrade');
+      const dif = rows.length - ant.length;
+      return [
+        {l:'Valor ganho', v:fmt.moneyCompact(soma(rows,'valor')), s:fmt.int(rows.length)+' negócios · '+(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Cross-sell', v:fmt.int(cross.length), s:fmt.moneyCompact(soma(cross,'valor'))+' em produto novo'},
+        {l:'Upgrade', v:fmt.int(up.length), s:fmt.moneyCompact(soma(up,'valor'))+' em expansão'},
+        {l:'Período anterior', v:fmt.moneyCompact(soma(ant,'valor')), s:fmt.int(ant.length)+' negócios em '+rotuloPeriodo(periodoAnterior(ctx.p))},
+      ]; },
+    metricas:[
+      {k:'valorCross', l:'Cross-sell', f:fmt.money, v:rows=>soma(rows.filter(r=>r.categoriaTxt==='Cross-sell'),'valor')},
+      {k:'valorUp', l:'Upgrade', f:fmt.money, v:rows=>soma(rows.filter(r=>r.categoriaTxt==='Upgrade'),'valor')},
+    ],
+    tituloCategorias:'Negócios por categoria (este período × anterior)',
+    categorias:()=>categoriasNegocios(),
+    colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'categoriaTxt', l:'Categoria'},
+      {k:'produto', l:'Produto'}, {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}],
+  },
+  {
+    id:'funil', titulo:'Funil de onboarding', cor:'#1E74C8',
+    capa:'Foto do momento: negócios em andamento nos pipelines de CS, por fase',
+    fonte:'HubSpot — campo <code>estagio</code> cru do negócio, agrupado em 5 fases. <b>Não depende do período</b>: é a contagem de quem está parado em cada fase agora, não um fluxo.',
+    vazio:'Nenhum negócio em andamento nas cinco fases do funil.',
+    linhas:()=>(DATA.onboarding||[]).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
+        fase:bucketOnboarding(o.estagio), estagio:o.estagio, pipeline:o.pipeline, data:o.data}))
+      .filter(o=>o.fase)
+      .sort((a,b)=>String(a.data).localeCompare(String(b.data))),
+    resumo:rows=>({v:fmt.int(rows.length),
+      s: rows.length ? `${rows.filter(r=>r.fase==='Implantado').length} já implantados · foto de hoje` : 'funil vazio'}),
+    kpis:rows=>{ const por = f=>rows.filter(r=>r.fase===f).length;
+      const maisVelho = rows[0];
+      return [
+        {l:'Em andamento', v:fmt.int(rows.length), s:'negócios parados nas 5 fases'},
+        {l:'Em treinamento', v:fmt.int(por('Treinamento')), s:'fase anterior à implantação'},
+        {l:'Implantados', v:fmt.int(por('Implantado')), s:pctTexto(por('Implantado'), rows.length)+' do funil'},
+        {l:'Mais antigo no funil', v: maisVelho ? fmt.date(maisVelho.data) : '—',
+         s: maisVelho ? maisVelho.nome : 'nada em andamento'},
+      ]; },
+    tituloCategorias:'Negócios por fase (foto do momento)',
+    categorias:()=>funilIntegracoes(),
+    colunas:[COL_NOME, COL_CS_CARD, {k:'fase', l:'Fase'}, {k:'estagio', l:'Estágio no HubSpot'},
+      {k:'pipeline', l:'Pipeline'}, {k:'data', l:'Negócio criado em', f:fmt.date}],
+  },
+  {
+    id:'implantados', titulo:'Produtos implantados', cor:'#B7791F',
+    capa:'Tino, Oráculo e VestiPago que passaram a valer dentro do período',
+    fonte:'Híbrido: <b>Tino</b> = marca criada na base do próprio produto; <b>VestiPago</b> = conta de pagamento criada no BigQuery; <b>Oráculo</b> = negócio de cross-sell de Oráculo ganho no período (marca que já nasceu com ele no plano não entra aqui).',
+    campoData:'data',
+    linhas:ctx=>{ const p = ctx.p;
+      const imp = implantadosNoPeriodo(p);
+      const oraculo = DATA.negocios.filter(n=>n.categoria==='cross' && n.status==='Ganho'
+        && n.produto==='Oráculo' && n.data>=p.ini && n.data<=p.fim);
+      return [
+        ...imp.tino.map(x=>({nome:x.cliente, cs:x.cs||CS_POR_CLIENTE[x.cliente]||'Sem CS', produto:'Tino', data:x.implantado})),
+        ...oraculo.map(n=>({nome:n.cliente, cs:n.cs, produto:'Oráculo', data:n.data, negocio:n.negocio, valor:n.valor})),
+        ...imp.vestiPago.map(x=>({nome:x.cliente, cs:x.cs||CS_POR_CLIENTE[x.cliente]||'Sem CS', produto:'VestiPago', data:x.implantado})),
+      ].sort((a,b)=>String(b.data).localeCompare(String(a.data))); },
+    resumo:rows=>({v:fmt.int(rows.length),
+      s: rows.length ? ['Tino','Oráculo','VestiPago'].map(pr=>`${rows.filter(r=>r.produto===pr).length} ${pr}`).join(' · ')
+                     : 'nenhum produto implantado no período'}),
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('implantados'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const por = pr=>rows.filter(r=>r.produto===pr).length;
+      const dif = rows.length - ant.length;
+      return [
+        {l:'Implantações no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Tino', v:fmt.int(por('Tino')), s:'marcas novas na base do produto'},
+        {l:'Oráculo', v:fmt.int(por('Oráculo')), s:'negócios de cross-sell ganhos'},
+        {l:'VestiPago', v:fmt.int(por('VestiPago')), s:'contas de pagamento criadas'},
+      ]; },
+    metricas:[{k:'qtd', l:'Implantações', f:fmt.int, v:rows=>rows.length}],
+    tituloCategorias:'Produtos implantados no período',
+    categorias:()=>categoriasImplantados(), pizza:true,
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'produto', l:'Produto'}],
+  },
+  {
+    id:'marcos', titulo:'Marcos de volume', cor:'#0E7A73',
+    capa:'Marcas que cruzaram um marco de volume dentro do período',
+    fonte:'BigQuery — <b>Novas marcas criadas</b> é a data de criação do domínio; <b>5 e 25 pedidos pagos</b> e <b>100k de GMV</b> são o dia em que o acumulado da marca cruzou o limiar <b>pela primeira vez na vida</b>, então nenhuma marca repete o mesmo marco em período seguinte.',
+    campoData:'data',
+    linhas:ctx=>{ const p = ctx.p; const dentro = d => d && d>=p.ini && d<=p.fim;
+      const out = (DATA.clientes||[]).filter(c=>dentro(c.dataCadastro))
+        .map(c=>({nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, marco:'Novas marcas criadas', data:c.dataCadastro}));
+      (DATA.marcosVolume||[]).forEach(ev=>{ if(!dentro(ev.data)) return;
+        out.push({nome:ev.cliente, cs:CS_POR_DOM[ev.dominio]||CS_POR_CLIENTE[ev.cliente]||'Sem CS',
+          dominio:ev.dominio, marco:ev.tipo, data:ev.data}); });
+      return out.sort((a,b)=>String(b.data).localeCompare(String(a.data))); },
+    resumo:rows=>({v:fmt.int(rows.length),
+      s: rows.length ? `${rows.filter(r=>r.marco==='Novas marcas criadas').length} marcas novas · ${rows.filter(r=>r.marco!=='Novas marcas criadas').length} marcos de volume`
+                     : 'nenhum marco no período'}),
+    kpis:rows=>{ const por = t=>rows.filter(r=>r.marco===t).length;
+      return ORDEM_MARCOS.map(t=>({l:t, v:fmt.int(por(t)),
+        s: t==='Novas marcas criadas' ? 'domínio criado no período' : 'primeira vez na vida da marca'})); },
+    metricas:[{k:'qtd', l:'Marcos batidos', f:fmt.int, v:rows=>rows.length}],
+    tituloCategorias:'Marcos de volume no período',
+    categorias:()=>categoriasMarcos(),
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'dominio', l:'Domínio'}, {k:'marco', l:'Marco'}],
+  },
+];
+function cardVisao(id){ return CARDS_VISAO.find(c=>c.id===id) }
+function renderVisaoGeral(){ return renderGradeCards('visaoGeral', CARDS_VISAO, ctxPeriodo()) }
 
 /* ============================================================================
    4. CONFIGURAÇÃO DAS ABAS
@@ -2170,24 +2450,6 @@ function categoriasNegocios(){
     linha('Upgrade — período anterior', 'up', ant, 'var(--acc-2)'),
   ];
 }
-function kpisVisaoGeral(){
-  const p = periodo(), ant = periodoAnterior(p);
-  const delta = (a,b)=> a>b ? `+${fmt.int(a-b)} vs período anterior`
-    : a<b ? `${fmt.int(a-b)} vs período anterior` : 'igual ao período anterior';
-  const novasAtual = novasVendasNoPeriodo(p).length, novasAnt = novasVendasNoPeriodo(ant).length;
-  const churnAtual = churnsNoPeriodo(p).length, churnAnt = churnsNoPeriodo(ant).length;
-  const reunAtual = reunioesNoPeriodo(p).length, reunAnt = reunioesNoPeriodo(ant).length;
-  const negAtual = [...negociosGanhosNoPeriodo('cross',p), ...negociosGanhosNoPeriodo('up',p)];
-  const negAnt = [...negociosGanhosNoPeriodo('cross',ant), ...negociosGanhosNoPeriodo('up',ant)];
-  return [
-    {l:'Novas vendas', v:fmt.int(novasAtual), s:delta(novasAtual,novasAnt)},
-    {l:'Churn', v:fmt.int(churnAtual), s:delta(churnAtual,churnAnt)},
-    {l:'Reuniões realizadas', v:fmt.int(reunAtual), s:delta(reunAtual,reunAnt)},
-    {l:'Negócios ganhos (cross-sell + upgrade)', v:fmt.moneyCompact(soma(negAtual,'valor')),
-     s:fmt.int(negAtual.length)+' negócios · '+delta(negAtual.length,negAnt.length)},
-  ];
-}
-
 /* Resumo "marca -> quantos e quando foi a última vez" — usado no extra das
    abas Reuniões, Cross-sell e Upsell. Não mede nada de novo: agrega as MESMAS
    linhas que a tabela da aba já mostra (por isso recebe `rows`, já filtrado
@@ -2270,25 +2532,17 @@ const TABS = [
   {
     id:'visaoGeral', grupo:'Visão geral', nav:'Visão geral', cor:'#2E7D46', cor2:'#1E74C8',
     titulo:'Visão geral',
-    desc:'<b>Experimento de 08/09/2026: parte daqui vem do HubSpot agora</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes — os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. Fonte HubSpot: os 4 pipelines de negócio de CS (Sucesso do Cliente, Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter — achados pelo estágio "Implantado", não pelo nome). <b>Marcos de volume voltou a ser 100% BigQuery</b> (nunca chegou a ser 100% HubSpot: era o estágio de negócio, editado à mão). Retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. <b>Passe o mouse em qualquer barra ou fatia</b> pra ver quais marcas formam aquele número. '
-      + '<b>Novas vendas</b> = negócio criado (campo <code>createdate</code>) no período, em qualquer um dos 4 pipelines; Starter = pipeline "CS - Starter", Pro = os outros três (não existe campo de plano nesses negócios). '
-      + '<b>Churn</b> = negócio cujo estágio atual é "Perdido (Churn)" (existe nos 4 pipelines); a data é <code>closedate</code> ou, sem ela, <code>hs_lastmodifieddate</code> — o HubSpot não guarda quando o negócio ENTROU nesse estágio, só a última mexida nele. '
-      + '<b>Negócios</b> é Cross-sell (produto novo na carteira) e Upgrade (expansão do que já tem) — mesma fonte das abas Cross-sell e Upsell, ganhos e <b>criados</b> dentro do período (data de <code>createdate</code>, não de fechamento). '
-      + '<b>Funil de onboarding</b> é uma <b>foto do momento</b>: negócios ainda em andamento nesses 4 pipelines, por fase (campo <code>estagio</code> cru do HubSpot, agrupado em 5 nomes). '
-      + '<b>Produtos implantados</b> é híbrido: <b>Oráculo</b> vem de negócio de cross-sell <b>ganho, criado dentro do período</b> (produto extraído do nome do negócio) — marca que já nasceu com o Oráculo no plano não entra aqui; <b>Tino</b> e <b>VestiPago</b> ainda não têm esse dado no HubSpot, então continuam na fonte de antes: "tem o produto implantado" dentro do período (API do Tino / conta de pagamento criada no BigQuery). '
-      + '<b>Marcos de volume</b> vem do BigQuery, não do HubSpot: <b>Novas marcas criadas</b> = data de criação do domínio (<code>odbc_domains.created_at</code>) no período. <b>5 Pedidos Pagos</b>, <b>25 Pedidos Pagos</b> e <b>100k de GMV</b> = o dia em que o acumulado da marca (pedidos pagos ou GMV pago, desde o primeiro pedido dela) cruzou aquele limiar pela primeira vez cai no período — cada marca entra uma única vez na vida em cada um dos quatro marcos, nunca repete em período seguinte. Se nenhuma marca bateu o marco na janela escolhida, o número é 0, mesmo que outras já tenham batido antes.',
+    desc:'O retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. '
+      + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número, a evolução dentro do período (dia, semana ou mês, conforme o tamanho da janela) e a lista das marcas — que antes só existia no hover do gráfico. A fonte de cada número está escrita no próprio card. '
+      + '<b>Experimento de 08/09/2026: parte daqui vem do HubSpot</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes; os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. <b>Marcos de volume</b> é 100% BigQuery. '
+      + '<b>Funil de onboarding</b> é o único card que não obedece ao período: é uma <b>foto do momento</b>, a contagem de quem está parado em cada fase agora.',
     filtros:['periodo'],
     semTabela:true,
     linhas:()=>[],
-    kpis:()=>kpisVisaoGeral(),
-    duasColunas:true,
-    graficos:[
-      {t:'Novas vendas por plano (HubSpot)', categorias:()=>categoriasNovasVendas()},
-      {t:'Negócios por categoria (cross-sell x upgrade)', categorias:()=>categoriasNegocios()},
-      {t:'Funil de onboarding (foto do momento)', categorias:()=>funilIntegracoes()},
-      {t:'Produtos implantados no período', categorias:()=>categoriasImplantados(), pizza:true},
-      {t:'Marcos de volume no período (BigQuery)', categorias:()=>categoriasMarcos()},
-    ],
+    /* Os cinco gráficos que ficavam soltos aqui viraram, em 18/09/2026, o
+       conteúdo dos cards clicáveis — cada um dentro do card a que pertence,
+       agora com a lista de marcas por trás do número. */
+    extra:()=>renderVisaoGeral(),
   },
   {
     id:'gerencial', grupo:'Visão geral', nav:'Gerencial', cor:'#6C5CE7', cor2:'#00B894',
@@ -3224,7 +3478,8 @@ const estado = {
   filtros: filtrosPadrao(),
   ordem: {}, // { abaId: {k, dir} }
   ordemCard: {}, // { tituloDoCard: {k, dir} } — ordenação própria de cada cardLista
-  cardGerencial: null, // card aberto na aba Gerencial (null = só a grade)
+  /* card aberto em cada aba que usa a grade de cards (null = só a grade) */
+  cardAberto: { gerencial: null, visaoGeral: null },
 };
 let ultimoRender = { rows:[], colunas:[] };
 
