@@ -1876,8 +1876,14 @@ function serieMensalDoCard(c, ctx){
     return o;
   });
 }
+/* Grão do gráfico dos cards: SEMANA é o passo mínimo, mesmo em período curto
+   (pedido da Laura, 18/09/2026: "se puder nos gráficos ser semana a semana e
+   não dia a dia acho melhor"). Uma reunião ou um negócio por dia vira uma
+   floresta de barras de 1 — por semana dá para ver a tendência. Períodos longos
+   seguem a régua do resto do painel e agrupam por mês. */
+function graoDosCards(p){ const g = grãoDoPeriodo(p); return g === 'dia' ? 'semana' : g }
 function seriePorBucketDoCard(c, ctx, rows){
-  const grao = grãoDoPeriodo(ctx.p);
+  const grao = graoDosCards(ctx.p);
   const mapa = new Map();
   bucketsDoPeriodo(ctx.p, grao).forEach(b=>mapa.set(b, []));
   rows.forEach(r=>{
@@ -1927,16 +1933,23 @@ function graficoDoCard(c, ctx, rows){
       ]);
     }
     /* Período: a comparação é contra a mesma janela deslocada para trás, em
-       dias corridos — a mesma conta dos KPIs do topo da Visão geral. */
-    const ant = ctxPeriodo(periodoAnterior(ctx.p));
-    const atual = met.v(rows, ctx), antes = met.v(linhasDoCard(c, ant), ant);
+       dias corridos — a mesma conta que a Visão geral sempre usou. */
+    const anterior = periodoAnterior(ctx.p);
+    const ant = ctxPeriodo(anterior);
+    const atual = met.v(rows, ctx);
+    /* Janela que cai antes do começo do arquivo não é "zero", é ausência de
+       dado — dizer "+323 acima do período anterior (0)" seria inventar uma
+       queda ou uma alta que ninguém pode conferir. */
+    if(anterior.ini <= LIMITE_DADOS.ini && anterior.fim <= LIMITE_DADOS.ini)
+      return `<b>${met.l}: ${met.f(atual)}</b> · sem período anterior no arquivo (ele começa em ${fmt.date(LIMITE_DADOS.ini)})`;
+    const antes = met.v(linhasDoCard(c, ant), ant);
     return frasesComparativas(met, atual, [{v:antes, de:'do período anterior', ao:'ao período anterior'}]);
   }).filter(Boolean);
 
   const card = el('div',{class:'card'});
   const leg = c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
   const titulo = ctx.tipo === 'mes' ? `Últimos ${dados.length} meses`
-    : 'No período, ' + ({dia:'dia a dia', semana:'por semana', mes:'por mês'}[grãoDoPeriodo(ctx.p)]);
+    : 'No período, ' + ({semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p)]);
   card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><div class="legend">${leg}</div></div>
                     <div class="chart-wrap" id="gch-${c.id}"></div>
                     <div class="gcomp">${comparacoes.join('<br>')}</div>`;
@@ -2533,7 +2546,7 @@ const TABS = [
     id:'visaoGeral', grupo:'Visão geral', nav:'Visão geral', cor:'#2E7D46', cor2:'#1E74C8',
     titulo:'Visão geral',
     desc:'O retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. '
-      + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número, a evolução dentro do período (dia, semana ou mês, conforme o tamanho da janela) e a lista das marcas — que antes só existia no hover do gráfico. A fonte de cada número está escrita no próprio card. '
+      + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número, a evolução <b>semana a semana</b> dentro do período (janela longa agrupa por mês) e a lista das marcas — que antes só existia no hover do gráfico. A fonte de cada número está escrita no próprio card. '
       + '<b>Experimento de 08/09/2026: parte daqui vem do HubSpot</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes; os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. <b>Marcos de volume</b> é 100% BigQuery. '
       + '<b>Funil de onboarding</b> é o único card que não obedece ao período: é uma <b>foto do momento</b>, a contagem de quem está parado em cada fase agora.',
     filtros:['periodo'],

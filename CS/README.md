@@ -216,7 +216,7 @@ gráfico de comparação:
 
 | | Recorte | Gráfico do card | Comparação |
 |---|---|---|---|
-| Visão geral | janela de datas (o filtro Período) | uma barra por dia, semana ou mês, conforme o tamanho da janela | contra o **período anterior** de mesmo tamanho em dias corridos |
+| Visão geral | janela de datas (o filtro Período) | uma barra por **semana** (janela longa agrupa por mês) | contra o **período anterior** de mesmo tamanho em dias corridos |
 | Gerencial | mês civil | uma barra por mês, até 12, com o mês escolhido em cor cheia | contra o **mês anterior** e a média da janela |
 
 No código, quem carrega essa diferença é o `ctx` (`ctxPeriodo()` ou
@@ -237,6 +237,18 @@ Os sete cards: **Novas vendas**, **Churn**, **Reuniões realizadas**, **Negócio
 ganhos**, **Funil de onboarding**, **Produtos implantados** e **Marcos de
 volume**. O funil é o único que não obedece ao período — é foto do momento, a
 contagem de quem está parado em cada fase agora.
+
+**A Visão geral é de todo o time**, não só das três CS da carteira: em reuniões,
+negócios e novas vendas entram Elisa, Cristiane, Tatiane, Jennyfer e quem mais
+for dono do registro no HubSpot — nos últimos 90 dias de 17/09/2026, por exemplo,
+as reuniões eram de cinco pessoas diferentes. Quem tem o recorte das três é a aba
+Gerencial. Confirmado com a Laura em 18/09/2026.
+
+O gráfico dos cards vai de **semana em semana** mesmo em período curto (pedido da
+Laura, 18/09/2026): uma reunião por dia vira uma floresta de barras de 1, e por
+semana dá para ver a tendência. Janela longa (mais de 400 dias) agrupa por mês, e
+quando a janela anterior cai antes do começo do arquivo o card diz "sem período
+anterior no arquivo" em vez de comparar contra zero.
 
 ## Aba Gerencial (17/09/2026)
 
