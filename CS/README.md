@@ -233,8 +233,8 @@ vem com a lista de marcas por trás do número — que antes só existia no hove
 fileira de KPIs do topo saiu porque repetia os quatro primeiros cards, que já
 mostram o mesmo número com a comparação junto.
 
-Os sete cards: **Novas vendas**, **Churn**, **Reuniões realizadas**, **Negócios
-ganhos**, **Funil de onboarding**, **Produtos implantados** e **Marcos de
+Os sete cards: **Novas vendas**, **Churn**, **Reuniões realizadas**,
+**Negócios**, **Funil de onboarding**, **Produtos implantados** e **Marcos de
 volume**. O funil é o único que não obedece ao período — é foto do momento, a
 contagem de quem está parado em cada fase agora.
 
@@ -249,6 +249,26 @@ Laura, 18/09/2026): uma reunião por dia vira uma floresta de barras de 1, e por
 semana dá para ver a tendência. Janela longa (mais de 400 dias) agrupa por mês, e
 quando a janela anterior cai antes do começo do arquivo o card diz "sem período
 anterior no arquivo" em vez de comparar contra zero.
+
+### Ajustes de 21/09/2026 (pedidos da Laura)
+
+- **Novas vendas agora mostram valor.** A carga passou a trazer o `amount` do
+  negócio de onboarding (antes só vinha a contagem). O card soma o valor no
+  período e quebra por Starter e Pro. Negócio sem valor preenchido no HubSpot
+  conta na quantidade e não no dinheiro — o KPI diz quantos têm valor. Com um
+  `dados.js` anterior a essa carga o campo aparece como `—`, sem somar zeros.
+- **O card de negócios deixou de ser só "ganhos".** Virou **Negócios**: mostra o
+  que foi ganho e o que ainda está **em negociação**, com **temperatura**
+  (🔥 Quente / 🟡 Morno / ❄️ Frio, a propriedade `temperatura_do_negocio` do
+  HubSpot). O gráfico tem duas barras — ganho e em negociação — e o gráfico de
+  composição virou "Em negociação por temperatura".
+- **No upgrade, o valor é a diferença.** O ganho do card de Negócios da Visão
+  geral segue a mesma conta da aba Gerencial: valor do negócio menos a última
+  mensalidade da marca no Iugu antes dele. Cross-sell continua entrando pelo
+  valor cheio (é produto novo, não troca de plano). Upgrade sem mensalidade
+  anterior não entra na soma e é contado no subtítulo do KPI.
+- **Temperatura também nos cards de Cross-sell e Upsell da Gerencial**, na
+  tabela, no KPI "Em negociação" e num gráfico de composição próprio.
 
 ## Aba Gerencial (17/09/2026)
 

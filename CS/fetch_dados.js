@@ -971,7 +971,10 @@ async function puxarOnboarding(pipes, owners) {
 
   const filterGroups = alvo.map(p => ({ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: p.id }] }));
   const deals = await buscarTudo('deals',
-    ['dealname', 'dealstage', 'pipeline', 'createdate', 'closedate', 'hs_lastmodifieddate', 'hubspot_owner_id'],
+    /* `amount` entrou em 18/09/2026: a Visão geral passou a mostrar o VALOR das
+       novas vendas, não só a contagem (pedido da Laura). Negócio sem valor
+       preenchido no HubSpot vem 0 e aparece como "—" no painel. */
+    ['dealname', 'dealstage', 'pipeline', 'amount', 'createdate', 'closedate', 'hs_lastmodifieddate', 'hubspot_owner_id'],
     filterGroups,
     [{ propertyName: 'createdate', direction: 'DESCENDING' }]);
   console.log('  negócios nesses pipelines'.padEnd(44) + String(deals.length).padStart(8));
@@ -986,6 +989,7 @@ async function puxarOnboarding(pipes, owners) {
       pipeline: nomePipeline[p.pipeline] || '—',
       estagio: nomeEstagio[p.dealstage] || '—',
       cs: owners[p.hubspot_owner_id] || '',
+      valor: r2(p.amount),
       data: iso(p.createdate),
       fechadoEm: iso(p.closedate) || iso(p.hs_lastmodifieddate),
     };

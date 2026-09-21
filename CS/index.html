@@ -1508,6 +1508,52 @@ function linhasT3Plus(m){
   return out.sort((a,b)=>b.valorTotal-a.valorTotal);
 }
 
+/* --- temperatura do negócio (🔥 Quente / 🟡 Morno / ❄️ Frio) ---------------
+   Propriedade `temperatura_do_negocio` do HubSpot, criada pela Laura em
+   16/09/2026. Vem pura da fonte, com o emoji; aqui só agrupa e conta, para os
+   cards mostrarem "o que está em negociação e quão quente está" em vez de só
+   um valor total. Negócio sem a propriedade preenchida cai em "Sem
+   temperatura" — é a maioria dos antigos, e some da conta se for tratado como
+   frio. */
+const TEMPERATURAS = [
+  {l:'🔥 Quente', curto:'quente', re:/quente/i, cor:'var(--neg)'},
+  {l:'🟡 Morno', curto:'morno', re:/morno/i, cor:'var(--gold)'},
+  {l:'❄️ Frio', curto:'frio', re:/frio/i, cor:'var(--acc-2)'},
+  {l:'Sem temperatura', curto:'sem temperatura', re:null, cor:'var(--ink-3)'},
+];
+function bucketTemperatura(t){
+  const achou = TEMPERATURAS.find(x=>x.re && x.re.test(String(t||'')));
+  return achou || TEMPERATURAS[TEMPERATURAS.length-1];
+}
+/* "🔥 2 · 🟡 3 · ❄️ 1" — resumo de uma linha, para o subtítulo de um KPI. */
+function resumoTemperatura(linhas){
+  const partes = TEMPERATURAS.map(t=>{
+    const n = linhas.filter(l=>bucketTemperatura(l.temperatura)===t).length;
+    return n ? (t.re ? t.l.split(' ')[0]+' '+n : n+' sem temperatura') : '';
+  }).filter(Boolean);
+  return partes.length ? partes.join(' · ') : 'nenhum negócio em aberto';
+}
+function categoriasTemperatura(linhas){
+  return TEMPERATURAS.map(t=>{
+    const doBucket = linhas.filter(l=>bucketTemperatura(l.temperatura)===t);
+    return {l:t.l, v:doBucket.length, cor:t.cor, quem:doBucket.map(l=>l.negocio||l.nome)};
+  }).filter(c=>c.v > 0);
+}
+
+/* Ganho mensal de um negócio de upgrade: o valor do plano novo menos a última
+   mensalidade que a marca pagava no Iugu antes dele. Mora aqui porque a aba
+   Gerencial e a Visão geral usam a mesma conta — a Laura pediu a diferença nas
+   duas (17 e 21/09/2026), "não o valor fechado". Sem mensalidade anterior no
+   Iugu o ganho fica em branco e quem chama decide o que fazer: somar o valor
+   cheio inflaria o número. */
+function ganhoDoUpgrade(n){
+  const dom = n.dominio || DOM_POR_CLIENTE[n.cliente || n.nome];
+  const mesRef = String(n.fechadoEm || n.data || '').slice(0,7);
+  const antes = (dom && mesRef) ? mensalidadeAntesDe(dom, mesRef) : null;
+  return antes ? {antes:antes.valor, mesAntes:antes.mes, ganhoMes:(n.valor||0) - antes.valor}
+               : {antes:null, mesAntes:null, ganhoMes:null};
+}
+
 /* --- 10/11. Cross-sell e Upsell: criadas E ganhas -------------------------
    Pedido da Laura em 17/09/2026: "senti falta das oportunidades criadas além
    das ganhas". Um negócio tem duas datas e elas caem em meses diferentes:
@@ -1530,6 +1576,7 @@ function linhasNegociosMes(categoria, m){
     if(!criado && !fechado) return;
     out.push({nome:n.cliente, cs:n.cs, dominio:n.dominio, produto:n.produto||'—',
       negocio:n.negocio, valor:n.valor||0, status:n.status, estagio:n.estagio,
+      temperatura:n.temperatura||'',
       data:n.data, fechadoEm:fim,
       momento: criado && ganho ? 'Criado e ganho no mês' : criado ? 'Criado no mês'
              : ganho ? 'Ganho no mês' : perdido ? 'Perdido no mês' : 'Fechado no mês',
@@ -1541,14 +1588,9 @@ function linhasNegociosMes(categoria, m){
    pagava no Iugu antes dele. Só para os negócios GANHOS — oportunidade criada
    e ainda aberta não mudou a conta de ninguém. */
 function linhasUpsellMes(m){
-  return linhasNegociosMes('up', m).map(n=>{
-    if(!n.ganho) return Object.assign({}, n, {antes:null, mesAntes:null, ganhoMes:null});
-    const dom = n.dominio || DOM_POR_CLIENTE[n.nome];
-    const antes = dom ? mensalidadeAntesDe(dom, (n.fechadoEm||n.data).slice(0,7)) : null;
-    return Object.assign({}, n, {antes: antes ? antes.valor : null,
-      mesAntes: antes ? antes.mes : null,
-      ganhoMes: antes ? (n.valor||0) - antes.valor : null});
-  });
+  return linhasNegociosMes('up', m).map(n=> n.ganho
+    ? Object.assign({}, n, ganhoDoUpgrade(n))
+    : Object.assign({}, n, {antes:null, mesAntes:null, ganhoMes:null}));
 }
 
 /* ---------------------------------------------------------------------------
@@ -1777,19 +1819,22 @@ const CARDS_GERENCIAL = [
       return {v:`${fmt.int(cri.length)} / ${fmt.int(gan.length)}`,
         s: rows.length ? `criadas / ganhas · ${fmt.moneyCompact(soma(gan,'valor'))} ganhos` : 'nenhum cross-sell no mês'}; },
     kpis:rows=>{ const cri = rows.filter(r=>r.criado), gan = rows.filter(r=>r.ganho);
-      const abertas = cri.filter(r=>r.status==='Em aberto'), perd = rows.filter(r=>r.perdido);
+      const abertas = rows.filter(r=>r.status==='Em aberto'), perd = rows.filter(r=>r.perdido);
       return [
         {l:'Oportunidades criadas', v:fmt.int(cri.length), s:fmt.moneyCompact(soma(cri,'valor'))+' em negócios novos'},
         {l:'Ganhas no mês', v:fmt.int(gan.length), s:fmt.moneyCompact(soma(gan,'valor'))+' fechados'},
-        {l:'Das criadas, ainda abertas', v:fmt.int(abertas.length), s:fmt.moneyCompact(soma(abertas,'valor'))+' em jogo'},
+        {l:'Em negociação', v:fmt.moneyCompact(soma(abertas,'valor')), s:fmt.int(abertas.length)+' em aberto · '+resumoTemperatura(abertas)},
         {l:'Perdidas no mês', v:fmt.int(perd.length), s:fmt.moneyCompact(soma(perd,'valor'))+' que não vieram'},
       ]; },
     metricas:[
       {k:'criadas', l:'Oportunidades criadas', f:fmt.int, v:rows=>rows.filter(r=>r.criado).length},
       {k:'ganhas', l:'Ganhas', f:fmt.int, v:rows=>rows.filter(r=>r.ganho).length},
     ],
+    tituloCategorias:'Em negociação por temperatura',
+    categorias:ctx=>categoriasTemperatura(linhasDoCard(cardGerencial('cross'), ctx).filter(r=>r.status==='Em aberto')),
     colunas:[COL_NOME, COL_CS_CARD, {k:'momento', l:'Momento'}, {k:'produto', l:'Produto'},
       {k:'negocio', l:'Negócio'}, {k:'status', l:'Status'}, {k:'estagio', l:'Estágio'},
+      {k:'temperatura', l:'Temperatura', f:v=>v||'—'},
       {k:'valor', l:'Valor', r:true, f:fmt.money},
       {k:'data', l:'Criado em', f:fmt.date}, {k:'fechadoEm', l:'Fechado em', f:fmt.date}],
   },
@@ -1803,19 +1848,23 @@ const CARDS_GERENCIAL = [
       return {v:fmt.moneyCompact(ganho),
         s: rows.length ? `${cri.length} criados / ${gan.length} ganhos · ${fmt.moneyCompact(ganho*12)}/ano` : 'nenhum upgrade no mês'}; },
     kpis:rows=>{ const cri = rows.filter(r=>r.criado), gan = rows.filter(r=>r.ganho);
+      const abertas = rows.filter(r=>r.status==='Em aberto');
       const com = gan.filter(r=>r.ganhoMes!=null), ganho = soma(com,'ganhoMes');
       return [
         {l:'Ganho a mais por mês', v:fmt.moneyCompact(ganho), s:'plano novo − mensalidade anterior'},
-        {l:'Upgrades ganhos', v:fmt.int(gan.length), s:fmt.moneyCompact(soma(gan,'valor'))+' em planos novos'},
+        {l:'Upgrades ganhos', v:fmt.int(gan.length), s:fmt.moneyCompact(soma(gan,'valor'))+' em planos novos'
+          + (gan.length-com.length ? ' · '+fmt.int(gan.length-com.length)+' sem base anterior' : '')},
         {l:'Oportunidades criadas', v:fmt.int(cri.length), s:fmt.moneyCompact(soma(cri,'valor'))+' entraram no funil'},
-        {l:'Sem base anterior', v:fmt.int(gan.length-com.length), s:'sem mensalidade no Iugu antes do upgrade'},
+        {l:'Em negociação', v:fmt.moneyCompact(soma(abertas,'valor')), s:fmt.int(abertas.length)+' em aberto · '+resumoTemperatura(abertas)},
       ]; },
     metricas:[
       {k:'criadas', l:'Upgrades criados', f:fmt.int, v:rows=>rows.filter(r=>r.criado).length},
       {k:'ganhas', l:'Upgrades ganhos', f:fmt.int, v:rows=>rows.filter(r=>r.ganho).length},
     ],
+    tituloCategorias:'Em negociação por temperatura',
+    categorias:ctx=>categoriasTemperatura(linhasDoCard(cardGerencial('up'), ctx).filter(r=>r.status==='Em aberto')),
     colunas:[COL_NOME, COL_CS_CARD, {k:'momento', l:'Momento'}, {k:'negocio', l:'Negócio'},
-      {k:'status', l:'Status'},
+      {k:'status', l:'Status'}, {k:'temperatura', l:'Temperatura', f:v=>v||'—'},
       {k:'valor', l:'Plano novo', r:true, f:fmt.money},
       {k:'antes', l:'Mensalidade anterior', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'ganhoMes', l:'Ganho por mês', r:true, f:v=>v==null?'—':fmt.money(v)},
@@ -2085,27 +2134,41 @@ const CARDS_VISAO = [
     capa:'Negócios criados nos quatro pipelines de CS dentro do período',
     fonte:'HubSpot — <code>createdate</code> do negócio, em qualquer um dos 4 pipelines de CS (Sucesso do Cliente, Integração, Plataforma e CS - Starter). O plano sai do pipeline: Starter é o "CS - Starter", Pro são os outros três — não existe campo de plano nesses negócios.',
     campoData:'data',
+    /* `valor` (amount do negócio) entrou em 21/09/2026 a pedido da Laura. Só
+       existe nas cargas a partir dessa data: num dados.js mais velho o campo
+       vem ausente e o painel mostra "—" em vez de somar zeros como se todas as
+       vendas fossem de graça. */
     linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
-      plano:planoBucketHS(o.pipeline), pipeline:o.pipeline, estagio:o.estagio, data:o.data}))
-      .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
-    resumo:rows=>({v:fmt.int(rows.length),
-      s: rows.length ? `${rows.filter(r=>r.plano==='Starter').length} Starter · ${rows.filter(r=>r.plano==='Pro').length} Pro`
-                     : 'nenhuma venda nova no período'}),
+      plano:planoBucketHS(o.pipeline), pipeline:o.pipeline, estagio:o.estagio,
+      valor: o.valor==null ? null : (o.valor||0), data:o.data}))
+      .sort((a,b)=>(b.valor||0)-(a.valor||0) || String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>{ const temValor = rows.some(r=>r.valor!=null);
+      return {v:fmt.int(rows.length),
+        s: !rows.length ? 'nenhuma venda nova no período'
+          : (temValor ? fmt.moneyCompact(soma(rows,'valor'))+' · ' : '')
+            + `${rows.filter(r=>r.plano==='Starter').length} Starter · ${rows.filter(r=>r.plano==='Pro').length} Pro`}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('novasVendas'), ctxPeriodo(periodoAnterior(ctx.p)));
       const st = rows.filter(r=>r.plano==='Starter'), pro = rows.filter(r=>r.plano==='Pro');
       const dif = rows.length - ant.length;
+      const temValor = rows.some(r=>r.valor!=null), valor = soma(rows,'valor');
+      const comValor = rows.filter(r=>r.valor>0).length;
       return [
         {l:'Novas vendas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
-        {l:'Starter', v:fmt.int(st.length), s:pctTexto(st.length, rows.length)+' das novas'},
-        {l:'Pro', v:fmt.int(pro.length), s:pctTexto(pro.length, rows.length)+' das novas'},
-        {l:'Marcas distintas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas diferentes no período'},
+        {l:'Valor das novas vendas', v: temValor ? fmt.moneyCompact(valor) : '—',
+         s: temValor ? fmt.int(comValor)+' com valor preenchido no HubSpot'
+                     : 'a carga ainda não traz o valor do negócio'},
+        {l:'Starter', v:fmt.int(st.length), s:pctTexto(st.length, rows.length)+' das novas'
+          + (temValor ? ' · '+fmt.moneyCompact(soma(st,'valor')) : '')},
+        {l:'Pro', v:fmt.int(pro.length), s:pctTexto(pro.length, rows.length)+' das novas'
+          + (temValor ? ' · '+fmt.moneyCompact(soma(pro,'valor')) : '')},
       ]; },
     metricas:[
       {k:'starter', l:'Starter', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Starter').length},
       {k:'pro', l:'Pro', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Pro').length},
     ],
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD,
-      {k:'plano', l:'Plano'}, {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
+      {k:'plano', l:'Plano'}, {k:'valor', l:'Valor', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
   },
   {
     id:'churnCs', titulo:'Churn', cor:'#C0453B',
@@ -2161,35 +2224,60 @@ const CARDS_VISAO = [
       {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
   },
   {
-    id:'negociosVg', titulo:'Negócios ganhos', cor:'#4048B8',
-    capa:'Cross-sell e upgrade ganhos, criados dentro do período',
-    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, negócios com estágio de ganho. <b>Conta pela data de criação</b> (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell — a aba Gerencial, essa sim, separa criado de fechado.',
+    id:'negociosVg', titulo:'Negócios', cor:'#4048B8',
+    capa:'Cross-sell e upgrade criados no período — o que já foi ganho e o que ainda está em negociação',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele — quem não tem mensalidade anterior fica em branco e é contado à parte.',
     campoData:'data',
-    linhas:ctx=>[...negociosGanhosNoPeriodo('cross', ctx.p).map(n=>({...n, categoriaTxt:'Cross-sell'})),
-                 ...negociosGanhosNoPeriodo('up', ctx.p).map(n=>({...n, categoriaTxt:'Upgrade'}))]
-      .map(n=>({nome:n.cliente, cs:n.cs, categoriaTxt:n.categoriaTxt, produto:n.produto||'—',
-        negocio:n.negocio, valor:n.valor||0, data:n.data, estagio:n.estagio}))
-      .sort((a,b)=>b.valor-a.valor),
-    resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valor')),
-      s: rows.length ? `${rows.length} negócio(s) · ${rows.filter(r=>r.categoriaTxt==='Cross-sell').length} cross · ${rows.filter(r=>r.categoriaTxt==='Upgrade').length} upgrade`
-                     : 'nenhum negócio ganho no período'}),
-    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('negociosVg'), ctxPeriodo(periodoAnterior(ctx.p)));
-      const cross = rows.filter(r=>r.categoriaTxt==='Cross-sell'), up = rows.filter(r=>r.categoriaTxt==='Upgrade');
-      const dif = rows.length - ant.length;
+    linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
+                 ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
+      .filter(n=>n.data >= ctx.p.ini && n.data <= ctx.p.fim)
+      .map(n=>{
+        const g = n.categoriaTxt==='Upgrade' ? ganhoDoUpgrade(n) : {antes:null, mesAntes:null, ganhoMes:null};
+        /* O que entra na conta de "ganho": no cross-sell é o valor do negócio;
+           no upgrade, a diferença que a marca passou a pagar. Upgrade sem base
+           anterior no Iugu não entra na soma — some, mas aparece na tabela e no
+           subtítulo do KPI. */
+        const efetivo = n.status!=='Ganho' ? 0
+          : n.categoriaTxt==='Upgrade' ? (g.ganhoMes==null ? 0 : g.ganhoMes) : (n.valor||0);
+        return {nome:n.cliente, cs:n.cs, dominio:n.dominio, categoriaTxt:n.categoriaTxt,
+          produto:n.produto||'—', negocio:n.negocio, status:n.status, estagio:n.estagio,
+          temperatura:n.temperatura||'', valor:n.valor||0, antes:g.antes, mesAntes:g.mesAntes,
+          ganhoMes:g.ganhoMes, efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
+          semBase: n.categoriaTxt==='Upgrade' && n.status==='Ganho' && g.ganhoMes==null};
+      })
+      .sort((a,b)=> b.efetivo-a.efetivo || b.valor-a.valor),
+    resumo:rows=>{ const gan = rows.filter(r=>r.status==='Ganho'), ab = rows.filter(r=>r.status==='Em aberto');
+      return {v:fmt.moneyCompact(soma(gan,'efetivo')),
+        s: rows.length ? `${gan.length} ganhos · ${fmt.moneyCompact(soma(ab,'valor'))} em negociação`
+                       : 'nenhum negócio criado no período'}; },
+    kpis:(rows,ctx)=>{ const gan = rows.filter(r=>r.status==='Ganho'), ab = rows.filter(r=>r.status==='Em aberto');
+      const cross = gan.filter(r=>r.categoriaTxt==='Cross-sell'), up = gan.filter(r=>r.categoriaTxt==='Upgrade');
+      const semBase = gan.filter(r=>r.semBase).length;
+      const ant = linhasDoCard(cardVisao('negociosVg'), ctxPeriodo(periodoAnterior(ctx.p)));
+      const ganhoAnt = soma(ant.filter(r=>r.status==='Ganho'),'efetivo');
+      const dif = soma(gan,'efetivo') - ganhoAnt;
       return [
-        {l:'Valor ganho', v:fmt.moneyCompact(soma(rows,'valor')), s:fmt.int(rows.length)+' negócios · '+(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
-        {l:'Cross-sell', v:fmt.int(cross.length), s:fmt.moneyCompact(soma(cross,'valor'))+' em produto novo'},
-        {l:'Upgrade', v:fmt.int(up.length), s:fmt.moneyCompact(soma(up,'valor'))+' em expansão'},
-        {l:'Período anterior', v:fmt.moneyCompact(soma(ant,'valor')), s:fmt.int(ant.length)+' negócios em '+rotuloPeriodo(periodoAnterior(ctx.p))},
+        {l:'Ganho no período', v:fmt.moneyCompact(soma(gan,'efetivo')),
+         s:fmt.int(gan.length)+' negócios · '+(dif>=0?'+':'')+fmt.moneyCompact(dif)+' vs período anterior'},
+        {l:'Em negociação', v:fmt.moneyCompact(soma(ab,'valor')),
+         s:fmt.int(ab.length)+' em aberto · '+resumoTemperatura(ab)},
+        {l:'Cross-sell ganho', v:fmt.moneyCompact(soma(cross,'valor')), s:fmt.int(cross.length)+' negócios de produto novo'},
+        {l:'Upgrade: ganho por mês', v:fmt.moneyCompact(soma(up,'efetivo')),
+         s:fmt.int(up.length)+' upgrades'+(semBase?' · '+fmt.int(semBase)+' sem base anterior':'')+' · é a diferença, não o plano cheio'},
       ]; },
     metricas:[
-      {k:'valorCross', l:'Cross-sell', f:fmt.money, v:rows=>soma(rows.filter(r=>r.categoriaTxt==='Cross-sell'),'valor')},
-      {k:'valorUp', l:'Upgrade', f:fmt.money, v:rows=>soma(rows.filter(r=>r.categoriaTxt==='Upgrade'),'valor')},
+      {k:'valorGanho', l:'Ganho (upgrade pela diferença)', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Ganho'),'efetivo')},
+      {k:'valorNegociacao', l:'Em negociação', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Em aberto'),'valor')},
     ],
-    tituloCategorias:'Negócios por categoria (este período × anterior)',
-    categorias:()=>categoriasNegocios(),
+    tituloCategorias:'Em negociação por temperatura',
+    categorias:ctx=>categoriasTemperatura(linhasDoCard(cardVisao('negociosVg'), ctx).filter(r=>r.status==='Em aberto')),
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'categoriaTxt', l:'Categoria'},
-      {k:'produto', l:'Produto'}, {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}],
+      {k:'produto', l:'Produto'}, {k:'negocio', l:'Negócio'}, {k:'status', l:'Status'},
+      {k:'estagio', l:'Estágio'}, {k:'temperatura', l:'Temperatura', f:v=>v||'—'},
+      {k:'valor', l:'Valor do negócio', r:true, f:fmt.money},
+      {k:'antes', l:'Mensalidade anterior', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'ganhoMes', l:'Ganho por mês (upgrade)', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'fechadoEm', l:'Fechado em', f:fmt.date}],
   },
   {
     id:'funil', titulo:'Funil de onboarding', cor:'#1E74C8',
