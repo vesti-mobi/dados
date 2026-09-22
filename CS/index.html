@@ -433,6 +433,13 @@ td.strong{font-weight:600}
 .gdetalhe .card{margin-bottom:16px}
 .gcomp{padding:0 18px 14px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
 .gcomp b{color:var(--ink);font-weight:600}
+/* projeção do mês em andamento, na aba Bonificação */
+.cell-proj{display:block;font-size:11px;line-height:1.3;margin-top:3px;color:var(--acc);font-variant-numeric:tabular-nums}
+.cell-proj em{font-style:normal;color:var(--ink-3)}
+.aviso-proj{display:block;padding:11px 14px;margin-bottom:14px;
+  background:var(--acc-soft);border:1px solid var(--acc-line);border-radius:var(--r-lg);
+  font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.aviso-proj b{color:var(--ink)}
 
 /* --- responsivo --- */
 @media (max-width:1080px){
@@ -2997,7 +3004,13 @@ const TABS = [
        escolhido no seletor próprio. */
     id:'bonificacao', grupo:'Operação', nav:'Bonificação', cor:'#7A4FB5', cor2:'#B7791F',
     titulo:'Bonificação — números do mês',
-    desc:'Uma linha por CS, uma coluna por regra, sempre no <b>mês fechado</b>. '
+    desc:'Uma linha por CS, uma coluna por regra. '
+      + '<b>No mês que ainda está correndo, cada número vem com uma projeção do fim do mês</b> (a linha <b>≈</b> embaixo dele), '
+      + 'inclusive na tabela de pontuação — pedido da Laura em 22/09/2026, para não esperar o mês fechar para saber onde a meta vai dar. '
+      + 'O <b>Tino</b> projeta <b>marca a marca</b>: quem usou 20 eventos em 15 dias está no ritmo de bater os 40 e já conta como 1 na projeção. '
+      + '<b>Integrações ativas</b> somam quem já contou no mês e quem contou no mês passado e ainda não apareceu. '
+      + 'O resto (GMV, mensalidade, VestiPago, reuniões e varejos) é <b>regra de três pelos dias corridos</b> — a mensalidade é a menos confiável das três, porque as faturas vencem em dias concentrados. '
+      + 'Passe o mouse no número para ver o método e quem sustenta a projeção. Mês fechado não tem projeção: o número dele já é o número. '
       + 'Onde a regra pede comparação, a variação aparece embaixo do número: '
       + '<b>Tino</b>, <b>mensalidade</b> e <b>integrações ativas</b> comparam com a <b>marca d\'água</b> do CS — o maior número '
       + 'que ele já registrou em um mês, contando só os meses anteriores ao escolhido; '
@@ -3030,11 +3043,18 @@ const TABS = [
       const met = METRICAS();
       const t = k => rows.reduce((a,r)=>a+(r[k]||0),0);
       const fmtU = (k)=>{ const m=met.find(x=>x.k===k); return m && m.unidade==='R$' ? fmt.moneyCompact(t(k)) : fmt.int(t(k)) };
+      /* No mês em andamento o subtítulo vira a projeção: é a primeira pergunta
+         de quem abre a aba antes de o mês fechar. */
+      const p = projecaoBonificacao();
+      const projU = k => { const m = met.find(x=>x.k===k);
+        const soma = rows.reduce((a,r)=>{ const v = projecaoDe(r.cs,k); return a + (v==null ? (r[k]||0) : v) }, 0);
+        return m && m.unidade==='R$' ? fmt.moneyCompact(soma) : fmt.int(Math.round(soma)) };
+      const sub = (k, txt) => p ? '≈ '+projU(k)+' projetado no mês' : txt;
       return [
-        {l:'Reuniões no mês', v:fmtU('reunioes'), s:'time todo'},
-        {l:'Marcas +40 eventos no Tino', v:fmtU('tino60'), s:'no mês escolhido'},
-        {l:'Varejos novos', v:fmtU('filiais'), s:'filiais de marca já existente'},
-        {l:'Receita de mensalidade', v:fmtU('mensalidade'), s:'soma das carteiras na visão'},
+        {l:'Reuniões no mês', v:fmtU('reunioes'), s:sub('reunioes','time todo')},
+        {l:'Marcas +40 eventos no Tino', v:fmtU('tino60'), s:sub('tino60','no mês escolhido')},
+        {l:'Varejos novos', v:fmtU('filiais'), s:sub('filiais','filiais de marca já existente')},
+        {l:'Receita de mensalidade', v:fmtU('mensalidade'), s:sub('mensalidade','soma das carteiras na visão')},
       ];
     },
     graficos:[
@@ -3344,6 +3364,13 @@ function linhasBonificacao(mesForcado){
   /* Quem não teve nenhuma linha no mês ainda precisa existir na tabela: um CS
      zerado é informação, não ausência de dado. */
   DATA.meta.cs?.forEach(cs=>{ if(cs && cs!=='Sem CS') linha(cs) });
+  /* Mês em andamento: carrega junto a lista de quem sustenta a projeção, para
+     o balãozinho da célula poder mostrar as marcas que devem bater a meta. */
+  const proj = projecaoBonificacao(mes);
+  if(proj) porCs.forEach(l=>{
+    const pl = proj.porCs.get(l.cs); if(!pl) return;
+    Object.keys(pl).forEach(k=>{ if(k.startsWith('_proj_quem_')) l[k] = pl[k] });
+  });
   return [...porCs.values()].sort((a,b2)=>
     /^\(?Sem/i.test(a.cs) ? 1 : /^\(?Sem/i.test(b2.cs) ? -1 : a.cs.localeCompare(b2.cs,'pt-BR'));
 }
@@ -3377,6 +3404,136 @@ function linhasBonificacao(mesForcado){
      "Integrações ativas" (estoque), que herdou a vaga de pontos, agora valendo
      10. Mensalidade virou percentual, e VestiPago e GMV ganharam meta — antes
      qualquer crescimento pagava. */
+/* ============================================================================
+   PROJEÇÃO DO MÊS EM ANDAMENTO
+   Pedido da Laura em 22/09/2026: "só conseguimos ver de fato quando o mês
+   termina, mas precisava ver uma projeção — se a marca usou 20 eventos em 15
+   dias, é provável que chegue nos 40, então na projeção deveria contar como 1".
+
+   Vale só para o mês que ainda está correndo (o último com dado no arquivo).
+   Mês fechado não tem projeção: o número dele já é o número.
+
+   Três métodos, porque as regras não são todas do mesmo tipo:
+
+   1. REGRA DE TRÊS (gmv, mensalidade, vestipago, reuniões, varejos) — o que já
+      aconteceu, esticado até o fim do mês pelos dias corridos. É o que a Laura
+      descreveu.
+   2. POR MARCA (Tino) — não adianta esticar a CONTAGEM de marcas: uma marca que
+      já bateu 40 não vira duas no fim do mês. Aqui a régua é esticada marca a
+      marca (eventos dela ÷ dias corridos × dias do mês) e depois se conta
+      quantas devem cruzar os 40. É exatamente o exemplo da Laura.
+   3. QUEM COSTUMA REPETIR (integrações ativas) — também é contagem de marcas
+      distintas, mas não existe série diária de "vendeu com integração". A
+      projeção é o que já contou + as marcas que contaram no mês passado e ainda
+      não apareceram neste, que é o comportamento normal de uma medida de
+      estoque.
+
+   A mensalidade é a mais frágil das três: as faturas vencem em dias
+   concentrados, então a regra de três pode errar feio no começo do mês. Por
+   isso a projeção aparece sempre rotulada como estimativa, e o painel continua
+   mostrando o número real do mês ao lado.
+   ========================================================================== */
+function mesEmAndamento(mes){ return !!mes && mes === LIMITE_DADOS.fim.slice(0,7) }
+function diasDoMes(mes){ return Number(ultimoDiaDoMes(mes+'-01').slice(8,10)) }
+/* Dias já corridos do mês: até o último dia com dado no arquivo, não até hoje —
+   a carga roda de madrugada, e contar o dia de hoje (ainda sem pedido nenhum)
+   derrubaria toda projeção na primeira hora da manhã. */
+function diasCorridosDoMes(mes){ return Number(LIMITE_DADOS.fim.slice(8,10)) }
+
+const projecaoBonificacao = (()=>{
+  const cache = new Map();
+  return (mes)=>{
+    mes = mes || mesBonificacao();
+    if(!mesEmAndamento(mes)) return null;
+    if(cache.has(mes)) return cache.get(mes);
+
+    const dec = diasCorridosDoMes(mes), tot = diasDoMes(mes);
+    const fator = dec > 0 ? tot/dec : 1;
+    const b = DATA.bonificacao || {};
+    const lim = b.limiteTino || 40;
+    const porCs = new Map();   // cs -> {k: valor projetado, _proj_quem_k: [...]}
+    const alvo = cs => {
+      let l = porCs.get(cs);
+      if(!l){ l = {cs}; porCs.set(cs, l) }
+      return l;
+    };
+
+    /* 2. Tino, marca a marca. */
+    const marcas = new Map();
+    (DATA.tino.series||[]).forEach(x=>{
+      if(String(x.data||'').slice(0,7) !== mes) return;
+      const k = x.dominio || x.cliente; if(!k) return;
+      const a = marcas.get(k) || {cs: normalizarCs(x.cs) || CS_POR_DOM[x.dominio] || CS_POR_CLIENTE[x.cliente] || 'Sem CS',
+                                  cliente: x.cliente || k, eventos: 0};
+      a.eventos += Number(x.eventos)||0;
+      marcas.set(k, a);
+    });
+    marcas.forEach(a=>{
+      const projetado = a.eventos * fator;
+      if(a.eventos < lim && projetado < lim) return;
+      const l = alvo(a.cs);
+      l.tino60 = (l.tino60||0) + 1;
+      (l._proj_quem_tino60 || (l._proj_quem_tino60 = [])).push(
+        a.cliente + ' (' + fmt.int(a.eventos) + (a.eventos >= lim ? ' — já bateu' : ' → ~' + fmt.int(projetado)) + ')');
+    });
+
+    /* 3. Integrações ativas: quem já contou + quem costuma repetir. */
+    const ant = mesAnterior(mes);
+    const jaContou = new Map();  // cs -> Set(marca)
+    const doMesPassado = new Map();
+    (b.detalhe||[]).forEach(x=>{
+      if(x.k !== 'integracoesAtivas') return;
+      const mapa = x.mes === mes ? jaContou : x.mes === ant ? doMesPassado : null;
+      if(!mapa) return;
+      (mapa.get(x.cs) || mapa.set(x.cs, new Set()).get(x.cs)).add(x.cliente);
+    });
+    const csIntegra = new Set([...jaContou.keys(), ...doMesPassado.keys()]);
+    csIntegra.forEach(cs=>{
+      const ja = jaContou.get(cs) || new Set();
+      const antes = doMesPassado.get(cs) || new Set();
+      const faltam = [...antes].filter(m=>!ja.has(m));
+      const l = alvo(cs);
+      l.integracoesAtivas = ja.size + faltam.length;
+      if(faltam.length) l._proj_quem_integracoesAtivas =
+        ['já contaram: '+ja.size, 'devem repetir: '+faltam.slice(0,20).join(', ')];
+    });
+
+    /* 1. O resto, regra de três em cima do que a carga já apurou no mês. */
+    const LINEARES = ['gmv','mensalidade','vestipago','reunioes','filiais'];
+    (b.linhas||[]).forEach(x=>{
+      if(x.mes !== mes || !LINEARES.includes(x.k)) return;
+      alvo(x.cs)[x.k] = (Number(x.valor)||0) * fator;
+    });
+
+    const out = {mes, dias:dec, diasTotal:tot, fator, porCs,
+      metodo:{tino60:'marca a marca', integracoesAtivas:'quem costuma repetir'}};
+    cache.set(mes, out);
+    return out;
+  };
+})();
+
+/* Valor projetado de uma regra para um CS — null quando não há projeção (mês
+   fechado) ou quando ela não muda nada (o que já aconteceu é o que vai ser). */
+function projecaoDe(cs, k){
+  const p = projecaoBonificacao(); if(!p) return null;
+  const l = p.porCs.get(cs); if(!l) return null;
+  const v = l[k];
+  return (v==null) ? null : v;
+}
+/* Linha inteira projetada, com as mesmas bases da linha real: serve para rodar
+   as REGRAS_PONTOS em cima da projeção sem duplicar a régua de pontuação. */
+function linhaProjetada(r){
+  const p = projecaoBonificacao(); if(!p) return null;
+  const l = p.porCs.get(r.cs);
+  const out = Object.assign({}, r);
+  METRICAS().forEach(m=>{
+    const v = l ? l[m.k] : null;
+    /* Regra sem projeção própria mantém o valor real — não inventa zero. */
+    if(v != null) out[m.k] = m.unidade === 'R$' ? v : Math.round(v);
+  });
+  return out;
+}
+
 const REGRAS_PONTOS = [
   { k:'tino60', l:'Tino', regra:'10 pts por cliente extra (40+ eventos) acima da marca d\u2019água',
     calc:r=>pontosExtra(r,'tino60',10,'cliente(s)') },
@@ -3456,6 +3613,13 @@ function renderPontos(rows){
   }
   /* A régua em cima da tabela, em texto corrido e QUEBRANDO LINHA: em uma linha
      só (que é como o .eyebrow desenha) ela some na borda do card. */
+  const p = projecaoBonificacao(mes);
+  if(p) card.appendChild(el('div',{class:'aviso-proj', style:'margin:0 18px 12px'},
+    `<b>Mês em andamento.</b> Os números em <b style="color:var(--acc)">≈</b> são a `
+    + `<b>projeção do fim do mês</b>, com ${p.dias} de ${p.diasTotal} dias corridos: `
+    + `o Tino projeta marca a marca (quem está no ritmo de bater os ${(DATA.bonificacao||{}).limiteTino||40} eventos conta), `
+    + `integrações ativas somam quem já contou e quem costuma repetir, e o resto é regra de três pelos dias. `
+    + `Passe o mouse para ver o método e quem sustenta cada número.`));
   card.appendChild(el('div',{style:'padding:0 18px 12px;font-size:12px;line-height:1.7;color:var(--ink-3)'},
     REGRAS_PONTOS.map(g=>`<b>${g.l}</b>: ${g.regra}`).join(' &nbsp;·&nbsp; ')
     + ' &nbsp;·&nbsp; queda não tira ponto'
@@ -3463,12 +3627,21 @@ function renderPontos(rows){
     + ', de julho de 2026 em diante.'));
 
   const linhas = rows.filter(r=>ehPontuado(r.cs)).map(r=>{
-    const o = {cs:r.cs, total:0};
+    const o = {cs:r.cs, total:0, totalProj:0};
+    /* A projeção roda a MESMA régua de pontos, só que sobre a linha projetada —
+       assim não existe uma segunda régua para manter em dia. */
+    const rp = linhaProjetada(r);
     REGRAS_PONTOS.forEach(g=>{
       const res = g.calc(r) || {p:0};
       o[g.k] = res.p || 0; o['_como_'+g.k] = res.como || '';
       o['_alerta_'+g.k] = !!res.alerta;
       o.total += o[g.k];
+      if(rp){
+        const resP = g.calc(rp) || {p:0};
+        o['_proj_'+g.k] = resP.p || 0;
+        o['_projComo_'+g.k] = resP.como || '';
+        o.totalProj += o['_proj_'+g.k];
+      }
     });
     return o;
   }).sort((a,b)=> b.total - a.total || a.cs.localeCompare(b.cs,'pt-BR'));
@@ -3498,23 +3671,35 @@ function renderPontos(rows){
       td.innerHTML = l[g.k] ? `<span class="cell-main">${fmt.int(l[g.k])}</span>`
                             : '<span class="cell-sub">—</span>';
       if(l['_alerta_'+g.k]) td.innerHTML += '<span class="cell-sub var-down">base ~0 no ano anterior</span>';
+      if(l['_proj_'+g.k] != null && l['_proj_'+g.k] !== l[g.k])
+        td.innerHTML += `<span class="cell-proj">≈ ${fmt.int(l['_proj_'+g.k])} <em>projeção</em></span>`;
       /* De onde saiu o ponto: sem isso a CS vê "30" e não tem como conferir se
          são 3 clientes no Tino ou arredondamento da mensalidade. */
-      const como = l['_como_'+g.k];
-      td.title = g.regra + (como ? ' · ' + como : '');
+      const como = l['_como_'+g.k], comoP = l['_projComo_'+g.k];
+      td.title = g.regra + (como ? ' · ' + como : '')
+        + (l['_proj_'+g.k] != null && l['_proj_'+g.k] !== l[g.k]
+           ? ' · projeção do fim do mês: ' + fmt.int(l['_proj_'+g.k]) + ' pts' + (comoP ? ' ('+comoP+')' : '') : '');
       tr.appendChild(td);
     });
     tr.appendChild(el('td',{class:'r num strong'},
-      `<span class="cell-main" style="font-weight:700">${fmt.int(l.total)}</span>`));
+      `<span class="cell-main" style="font-weight:700">${fmt.int(l.total)}</span>`
+      + (l.totalProj && l.totalProj !== l.total ? `<span class="cell-proj">≈ ${fmt.int(l.totalProj)} <em>projeção</em></span>` : '')));
     tbody.appendChild(tr);
   });
   /* Fecha com o somatório das três: a bonificação é discutida em conjunto, e
      "quanto deu no mês" é a primeira pergunta depois de "quanto eu fiz". */
   const tot = el('tr'); tot.style.fontWeight = '600';
   tot.appendChild(el('td',{},'<span class="cell-sub">Soma das três</span>'));
-  REGRAS_PONTOS.forEach(g=>tot.appendChild(el('td',{class:'r num'},
-    fmt.int(linhas.reduce((a,l)=>a+l[g.k],0)))));
-  tot.appendChild(el('td',{class:'r num'}, fmt.int(linhas.reduce((a,l)=>a+l.total,0))));
+  const somaProj = k => linhas.reduce((a,l)=>a+(l['_proj_'+k] ?? l[k]),0);
+  REGRAS_PONTOS.forEach(g=>{
+    const soma = linhas.reduce((a,l)=>a+l[g.k],0), sp = somaProj(g.k);
+    tot.appendChild(el('td',{class:'r num'}, fmt.int(soma)
+      + (sp !== soma ? `<span class="cell-proj">≈ ${fmt.int(sp)}</span>` : '')));
+  });
+  const totalReal = linhas.reduce((a,l)=>a+l.total,0);
+  const totalProj = linhas.reduce((a,l)=>a+(l.totalProj||l.total),0);
+  tot.appendChild(el('td',{class:'r num'}, fmt.int(totalReal)
+    + (totalProj !== totalReal ? `<span class="cell-proj">≈ ${fmt.int(totalProj)}</span>` : '')));
   tbody.appendChild(tot);
 
   table.appendChild(tbody);
@@ -4649,9 +4834,28 @@ function celula(r,c){
         const semTipo = r.filiaisSemTipo || 0;
         if(semTipo) sub = `<span class="cell-sub">+${fmt.int(semTipo)} sem classificação</span>`;
       }
+      /* Mês em andamento: embaixo do número real vem quanto ele deve virar até
+         o fim do mês, com o método escrito no balãozinho. Mês fechado não tem
+         projeção nenhuma — o número dele já é o número. */
+      const proj = projecaoDe(r.cs, c.k);
+      let projTxt = '';
+      if(proj != null){
+        const p = projecaoBonificacao();
+        const alvoTxt = dinheiro ? fmt.moneyCompact(proj) : fmt.int(Math.round(proj));
+        const metodo = p.metodo[c.k] || 'regra de três pelos dias corridos';
+        projTxt = `<span class="cell-proj">≈ ${alvoTxt} <em>projeção</em></span>`;
+        sub = sub + projTxt;
+      }
       td.innerHTML = `<span class="cell-main">${dinheiro?fmt.moneyCompact(vv):fmt.int(vv)}</span>` + sub;
       const quemSem = c.k==='filiais' ? (r['_quem_filiaisSemTipo']||[]) : [];
-      let titulo = (emPct && deltaTxt ? deltaTxt + (quem.length?' · ':'') : '')
+      const p2 = proj != null ? projecaoBonificacao() : null;
+      const projTitulo = p2
+        ? 'projeção do fim do mês (' + (p2.metodo[c.k] || 'regra de três pelos dias corridos')
+          + ', ' + p2.dias + ' de ' + p2.diasTotal + ' dias corridos)'
+          + ((r['_proj_quem_'+c.k]||[]).length ? ' · ' + r['_proj_quem_'+c.k].slice(0,20).join(', ') : '')
+        : '';
+      let titulo = (projTitulo ? projTitulo + ' · ' : '')
+        + (emPct && deltaTxt ? deltaTxt + (quem.length?' · ':'') : '')
         + quem.slice(0,40).join(', ')
         + (quemSem.length ? (quem.length?' · ':'') + 'sem classificação: ' + quemSem.slice(0,20).join(', ') : '');
       /* Varejos é a única coluna editável do painel: o cadastro não sabe dizer
@@ -5069,8 +5273,13 @@ function atualizarTopo(){
      janela de datas no topo seria uma resposta que não vale para o que está na
      tela. */
   if(t && t.filtros && !t.filtros.includes('periodo') && t.filtros.includes('mesBonificacao')){
-    $('#wkNow').textContent = rotuloMes(mesBonificacao());
-    $('#wkRange').textContent = 'mês fechado';
+    const m = mesBonificacao();
+    $('#wkNow').textContent = rotuloMes(m);
+    const p = projecaoBonificacao(m);
+    /* A lista de meses da bonificação vai até o fim do ano; mês que ainda nem
+       começou não é "fechado" — ali só existem reuniões já agendadas. */
+    $('#wkRange').textContent = p ? `mês em andamento · ${p.dias} de ${p.diasTotal} dias`
+      : m > LIMITE_DADOS.fim.slice(0,7) ? 'mês ainda não começou' : 'mês fechado';
     return;
   }
   /* Mesmo caso na aba Gerencial: o recorte dela é um mês civil. */

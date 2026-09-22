@@ -408,6 +408,38 @@ o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da 
 carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
 números forem para o BigQuery, o card volta como os outros.
 
+## Projeção do mês em andamento (Bonificação, 22/09/2026)
+
+Pedido da Laura: *"só conseguimos ver de fato quando o mês termina, mas precisava
+ver uma projeção — se a marca usou 20 eventos em 15 dias, é provável que chegue
+nos 40, então na projeção deveria contar como 1"*.
+
+No mês que ainda está correndo, cada número da aba ganha embaixo uma linha **≈**
+com a projeção do fim do mês — na tabela de números e também na **pontuação**,
+onde a projeção roda a mesma régua de pontos sobre a linha projetada (não existe
+uma segunda régua para manter em dia). Mês fechado não tem projeção: o número
+dele já é o número. Mês que ainda não começou aparece como tal.
+
+Três métodos, porque as regras não são todas do mesmo tipo:
+
+| Regra | Método | Por quê |
+|---|---|---|
+| Tino (marcas com +40 eventos) | **marca a marca**: eventos da marca ÷ dias corridos × dias do mês; conta quem cruza os 40 | esticar a contagem não faz sentido — uma marca que já bateu não vira duas |
+| Integrações ativas | **quem costuma repetir**: quem já contou no mês + quem contou no mês passado e ainda não apareceu | é contagem de marcas distintas e não existe série diária de "vendeu com integração" |
+| GMV, mensalidade, VestiPago, reuniões, varejos | **regra de três** pelos dias corridos | é o que a Laura descreveu, e vale para medida que acumula |
+
+O método do Tino foi conferido contra os meses fechados: rodando a mesma conta
+sem projeção em julho e agosto de 2026, a contagem por marca bate **exatamente**
+com o número que a carga apura para cada CS.
+
+Duas ressalvas que estão escritas na própria aba:
+
+- **A mensalidade é a mais frágil**: as faturas vencem em dias concentrados, então
+  a regra de três erra mais no começo do mês.
+- **"Dias corridos" conta até o último dia com dado no arquivo**, não até hoje — a
+  carga roda de madrugada, e incluir o dia de hoje (ainda sem pedido nenhum)
+  derrubaria toda projeção na primeira hora da manhã.
+
 ## Ressalvas que mudam a leitura do número
 
 Estão também dentro do painel: clique no selo do topo direito.
