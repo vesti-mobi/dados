@@ -1,18 +1,16 @@
 {
-  "geradoEm": "2026-09-21T22:05:14.176605+00:00",
+  "geradoEm": "2026-09-22T15:28:12.344572+00:00",
   "reguaDias": 15,
   "semDominio": {
-    "qtFaturas": 32,
-    "valor": 15811.5,
+    "qtFaturas": 30,
+    "valor": 14216.5,
     "subcontas": {
-      "*Vesti Setup*": 5,
-      "**VESTI**": 2,
-      "*Vesti - Uemtel*": 9,
       "*Vesti Starter*": 5,
+      "*Vesti - Uemtel*": 11,
+      "*Vesti Setup*": 5,
+      "*Vesti Portal*": 1,
       "*Vesti - Multimarcas*": 5,
       "*Vesti - Atta*": 2,
-      "*Vesti Portal*": 1,
-      "*Mensalidade Vesti*": 2,
       "*Vesti - Glads*": 1
     }
   },
@@ -20,7 +18,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 600.0,
-      "diasAtraso": 357,
+      "diasAtraso": 358,
       "vencimentoMaisAntigo": "2025-09-29",
       "subcontas": [
         "*Vesti Setup*"
@@ -28,7 +26,7 @@
       "faturas": [
         {
           "venc": "2025-09-29",
-          "dias": 357,
+          "dias": 358,
           "valor": 600.0,
           "status": "expired",
           "subconta": "*Vesti Setup*"
@@ -46,7 +44,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 60.0,
-      "diasAtraso": 280,
+      "diasAtraso": 281,
       "vencimentoMaisAntigo": "2025-12-15",
       "subcontas": [
         "*Vesti Portal*"
@@ -54,7 +52,7 @@
       "faturas": [
         {
           "venc": "2025-12-15",
-          "dias": 280,
+          "dias": 281,
           "valor": 60.0,
           "status": "expired",
           "subconta": "*Vesti Portal*"
@@ -72,7 +70,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 151,
+      "diasAtraso": 152,
       "vencimentoMaisAntigo": "2026-04-23",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -80,7 +78,7 @@
       "faturas": [
         {
           "venc": "2026-04-23",
-          "dias": 151,
+          "dias": 152,
           "valor": 429.0,
           "status": "expired",
           "subconta": "*Vesti - Uemtel*"
@@ -98,7 +96,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 147,
+      "diasAtraso": 148,
       "vencimentoMaisAntigo": "2026-04-27",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -106,7 +104,7 @@
       "faturas": [
         {
           "venc": "2026-04-27",
-          "dias": 147,
+          "dias": 148,
           "valor": 429.0,
           "status": "expired",
           "subconta": "*Vesti - Uemtel*"
@@ -124,7 +122,7 @@
     {
       "qtFaturas": 2,
       "valorEmAberto": 2000.0,
-      "diasAtraso": 50,
+      "diasAtraso": 51,
       "vencimentoMaisAntigo": "2026-08-02",
       "subcontas": [
         "*Vesti Setup*"
@@ -132,14 +130,14 @@
       "faturas": [
         {
           "venc": "2026-08-02",
-          "dias": 50,
+          "dias": 51,
           "valor": 1000.0,
           "status": "expired",
           "subconta": "*Vesti Setup*"
         },
         {
           "venc": "2026-09-02",
-          "dias": 19,
+          "dias": 20,
           "valor": 1000.0,
           "status": "pending",
           "subconta": "*Vesti Setup*"
@@ -157,7 +155,7 @@
     {
       "qtFaturas": 2,
       "valorEmAberto": 2725.0,
-      "diasAtraso": 47,
+      "diasAtraso": 48,
       "vencimentoMaisAntigo": "2026-08-05",
       "subcontas": [
         "*Vesti Setup*"
@@ -165,14 +163,14 @@
       "faturas": [
         {
           "venc": "2026-08-05",
-          "dias": 47,
+          "dias": 48,
           "valor": 1600.0,
           "status": "expired",
           "subconta": "*Vesti Setup*"
         },
         {
           "venc": "2026-09-03",
-          "dias": 18,
+          "dias": 19,
           "valor": 1125.0,
           "status": "pending",
           "subconta": "*Vesti Setup*"
@@ -190,7 +188,7 @@
     {
       "qtFaturas": 2,
       "valorEmAberto": 858.0,
-      "diasAtraso": 42,
+      "diasAtraso": 43,
       "vencimentoMaisAntigo": "2026-08-10",
       "subcontas": [
         "*Vesti - Atta*"
@@ -198,14 +196,14 @@
       "faturas": [
         {
           "venc": "2026-08-10",
-          "dias": 42,
+          "dias": 43,
           "valor": 429.0,
           "status": "in_protest",
           "subconta": "*Vesti - Atta*"
         },
         {
           "venc": "2026-09-05",
-          "dias": 16,
+          "dias": 17,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Atta*"
@@ -223,7 +221,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 39.9,
-      "diasAtraso": 37,
+      "diasAtraso": 38,
       "vencimentoMaisAntigo": "2026-08-15",
       "subcontas": [
         "*Vesti - Multimarcas*"
@@ -231,7 +229,7 @@
       "faturas": [
         {
           "venc": "2026-08-15",
-          "dias": 37,
+          "dias": 38,
           "valor": 39.9,
           "status": "expired",
           "subconta": "*Vesti - Multimarcas*"
@@ -249,7 +247,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 780.0,
-      "diasAtraso": 37,
+      "diasAtraso": 38,
       "vencimentoMaisAntigo": "2026-08-15",
       "subcontas": [
         "*Vesti - Glads*"
@@ -257,7 +255,7 @@
       "faturas": [
         {
           "venc": "2026-08-15",
-          "dias": 37,
+          "dias": 38,
           "valor": 780.0,
           "status": "expired",
           "subconta": "*Vesti - Glads*"
@@ -275,7 +273,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 39.9,
-      "diasAtraso": 36,
+      "diasAtraso": 37,
       "vencimentoMaisAntigo": "2026-08-16",
       "subcontas": [
         "*Vesti - Multimarcas*"
@@ -283,7 +281,7 @@
       "faturas": [
         {
           "venc": "2026-08-16",
-          "dias": 36,
+          "dias": 37,
           "valor": 39.9,
           "status": "expired",
           "subconta": "*Vesti - Multimarcas*"
@@ -301,7 +299,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 29.9,
-      "diasAtraso": 32,
+      "diasAtraso": 33,
       "vencimentoMaisAntigo": "2026-08-20",
       "subcontas": [
         "*Vesti - Multimarcas*"
@@ -309,7 +307,7 @@
       "faturas": [
         {
           "venc": "2026-08-20",
-          "dias": 32,
+          "dias": 33,
           "valor": 29.9,
           "status": "expired",
           "subconta": "*Vesti - Multimarcas*"
@@ -327,7 +325,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 579.0,
-      "diasAtraso": 31,
+      "diasAtraso": 32,
       "vencimentoMaisAntigo": "2026-08-21",
       "subcontas": [
         "*Vesti Starter*"
@@ -335,7 +333,7 @@
       "faturas": [
         {
           "venc": "2026-08-21",
-          "dias": 31,
+          "dias": 32,
           "valor": 579.0,
           "status": "expired",
           "subconta": "*Vesti Starter*"
@@ -353,7 +351,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 29,
+      "diasAtraso": 30,
       "vencimentoMaisAntigo": "2026-08-23",
       "subcontas": [
         "*Vesti Starter*"
@@ -361,7 +359,7 @@
       "faturas": [
         {
           "venc": "2026-08-23",
-          "dias": 29,
+          "dias": 30,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
@@ -379,7 +377,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 29,
+      "diasAtraso": 30,
       "vencimentoMaisAntigo": "2026-08-23",
       "subcontas": [
         "*Vesti Starter*"
@@ -387,7 +385,7 @@
       "faturas": [
         {
           "venc": "2026-08-23",
-          "dias": 29,
+          "dias": 30,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
@@ -404,34 +402,8 @@
     },
     {
       "qtFaturas": 1,
-      "valorEmAberto": 756.0,
-      "diasAtraso": 27,
-      "vencimentoMaisAntigo": "2026-08-25",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-08-25",
-          "dias": 27,
-          "valor": 756.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ],
-      "domain_id": "1232863",
-      "name": "Califor",
-      "cs": "Thamiris Ribeiro",
-      "canal": "Vesti",
-      "partner_raw": "Vesti",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
       "valorEmAberto": 29.9,
-      "diasAtraso": 24,
+      "diasAtraso": 25,
       "vencimentoMaisAntigo": "2026-08-28",
       "subcontas": [
         "*Vesti - Multimarcas*"
@@ -439,7 +411,7 @@
       "faturas": [
         {
           "venc": "2026-08-28",
-          "dias": 24,
+          "dias": 25,
           "valor": 29.9,
           "status": "pending",
           "subconta": "*Vesti - Multimarcas*"
@@ -457,7 +429,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 23,
+      "diasAtraso": 24,
       "vencimentoMaisAntigo": "2026-08-29",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -465,7 +437,7 @@
       "faturas": [
         {
           "venc": "2026-08-29",
-          "dias": 23,
+          "dias": 24,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
@@ -483,7 +455,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 23,
+      "diasAtraso": 24,
       "vencimentoMaisAntigo": "2026-08-29",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -491,7 +463,33 @@
       "faturas": [
         {
           "venc": "2026-08-29",
-          "dias": 23,
+          "dias": 24,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ],
+      "domain_id": "2007479",
+      "name": "LSJ Confecções",
+      "cs": "Elisa Marques",
+      "canal": "Parceiros",
+      "partner_raw": "Uemtel",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 24,
+      "vencimentoMaisAntigo": "2026-08-29",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-08-29",
+          "dias": 24,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
@@ -510,32 +508,6 @@
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
       "diasAtraso": 23,
-      "vencimentoMaisAntigo": "2026-08-29",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-08-29",
-          "dias": 23,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ],
-      "domain_id": "2007479",
-      "name": "LSJ Confecções",
-      "cs": "Elisa Marques",
-      "canal": "Parceiros",
-      "partner_raw": "Uemtel",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 22,
       "vencimentoMaisAntigo": "2026-08-30",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -543,7 +515,7 @@
       "faturas": [
         {
           "venc": "2026-08-30",
-          "dias": 22,
+          "dias": 23,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
@@ -561,7 +533,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 20,
+      "diasAtraso": 21,
       "vencimentoMaisAntigo": "2026-09-01",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -569,7 +541,7 @@
       "faturas": [
         {
           "venc": "2026-09-01",
-          "dias": 20,
+          "dias": 21,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
@@ -587,7 +559,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 18,
+      "diasAtraso": 19,
       "vencimentoMaisAntigo": "2026-09-03",
       "subcontas": [
         "*Vesti Starter*"
@@ -595,7 +567,7 @@
       "faturas": [
         {
           "venc": "2026-09-03",
-          "dias": 18,
+          "dias": 19,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
@@ -613,7 +585,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 15,
+      "diasAtraso": 16,
       "vencimentoMaisAntigo": "2026-09-06",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -621,7 +593,7 @@
       "faturas": [
         {
           "venc": "2026-09-06",
-          "dias": 15,
+          "dias": 16,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
@@ -638,60 +610,8 @@
     },
     {
       "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 15,
-      "vencimentoMaisAntigo": "2026-09-06",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-06",
-          "dias": 15,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ],
-      "domain_id": "1979643",
-      "name": "confeccionesvioletaempresa@gmail.com",
-      "cs": "Elisa Marques",
-      "canal": "Parceiros",
-      "partner_raw": "Uemtel",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 699.0,
-      "diasAtraso": 12,
-      "vencimentoMaisAntigo": "2026-09-09",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-09",
-          "dias": 12,
-          "valor": 699.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ],
-      "domain_id": "1069425",
-      "name": "MALUE",
-      "cs": "Luana Coutinho",
-      "canal": "Vesti",
-      "partner_raw": "Vesti",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
       "valorEmAberto": 39.9,
-      "diasAtraso": 12,
+      "diasAtraso": 13,
       "vencimentoMaisAntigo": "2026-09-09",
       "subcontas": [
         "*Vesti - Multimarcas*"
@@ -699,7 +619,7 @@
       "faturas": [
         {
           "venc": "2026-09-09",
-          "dias": 12,
+          "dias": 13,
           "valor": 39.9,
           "status": "pending",
           "subconta": "*Vesti - Multimarcas*"
@@ -717,7 +637,85 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 10,
+      "diasAtraso": 12,
+      "vencimentoMaisAntigo": "2026-09-10",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-10",
+          "dias": 12,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ],
+      "domain_id": "1812999",
+      "name": "Modas Dylan 22",
+      "cs": "Jennyfer Rabelo",
+      "canal": "Parceiros",
+      "partner_raw": "Uemtel",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 12,
+      "vencimentoMaisAntigo": "2026-09-10",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-10",
+          "dias": 12,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ],
+      "domain_id": "1816615",
+      "name": "Michelis Modas",
+      "cs": "Elisa Marques",
+      "canal": "Parceiros",
+      "partner_raw": "Uemtel",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 12,
+      "vencimentoMaisAntigo": "2026-09-10",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-10",
+          "dias": 12,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ],
+      "domain_id": "1536375",
+      "name": "Sam Modas",
+      "cs": "Elisa Marques",
+      "canal": "Parceiros",
+      "partner_raw": "Uemtel",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 11,
       "vencimentoMaisAntigo": "2026-09-11",
       "subcontas": [
         "*Vesti Starter*"
@@ -725,7 +723,7 @@
       "faturas": [
         {
           "venc": "2026-09-11",
-          "dias": 10,
+          "dias": 11,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
@@ -739,46 +737,31 @@
       "starter_interno": true,
       "modulos": "{'modulos': ['compras']}",
       "bloqueada": true
-    },
-    {
-      "qtFaturas": 2,
-      "valorEmAberto": 998.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-09-17",
-      "subcontas": [
-        "*Mensalidade Vesti*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-17",
-          "dias": 4,
-          "valor": 499.0,
-          "status": "pending",
-          "subconta": "*Mensalidade Vesti*"
-        },
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 499.0,
-          "status": "pending",
-          "subconta": "*Mensalidade Vesti*"
-        }
-      ],
-      "domain_id": "1765732",
-      "name": "Menina Bonita",
-      "cs": "Gabriella Busto",
-      "canal": "Vesti",
-      "partner_raw": "Vesti",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
     }
   ],
   "dominios": {
+    "770710": {
+      "qtFaturas": 1,
+      "valorEmAberto": 447.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 447.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*"
+        }
+      ]
+    },
     "1814060": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 7,
+      "diasAtraso": 8,
       "vencimentoMaisAntigo": "2026-09-14",
       "subcontas": [
         "*Vesti Starter*"
@@ -786,89 +769,179 @@
       "faturas": [
         {
           "venc": "2026-09-14",
-          "dias": 7,
+          "dias": 8,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
         }
       ]
     },
-    "1661979": {
+    "1590317": {
       "qtFaturas": 1,
-      "valorEmAberto": 4544.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
+      "valorEmAberto": 447.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-09-17",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti Starter*"
       ],
       "faturas": [
         {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 4544.0,
+          "venc": "2026-09-17",
+          "dias": 5,
+          "valor": 447.0,
           "status": "pending",
-          "subconta": "**VESTI**"
+          "subconta": "*Vesti Starter*"
         }
       ]
     },
-    "1069542": {
-      "qtFaturas": 1,
-      "valorEmAberto": 843.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 843.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1584172": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 13,
-      "vencimentoMaisAntigo": "2026-09-08",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-08",
-          "dias": 13,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1977096": {
+    "2126045": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 7,
-      "vencimentoMaisAntigo": "2026-09-14",
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
       "subcontas": [
         "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-09-14",
-          "dias": 7,
+          "venc": "2026-09-21",
+          "dias": 1,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
         }
       ]
     },
+    "2125851": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "844570": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "1859835": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 9,
+      "vencimentoMaisAntigo": "2026-09-13",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-13",
+          "dias": 9,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*"
+        }
+      ]
+    },
+    "29362": {
+      "qtFaturas": 1,
+      "valorEmAberto": 99.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-09-17",
+      "subcontas": [
+        "*Vesti - Multimarcas*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-17",
+          "dias": 5,
+          "valor": 99.0,
+          "status": "pending",
+          "subconta": "*Vesti - Multimarcas*"
+        }
+      ]
+    },
+    "1989464": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1510.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Mensalidade Vesti*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 1510.0,
+          "status": "pending",
+          "subconta": "*Mensalidade Vesti*"
+        }
+      ]
+    },
+    "1956465": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 11,
+      "vencimentoMaisAntigo": "2026-09-11",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-11",
+          "dias": 11,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*"
+        }
+      ]
+    },
+    "139874": {
+      "qtFaturas": 1,
+      "valorEmAberto": 444.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 444.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
     "26986": {
       "qtFaturas": 1,
       "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "**VESTI**"
@@ -876,17 +949,17 @@
       "faturas": [
         {
           "venc": "2026-09-20",
-          "dias": 1,
+          "dias": 2,
           "valor": 1232.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
       ]
     },
-    "146795": {
+    "57": {
       "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 444.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "**VESTI**"
@@ -894,17 +967,259 @@
       "faturas": [
         {
           "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 444.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "103213": {
+      "qtFaturas": 2,
+      "valorEmAberto": 510.0,
+      "diasAtraso": 11,
+      "vencimentoMaisAntigo": "2026-09-11",
+      "subcontas": [
+        "*Vesti Portal*",
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-11",
+          "dias": 11,
+          "valor": 444.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        },
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 66.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*"
+        }
+      ]
+    },
+    "130927": {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*"
+        }
+      ]
+    },
+    "2095070": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1000.0,
+      "diasAtraso": 129,
+      "vencimentoMaisAntigo": "2026-05-16",
+      "subcontas": [
+        "*Vesti Setup*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-05-16",
+          "dias": 129,
+          "valor": 1000.0,
+          "status": "partially_paid",
+          "subconta": "*Vesti Setup*"
+        }
+      ]
+    },
+    "33269": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1100.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1100.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "3277": {
+      "qtFaturas": 1,
+      "valorEmAberto": 2089.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "*Mensalidade Vesti*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 2089.0,
+          "status": "pending",
+          "subconta": "*Mensalidade Vesti*"
+        }
+      ]
+    },
+    "196201": {
+      "qtFaturas": 1,
+      "valorEmAberto": 756.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
           "dias": 1,
+          "valor": 756.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "166159": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1232.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
           "valor": 1232.0,
           "status": "pending",
           "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "178797": {
+      "qtFaturas": 1,
+      "valorEmAberto": 492.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 492.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "940943": {
+      "qtFaturas": 1,
+      "valorEmAberto": 793.0,
+      "diasAtraso": 10,
+      "vencimentoMaisAntigo": "2026-09-12",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-12",
+          "dias": 10,
+          "valor": 793.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "383850": {
+      "qtFaturas": 1,
+      "valorEmAberto": 333.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 333.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "681828": {
+      "qtFaturas": 1,
+      "valorEmAberto": 389.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 389.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1245140": {
+      "qtFaturas": 1,
+      "valorEmAberto": 756.0,
+      "diasAtraso": 28,
+      "vencimentoMaisAntigo": "2026-08-25",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-08-25",
+          "dias": 28,
+          "valor": 756.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1791824": {
+      "qtFaturas": 1,
+      "valorEmAberto": 447.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 447.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
         }
       ]
     },
     "543364": {
       "qtFaturas": 1,
       "valorEmAberto": 306.0,
-      "diasAtraso": 3,
+      "diasAtraso": 4,
       "vencimentoMaisAntigo": "2026-09-18",
       "subcontas": [
         "**VESTI**"
@@ -912,17 +1227,35 @@
       "faturas": [
         {
           "venc": "2026-09-18",
-          "dias": 3,
+          "dias": 4,
           "valor": 306.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
       ]
     },
+    "914287": {
+      "qtFaturas": 1,
+      "valorEmAberto": 317.0,
+      "diasAtraso": 106,
+      "vencimentoMaisAntigo": "2026-06-08",
+      "subcontas": [
+        "*Vesti - Glads*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-06-08",
+          "dias": 106,
+          "valor": 317.0,
+          "status": "expired",
+          "subconta": "*Vesti - Glads*"
+        }
+      ]
+    },
     "16265": {
       "qtFaturas": 2,
       "valorEmAberto": 566.0,
-      "diasAtraso": 6,
+      "diasAtraso": 7,
       "vencimentoMaisAntigo": "2026-09-15",
       "subcontas": [
         "*Vesti Portal*",
@@ -931,14 +1264,14 @@
       "faturas": [
         {
           "venc": "2026-09-15",
-          "dias": 6,
+          "dias": 7,
           "valor": 270.0,
           "status": "pending",
           "subconta": "*Vesti Portal*"
         },
         {
           "venc": "2026-09-20",
-          "dias": 1,
+          "dias": 2,
           "valor": 296.0,
           "status": "pending",
           "subconta": "**VESTI**"
@@ -948,412 +1281,16 @@
     "184224": {
       "qtFaturas": 1,
       "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1370866": {
-      "qtFaturas": 1,
-      "valorEmAberto": 868.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 868.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "407318": {
-      "qtFaturas": 1,
-      "valorEmAberto": 273.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 273.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "317744": {
-      "qtFaturas": 1,
-      "valorEmAberto": 3441.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 3441.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1816615": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "1151598": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1081.33,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1081.33,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "2095070": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1000.0,
-      "diasAtraso": 128,
-      "vencimentoMaisAntigo": "2026-05-16",
-      "subcontas": [
-        "*Vesti Setup*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-05-16",
-          "dias": 128,
-          "valor": 1000.0,
-          "status": "partially_paid",
-          "subconta": "*Vesti Setup*"
-        }
-      ]
-    },
-    "292554": {
-      "qtFaturas": 1,
-      "valorEmAberto": 586.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 586.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "2602": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2132.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2132.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "29362": {
-      "qtFaturas": 1,
-      "valorEmAberto": 99.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-09-17",
-      "subcontas": [
-        "*Vesti - Multimarcas*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-17",
-          "dias": 4,
-          "valor": 99.0,
-          "status": "pending",
-          "subconta": "*Vesti - Multimarcas*"
-        }
-      ]
-    },
-    "178797": {
-      "qtFaturas": 1,
-      "valorEmAberto": 492.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 492.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "57": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "606611": {
-      "qtFaturas": 1,
-      "valorEmAberto": 418.0,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-09-18",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-18",
-          "dias": 3,
-          "valor": 418.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "376753": {
-      "qtFaturas": 1,
-      "valorEmAberto": 428.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 428.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "957264": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2075.0,
-      "diasAtraso": 180,
-      "vencimentoMaisAntigo": "2026-03-25",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-03-25",
-          "dias": 180,
-          "valor": 2075.0,
-          "status": "partially_paid",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1492535": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
       "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
+      "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
-        "*Vesti - Uemtel*"
+        "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-09-19",
+          "venc": "2026-09-20",
           "dias": 2,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "135576": {
-      "qtFaturas": 1,
-      "valorEmAberto": 767.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 767.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "432686": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "119722": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
           "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "49033": {
-      "qtFaturas": 1,
-      "valorEmAberto": 273.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 273.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1326489": {
-      "qtFaturas": 1,
-      "valorEmAberto": 96.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 96.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*"
-        }
-      ]
-    },
-    "1776270": {
-      "qtFaturas": 1,
-      "valorEmAberto": 600.0,
-      "diasAtraso": 351,
-      "vencimentoMaisAntigo": "2025-10-05",
-      "subcontas": [
-        "*Vesti Setup*"
-      ],
-      "faturas": [
-        {
-          "venc": "2025-10-05",
-          "dias": 351,
-          "valor": 600.0,
-          "status": "expired",
-          "subconta": "*Vesti Setup*"
-        }
-      ]
-    },
-    "1847659": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 9,
-      "vencimentoMaisAntigo": "2026-09-12",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-12",
-          "dias": 9,
-          "valor": 1100.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
@@ -1362,7 +1299,7 @@
     "894067": {
       "qtFaturas": 1,
       "valorEmAberto": 307.37,
-      "diasAtraso": 6,
+      "diasAtraso": 7,
       "vencimentoMaisAntigo": "2026-09-15",
       "subcontas": [
         "**VESTI**"
@@ -1370,71 +1307,215 @@
       "faturas": [
         {
           "venc": "2026-09-15",
-          "dias": 6,
+          "dias": 7,
           "valor": 307.37,
           "status": "pending",
           "subconta": "**VESTI**"
         }
       ]
     },
-    "448792": {
+    "407318": {
       "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 273.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Vesti - Atta*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "*Vesti - Atta*"
-        }
-      ]
-    },
-    "1637938": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 5,
-      "vencimentoMaisAntigo": "2026-09-16",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-09-16",
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 273.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1514453": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1172.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-09-17",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-17",
           "dias": 5,
+          "valor": 1172.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "909617": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1246.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1246.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "606611": {
+      "qtFaturas": 1,
+      "valorEmAberto": 418.0,
+      "diasAtraso": 4,
+      "vencimentoMaisAntigo": "2026-09-18",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-18",
+          "dias": 4,
+          "valor": 418.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1275581": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1159.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1159.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1964146": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*"
+        }
+      ]
+    },
+    "1752367": {
+      "qtFaturas": 1,
+      "valorEmAberto": 447.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 447.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "683519": {
+      "qtFaturas": 1,
+      "valorEmAberto": 868.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 868.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1661979": {
+      "qtFaturas": 1,
+      "valorEmAberto": 4544.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 4544.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1492535": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "731799": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 4,
+      "vencimentoMaisAntigo": "2026-09-18",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-18",
+          "dias": 4,
           "valor": 1149.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
       ]
     },
-    "1422450": {
-      "qtFaturas": 1,
-      "valorEmAberto": 317.0,
-      "diasAtraso": 65,
-      "vencimentoMaisAntigo": "2026-07-18",
-      "subcontas": [
-        "*Vesti - Vê Vantanges*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-07-18",
-          "dias": 65,
-          "valor": 317.0,
-          "status": "pending",
-          "subconta": "*Vesti - Vê Vantanges*"
-        }
-      ]
-    },
     "50178": {
       "qtFaturas": 1,
       "valorEmAberto": 708.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "**VESTI**"
@@ -1442,8 +1523,62 @@
       "faturas": [
         {
           "venc": "2026-09-20",
-          "dias": 1,
+          "dias": 2,
           "valor": 708.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1069542": {
+      "qtFaturas": 1,
+      "valorEmAberto": 843.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 843.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1643381": {
+      "qtFaturas": 1,
+      "valorEmAberto": 2000.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "*Vesti Setup*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 2000.0,
+          "status": "pending",
+          "subconta": "*Vesti Setup*"
+        }
+      ]
+    },
+    "42652": {
+      "qtFaturas": 1,
+      "valorEmAberto": 795.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 795.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
@@ -1452,7 +1587,7 @@
     "661636": {
       "qtFaturas": 1,
       "valorEmAberto": 460.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "**VESTI**"
@@ -1460,7 +1595,7 @@
       "faturas": [
         {
           "venc": "2026-09-20",
-          "dias": 1,
+          "dias": 2,
           "valor": 460.0,
           "status": "pending",
           "subconta": "**VESTI**"
@@ -1470,929 +1605,43 @@
     "2061311": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "1638871": {
-      "qtFaturas": 1,
-      "valorEmAberto": 447.0,
       "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
+      "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-09-19",
+          "venc": "2026-09-20",
           "dias": 2,
-          "valor": 447.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "1036740": {
-      "qtFaturas": 2,
-      "valorEmAberto": 1734.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1081.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        },
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 653.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "166026": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2600.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2600.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "34017": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1232.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1819640": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "503164": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1577.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 1577.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "731799": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-09-18",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-18",
-          "dias": 3,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "754709": {
-      "qtFaturas": 1,
-      "valorEmAberto": 439.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 439.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "218051": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "842293": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1724.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1724.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "139874": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "948623": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2890.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 2890.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "16653": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2700.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2700.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "2118484": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-09-18",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-18",
-          "dias": 3,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "103213": {
-      "qtFaturas": 2,
-      "valorEmAberto": 510.0,
-      "diasAtraso": 10,
-      "vencimentoMaisAntigo": "2026-09-11",
-      "subcontas": [
-        "**VESTI**",
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-11",
-          "dias": 10,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        },
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 66.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*"
-        }
-      ]
-    },
-    "1299419": {
-      "qtFaturas": 1,
-      "valorEmAberto": 627.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 627.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "16331": {
-      "qtFaturas": 1,
-      "valorEmAberto": 532.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 532.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1275581": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1159.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1159.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "812626": {
-      "qtFaturas": 1,
-      "valorEmAberto": 993.87,
-      "diasAtraso": 163,
-      "vencimentoMaisAntigo": "2026-04-11",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-04-11",
-          "dias": 163,
-          "valor": 993.87,
-          "status": "partially_paid",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1590317": {
-      "qtFaturas": 1,
-      "valorEmAberto": 447.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-09-17",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-17",
-          "dias": 4,
-          "valor": 447.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*"
-        }
-      ]
-    },
-    "1956465": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 10,
-      "vencimentoMaisAntigo": "2026-09-11",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-11",
-          "dias": 10,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*"
-        }
-      ]
-    },
-    "632540": {
-      "qtFaturas": 1,
-      "valorEmAberto": 836.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 836.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "28810": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1232.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1812999": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*"
         }
       ]
     },
-    "105975": {
-      "qtFaturas": 2,
-      "valorEmAberto": 3636.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1636.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        },
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2000.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "914287": {
-      "qtFaturas": 1,
-      "valorEmAberto": 317.0,
-      "diasAtraso": 105,
-      "vencimentoMaisAntigo": "2026-06-08",
-      "subcontas": [
-        "*Vesti - Glads*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-06-08",
-          "dias": 105,
-          "valor": 317.0,
-          "status": "expired",
-          "subconta": "*Vesti - Glads*"
-        }
-      ]
-    },
-    "198148": {
-      "qtFaturas": 1,
-      "valorEmAberto": 305.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 305.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "909617": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1246.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1246.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1746256": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*"
-        }
-      ]
-    },
-    "1289726": {
-      "qtFaturas": 1,
-      "valorEmAberto": 335.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 335.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*"
-        }
-      ]
-    },
-    "47634": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1750.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "*Vesti Setup*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
-          "valor": 1750.0,
-          "status": "pending",
-          "subconta": "*Vesti Setup*"
-        }
-      ]
-    },
-    "1859835": {
+    "1977096": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
       "diasAtraso": 8,
-      "vencimentoMaisAntigo": "2026-09-13",
+      "vencimentoMaisAntigo": "2026-09-14",
       "subcontas": [
-        "*Vesti Starter*"
+        "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-09-13",
+          "venc": "2026-09-14",
           "dias": 8,
           "valor": 429.0,
           "status": "pending",
-          "subconta": "*Vesti Starter*"
-        }
-      ]
-    },
-    "1989464": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1510.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "*Mensalidade Vesti*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 1510.0,
-          "status": "pending",
-          "subconta": "*Mensalidade Vesti*"
-        }
-      ]
-    },
-    "128065": {
-      "qtFaturas": 1,
-      "valorEmAberto": 480.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 480.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "940943": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 9,
-      "vencimentoMaisAntigo": "2026-09-12",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-12",
-          "dias": 9,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "644061": {
-      "qtFaturas": 1,
-      "valorEmAberto": 305.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 305.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "681828": {
-      "qtFaturas": 1,
-      "valorEmAberto": 389.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 389.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1250065": {
-      "qtFaturas": 1,
-      "valorEmAberto": 756.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 756.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "93281": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1434319": {
-      "qtFaturas": 1,
-      "valorEmAberto": 317.0,
-      "diasAtraso": 69,
-      "vencimentoMaisAntigo": "2026-07-14",
-      "subcontas": [
-        "*Vesti - Vê Vantanges*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-07-14",
-          "dias": 69,
-          "valor": 317.0,
-          "status": "pending",
-          "subconta": "*Vesti - Vê Vantanges*"
-        }
-      ]
-    },
-    "1536375": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-09-10",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-10",
-          "dias": 11,
-          "valor": 429.0,
-          "status": "pending",
           "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "63490": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "1791824": {
-      "qtFaturas": 1,
-      "valorEmAberto": 447.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 447.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "1943437": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*"
-        }
-      ]
-    },
-    "33269": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "844570": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "2025346": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Vesti - Atta*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "*Vesti - Atta*"
-        }
-      ]
-    },
-    "1643381": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2000.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Vesti Setup*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2000.0,
-          "status": "pending",
-          "subconta": "*Vesti Setup*"
-        }
-      ]
-    },
-    "166943": {
-      "qtFaturas": 1,
-      "valorEmAberto": 473.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 473.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
         }
       ]
     },
     "261508": {
       "qtFaturas": 1,
       "valorEmAberto": 96.0,
-      "diasAtraso": 6,
+      "diasAtraso": 7,
       "vencimentoMaisAntigo": "2026-09-15",
       "subcontas": [
         "*Vesti Portal*"
@@ -2400,215 +1649,17 @@
       "faturas": [
         {
           "venc": "2026-09-15",
-          "dias": 6,
+          "dias": 7,
           "valor": 96.0,
           "status": "pending",
           "subconta": "*Vesti Portal*"
         }
       ]
     },
-    "2147903": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1510.0,
-      "diasAtraso": 9,
-      "vencimentoMaisAntigo": "2026-09-12",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-12",
-          "dias": 9,
-          "valor": 1510.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "350323": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "130927": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-09-15",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-15",
-          "dias": 6,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*"
-        }
-      ]
-    },
-    "1870959": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*"
-        }
-      ]
-    },
-    "3277": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2089.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "*Mensalidade Vesti*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 2089.0,
-          "status": "pending",
-          "subconta": "*Mensalidade Vesti*"
-        }
-      ]
-    },
-    "1568965": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 61,
-      "vencimentoMaisAntigo": "2026-07-22",
-      "subcontas": [
-        "*Vesti - Vê Vantanges*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-07-22",
-          "dias": 61,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "*Vesti - Vê Vantanges*"
-        }
-      ]
-    },
-    "1786269": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 76,
-      "vencimentoMaisAntigo": "2026-07-07",
-      "subcontas": [
-        "*Vesti - Vê Vantanges*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-07-07",
-          "dias": 76,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Vê Vantanges*"
-        }
-      ]
-    },
-    "166159": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 1232.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "158011": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "42652": {
-      "qtFaturas": 1,
-      "valorEmAberto": 795.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-09-20",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-20",
-          "dias": 1,
-          "valor": 795.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
-    "383850": {
-      "qtFaturas": 1,
-      "valorEmAberto": 333.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-09-19",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-09-19",
-          "dias": 2,
-          "valor": 333.0,
-          "status": "pending",
-          "subconta": "**VESTI**"
-        }
-      ]
-    },
     "1652126": {
       "qtFaturas": 1,
       "valorEmAberto": 69.0,
-      "diasAtraso": 6,
+      "diasAtraso": 7,
       "vencimentoMaisAntigo": "2026-09-15",
       "subcontas": [
         "*Vesti Portal*"
@@ -2616,7 +1667,7 @@
       "faturas": [
         {
           "venc": "2026-09-15",
-          "dias": 6,
+          "dias": 7,
           "valor": 69.0,
           "status": "pending",
           "subconta": "*Vesti Portal*"
@@ -2626,7 +1677,7 @@
     "1994087": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 151,
+      "diasAtraso": 152,
       "vencimentoMaisAntigo": "2026-04-23",
       "subcontas": [
         "*Vesti - Uemtel*"
@@ -2634,53 +1685,467 @@
       "faturas": [
         {
           "venc": "2026-04-23",
-          "dias": 151,
+          "dias": 152,
           "valor": 429.0,
           "status": "expired",
           "subconta": "*Vesti - Uemtel*"
         }
       ]
     },
-    "1514453": {
+    "2147903": {
       "qtFaturas": 1,
-      "valorEmAberto": 1172.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-09-17",
+      "valorEmAberto": 1510.0,
+      "diasAtraso": 10,
+      "vencimentoMaisAntigo": "2026-09-12",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-09-17",
-          "dias": 4,
-          "valor": 1172.0,
+          "venc": "2026-09-12",
+          "dias": 10,
+          "valor": 1510.0,
           "status": "pending",
           "subconta": "**VESTI**"
         }
       ]
     },
-    "1432242": {
+    "350323": {
       "qtFaturas": 1,
-      "valorEmAberto": 317.0,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-09-18",
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "16331": {
+      "qtFaturas": 1,
+      "valorEmAberto": 532.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 532.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "198148": {
+      "qtFaturas": 1,
+      "valorEmAberto": 305.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 305.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "957264": {
+      "qtFaturas": 1,
+      "valorEmAberto": 2075.0,
+      "diasAtraso": 181,
+      "vencimentoMaisAntigo": "2026-03-25",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-03-25",
+          "dias": 181,
+          "valor": 2075.0,
+          "status": "partially_paid",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "93281": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 296.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1847659": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1100.0,
+      "diasAtraso": 10,
+      "vencimentoMaisAntigo": "2026-09-12",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-12",
+          "dias": 10,
+          "valor": 1100.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1289726": {
+      "qtFaturas": 1,
+      "valorEmAberto": 335.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
       "subcontas": [
         "*Vesti Starter*"
       ],
       "faturas": [
         {
-          "venc": "2026-09-18",
-          "dias": 3,
-          "valor": 317.0,
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 335.0,
           "status": "pending",
           "subconta": "*Vesti Starter*"
+        }
+      ]
+    },
+    "1363929": {
+      "qtFaturas": 1,
+      "valorEmAberto": 815.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 815.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "402982": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1577.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-09-21",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-21",
+          "dias": 1,
+          "valor": 1577.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "292554": {
+      "qtFaturas": 1,
+      "valorEmAberto": 586.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 586.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "503164": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1577.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 1577.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "754709": {
+      "qtFaturas": 1,
+      "valorEmAberto": 439.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 439.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "842293": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1724.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1724.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "432686": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1326489": {
+      "qtFaturas": 1,
+      "valorEmAberto": 96.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-09-15",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-15",
+          "dias": 7,
+          "valor": 96.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*"
+        }
+      ]
+    },
+    "1776270": {
+      "qtFaturas": 1,
+      "valorEmAberto": 600.0,
+      "diasAtraso": 352,
+      "vencimentoMaisAntigo": "2025-10-05",
+      "subcontas": [
+        "*Vesti Setup*"
+      ],
+      "faturas": [
+        {
+          "venc": "2025-10-05",
+          "dias": 352,
+          "valor": 600.0,
+          "status": "expired",
+          "subconta": "*Vesti Setup*"
+        }
+      ]
+    },
+    "948623": {
+      "qtFaturas": 1,
+      "valorEmAberto": 2890.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 2890.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1638871": {
+      "qtFaturas": 1,
+      "valorEmAberto": 447.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 447.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "1637938": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 6,
+      "vencimentoMaisAntigo": "2026-09-16",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-16",
+          "dias": 6,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1151598": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1081.33,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-09-20",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-20",
+          "dias": 2,
+          "valor": 1081.33,
+          "status": "pending",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1870959": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-09-19",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-09-19",
+          "dias": 3,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*"
+        }
+      ]
+    },
+    "812626": {
+      "qtFaturas": 1,
+      "valorEmAberto": 993.87,
+      "diasAtraso": 164,
+      "vencimentoMaisAntigo": "2026-04-11",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-04-11",
+          "dias": 164,
+          "valor": 993.87,
+          "status": "partially_paid",
+          "subconta": "**VESTI**"
+        }
+      ]
+    },
+    "1568965": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 62,
+      "vencimentoMaisAntigo": "2026-07-22",
+      "subcontas": [
+        "*Vesti - Vê Vantanges*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-07-22",
+          "dias": 62,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "*Vesti - Vê Vantanges*"
+        }
+      ]
+    },
+    "1422450": {
+      "qtFaturas": 1,
+      "valorEmAberto": 317.0,
+      "diasAtraso": 66,
+      "vencimentoMaisAntigo": "2026-07-18",
+      "subcontas": [
+        "*Vesti - Vê Vantanges*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-07-18",
+          "dias": 66,
+          "valor": 317.0,
+          "status": "pending",
+          "subconta": "*Vesti - Vê Vantanges*"
         }
       ]
     },
     "2051090": {
       "qtFaturas": 1,
       "valorEmAberto": 1920.0,
-      "diasAtraso": 68,
+      "diasAtraso": 69,
       "vencimentoMaisAntigo": "2026-07-15",
       "subcontas": [
         "*Vesti - Vê Vantanges*"
@@ -2688,8 +2153,44 @@
       "faturas": [
         {
           "venc": "2026-07-15",
-          "dias": 68,
+          "dias": 69,
           "valor": 1920.0,
+          "status": "pending",
+          "subconta": "*Vesti - Vê Vantanges*"
+        }
+      ]
+    },
+    "1786269": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 77,
+      "vencimentoMaisAntigo": "2026-07-07",
+      "subcontas": [
+        "*Vesti - Vê Vantanges*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-07-07",
+          "dias": 77,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Vê Vantanges*"
+        }
+      ]
+    },
+    "1434319": {
+      "qtFaturas": 1,
+      "valorEmAberto": 317.0,
+      "diasAtraso": 70,
+      "vencimentoMaisAntigo": "2026-07-14",
+      "subcontas": [
+        "*Vesti - Vê Vantanges*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-07-14",
+          "dias": 70,
+          "valor": 317.0,
           "status": "pending",
           "subconta": "*Vesti - Vê Vantanges*"
         }
