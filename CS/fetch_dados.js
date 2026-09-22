@@ -379,6 +379,30 @@ async function puxarBQ() {
       AND ${FILTRO_PERIODO('DataReferencia')}
     GROUP BY 1,2`);
 
+  /* Links compartilhados pelos vendedores da marca — entrou em 22/09/2026 para
+     o health score da tabela geral. `sucessodocliente_products` guarda cada
+     lista de produtos enviada por um usuário e `sucessodocliente_cadastrouser`
+     diz de qual domínio é esse usuário; é a mesma leitura que o Painel Elisa
+     faz para "links compartilhados". Também é o sinal mais próximo de "a marca
+     entrou na plataforma hoje" que existe no lake: login de lojista não é
+     espelhado (confirmado nas três datasets do projeto).
+     Se as duas tabelas sumirem do espelho, a carga segue sem elas e o health
+     score diz que não tem o dado, em vez de derrubar o painel inteiro. */
+  const linksVendedor = await q('links compartilhados por vendedor × dia', `
+    SELECT CAST(u.DomainId AS STRING) dom,
+      ${DIA('p.product_sent_lists_created_at')} d,
+      COUNT(DISTINCT p.product_sent_lists_id) links,
+      COUNT(DISTINCT p.USERS_ID) vendedores
+    FROM ${DS}.sucessodocliente_products p
+    JOIN ${DS}.sucessodocliente_cadastrouser u ON u.UserId = p.USERS_ID
+    WHERE p.product_sent_lists_created_at IS NOT NULL
+      AND SAFE_CAST(u.DomainId AS INT64) IS NOT NULL
+      AND ${FILTRO_PERIODO('p.product_sent_lists_created_at')}
+    GROUP BY 1,2`).catch(e => {
+      console.log('    links compartilhados falharam: ' + String(e.message).slice(0, 120));
+      return [];
+    });
+
   /* O Tino saiu do BigQuery (ver puxarTino, seção 1B). A tabela
      sucessodocliente_rankings só tinha os links compartilhados ("cliques"), e ela
      nem sabe quem tem o produto: quem manda nisso é a base do próprio Tino. */
@@ -557,6 +581,7 @@ async function puxarBQ() {
 
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
+           linksVendedor,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -1542,6 +1567,20 @@ function montar(bqd, hsd, tinoDados) {
     });
   });
 
+  /* Links compartilhados pelos vendedores, por dia — alimenta duas das cinco
+     regras do health score: a média de links por dia e a "última atividade na
+     plataforma". Só entram domínios da carteira, como o resto da série. */
+  let diasComLink = 0;
+  (bqd.linksVendedor || []).forEach(r => {
+    if (!dataOk(r.d) || !porDom.has(r.dom)) return;
+    diasComLink++;
+    somaEm(serieCli, r.dom + '|' + r.d, {
+      linksCompartilhados: Number(r.links) || 0,
+      vendedoresComLink: Number(r.vendedores) || 0,
+    });
+  });
+  console.log('  dias-marca com link compartilhado'.padEnd(44) + String(diasComLink).padStart(8));
+
   /* Interchange já LÍQUIDO do banco. Vem de vestipago_transaction_detail (a única
      fonte com a quebra do MDR) e não mais dos pedidos — por isso ele entra aqui,
      numa passada própria, e não junto do laço acima. */
@@ -1631,6 +1670,8 @@ function montar(bqd, hsd, tinoDados) {
          GMV pago por pedido pago. */
       pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
       valorPedidos: v.valorPedidos || 0,
+      /* health score: links que os vendedores da marca compartilharam no dia */
+      linksCompartilhados: v.linksCompartilhados || 0,
       receitaInterchange: v.receitaInterchange || 0,
       receitaMensalidade: v.receitaMensalidade || 0,
       receitaOutrosIugu: v.receitaOutrosIugu || 0,

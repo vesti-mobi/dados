@@ -408,6 +408,44 @@ o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da 
 carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
 números forem para o BigQuery, o card volta como os outros.
 
+## Health score (22/09/2026)
+
+Régua da Laura, uma nota de 0 a 100 por marca, na coluna **Health score** da
+tabela geral (ela escolheu ali, em vez de uma aba própria):
+
+| Regra | Pontos |
+|---|---|
+| Pedido há menos de 5 dias | +20 |
+| Atividade na plataforma há menos de 3 dias | +30 |
+| Mais de 1 link compartilhado por dia, em média | +20 |
+| GMV estável ou crescendo (queda de até 15%) | +20 |
+| Média de 2 ou mais pedidos por dia | +10 |
+
+Acima de 80 é **saudável**, de 50 a 79 **atenção**, abaixo **em risco**. O
+balãozinho do número abre a régua inteira, regra a regra, com o motivo de cada
+uma ter entrado ou não.
+
+Três decisões que mudam a leitura:
+
+- **"Acessou a plataforma" não existe no BigQuery.** Login de lojista não é
+  espelhado — é a mesma pendência da coluna *Último acesso*. O que existe é
+  **atividade**: a marca compartilhou um link de produto (`sucessodocliente_products`,
+  que a carga passou a puxar em 22/09/2026) ou entrou um pedido. A regra usa o
+  mais recente dos dois, decidido com a Laura. **É uso, não login.**
+- **A janela é de 30 dias corridos, não o mês civil**, e não depende do filtro de
+  período da aba. Comparar um mês pela metade com um mês cheio derrubaria o score
+  de todo mundo no dia 1º; e "a marca está saudável" não pode mudar de resposta
+  conforme a janela que alguém escolheu para olhar receita. "GMV crescendo" é,
+  portanto, os últimos 30 dias contra os 30 anteriores.
+- **Regra sem fonte sai da conta, não zera.** Se a carga não trouxer os links
+  compartilhados, aquela regra é marcada como indisponível e o score é
+  normalizado sobre os 80 pontos que sobraram — penalizar a marca por uma falha
+  de ingestão nossa seria pior do que medir com uma régua menor. O balãozinho
+  avisa quando isso acontece.
+
+Os dias contam até o último dia com dado no arquivo, não até hoje: a carga roda
+de madrugada e medir contra "hoje" faria toda marca parecer parada de manhã.
+
 ## Projeção do mês em andamento (Bonificação, 22/09/2026)
 
 Pedido da Laura: *"só conseguimos ver de fato quando o mês termina, mas precisava

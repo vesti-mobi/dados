@@ -390,7 +390,8 @@ td.strong{font-weight:600}
 .tag[data-hue="5"]{background:#FBEAE7;border-color:#F3D6D1;color:#A63A31}
 .health{display:inline-flex;align-items:center;gap:7px}
 .health i{width:6px;height:6px;border-radius:50%;flex:none}
-.h-ok i{background:var(--pos)}.h-warn i{background:var(--gold)}.h-bad i{background:var(--neg)}
+.h-ok i{background:var(--pos)}.h-warn i{background:var(--gold)}.h-bad i{background:var(--neg)}/* faixa do health score, embaixo do número na tabela geral */
+.cell-sub.h-ok{color:var(--pos)}.cell-sub.h-warn{color:var(--gold)}.cell-sub.h-bad{color:var(--neg)}
 .cs-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
 .dom-id{font-variant-numeric:tabular-nums;font-size:12px;color:var(--txt-2,#6b7280);letter-spacing:.01em}
 .cs-chip b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none;
@@ -1076,7 +1077,13 @@ function clientesAgregados(){
   return DATA.clientes.map(c=>{
     const a = acc[c.dominio] || acc[c.nome]
       || {pedidos:0,valorPedidos:0,receitaInterchange:0,receitaMensalidade:0,receitaOutrosIugu:0,receitaAntecipacao:0};
+    /* Health score (Laura, 22/09/2026): não depende do período escolhido no
+       filtro — é uma foto dos últimos 30 dias corridos, sempre. Misturar as
+       duas coisas faria "a marca está saudável" mudar de resposta conforme a
+       janela que alguém escolheu para olhar receita. */
+    const h = healthDaMarca(c);
     return Object.assign({}, c, a, {
+      health: h.score, _health: h,
       ticketMedio: a.pedidos ? Math.round(a.valorPedidos/a.pedidos*100)/100 : 0,
       // total = tudo que a marca gerou de receita para a Vesti no período
       receitaTotal: Math.round((a.receitaInterchange + a.receitaMensalidade
@@ -1184,6 +1191,155 @@ function linhasChurn(){
   const peso = {alerta:0, bloqueada:1, cancelada:2};
   return filtrado.sort((a,b)=>
     (peso[a.situacao]??9)-(peso[b.situacao]??9) || (b.diasAtraso||0)-(a.diasAtraso||0));
+}
+
+/* ============================================================================
+   HEALTH SCORE — régua da Laura, 22/09/2026
+   Cinco regras, 100 pontos no total, calculadas por MARCA:
+
+     +20  pedido há menos de 5 dias
+     +30  atividade na plataforma há menos de 3 dias
+     +20  mais de 1 link compartilhado por dia, em média
+     +20  GMV estável ou crescendo (queda de até 15% conta como estável)
+     +10  média de 2 ou mais pedidos por dia
+
+   Três decisões que valem estar escritas:
+
+   1. "Acessou a plataforma" não existe no BigQuery — login de lojista não é
+      espelhado, é a mesma pendência da coluna "Último acesso". O que existe é
+      ATIVIDADE: a marca compartilhou um link de produto ou entrou um pedido.
+      A régua usa o mais recente dos dois (decidido com a Laura em 22/09/2026).
+      Não é login: é uso.
+
+   2. A janela é de 30 DIAS CORRIDOS, não o mês civil. Comparar um mês pela
+      metade com um mês cheio derrubaria o score de todo mundo no dia 1º; com
+      janela móvel, o número quer dizer a mesma coisa em qualquer dia.
+      "GMV crescendo" é, então, os últimos 30 dias contra os 30 anteriores.
+
+   3. Os dias contam até o último dia com dado no arquivo, não até hoje: a carga
+      roda de madrugada, e medir contra "hoje" faria toda marca parecer parada
+      na primeira hora da manhã.
+   ========================================================================== */
+const HEALTH_REGRAS = [
+  {k:'pedidoRecente', pts:20, l:'Pedido há menos de 5 dias'},
+  {k:'atividade',     pts:30, l:'Atividade na plataforma há menos de 3 dias'},
+  {k:'links',         pts:20, l:'Mais de 1 link compartilhado por dia'},
+  {k:'gmv',           pts:20, l:'GMV estável ou crescendo (queda até 15%)'},
+  {k:'pedidosDia',    pts:10, l:'Média de 2 ou mais pedidos por dia'},
+];
+const HEALTH_JANELA = 30;
+const HEALTH_FAIXAS = [
+  {min:80, l:'Saudável', cls:'h-ok'},
+  {min:50, l:'Atenção',  cls:'h-warn'},
+  {min:0,  l:'Em risco', cls:'h-bad'},
+];
+function faixaHealth(score){ return HEALTH_FAIXAS.find(f=>score >= f.min) }
+
+/* Índice por domínio das duas janelas de 30 dias + as últimas datas de pedido e
+   de link. Uma passada só na série diária, guardada para o resto da sessão: a
+   tabela geral recalcula o score a cada render e a série tem ~85 mil linhas. */
+const idxHealth = (()=>{
+  let cache = null;
+  return ()=>{
+    if(cache) return cache;
+    const fim = LIMITE_DADOS.fim;
+    const ini = somarDias(fim, -(HEALTH_JANELA-1));
+    const iniAnt = somarDias(fim, -(HEALTH_JANELA*2-1)), fimAnt = somarDias(ini, -1);
+    const por = {};
+    const alvo = k => por[k] || (por[k] = {pedidos:0, gmv:0, links:0, gmvAnt:0,
+      ultimoLink:null, ultimoPedido:null, temLink:false});
+    DATA.clientesSeries.forEach(x=>{
+      const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
+      const d = String(x.data).slice(0,10);
+      const a = alvo(dom);
+      const links = Number(x.linksCompartilhados)||0;
+      if(links > 0){
+        a.temLink = true;
+        if(!a.ultimoLink || d > a.ultimoLink) a.ultimoLink = d;
+      }
+      if((Number(x.pedidos)||0) > 0 && (!a.ultimoPedido || d > a.ultimoPedido)) a.ultimoPedido = d;
+      if(d >= ini && d <= fim){
+        a.pedidos += Number(x.pedidos)||0;
+        a.gmv += Number(x.valorPedidos)||0;
+        a.links += links;
+      } else if(d >= iniAnt && d <= fimAnt){
+        a.gmvAnt += Number(x.valorPedidos)||0;
+      }
+    });
+    /* A série só tem o ano corrente; marcas paradas desde o ano passado não têm
+       linha nenhuma e o cadastro é quem sabe o último pedido delas. */
+    const temLinkNaCarga = DATA.clientesSeries.some(x=>x.linksCompartilhados!=null);
+    return (cache = {por, ini, fim, iniAnt, fimAnt, temLinkNaCarga});
+  };
+})();
+
+/* Score de uma marca. `c` é a linha do cadastro (DATA.clientes ou a linha já
+   agregada da tabela geral). Devolve também a régua aberta, para o balãozinho
+   poder mostrar o que entrou e o que faltou. */
+function healthDaMarca(c){
+  const idx = idxHealth();
+  const a = idx.por[c.dominio] || idx.por[c.nome] || {};
+  const janela = HEALTH_JANELA;
+
+  const ultimoPedido = [c.ultimoPedido, a.ultimoPedido].filter(Boolean).sort().pop() || null;
+  const ultimaAtividade = [ultimoPedido, a.ultimoLink].filter(Boolean).sort().pop() || null;
+  /* Dias contados a partir do último dia com dado, não de hoje. */
+  const diasAte = iso => iso ? diasEntre(iso, idx.fim) : null;
+  const dPedido = diasAte(ultimoPedido), dAtividade = diasAte(ultimaAtividade);
+
+  const linksDia = (a.links||0) / janela;
+  const pedidosDia = (a.pedidos||0) / janela;
+  const gmv = a.gmv||0, gmvAnt = a.gmvAnt||0;
+  const varGmv = gmvAnt ? (gmv-gmvAnt)/gmvAnt*100 : null;
+
+  const regras = HEALTH_REGRAS.map(r=>{
+    let ok = false, detalhe = '', indisponivel = false;
+    switch(r.k){
+      case 'pedidoRecente':
+        ok = dPedido != null && dPedido < 5;
+        detalhe = ultimoPedido ? 'último pedido ' + fmt.date(ultimoPedido) + ' (há ' + fmt.int(dPedido) + ' d)'
+                               : 'nenhum pedido registrado';
+        break;
+      case 'atividade':
+        ok = dAtividade != null && dAtividade < 3;
+        detalhe = ultimaAtividade
+          ? 'última atividade ' + fmt.date(ultimaAtividade) + ' (há ' + fmt.int(dAtividade) + ' d'
+            + (a.ultimoLink === ultimaAtividade ? ', link compartilhado' : ', pedido') + ')'
+          : 'sem pedido nem link compartilhado';
+        break;
+      case 'links':
+        /* Sem o dado na carga a regra não vale zero: ela SAI da conta, e o
+           score é normalizado sobre o que dá para medir. Zerar penalizaria a
+           marca por uma falha nossa de ingestão. */
+        indisponivel = !idx.temLinkNaCarga;
+        ok = !indisponivel && linksDia > 1;
+        detalhe = indisponivel
+          ? 'a carga ainda não traz links compartilhados — regra fora da conta'
+          : fmt.int(a.links||0) + ' links em ' + janela + ' dias (' + linksDia.toFixed(1).replace('.',',') + '/dia)';
+        break;
+      case 'gmv':
+        ok = varGmv != null ? varGmv >= -15 : gmv > 0;
+        detalhe = gmvAnt
+          ? fmt.moneyCompact(gmv) + ' nos últimos ' + janela + ' dias vs ' + fmt.moneyCompact(gmvAnt)
+            + ' nos 30 anteriores (' + (varGmv>0?'+':'') + fmt.pct1(varGmv) + ')'
+          : (gmv ? fmt.moneyCompact(gmv) + ' nos últimos ' + janela + ' dias, sem base anterior'
+                 : 'sem GMV nos últimos ' + janela + ' dias');
+        break;
+      case 'pedidosDia':
+        ok = pedidosDia >= 2;
+        detalhe = fmt.int(a.pedidos||0) + ' pedidos em ' + janela + ' dias ('
+          + pedidosDia.toFixed(1).replace('.',',') + '/dia)';
+        break;
+    }
+    return {k:r.k, l:r.l, pts:r.pts, ok, detalhe, indisponivel};
+  });
+
+  const possiveis = regras.reduce((s,r)=>s + (r.indisponivel ? 0 : r.pts), 0);
+  const ganhos = regras.reduce((s,r)=>s + (r.ok ? r.pts : 0), 0);
+  /* Normalizado sobre o que deu para medir: com todas as regras de pé,
+     `possiveis` é 100 e o score é a soma pura dos pontos. */
+  const score = possiveis ? Math.round(ganhos/possiveis*100) : 0;
+  return {score, ganhos, possiveis, faixa:faixaHealth(score), regras};
 }
 
 /* ============================================================================
@@ -2670,13 +2826,18 @@ const TABS = [
   {
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
     titulo:'Tabela geral dos clientes',
-    desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista.',
+    desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
+      + '<b>Health score</b> (régua da Laura, 22/09/2026) é uma nota de 0 a 100 da saúde da marca, <b>independente do período do filtro</b>: ela olha sempre os <b>últimos 30 dias corridos</b>. '
+      + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
+      + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
+      + 'Passe o mouse no número para ver o que entrou e o que faltou, regra a regra. Acima de 80 é <b>saudável</b>, de 50 a 79 <b>atenção</b>, abaixo disso <b>em risco</b>.',
     filtros:['cliente','cs','canal','statusCliente','periodo'],
     tabela:'Clientes', chaveCliente:'nome',
     colunas:[
       {k:'nome', l:'Cliente', tipo:'cliente'},
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       COL_CS,
+      {k:'health', l:'Health score', tipo:'health', r:true},
       {k:'status', l:'Status', tipo:'status'},
       {k:'canal', l:'Canal', tipo:'tag'},
       {k:'integracao', l:'Integração', tipo:'tag'},
@@ -2698,13 +2859,17 @@ const TABS = [
       {k:'vencimento', l:'Vencimento', tipo:'date'},
     ],
     linhas:()=>clientesAgregados(),
-    kpis:(rows)=>[
-      {l:'Clientes ativos', v:fmt.int(rows.filter(r=>r.status==='ativo').length), s:`de ${rows.length} na visão`},
-      {l:'Receita total', v:fmt.moneyCompact(soma(rows,'receitaTotal')), s:'soma da coluna no período'},
-      {l:'Ticket médio', v:fmt.money(media(rows,'ticketMedio')), s:'média entre clientes'},
-      // "último acesso" ainda não tem fonte; o sinal de abandono disponível é o pedido
-      {l:'Sem pedido há +30d', v:fmt.int(rows.filter(r=>{const d=diasDe(r.ultimoPedido);return d==null||d>30}).length), s:'risco de abandono'},
-    ]
+    kpis:(rows)=>{
+      const porFaixa = l => rows.filter(r=>r._health && r._health.faixa.l===l).length;
+      return [
+        {l:'Clientes ativos', v:fmt.int(rows.filter(r=>r.status==='ativo').length), s:`de ${rows.length} na visão`},
+        {l:'Health score médio', v:fmt.int(Math.round(media(rows,'health'))),
+         s:`${fmt.int(porFaixa('Saudável'))} saudáveis · ${fmt.int(porFaixa('Atenção'))} em atenção · ${fmt.int(porFaixa('Em risco'))} em risco`},
+        {l:'Receita total', v:fmt.moneyCompact(soma(rows,'receitaTotal')), s:'soma da coluna no período'},
+        {l:'Ticket médio', v:fmt.money(media(rows,'ticketMedio')), s:'média entre clientes'},
+        // "último acesso" ainda não tem fonte; o sinal de abandono disponível é o pedido
+        {l:'Sem pedido há +30d', v:fmt.int(rows.filter(r=>{const d=diasDe(r.ultimoPedido);return d==null||d>30}).length), s:'risco de abandono'},
+      ]; }
   },
   {
     id:'crossSell', grupo:'Crescimento', nav:'Cross-sell', cor:'#4048B8', cor2:'#12968D',
@@ -4870,6 +5035,17 @@ function celula(r,c){
         titulo = (titulo ? titulo + ' · ' : '') + 'clique para marcar quais são de varejo';
       }
       if(titulo) td.title = titulo;
+      break }
+    /* Health score: número grande, faixa embaixo e a régua inteira no
+       balãozinho — sem isso a CS vê "50" e não sabe o que faltou. */
+    case 'health': {
+      const h = r._health;
+      if(!h){ td.textContent = '—'; break }
+      td.innerHTML = `<span class="cell-main">${fmt.int(h.score)}</span>`
+        + `<span class="cell-sub ${h.faixa.cls}">${h.faixa.l}</span>`;
+      td.title = h.regras.map(x=> x.indisponivel ? '–  ' + x.l + ' — ' + x.detalhe
+        : (x.ok?'✓ +':'✗  ')+(x.ok?x.pts:0)+'  '+x.l+' — '+x.detalhe).join('\n')
+        + (h.possiveis !== 100 ? '\n\nscore sobre '+h.possiveis+' pontos possíveis, normalizado para 100' : '');
       break }
     case 'implantado': {
       if(!v){ td.textContent = '—'; break }
