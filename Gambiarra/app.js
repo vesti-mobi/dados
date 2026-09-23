@@ -436,6 +436,23 @@ function baixarInadimplentesExcel() {
   exportTableToExcel("tbl-inadimplentes", `inadimplentes_${new Date().toISOString().slice(0,10)}.csv`);
 }
 
+// Copia o link de checkout da fatura (Iugu) pra CS colar e mandar pro
+// lojista. Clipboard API exige contexto seguro (https/localhost) -- sem isso
+// (ou permissao negada) cai no prompt(), que tambem deixa copiar manualmente.
+function copiarLinkFatura(btn, link) {
+  const original = btn.textContent;
+  const marcaCopiado = () => {
+    btn.textContent = "✅ Copiado!";
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(marcaCopiado).catch(() => prompt("Copie o link da fatura:", link));
+  } else {
+    prompt("Copie o link da fatura:", link);
+  }
+}
+
 // ---------- HOME KPIs ----------
 // Marcas com fatura vencida e ainda em aberto ha mais dias que a regua.
 // Nao depende do filtro de periodo -- e' uma foto de hoje, igual Sem VP/Travadas.
@@ -1157,6 +1174,15 @@ function renderTabInadTabela(lista) {
     {label:"Domínio", cls:"num", fn:r=>r.domain_id||"—", sort:r=>+r.domain_id||0},
     {label:"Bloqueado em", fn:r=>r.bloqueadoEm||"—", sort:r=>r.bloqueadoEm||""},
     {label:"Venc. mais antigo", fn:r=>r.vencimentoMaisAntigo||"—", sort:r=>r.vencimentoMaisAntigo||""},
+    // link de checkout da Iugu da fatura vencida mais antiga -- so' faz sentido
+    // pra quem ainda deve de verdade (alerta/bloqueada); cancelada nao tem
+    // divida ativa. Pedido da Laura, 23/09/2026.
+    {label:"Fatura", fn:r=>{
+       const st = situacaoDe(r);
+       const link = r.linkFaturaMaisAntiga;
+       if (st === "cancelada" || !link) return "—";
+       return `<button class="btn-copy-link" onclick="copiarLinkFatura(this,'${link.replace(/'/g,"\\'")}')">🔗 Copiar link</button>`;
+     }, sort:r=>r.linkFaturaMaisAntiga||""},
     // mostra a regra em tela: quem esta aqui NAO pagou depois desse vencimento
     {label:"Último pagamento", fn:r=>r.ultimoPagamento||"—", sort:r=>r.ultimoPagamento||""},
     // e' o numero que a regra dos 60 dias usa; "nunca" conta da entrada

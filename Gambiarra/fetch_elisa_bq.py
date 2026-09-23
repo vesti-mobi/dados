@@ -294,7 +294,8 @@ SQL_INADIMPLENTES = f"""
 WITH abertas AS (
   SELECT DISTINCT id, account_name, customer_id, payer_cpf_cnpj, status,
     SAFE.PARSE_DATE('%Y-%m-%d', due_date) due_dt,
-    SAFE_CAST(total_cents AS INT64) total_cents
+    SAFE_CAST(total_cents AS INT64) total_cents,
+    secure_url
   FROM `{PROJECT}.{DATASET}.iugu_invoices`
   WHERE status IN ('pending', 'expired', 'partially_paid', 'in_protest')
     AND due_date IS NOT NULL AND due_date NOT IN ('None', '')),
@@ -318,18 +319,18 @@ mapa AS (
 cands AS (
   -- 1/2) pelo customer da Iugu (custom_variables domain, depois CNPJ do customer)
   SELECT v.id fatura_id, CAST(m.domain_id AS STRING) domain_id, m.prio, v.customer_id,
-    v.account_name, v.status, v.due_dt, v.total_cents
+    v.account_name, v.status, v.due_dt, v.total_cents, v.secure_url
   FROM venc v JOIN mapa m ON m.customer_id = v.customer_id
   UNION ALL
   -- 3) pelo CNPJ do PAGADOR da propria fatura: cobre subconta cujo customer nao
   --    esta espelhado em iugu_customers (caso *Vesti - Va Vantagens*).
   SELECT v.id, CAST(co.domain_id AS STRING), 3, v.customer_id,
-    v.account_name, v.status, v.due_dt, v.total_cents
+    v.account_name, v.status, v.due_dt, v.total_cents, v.secure_url
   FROM venc v JOIN `{PROJECT}.{DATASET}.odbc_companies` co
     ON REGEXP_REPLACE(co.tax_document, r'[^0-9]', '') = REGEXP_REPLACE(IFNULL(v.payer_cpf_cnpj, ''), r'[^0-9]', '')
   WHERE LENGTH(REGEXP_REPLACE(IFNULL(v.payer_cpf_cnpj, ''), r'[^0-9]', '')) >= 11)
 SELECT c.fatura_id, c.domain_id, c.prio, c.customer_id, c.account_name, c.status,
-  c.due_dt, c.total_cents,
+  c.due_dt, c.total_cents, c.secure_url,
   DATE_DIFF(CURRENT_DATE('America/Sao_Paulo'), c.due_dt, DAY) dias_atraso,
   d.created_at dom_created, d.name dom_name, d.modulos dom_modulos,
   ang.name dom_cs, prt.name dom_partner
@@ -687,12 +688,14 @@ def build_inadimplencia(rows: list[dict], empresas_by_dom: dict[str, dict]) -> d
 
     def _novo_slot() -> dict:
         return {"qtFaturas": 0, "valorEmAberto": 0.0, "diasAtraso": 0,
-                "vencimentoMaisAntigo": "", "subcontas": [], "faturas": []}
+                "vencimentoMaisAntigo": "", "linkFaturaMaisAntiga": "",
+                "subcontas": [], "faturas": []}
 
     def _acumula(slot: dict, escolha: dict) -> None:
         venc = _iso(escolha.get("due_dt"))
         dias = int(escolha.get("dias_atraso") or 0)
         valor = round(int(escolha.get("total_cents") or 0) / 100.0, 2)
+        link = (escolha.get("secure_url") or "").strip()
         slot["qtFaturas"] += 1
         slot["valorEmAberto"] = round(slot["valorEmAberto"] + valor, 2)
         conta = (escolha.get("account_name") or "").strip()
@@ -700,11 +703,15 @@ def build_inadimplencia(rows: list[dict], empresas_by_dom: dict[str, dict]) -> d
             slot["subcontas"].append(conta)
         slot["faturas"].append({"venc": venc, "dias": dias, "valor": valor,
                                 "status": escolha.get("status") or "",
-                                "subconta": conta})
-        # atraso da marca = vencimento MAIS ANTIGO ainda em aberto
+                                "subconta": conta, "link": link})
+        # atraso da marca = vencimento MAIS ANTIGO ainda em aberto -- o link
+        # que acompanha e' o dessa MESMA fatura, pra CS copiar e mandar pro
+        # lojista a fatura certa (nao a mais recente). Pedido da Laura,
+        # 23/09/2026.
         if dias > slot["diasAtraso"]:
             slot["diasAtraso"] = dias
             slot["vencimentoMaisAntigo"] = venc
+            slot["linkFaturaMaisAntiga"] = link
 
     out: dict[str, dict] = {}
     fora_dom: dict[str, dict] = {}

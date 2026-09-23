@@ -425,6 +425,10 @@ def main():
             "valorEmAberto": (inad_dom.get(dom) or {}).get("valorEmAberto", 0.0),
             "diasAtraso": (inad_dom.get(dom) or {}).get("diasAtraso", 0),
             "vencimentoMaisAntigo": (inad_dom.get(dom) or {}).get("vencimentoMaisAntigo", ""),
+            # link da fatura vencida mais antiga (checkout da Iugu) -- pra CS
+            # copiar e mandar pro lojista. Mesma fatura do vencimentoMaisAntigo
+            # acima. Pedido da Laura, 23/09/2026.
+            "linkFaturaMaisAntiga": (inad_dom.get(dom) or {}).get("linkFaturaMaisAntiga", ""),
             "faturasAbertas": (inad_dom.get(dom) or {}).get("faturas", []),
             # subcontas da Iugu de onde vem a divida (sao 15 contas no espelho)
             "subcontasIugu": (inad_dom.get(dom) or {}).get("subcontas", []),
