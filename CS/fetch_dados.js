@@ -572,6 +572,103 @@ async function puxarBQ() {
       /* "FILIAL TESTE ALEXIA" estava entrando na conta de varejo de set/2025. */
       AND LOWER(IFNULL(COALESCE(rk.company_name, rk.social_name),'')) NOT LIKE '%teste%'`);
 
+
+  /* ---------------------------------------------------------- FICHA DO CLIENTE
+     Tudo abaixo entrou em 24/09/2026 para a aba "Visão do cliente": o RG da
+     marca (CNPJ, endereço, quantas lojas), o histórico de faturas pagas e não
+     pagas e os cliques nos links compartilhados. Nenhuma dessas consultas é
+     obrigatória — se uma falhar, o card correspondente aparece vazio dizendo
+     que não tem o dado, e o resto do painel carrega igual. */
+
+  /* O espelho não tem schema fixo: odbc_companies veio de um SELECT * da
+     produção e ninguém garante que endereço, telefone ou "loja física" estejam
+     lá com o mesmo nome (ou estejam). Em vez de chutar coluna e derrubar a
+     query inteira, pergunta ao INFORMATION_SCHEMA quais existem e monta o
+     SELECT com o que houver. As colunas encontradas vão para o log, para quem
+     for mexer nisso depois saber o que dá para pedir. */
+  const colsCompanies = await q('colunas de odbc_companies',
+    `SELECT column_name FROM ${DS}.INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'odbc_companies'`)
+    .catch(() => []);
+  const COLS_EMP = new Set(colsCompanies.map(c => c.column_name));
+  if (COLS_EMP.size) console.log('    ' + [...COLS_EMP].join(', ').slice(0, 400));
+  /* Nomes candidatos, do mais provável ao menos: o primeiro que existir vira a
+     coluna. `null` quando nenhum existe — o painel mostra "—". */
+  const escolhe = (...nomes) => {
+    const achou = nomes.find(n => COLS_EMP.has(n));
+    return achou ? '`' + achou + '`' : 'CAST(NULL AS STRING)';
+  };
+  const C_END = escolhe('address', 'street', 'logradouro', 'endereco');
+  const C_NUM = escolhe('address_number', 'number', 'numero');
+  const C_BAIRRO = escolhe('neighborhood', 'district', 'bairro');
+  const C_CIDADE = escolhe('city', 'cidade');
+  const C_UF = escolhe('state', 'uf', 'estado');
+  const C_CEP = escolhe('zip_code', 'zipcode', 'cep', 'postal_code');
+  const C_FONE = escolhe('phone', 'telefone', 'phone_number', 'cellphone');
+  const C_FISICA = escolhe('physical_store', 'is_physical_store', 'loja_fisica', 'store_type');
+
+  /* Uma linha por EMPRESA (não por domínio): a matriz é a mais antiga e o resto
+     são as filiais. É daqui que saem "quantas lojas" e a lista de filiais do
+     RG do cliente. */
+  const empresasDaMarca = await q('empresas (matriz + filiais) por domínio', `
+    SELECT CAST(domain_id AS STRING) dom, CAST(id AS STRING) id,
+           ANY_VALUE(company_name) fantasia, ANY_VALUE(social_name) social,
+           ANY_VALUE(tax_document) cnpj, ANY_VALUE(status) status,
+           ANY_VALUE(${C_END}) endereco, ANY_VALUE(${C_NUM}) numero,
+           ANY_VALUE(${C_BAIRRO}) bairro, ANY_VALUE(${C_CIDADE}) cidade,
+           ANY_VALUE(${C_UF}) uf, ANY_VALUE(${C_CEP}) cep,
+           ANY_VALUE(${C_FONE}) telefone, ANY_VALUE(${C_FISICA}) lojaFisica,
+           SUBSTR(CAST(MIN(created_at) AS STRING),1,10) criado
+    FROM ${DS}.odbc_companies
+    WHERE SAFE_CAST(domain_id AS INT64) IS NOT NULL
+    GROUP BY 1, 2`).catch(e => {
+      console.log('    empresas por domínio falharam: ' + String(e.message).slice(0, 140));
+      return [];
+    });
+
+  /* Histórico de fatura, uma linha por fatura: é o que responde "pagou ou não
+     pagou, e quando" mês a mês. A agregação `mensalidade` continua existindo
+     para as séries de receita — ela soma só o que FOI pago, e aqui o que
+     interessa é justamente a que não foi. */
+  const faturasHist = await q('Iugu: histórico de faturas por CNPJ', `
+    WITH inv AS (
+      SELECT id,
+             REGEXP_REPLACE(ANY_VALUE(payer_cpf_cnpj), '[^0-9]', '') cnpj,
+             ANY_VALUE(payer_name) payer,
+             ANY_VALUE(status) status,
+             ANY_VALUE(SAFE_CAST(total_cents AS FLOAT64)) cents,
+             ANY_VALUE(COALESCE(due_date, SUBSTR(created_at_iso,1,10))) due,
+             ANY_VALUE(paid_at) pago_em,
+             ARRAY_AGG(items_description ORDER BY SAFE_CAST(items_price_cents AS FLOAT64) DESC
+                       LIMIT 1)[OFFSET(0)] item
+      FROM ${DS}.iugu_invoices
+      WHERE payer_cpf_cnpj IS NOT NULL AND payer_cpf_cnpj != ''
+      GROUP BY id
+    )
+    SELECT cnpj, payer, status, ROUND(cents/100, 2) valor, due,
+           SUBSTR(CAST(pago_em AS STRING), 1, 10) pagoEm, item
+    FROM inv
+    WHERE due IS NOT NULL AND due >= '${ANO_BASE}-01-01' AND due <= '${HOJE_ISO}'`).catch(e => {
+      console.log('    histórico de faturas falhou: ' + String(e.message).slice(0, 140));
+      return [];
+    });
+
+  /* Cliques nos links compartilhados. `rankings_shared_links` é um snapshot
+     diário acumulado por usuário — o Painel Elisa soma o diário, e é o mesmo
+     que fazemos aqui, para os dois painéis contarem igual. */
+  const cliquesVendedor = await q('cliques em links compartilhados × dia', `
+    SELECT CAST(u.DomainId AS STRING) dom,
+      ${DIA('r.rankings_created_at')} d,
+      SUM(SAFE_CAST(r.rankings_shared_links AS INT64)) cliques
+    FROM ${DS}.sucessodocliente_rankings r
+    JOIN ${DS}.sucessodocliente_cadastrouser u ON u.UserId = r.USERS_ID
+    WHERE r.rankings_created_at IS NOT NULL
+      AND SAFE_CAST(u.DomainId AS INT64) IS NOT NULL
+      AND ${FILTRO_PERIODO('r.rankings_created_at')}
+    GROUP BY 1, 2`).catch(e => {
+      console.log('    cliques falharam: ' + String(e.message).slice(0, 140));
+      return [];
+    });
+
   /* Até quando a classificação cobre. Vai para o painel avisar — sem isso um mês
      recente apareceria com zero varejos como se nenhum tivesse sido criado. */
   const coberturaTipo = await q('cobertura da classificação Atacado/Varejo', `
@@ -581,7 +678,7 @@ async function puxarBQ() {
 
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
-           linksVendedor,
+           linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -1579,6 +1676,10 @@ function montar(bqd, hsd, tinoDados) {
       vendedoresComLink: Number(r.vendedores) || 0,
     });
   });
+  (bqd.cliquesVendedor || []).forEach(r => {
+    if (!dataOk(r.d) || !porDom.has(r.dom)) return;
+    somaEm(serieCli, r.dom + '|' + r.d, { cliquesLinks: Number(r.cliques) || 0 });
+  });
   console.log('  dias-marca com link compartilhado'.padEnd(44) + String(diasComLink).padStart(8));
 
   /* Interchange já LÍQUIDO do banco. Vem de vestipago_transaction_detail (a única
@@ -1634,6 +1735,24 @@ function montar(bqd, hsd, tinoDados) {
     return null;
   }
 
+  /* ---- Histórico de faturas por marca: uma linha por fatura, com o status
+     como o Iugu deixou. É o card "mensalidade paga / não paga" da aba Visão do
+     cliente — a série de receita só conhece o que foi pago. Usa o mesmo
+     casamento CNPJ -> nome do pagador do resto da carga. */
+  const faturasCliente = [];
+  (bqd.faturasHist || []).forEach(r => {
+    const dom = domDaFatura(r);
+    if (!dom) return;
+    const pago = ['paid', 'externally_paid'].includes(String(r.status || '').toLowerCase());
+    faturasCliente.push({
+      dominio: dom, vencimento: r.due, valor: num(r.valor),
+      status: r.status || null, pago, pagoEm: r.pagoEm || null,
+      item: r.item ? String(r.item).slice(0, 90) : null,
+    });
+  });
+  faturasCliente.sort((a, b) => String(b.vencimento).localeCompare(String(a.vencimento)));
+  console.log('  faturas com marca (histórico)'.padEnd(44) + String(faturasCliente.length).padStart(8));
+
   let mensAplicada = 0, mensPorNome = 0, mensPerdida = 0, valorPerdido = 0;
   const perdidas = new Map();
   bqd.mensalidade.forEach(r => {
@@ -1670,8 +1789,10 @@ function montar(bqd, hsd, tinoDados) {
          GMV pago por pedido pago. */
       pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
       valorPedidos: v.valorPedidos || 0,
-      /* health score: links que os vendedores da marca compartilharam no dia */
+      /* health score e ficha do cliente: links que os vendedores da marca
+         compartilharam no dia, e os cliques que esses links receberam */
       linksCompartilhados: v.linksCompartilhados || 0,
+      cliquesLinks: v.cliquesLinks || 0,
       receitaInterchange: v.receitaInterchange || 0,
       receitaMensalidade: v.receitaMensalidade || 0,
       receitaOutrosIugu: v.receitaOutrosIugu || 0,
@@ -1751,6 +1872,23 @@ function montar(bqd, hsd, tinoDados) {
     return { risco: grave ? 'Alto' : medio ? 'Médio' : 'Baixo', motivos, diasSemPedido: diasPed };
   }
 
+  /* ---- RG do cliente: empresas do domínio (matriz + filiais), endereço e
+     telefone. A matriz é a mais antiga; o resto são filiais. Entra na aba
+     "Visão do cliente" (24/09/2026). */
+  const empresasPorDom = new Map();
+  (bqd.empresasDaMarca || []).forEach(e => {
+    const arr = empresasPorDom.get(e.dom) || empresasPorDom.set(e.dom, []).get(e.dom);
+    arr.push({
+      id: e.id, fantasia: e.fantasia || null, social: e.social || null,
+      cnpj: soDigitos(e.cnpj), status: e.status || null, criado: e.criado || null,
+      endereco: [e.endereco, e.numero].filter(Boolean).join(', ') || null,
+      bairro: e.bairro || null, cidade: e.cidade || null, uf: e.uf || null,
+      cep: e.cep || null, telefone: e.telefone || null,
+      lojaFisica: e.lojaFisica == null ? null : String(e.lojaFisica),
+    });
+  });
+  empresasPorDom.forEach(arr => arr.sort((a, b) => String(a.criado||'').localeCompare(String(b.criado||''))));
+
   const clientes = [];
   porDom.forEach(m => {
     const fat = faturaDaMarca(m);
@@ -1797,6 +1935,13 @@ function montar(bqd, hsd, tinoDados) {
       temOraculo: !!m.temOraculo,
       temTino: false,
       temVestiPago: false,
+      /* RG do cliente (aba Visão do cliente). `empresas` é a lista de lojas do
+         domínio: a primeira é a matriz, as outras são filiais. */
+      cnpj: m.cnpj || null,
+      razaoSocial: m.social || null,
+      nomeFantasia: m.fantasia || null,
+      integracaoDona: m.integracaoDona || null,
+      empresas: empresasPorDom.get(m.dom) || [],
       _dom: m.dom, _cnpj: m.cnpj,
     });
   });
@@ -2470,6 +2615,9 @@ function montar(bqd, hsd, tinoDados) {
     tickets,
     onboarding: hsd.onboarding || [],
     marcosVolume,
+    /* Uma linha por fatura do Iugu, com status — alimenta o card de
+       mensalidade da aba Visão do cliente. */
+    faturasCliente: empacotar(faturasCliente),
   };
 }
 

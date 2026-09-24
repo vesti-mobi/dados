@@ -392,6 +392,32 @@ td.strong{font-weight:600}
 .health i{width:6px;height:6px;border-radius:50%;flex:none}
 .h-ok i{background:var(--pos)}.h-warn i{background:var(--gold)}.h-bad i{background:var(--neg)}/* faixa do health score, embaixo do número na tabela geral */
 .cell-sub.h-ok{color:var(--pos)}.cell-sub.h-warn{color:var(--gold)}.cell-sub.h-bad{color:var(--neg)}
+
+/* --- Visão do cliente: busca com sugestão e cabeçalho da ficha --- */
+.busca-cliente{position:relative}
+.busca-cliente input{min-width:300px}
+.busca-pop{display:none;position:absolute;top:100%;left:0;z-index:30;min-width:340px;max-width:460px;
+  margin-top:5px;max-height:340px;overflow:auto;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 10px 30px -12px rgba(17,20,24,.35)}
+.busca-pop.aberto{display:block}
+.busca-item{display:block;width:100%;text-align:left;background:none;border:0;cursor:pointer;
+  padding:9px 13px;font-family:inherit;border-bottom:1px solid var(--line-2)}
+.busca-item:last-child{border-bottom:0}
+.busca-item:hover{background:var(--acc-soft)}
+.busca-item b{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+.busca-item span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.busca-vazio{padding:12px 13px;font-size:12.5px;color:var(--ink-3)}
+
+.ficha-topo{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:18px;
+  padding:16px 18px;background:var(--surface);border:1px solid var(--line);
+  border-top:2px solid var(--acc);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.ficha-topo h2{font-family:var(--f-display);font-size:23px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
+.ficha-topo p{margin:0;font-size:12.5px;color:var(--ink-2);max-width:78ch}
+.ficha-topo .btn{margin-left:auto}
+.ficha-health{text-align:right;padding-left:18px;border-left:1px solid var(--line)}
+.ficha-health b{display:block;font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1.1}
+.ficha-health span{font-size:11.5px;color:var(--ink-3)}
+.ficha-health.h-ok b{color:var(--pos)}.ficha-health.h-warn b{color:var(--gold)}.ficha-health.h-bad b{color:var(--neg)}
 .cs-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
 .dom-id{font-variant-numeric:tabular-nums;font-size:12px;color:var(--txt-2,#6b7280);letter-spacing:.01em}
 .cs-chip b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:none;
@@ -921,6 +947,7 @@ const DATA = converterSemanaEmData(desempacotar(DADOS_REAIS ? window.PAINEL_DATA
    vazios. */
 if(!DATA.tickets) DATA.tickets = [];
 if(!DATA.reunioes) DATA.reunioes = [];
+if(!DATA.faturasCliente) DATA.faturasCliente = [];   // histórico de faturas: carga de 24/09/2026 em diante
 if(!DATA.tino) DATA.tino = {tabela:[], series:[]};
 if(!DATA.tino.kpis) DATA.tino.kpis = {};
 DATA.clientes.forEach(c=>{ if(!c.canal) c.canal = 'Sem canal' });
@@ -956,6 +983,10 @@ const fmt = {
   wk:s=>'S'+String(s).padStart(2,'0'),
   /* '05/ago' — rótulo curto de dia, para o eixo dos gráficos e a régua. */
   dia:iso=>{ if(!iso) return '—'; const [,m,d]=iso.split('-'); return d+'/'+MESES[Number(m)-1] },
+  /* '12.345.678/0001-99' — CNPJ do cadastro, que vem só com os dígitos. */
+  cnpj:v=>{ const d = String(v==null?'':v).replace(/\D+/g,'');
+    return d.length===14 ? d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5')
+         : d.length===11 ? d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4') : (d || '—') },
   /* 'ago/26' — rótulo de mês, para quando o período é longo demais para dias. */
   mes:iso=>{ if(!iso) return '—'; const [y,m]=iso.split('-'); return MESES[Number(m)-1]+'/'+String(y).slice(2) },
 };
@@ -1124,7 +1155,7 @@ function normalizarCs(n){
 function csDaAba(t){
   /* A aba Gerencial é a carteira das três CS (pedido da Laura, 17/09/2026):
      o seletor só oferece elas, e nenhuma marcada quer dizer as três. */
-  if(t.id==='gerencial') return CS_CARTEIRA.slice();
+  if(t.id==='gerencial' || t.id==='cliente') return CS_CARTEIRA.slice();
   const fonte = ['reunioes','tickets','crossSell','upsell'].includes(t.id)
     ? t.linhas().map(r=>csDaLinha(t,r))
     : DATA.clientes.map(c=>c.cs || 'Sem CS');
@@ -2093,9 +2124,12 @@ function serieMensalDoCard(c, ctx){
    não dia a dia acho melhor"). Uma reunião ou um negócio por dia vira uma
    floresta de barras de 1 — por semana dá para ver a tendência. Períodos longos
    seguem a régua do resto do painel e agrupam por mês. */
-function graoDosCards(p){ const g = grãoDoPeriodo(p); return g === 'dia' ? 'semana' : g }
+function graoDosCards(p, ctx){
+  if(ctx && ctx.grao) return ctx.grao;   // a ficha do cliente pede mês a mês
+  const g = grãoDoPeriodo(p); return g === 'dia' ? 'semana' : g;
+}
 function seriePorBucketDoCard(c, ctx, rows){
-  const grao = graoDosCards(ctx.p);
+  const grao = graoDosCards(ctx.p, ctx);
   const mapa = new Map();
   bucketsDoPeriodo(ctx.p, grao).forEach(b=>mapa.set(b, []));
   rows.forEach(r=>{
@@ -2161,14 +2195,14 @@ function graficoDoCard(c, ctx, rows){
   const card = el('div',{class:'card'});
   const leg = c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
   const titulo = ctx.tipo === 'mes' ? `Últimos ${dados.length} meses`
-    : 'No período, ' + ({semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p)]);
+    : 'No período, ' + ({semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
   card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><div class="legend">${leg}</div></div>
                     <div class="chart-wrap" id="gch-${c.id}"></div>
                     <div class="gcomp">${comparacoes.join('<br>')}</div>`;
   const host = card.querySelector('#gch-'+c.id);
   const series = c.metricas.map((x,i)=>{
     const cor = corSerie(i);
-    return {k:x.k, l:x.l, tipo:'bar', cor, f:x.f,
+    return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
       /* no recorte de mês, o mês escolhido fica em cor cheia e o resto apagado:
          é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
       corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : null};
@@ -2525,6 +2559,500 @@ const CARDS_VISAO = [
 ];
 function cardVisao(id){ return CARDS_VISAO.find(c=>c.id===id) }
 function renderVisaoGeral(){ return renderGradeCards('visaoGeral', CARDS_VISAO, ctxPeriodo()) }
+
+/* ============================================================================
+   3e. VISÃO DO CLIENTE — a ficha de uma marca só
+   Pedido da Laura em 24/09/2026. A aba abre com a lista das marcas das três CS
+   (Thamiris, Luana e Gabriella) e uma busca que casa por nome, CNPJ, domínio ou
+   id da empresa; escolhida a marca, ela vira uma grade de cards com o histórico
+   de cada produto, o RG, as faturas, os tickets, as reuniões e os negócios.
+
+   Reaproveita a mesma grade de cards da Visão geral e da Gerencial — muda só o
+   contexto: aqui o recorte é UMA MARCA em uma janela de 12 meses, e o gráfico
+   de cada card sai mês a mês.
+   ========================================================================== */
+const MESES_FICHA = 12;
+/* Busca tolerante: "sao" acha "São", "jeans" acha "Bella Jeans", 12345678000199
+   acha pelo CNPJ com ou sem pontuação, e o número do domínio acha direto. */
+const semAcentoTxt = s => String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ]/g,'');
+const chaveBusca = s => semAcentoTxt(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const soDigitosTxt = s => String(s==null?'':s).replace(/\D+/g,'');
+
+/* Índice de busca montado uma vez: cada marca com as chaves por onde ela pode
+   ser encontrada. */
+const idxBuscaCliente = (()=>{
+  let cache = null;
+  return ()=>cache || (cache = DATA.clientes.map(c=>({
+    c,
+    nomes: [c.nome, c.razaoSocial, c.nomeFantasia, ...(c.empresas||[]).map(e=>e.fantasia),
+            ...(c.empresas||[]).map(e=>e.social)].filter(Boolean).map(chaveBusca),
+    cnpjs: [c.cnpj, ...(c.empresas||[]).map(e=>e.cnpj)].filter(Boolean).map(soDigitosTxt),
+    ids: [String(c.dominio||''), ...(c.empresas||[]).map(e=>String(e.id||''))].filter(Boolean),
+  })));
+})();
+
+/* Resultado da busca, já ordenado: quem começa com o termo vem antes de quem
+   só contém, e marca das três CS vem antes das outras — a aba é delas, mas
+   procurar uma marca de fora e achar é melhor do que dizer "não existe". */
+function buscarClientes(termo, csFoco){
+  const q = chaveBusca(termo), qd = soDigitosTxt(termo);
+  const lista = idxBuscaCliente();
+  if(!q && !qd) return lista.filter(x=>csFoco.has(x.c.cs)).map(x=>({c:x.c, peso:0}));
+  const out = [];
+  lista.forEach(x=>{
+    let peso = null;
+    if(qd && qd.length >= 3){
+      if(x.ids.some(id=>id === qd)) peso = 0;
+      else if(x.cnpjs.some(cn=>cn.includes(qd))) peso = 1;
+      else if(x.ids.some(id=>id.startsWith(qd))) peso = 2;
+    }
+    if(peso === null && q){
+      if(x.nomes.some(n=>n.startsWith(q))) peso = 3;
+      else if(x.nomes.some(n=>n.split(' ').some(p=>p.startsWith(q)))) peso = 4;
+      else if(x.nomes.some(n=>n.includes(q))) peso = 5;
+    }
+    if(peso !== null) out.push({c:x.c, peso: peso + (csFoco.has(x.c.cs) ? 0 : 10)});
+  });
+  return out.sort((a,b)=> a.peso-b.peso || String(a.c.nome).localeCompare(String(b.c.nome),'pt-BR'));
+}
+function clienteFoco(){
+  const dom = estado.clienteFoco;
+  return dom ? DATA.clientes.find(c=>String(c.dominio)===String(dom)) || null : null;
+}
+
+/* Janela da ficha: 12 meses cheios até o último dia com dado. */
+function janelaFicha(){
+  const fim = LIMITE_DADOS.fim;
+  const ini = primeiroDiaDoMes(somarDias(primeiroDiaDoMes(fim), -1)); // mês anterior…
+  const [y,m] = fim.split('-').map(Number);
+  return janela(new Date(Date.UTC(y, m-MESES_FICHA, 1)).toISOString().slice(0,10), fim);
+}
+function ctxCliente(c){
+  const p = janelaFicha();
+  return {tipo:'periodo', p, grao:'mes', cliente:c,
+    chave:'cli:'+c.dominio+'|'+p.ini+'_'+p.fim, rotulo:c.nome};
+}
+
+/* --- fatias das séries para uma marca ------------------------------------- */
+function serieDoCliente(serie, c){
+  const dom = String(c.dominio||''), nome = c.nome;
+  return (serie||[]).filter(x=> (x.dominio ? String(x.dominio)===dom : x.cliente===nome));
+}
+function naJanela(linhas, p, campo){
+  return linhas.filter(x=>{ const d = String(x[campo||'data']||'').slice(0,10); return d >= p.ini && d <= p.fim });
+}
+/* Agrega uma série diária em linhas mensais — é assim que os cards de histórico
+   mostram "mês a mês" sem 365 linhas na tabela. */
+function porMes(linhas, campos, campoData){
+  const acc = new Map();
+  linhas.forEach(x=>{
+    const mes = String(x[campoData||'data']||'').slice(0,7); if(!mes) return;
+    const a = acc.get(mes) || {mes, data:mes+'-01', rotulo:rotuloMes(mes)};
+    campos.forEach(k=>a[k] = (a[k]||0) + (Number(x[k])||0));
+    acc.set(mes, a);
+  });
+  return [...acc.values()].sort((a,b)=>b.mes.localeCompare(a.mes));
+}
+
+const CARDS_CLIENTE = [
+  {
+    id:'rg', titulo:'RG do cliente', cor:'#0E7A73',
+    capa:'Cadastro, lojas e integração da marca',
+    fonte:'BigQuery — <code>odbc_domains</code> (domínio, CS, canal, integração) e <code>odbc_companies</code> (CNPJ, razão social, endereço, lojas). A primeira empresa do domínio é a matriz; as demais são filiais. Endereço e telefone só aparecem se existirem no espelho.',
+    vazio:'O cadastro não tem nenhuma empresa ligada a este domínio.',
+    linhas:ctx=>(ctx.cliente.empresas||[]).map((e,i)=>({
+      nome:e.fantasia || e.social || ('Empresa '+e.id), id:e.id, cnpj:e.cnpj,
+      tipo: i===0 ? 'Matriz' : 'Filial', cidade:[e.cidade, e.uf].filter(Boolean).join('/') || null,
+      endereco:[e.endereco, e.bairro].filter(Boolean).join(' — ') || null,
+      telefone:e.telefone, criado:e.criado, status:e.status, lojaFisica:e.lojaFisica})),
+    resumo:(rows,ctx)=>({v:fmt.int(rows.length || 1),
+      s: rows.length > 1 ? `${rows.length-1} filial(is) · ${ctx.cliente.canal}` : (ctx.cliente.canal || 'sem canal')}),
+    kpis:(rows,ctx)=>{ const c = ctx.cliente;
+      return [
+        {l:'CNPJ da matriz', v: c.cnpj ? fmt.cnpj(c.cnpj) : '—', s: c.razaoSocial || c.nomeFantasia || 'sem razão social no cadastro'},
+        {l:'CS responsável', v: c.cs || 'Sem CS', s:`canal ${c.canal || '—'} · plano ${c.plano || '—'}`},
+        {l:'Lojas cadastradas', v:fmt.int(rows.length), s: rows.length ? `matriz + ${rows.length-1} filial(is)` : 'nenhuma no cadastro'},
+        {l:'Cliente desde', v: c.dataCadastro ? fmt.date(c.dataCadastro) : '—',
+         s: c.dataCadastro ? tempoDeCasa(c.dataCadastro) + ' de casa · integração '+(c.integracao||'—')
+            + (c.integracaoDona ? ' ('+c.integracaoDona+')' : '') : 'sem data de cadastro'},
+      ]; },
+    colunas:[{k:'nome', l:'Loja'}, {k:'tipo', l:'Tipo'}, {k:'id', l:'ID da empresa'},
+      {k:'cnpj', l:'CNPJ', f:v=>v?fmt.cnpj(v):'—'}, {k:'cidade', l:'Cidade/UF', f:v=>v||'—'},
+      {k:'endereco', l:'Endereço', f:v=>v||'—'}, {k:'telefone', l:'Telefone', f:v=>v||'—'},
+      {k:'criado', l:'Criada em', f:fmt.date}],
+  },
+  {
+    id:'gmvCli', titulo:'Histórico de GMV', cor:'#2E7D46',
+    capa:'Pedidos e GMV da marca, mês a mês',
+    fonte:'BigQuery — <code>MongoDB_Pedidos_Geral</code>, pela data de criação do pedido. O GMV conta só pedido PAGO, com teto de R$ 50 mil por pedido; a contagem mostra todos e os pagos.',
+    campoData:'data',
+    linhas:ctx=>porMes(naJanela(serieDoCliente(DATA.clientesSeries, ctx.cliente), ctx.p),
+      ['pedidos','pedidosPagos','valorPedidos'])
+      .map(m=>Object.assign(m, {ticket: m.pedidosPagos ? m.valorPedidos/m.pedidosPagos : 0})),
+    resumo:rows=>({v:fmt.moneyCompact(soma(rows,'valorPedidos')),
+      s: rows.length ? `${fmt.int(soma(rows,'pedidos'))} pedidos em ${rows.length} meses` : 'sem pedidos na janela'}),
+    kpis:rows=>{ const melhor = rows.slice().sort((a,b)=>b.valorPedidos-a.valorPedidos)[0];
+      const pagos = soma(rows,'pedidosPagos');
+      return [
+        {l:'GMV em 12 meses', v:fmt.moneyCompact(soma(rows,'valorPedidos')), s:'só pedido pago'},
+        {l:'Pedidos', v:fmt.int(soma(rows,'pedidos')), s:fmt.int(pagos)+' pagos'},
+        {l:'Ticket médio', v:fmt.money(pagos ? soma(rows,'valorPedidos')/pagos : 0), s:'GMV pago ÷ pedidos pagos'},
+        {l:'Melhor mês', v: melhor ? fmt.moneyCompact(melhor.valorPedidos) : '—', s: melhor ? rotuloMes(melhor.mes) : ''},
+      ]; },
+    metricas:[{k:'valorPedidos', l:'GMV pago', f:fmt.money, v:rows=>soma(rows,'valorPedidos')},
+      {k:'pedidos', l:'Pedidos', f:fmt.int, v:rows=>soma(rows,'pedidos'), tipo:'line', eixo:'dir'}],
+    colunas:[{k:'rotulo', l:'Mês'}, {k:'pedidos', l:'Pedidos', r:true, f:fmt.int},
+      {k:'pedidosPagos', l:'Pagos', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'valorPedidos', l:'GMV pago', r:true, f:fmt.money},
+      {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
+  },
+  {
+    id:'tinoCli', titulo:'Uso do Tino', cor:'#B7791F',
+    capa:'Eventos gerados no Tino, mês a mês',
+    fonte:'API do Tino (<code>companies_chart</code>) — eventos e sessões da marca. Quem não aparece aqui não tem o produto ou nunca gerou evento.',
+    vazio:'Esta marca não tem eventos no Tino na janela — ou não tem o produto.',
+    campoData:'data',
+    linhas:ctx=>porMes(naJanela(serieDoCliente(DATA.tino.series, ctx.cliente), ctx.p), ['eventos']),
+    resumo:(rows,ctx)=>({v: rows.length ? fmt.compact(soma(rows,'eventos')) : '—',
+      s: rows.length ? `eventos em ${rows.length} meses` : (ctx.cliente.temTino ? 'tem o produto, sem uso na janela' : 'não tem o Tino')}),
+    kpis:(rows,ctx)=>{ const t = (DATA.tino.tabela||[]).find(x=>String(x.dominio)===String(ctx.cliente.dominio)) || {};
+      const melhor = rows.slice().sort((a,b)=>b.eventos-a.eventos)[0];
+      return [
+        {l:'Eventos na janela', v:fmt.compact(soma(rows,'eventos')), s: rows.length+' meses com dado'},
+        {l:'Status no Tino', v: t.statusTino || (ctx.cliente.temTino ? 'Ativa' : '—'),
+         s: t.implantado ? 'entrou em '+fmt.date(t.implantado) : 'sem data de implantação'},
+        {l:'Último acesso', v: t.ultimoAcessoTino ? fmt.date(t.ultimoAcessoTino) : '—',
+         s: t.ultimoAcessoTino ? relativo(t.ultimoAcessoTino).txt : (t.nuncaLogou ? 'nunca logou' : 'sem registro')},
+        {l:'Melhor mês', v: melhor ? fmt.compact(melhor.eventos) : '—', s: melhor ? rotuloMes(melhor.mes) : ''},
+      ]; },
+    metricas:[{k:'eventos', l:'Eventos no Tino', f:fmt.int, v:rows=>soma(rows,'eventos')}],
+    colunas:[{k:'rotulo', l:'Mês'}, {k:'eventos', l:'Eventos', r:true, f:fmt.int}],
+  },
+  {
+    id:'oraculoCli', titulo:'Uso do Oráculo', cor:'#1E74C8',
+    capa:'Atendimentos, participação da IA e GMV gerado',
+    fonte:'BigQuery — <code>oraculo_Atendimentos</code> (atendimentos e quantos foram da IA) e <code>oraculo_Pedidos</code> (GMV iniciado e finalizado dentro do Oráculo).',
+    vazio:'Esta marca não tem atendimento no Oráculo na janela.',
+    campoData:'data',
+    linhas:ctx=>porMes(naJanela(serieDoCliente(DATA.oraculo.series, ctx.cliente), ctx.p),
+      ['atendimentos','atendimentosIA','gmvIniciado','gmvFinalizado'])
+      .map(m=>Object.assign(m, {pctIA: m.atendimentos ? Math.round(m.atendimentosIA/m.atendimentos*100) : null})),
+    resumo:rows=>({v: rows.length ? fmt.compact(soma(rows,'atendimentos')) : '—',
+      s: rows.length ? fmt.moneyCompact(soma(rows,'gmvIniciado'))+' de GMV iniciado' : 'sem uso do Oráculo'}),
+    kpis:rows=>{ const at = soma(rows,'atendimentos'), ia = soma(rows,'atendimentosIA');
+      return [
+        {l:'Atendimentos', v:fmt.compact(at), s: rows.length+' meses com dado'},
+        {l:'Feitos pela IA', v:pctTexto(ia, at), s:fmt.compact(ia)+' atendimentos'},
+        {l:'GMV iniciado', v:fmt.moneyCompact(soma(rows,'gmvIniciado')), s:'venda direta + influenciada'},
+        {l:'GMV finalizado', v:fmt.moneyCompact(soma(rows,'gmvFinalizado')), s:'fechado dentro do Oráculo'},
+      ]; },
+    metricas:[{k:'atendimentos', l:'Atendimentos', f:fmt.int, v:rows=>soma(rows,'atendimentos')},
+      {k:'atendimentosIA', l:'Pela IA', f:fmt.int, v:rows=>soma(rows,'atendimentosIA')}],
+    colunas:[{k:'rotulo', l:'Mês'}, {k:'atendimentos', l:'Atendimentos', r:true, f:fmt.int},
+      {k:'atendimentosIA', l:'Pela IA', r:true, f:fmt.int}, {k:'pctIA', l:'% IA', r:true, f:v=>v==null?'—':v+'%'},
+      {k:'gmvIniciado', l:'GMV iniciado', r:true, f:fmt.money},
+      {k:'gmvFinalizado', l:'GMV finalizado', r:true, f:fmt.money}],
+  },
+  {
+    id:'vpCli', titulo:'Uso do VestiPago', cor:'#00B894',
+    capa:'Transacionado por mês, separado em PIX, cartão e links',
+    fonte:'BigQuery — pedidos com provider VestiPago. <b>Links</b> são os pedidos originados em link de cobrança (gerados e pagos); PIX e cartão somam o valor transacionado.',
+    vazio:'Esta marca não transacionou no VestiPago na janela.',
+    campoData:'data',
+    linhas:ctx=>porMes(naJanela(serieDoCliente(DATA.vestiPago.series, ctx.cliente), ctx.p),
+      ['valor','valorPix','valorCartao','linksGerados','linksPagos','receitaFee']),
+    resumo:rows=>({v: rows.length ? fmt.moneyCompact(soma(rows,'valor')) : '—',
+      s: rows.length ? `${pctTexto(soma(rows,'valorPix'), soma(rows,'valor'))} em PIX` : 'sem VestiPago'}),
+    kpis:rows=>[
+      {l:'Transacionado', v:fmt.moneyCompact(soma(rows,'valor')), s:'na janela de 12 meses'},
+      {l:'PIX', v:fmt.moneyCompact(soma(rows,'valorPix')), s:pctTexto(soma(rows,'valorPix'), soma(rows,'valor'))+' do volume'},
+      {l:'Cartão', v:fmt.moneyCompact(soma(rows,'valorCartao')), s:pctTexto(soma(rows,'valorCartao'), soma(rows,'valor'))+' do volume'},
+      {l:'Links de cobrança', v:fmt.int(soma(rows,'linksGerados')), s:fmt.int(soma(rows,'linksPagos'))+' pagos ('+pctTexto(soma(rows,'linksPagos'), soma(rows,'linksGerados'))+')'},
+    ],
+    metricas:[{k:'valorPix', l:'PIX', f:fmt.money, v:rows=>soma(rows,'valorPix')},
+      {k:'valorCartao', l:'Cartão', f:fmt.money, v:rows=>soma(rows,'valorCartao')}],
+    colunas:[{k:'rotulo', l:'Mês'}, {k:'valor', l:'Transacionado', r:true, f:fmt.money},
+      {k:'valorPix', l:'PIX', r:true, f:fmt.money}, {k:'valorCartao', l:'Cartão', r:true, f:fmt.money},
+      {k:'linksGerados', l:'Links gerados', r:true, f:fmt.int},
+      {k:'linksPagos', l:'Links pagos', r:true, f:fmt.int},
+      {k:'receitaFee', l:'Receita (fee)', r:true, f:fmt.money}],
+  },
+  {
+    id:'linksCli', titulo:'Links enviados × cliques', cor:'#8046C4',
+    capa:'Listas de produtos que os vendedores compartilharam e os cliques que elas receberam',
+    fonte:'BigQuery — <code>sucessodocliente_products</code> (cada lista enviada por um vendedor da marca) e <code>sucessodocliente_rankings</code> (cliques nos links compartilhados). Mesma leitura do Painel Elisa.',
+    vazio:'Nenhum link compartilhado por esta marca na janela — ou a carga ainda não traz esse dado.',
+    campoData:'data',
+    linhas:ctx=>porMes(naJanela(serieDoCliente(DATA.clientesSeries, ctx.cliente), ctx.p),
+      ['linksCompartilhados','cliquesLinks'])
+      .filter(m=>m.linksCompartilhados || m.cliquesLinks)
+      .map(m=>Object.assign(m, {porLink: m.linksCompartilhados ? m.cliquesLinks/m.linksCompartilhados : 0})),
+    resumo:rows=>({v: rows.length ? fmt.compact(soma(rows,'linksCompartilhados')) : '—',
+      s: rows.length ? fmt.compact(soma(rows,'cliquesLinks'))+' cliques' : 'sem links compartilhados'}),
+    kpis:rows=>{ const l = soma(rows,'linksCompartilhados'), cl = soma(rows,'cliquesLinks');
+      return [
+        {l:'Links compartilhados', v:fmt.compact(l), s:'na janela de 12 meses'},
+        {l:'Cliques', v:fmt.compact(cl), s: l ? (cl/l).toFixed(1).replace('.',',')+' cliques por link' : 'sem base'},
+        {l:'Média por dia', v:(l/365).toFixed(1).replace('.',','), s:'links por dia no ano'},
+        {l:'Melhor mês', v: rows.length ? fmt.compact(rows.slice().sort((a,b)=>b.linksCompartilhados-a.linksCompartilhados)[0].linksCompartilhados) : '—',
+         s: rows.length ? rotuloMes(rows.slice().sort((a,b)=>b.linksCompartilhados-a.linksCompartilhados)[0].mes) : ''},
+      ]; },
+    metricas:[{k:'linksCompartilhados', l:'Links enviados', f:fmt.int, v:rows=>soma(rows,'linksCompartilhados')},
+      {k:'cliquesLinks', l:'Cliques', f:fmt.int, v:rows=>soma(rows,'cliquesLinks')}],
+    colunas:[{k:'rotulo', l:'Mês'}, {k:'linksCompartilhados', l:'Links enviados', r:true, f:fmt.int},
+      {k:'cliquesLinks', l:'Cliques', r:true, f:fmt.int},
+      {k:'porLink', l:'Cliques por link', r:true, f:v=>v.toFixed(1).replace('.',',')}],
+  },
+  {
+    id:'faturasCli', titulo:'Mensalidade', cor:'#2D3436',
+    capa:'Faturas do Iugu, pagas e não pagas',
+    fonte:'BigQuery — <code>iugu_invoices</code>, uma linha por fatura, pelo mês de vencimento. O status é o que o Iugu registrou: <i>paid</i>/<i>externally_paid</i> é paga; <i>pending</i>, <i>expired</i>, <i>canceled</i> e afins aparecem como estão.',
+    vazio:'Nenhuma fatura do Iugu casou com esta marca — ela pode pagar por outro CNPJ ou pelo parceiro.',
+    campoData:'vencimento',
+    linhas:ctx=>naJanela((DATA.faturasCliente||[]).filter(f=>String(f.dominio)===String(ctx.cliente.dominio)),
+      ctx.p, 'vencimento')
+      .map(f=>Object.assign({}, f, {situacao: f.pago ? 'Paga' : (f.status||'—'),
+        atraso: f.pago && f.pagoEm && f.pagoEm > f.vencimento ? diasEntre(f.vencimento, f.pagoEm) : null})),
+    resumo:rows=>{ const pagas = rows.filter(r=>r.pago);
+      return {v: rows.length ? fmt.moneyCompact(soma(pagas,'valor')) : '—',
+        s: rows.length ? `${pagas.length} de ${rows.length} faturas pagas` : 'sem fatura casada'}; },
+    kpis:rows=>{ const pagas = rows.filter(r=>r.pago), abertas = rows.filter(r=>!r.pago);
+      const atrasadas = pagas.filter(r=>r.atraso > 0);
+      return [
+        {l:'Pago na janela', v:fmt.moneyCompact(soma(pagas,'valor')), s:fmt.int(pagas.length)+' faturas pagas'},
+        {l:'Não pagas', v:fmt.int(abertas.length), s:fmt.moneyCompact(soma(abertas,'valor'))+' em aberto ou canceladas'},
+        {l:'Pagas em atraso', v:fmt.int(atrasadas.length), s: atrasadas.length ? 'até '+fmt.int(Math.max(...atrasadas.map(r=>r.atraso)))+' dias depois do vencimento' : 'nenhuma'},
+        {l:'Fatura média', v:fmt.money(pagas.length ? soma(pagas,'valor')/pagas.length : 0), s:'entre as pagas'},
+      ]; },
+    metricas:[{k:'valorPago', l:'Pago', f:fmt.money, v:rows=>soma(rows.filter(r=>r.pago),'valor')},
+      {k:'valorAberto', l:'Não pago', f:fmt.money, v:rows=>soma(rows.filter(r=>!r.pago),'valor')}],
+    colunas:[{k:'vencimento', l:'Vencimento', f:fmt.date}, {k:'situacao', l:'Situação'},
+      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'pagoEm', l:'Pago em', f:fmt.date},
+      {k:'atraso', l:'Dias de atraso', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'item', l:'Item principal', f:v=>v||'—'}],
+  },
+  {
+    id:'healthCli', titulo:'Health score', cor:'#C0453B',
+    capa:'A régua de saúde da marca, regra a regra',
+    fonte:'Mesma régua da coluna Health score da tabela geral: cinco regras, 100 pontos, sempre sobre os <b>últimos 30 dias corridos</b> (não muda com o filtro de período).',
+    linhas:ctx=>healthDaMarca(ctx.cliente).regras.map(r=>({
+      nome:r.l, situacao: r.indisponivel ? 'Sem dado' : (r.ok ? 'Bateu' : 'Não bateu'),
+      pontos: r.indisponivel ? null : (r.ok ? r.pts : 0), vale:r.pts, detalhe:r.detalhe})),
+    resumo:(rows,ctx)=>{ const h = healthDaMarca(ctx.cliente);
+      return {v:fmt.int(h.score), s:h.faixa.l + ' · ' + rows.filter(r=>r.situacao==='Bateu').length + ' de ' + rows.length + ' regras'}; },
+    kpis:(rows,ctx)=>{ const h = healthDaMarca(ctx.cliente);
+      const bateu = rows.filter(r=>r.situacao==='Bateu');
+      return [
+        {l:'Health score', v:fmt.int(h.score), s:h.faixa.l + (h.possiveis!==100 ? ' · sobre '+h.possiveis+' pontos medíveis' : '')},
+        {l:'Regras batidas', v:`${bateu.length}/${rows.length}`, s:bateu.map(r=>'+'+r.pontos).join(' ') || 'nenhuma'},
+        {l:'Último pedido', v: ctx.cliente.ultimoPedido ? fmt.date(ctx.cliente.ultimoPedido) : '—',
+         s: ctx.cliente.ultimoPedido ? relativo(ctx.cliente.ultimoPedido).txt : 'sem pedido registrado'},
+        {l:'Situação na Vesti', v: ctx.cliente.status === 'ativo' ? 'Ativa' : 'Inativa',
+         s: ctx.cliente.riscoChurn ? 'risco de churn '+ctx.cliente.riscoChurn : 'sem risco calculado'},
+      ]; },
+    colunas:[{k:'nome', l:'Regra'}, {k:'situacao', l:'Situação'},
+      {k:'pontos', l:'Pontos', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'vale', l:'Vale', r:true, f:fmt.int}, {k:'detalhe', l:'Por quê'}],
+  },
+  {
+    id:'ticketsCli', titulo:'Tickets', cor:'#B54A72',
+    capa:'Chamados da marca no HubSpot, abertos e encerrados',
+    fonte:'HubSpot — <code>tickets</code> de todos os pipelines, casados com a marca pela empresa associada.',
+    vazio:'Nenhum ticket desta marca no ano.',
+    campoData:'data',
+    linhas:ctx=>(DATA.tickets||[]).filter(t=>String(t.dominio||'')===String(ctx.cliente.dominio) || t.cliente===ctx.cliente.nome)
+      .map(t=>({nome:t.ticket, situacao:t.situacao, estagio:t.estagio, pipeline:t.pipeline,
+        categoria:t.categoria, prioridade:t.prioridade, cs:t.cs, data:t.data, fechadoEm:t.fechadoEm,
+        dias:t.diasParaFechar}))
+      .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>{ const abertos = rows.filter(r=>r.situacao!=='Encerrado');
+      return {v:fmt.int(abertos.length), s: rows.length ? `abertos · ${rows.length} no total` : 'nenhum ticket'}; },
+    kpis:rows=>{ const abertos = rows.filter(r=>r.situacao!=='Encerrado');
+      const fechados = rows.filter(r=>r.dias!=null);
+      return [
+        {l:'Tickets abertos', v:fmt.int(abertos.length), s: abertos.length ? 'o mais antigo de '+fmt.date(abertos[abertos.length-1].data) : 'nenhum em aberto'},
+        {l:'Total no ano', v:fmt.int(rows.length), s:fmt.int(rows.length-abertos.length)+' encerrados'},
+        {l:'Tempo médio para fechar', v: fechados.length ? fmt.int(Math.round(media(fechados,'dias')))+' d' : '—', s:'entre os encerrados'},
+        {l:'Assunto mais comum', v: rows.length ? maisFrequente(rows,'categoria') : '—', s:'categoria do ticket'},
+      ]; },
+    metricas:[{k:'qtd', l:'Tickets abertos no mês', f:fmt.int, v:rows=>rows.length}],
+    colunas:[{k:'data', l:'Aberto em', f:fmt.date}, {k:'nome', l:'Ticket'}, {k:'situacao', l:'Situação'},
+      {k:'estagio', l:'Estágio'}, {k:'categoria', l:'Categoria'}, {k:'prioridade', l:'Prioridade'},
+      {k:'cs', l:'Responsável'}, {k:'dias', l:'Dias para fechar', r:true, f:v=>v==null?'—':fmt.int(v)}],
+  },
+  {
+    id:'reunioesCli', titulo:'Reuniões', cor:'#7A4FB5',
+    capa:'Reuniões do time de CS com esta marca',
+    fonte:'HubSpot — <code>meetings</code>, pela empresa associada. Inclui as já realizadas e as agendadas para a frente.',
+    vazio:'Nenhuma reunião registrada com esta marca.',
+    campoData:'data',
+    linhas:ctx=>(DATA.reunioes||[]).filter(r=>String(r.dominio||'')===String(ctx.cliente.dominio) || r.cliente===ctx.cliente.nome)
+      .map(r=>({nome:r.reuniao, data:r.data, cs:r.cs, resultado:r.resultado,
+        negocio:r.negocio||'—', valor:r.valor||0, resumo:r.resumo||''}))
+      .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>{ const feitas = rows.filter(r=>r.resultado!=='Agendada');
+      return {v:fmt.int(feitas.length), s: rows.length ? (feitas[0] ? 'última em '+fmt.date(feitas[0].data) : 'só agendadas') : 'nenhuma reunião'}; },
+    kpis:rows=>{ const feitas = rows.filter(r=>r.resultado!=='Agendada');
+      const agendadas = rows.filter(r=>r.resultado==='Agendada');
+      const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
+      return [
+        {l:'Reuniões realizadas', v:fmt.int(feitas.length), s: feitas[0] ? 'a última em '+fmt.date(feitas[0].data) : 'nenhuma'},
+        {l:'Agendadas', v:fmt.int(agendadas.length), s: agendadas.length ? 'a próxima em '+fmt.date(agendadas[agendadas.length-1].data) : 'nada marcado'},
+        {l:'Fecharam negócio', v:fmt.int(fechou.length), s:fmt.moneyCompact(soma(fechou,'valor'))+' creditados'},
+        {l:'Quem mais atendeu', v: rows.length ? maisFrequente(rows,'cs') : '—', s:'dono da reunião no HubSpot'},
+      ]; },
+    metricas:[{k:'qtd', l:'Reuniões no mês', f:fmt.int, v:rows=>rows.filter(r=>r.resultado!=='Agendada').length}],
+    colunas:[{k:'data', l:'Data', f:fmt.date}, {k:'nome', l:'Reunião'}, {k:'cs', l:'Responsável'},
+      {k:'resultado', l:'Resultado'}, {k:'negocio', l:'Negócio'},
+      {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
+  },
+  {
+    id:'negociosCli', titulo:'Negócios', cor:'#4048B8',
+    capa:'Cross-sell e upgrade desta marca, abertos e fechados',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>; no upgrade, o ganho por mês é o valor do plano novo menos a mensalidade anterior da marca no Iugu.',
+    vazio:'Nenhum negócio de cross-sell ou upgrade para esta marca.',
+    campoData:'data',
+    linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
+                 ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
+      .filter(n=>String(n.dominio||'')===String(ctx.cliente.dominio) || n.cliente===ctx.cliente.nome)
+      .map(n=>{ const g = n.categoriaTxt==='Upgrade' ? ganhoDoUpgrade(n) : {antes:null, mesAntes:null, ganhoMes:null};
+        return {nome:n.cliente, negocio:n.negocio, categoriaTxt:n.categoriaTxt, produto:n.produto||'—',
+          status:n.status, estagio:n.estagio, temperatura:n.temperatura||'', valor:n.valor||0,
+          ganhoMes:g.ganhoMes, data:n.data, fechadoEm:n.fechadoEm||null, cs:n.cs}; })
+      .sort((a,b)=> (a.status==='Em aberto'?0:1)-(b.status==='Em aberto'?0:1) || String(b.data).localeCompare(String(a.data))),
+    resumo:rows=>{ const abertos = rows.filter(r=>r.status==='Em aberto');
+      return {v:fmt.int(abertos.length), s: rows.length ? `abertos · ${fmt.moneyCompact(soma(abertos,'valor'))} em negociação` : 'nenhum negócio'}; },
+    kpis:rows=>{ const abertos = rows.filter(r=>r.status==='Em aberto'), ganhos = rows.filter(r=>r.status==='Ganho');
+      return [
+        {l:'Negócios abertos', v:fmt.int(abertos.length), s:fmt.moneyCompact(soma(abertos,'valor'))+' em negociação'},
+        {l:'Temperatura dos abertos', v: abertos.length ? bucketTemperatura(abertos[0].temperatura).l.split(' ')[0] : '—',
+         s:resumoTemperatura(abertos)},
+        {l:'Ganhos', v:fmt.int(ganhos.length), s:fmt.moneyCompact(soma(ganhos,'valor'))+' fechados'},
+        {l:'Perdidos', v:fmt.int(rows.filter(r=>r.status==='Perdido').length), s:'no histórico do pipeline'},
+      ]; },
+    metricas:[{k:'qtd', l:'Negócios criados no mês', f:fmt.int, v:rows=>rows.length}],
+    colunas:[{k:'data', l:'Criado em', f:fmt.date}, {k:'negocio', l:'Negócio'},
+      {k:'categoriaTxt', l:'Categoria'}, {k:'produto', l:'Produto'}, {k:'status', l:'Status'},
+      {k:'estagio', l:'Estágio'}, {k:'temperatura', l:'Temperatura', f:v=>v||'—'},
+      {k:'valor', l:'Valor', r:true, f:fmt.money},
+      {k:'ganhoMes', l:'Ganho por mês', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'fechadoEm', l:'Fechado em', f:fmt.date}],
+  },
+  {
+    id:'marcosCli', titulo:'Implantação e marcos', cor:'#12968D',
+    capa:'Quanto tempo a marca levou em cada etapa e em cada marco de volume',
+    fonte:'Duas origens, marcadas na coluna <b>Origem</b>. <b>BigQuery</b>: os marcos de volume — o dia em que a marca cruzou 5 e 25 pedidos pagos e 100 mil de GMV pela primeira vez na vida. <b>HubSpot</b>: o negócio de onboarding, com o estágio em que ele está e desde quando. <b>O HubSpot não guarda quando o negócio entrou em cada estágio</b> — sem a API de histórico de propriedades, o que dá para medir é o tempo desde a criação do negócio. Atenção: alguns estágios do pipeline de CS se chamam igual aos marcos ("25 Pedidos Pagos"), mas são coisas diferentes — um é o estágio que alguém arrastou no board, o outro é o fato medido no pedido.',
+    vazio:'Sem marcos registrados e sem negócio de onboarding para esta marca.',
+    linhas:ctx=>{ const c = ctx.cliente, out = [];
+      if(c.dataCadastro) out.push({etapa:'Cadastro na Vesti', origem:'BigQuery', quando:c.dataCadastro,
+        dias:0, detalhe:'criação do domínio', ordem:0});
+      (DATA.marcosVolume||[]).filter(m=>String(m.dominio)===String(c.dominio)).forEach(m=>{
+        out.push({etapa:m.tipo, origem:'BigQuery', quando:m.data, ordem:1,
+          dias: c.dataCadastro ? diasEntre(c.dataCadastro, m.data) : null,
+          detalhe:'primeira vez na vida da marca'});
+      });
+      const chaveC = chaveBusca(c.nome);
+      (DATA.onboarding||[]).filter(o=>o.cliente===c.nome || chaveBusca(o.cliente)===chaveC).forEach(o=>{
+        const implantado = /implantado/i.test(o.estagio||'');
+        const fim = implantado ? o.fechadoEm : null;
+        out.push({etapa:o.estagio || '—', origem:'HubSpot', quando:o.data, ordem:2, implantado,
+          dias: c.dataCadastro ? diasEntre(c.dataCadastro, o.data) : null,
+          duracao: o.data ? diasEntre(o.data, fim || LIMITE_DADOS.fim) : null,
+          fechadoEm: fim, detalhe: o.pipeline + (bucketOnboarding(o.estagio) ? ' · fase ' + bucketOnboarding(o.estagio) : '')});
+      });
+      return out.sort((a,b)=> String(a.quando||'').localeCompare(String(b.quando||''))); },
+    resumo:rows=>{ const onb = rows.filter(r=>r.ordem===2);
+      /* O negócio que vale é o mais recente: marca antiga costuma ter dois ou
+         três negócios de onboarding no histórico. */
+      const atual = onb.slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando)))[0];
+      const marcos = rows.filter(r=>r.ordem===1).length;
+      if(!atual) return {v: fmt.int(marcos), s: marcos ? 'marcos de volume batidos' : 'sem marco nem onboarding'};
+      return {v: atual.implantado ? 'Implantado' : fmt.int(atual.duracao||0)+' d',
+        s: atual.implantado ? 'onboarding concluído · '+fmt.int(marcos)+' marcos de volume'
+                            : 'parado em "'+atual.etapa+'" (HubSpot)'}; },
+    kpis:(rows,ctx)=>{ const c = ctx.cliente;
+      const marco = t => rows.find(r=>r.ordem===1 && r.etapa===t);
+      const onb = rows.filter(r=>r.ordem===2);
+      const atual = onb.slice().sort((a,b)=>String(b.quando).localeCompare(String(a.quando)))[0];
+      const dias = t => { const m = marco(t);
+        return m ? {v: fmt.int(m.dias)+' d', s:'depois do cadastro ('+fmt.date(m.quando)+')'}
+                 : {v:'—', s:'ainda não bateu'} };
+      const d5 = dias('5 Pedidos Pagos'), d25 = dias('25 Pedidos Pagos'), dGmv = dias('100k de GMV');
+      return [
+        {l:'Estágio no onboarding', v: atual ? (atual.implantado ? 'Implantado' : atual.etapa) : '—',
+         s: atual ? (atual.implantado ? 'fechado em '+fmt.date(atual.fechadoEm)
+                     : 'há '+fmt.int(atual.duracao||0)+' dias, desde '+fmt.date(atual.quando))
+                  : 'sem negócio de onboarding no HubSpot'},
+        {l:'5 pedidos pagos', v:d5.v, s:d5.s},
+        {l:'25 pedidos pagos', v:d25.v, s:d25.s},
+        {l:'100k de GMV', v:dGmv.v, s:dGmv.s},
+      ]; },
+    colunas:[{k:'quando', l:'Quando', f:fmt.date}, {k:'etapa', l:'Etapa / marco'},
+      {k:'origem', l:'Origem'},
+      {k:'dias', l:'Dias após o cadastro', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'duracao', l:'Dias no estágio', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'fechadoEm', l:'Fechado em', f:fmt.date}, {k:'detalhe', l:'Observação'}],
+  },
+];
+function cardCliente(id){ return CARDS_CLIENTE.find(c=>c.id===id) }
+
+/* --- a tela: busca + lista, ou a ficha da marca escolhida ------------------ */
+function renderVisaoCliente(){
+  const wrap = el('div',{});
+  const csFoco = csDoFoco();
+  const c = clienteFoco();
+
+  if(!c){
+    const termo = estado.filtros.buscaCliente || '';
+    const achados = buscarClientes(termo, csFoco);
+    const deFora = achados.filter(x=>!csFoco.has(x.c.cs)).length;
+    wrap.appendChild(el('div',{class:'section-label'},
+      `<span class="eyebrow">${termo ? fmt.int(achados.length)+' marca(s) para "'+escapar(termo)+'"'
+        : fmt.int(achados.length)+' marcas na carteira'}${deFora ? ' · '+fmt.int(deFora)+' fora da carteira das três' : ''}</span>`));
+    const linhas = achados.slice(0, 300).map(x=>{
+      const h = healthDaMarca(x.c);
+      return {nome:x.c.nome, cs:x.c.cs, dominio:x.c.dominio, cnpj:x.c.cnpj,
+        canal:x.c.canal, plano:x.c.plano, status:x.c.status==='ativo'?'Ativa':'Inativa',
+        health:h.score, faixa:h.faixa.l, ultimoPedido:x.c.ultimoPedido, _dom:x.c.dominio};
+    });
+    const card = cardLista('Marcas — clique para abrir a ficha'
+      + (achados.length > linhas.length ? ' (as '+fmt.int(linhas.length)+' primeiras de '+fmt.int(achados.length)+')' : ''),
+      linhas,
+      [{k:'nome', l:'Marca'}, {k:'cs', l:'CS'}, {k:'dominio', l:'Domínio'},
+       {k:'cnpj', l:'CNPJ', f:v=>v?fmt.cnpj(v):'—'}, {k:'canal', l:'Canal'}, {k:'plano', l:'Plano'},
+       {k:'status', l:'Situação'}, {k:'health', l:'Health', r:true, f:fmt.int},
+       {k:'ultimoPedido', l:'Último pedido', f:fmt.date}],
+      `<h4>Nenhuma marca encontrada</h4><p>A busca casa por nome (com ou sem acento), CNPJ, domínio ou id da empresa. Apague o texto para ver a carteira inteira.</p>`);
+    /* Clique na linha abre a ficha — é o caminho que a Laura pediu: lista,
+       escolhe, ficha. */
+    card.querySelectorAll('tbody tr').forEach((tr,i)=>{
+      tr.style.cursor = 'pointer';
+      tr.onclick = ()=>{ estado.clienteFoco = linhas[i]._dom; estado.cardAberto.cliente = null;
+        renderPagina(); window.scrollTo({top:0}) };
+    });
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  /* Cabeçalho da ficha: quem é a marca e o botão de voltar para a lista. */
+  const h = healthDaMarca(c);
+  const topo = el('div',{class:'ficha-topo'});
+  topo.innerHTML = `<div>
+      <span class="eyebrow">${escapar(c.cs || 'Sem CS')} · ${escapar(c.canal || 'sem canal')}</span>
+      <h2>${escapar(c.nome)}</h2>
+      <p>${c.cnpj ? 'CNPJ '+fmt.cnpj(c.cnpj)+' · ' : ''}domínio ${escapar(String(c.dominio||'—'))}
+         · ${escapar(c.plano || 'sem plano')} · ${escapar(c.integracao || 'sem integração')}
+         · cliente desde ${c.dataCadastro ? fmt.date(c.dataCadastro)+' ('+tempoDeCasa(c.dataCadastro)+')' : '—'}</p>
+    </div>
+    <div class="ficha-health ${h.faixa.cls}"><span class="eyebrow">Health score</span>
+      <b>${fmt.int(h.score)}</b><span>${h.faixa.l}</span></div>`;
+  const trocar = el('button',{class:'btn',type:'button'},'← Trocar de marca');
+  trocar.onclick = ()=>{ estado.clienteFoco = null; renderPagina(); window.scrollTo({top:0}) };
+  topo.appendChild(trocar);
+  wrap.appendChild(topo);
+  wrap.appendChild(renderGradeCards('cliente', CARDS_CLIENTE, ctxCliente(c)));
+  return wrap;
+}
 
 /* ============================================================================
    4. CONFIGURAÇÃO DAS ABAS
@@ -3032,6 +3560,18 @@ const TABS = [
       {l:'Receita antecipação', v:fmt.moneyCompact(soma(rows,'receitaAntecipacao')), s:'soma da coluna'},
       {l:'Links pagos', v:fmt.compact(soma(serie,'linksPagos')), s:pctTexto(soma(serie,'linksPagos'),soma(serie,'linksGerados'))+' dos gerados'},
     ]
+  },
+  {
+    id:'cliente', grupo:'Carteira', nav:'Visão do cliente', cor:'#12968D', cor2:'#4048B8',
+    titulo:'Visão do cliente',
+    desc:'A ficha de uma marca só, pedida pela Laura em 24/09/2026. A aba abre com as marcas da carteira das <b>três CS</b> (Thamiris, Luana e Gabriella) — o seletor de CS estreita para uma delas. '
+      + 'A <b>busca</b> casa por <b>nome</b> (com ou sem acento, e já a partir das primeiras letras), <b>CNPJ</b> (com ou sem pontuação), <b>domínio</b> ou <b>id da empresa</b>; marca de outra CS aparece no fim da lista, marcada como fora da carteira das três, em vez de sumir. '
+      + '<b>Clique na marca</b> para abrir a ficha: RG do cadastro, histórico de GMV, Tino, Oráculo, VestiPago (PIX, cartão e links), links enviados × cliques, mensalidade paga e não paga, health score, tickets, reuniões, negócios e o tempo em cada marco de implantação. '
+      + 'Cada card abre os dados por trás dele, com o histórico <b>mês a mês dos últimos 12 meses</b>.',
+    filtros:['cs','buscaCliente'],
+    semTabela:true,
+    linhas:()=>[],
+    extra:()=>renderVisaoCliente(),
   },
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
@@ -3919,7 +4459,7 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', mesGerencial:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
+  mesBonificacao:'', mesGerencial:'', buscaCliente:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -3930,7 +4470,8 @@ const estado = {
   ordem: {}, // { abaId: {k, dir} }
   ordemCard: {}, // { tituloDoCard: {k, dir} } — ordenação própria de cada cardLista
   /* card aberto em cada aba que usa a grade de cards (null = só a grade) */
-  cardAberto: { gerencial: null, visaoGeral: null },
+  cardAberto: { gerencial: null, visaoGeral: null, cliente: null },
+  clienteFoco: null,   // domínio da marca aberta na aba Visão do cliente
 };
 let ultimoRender = { rows:[], colunas:[] };
 
@@ -4231,6 +4772,50 @@ function renderFiltros(t){
       estado.filtros.pipeline, v=>estado.filtros.pipeline=v));
   }
   if(t.filtros.includes('periodo')) add('Período', seletorDePeriodo());
+  if(t.filtros.includes('buscaCliente')){
+    /* Busca com sugestão na hora: a cada letra a lista embaixo do campo mostra
+       as marcas que casam, e clicar abre a ficha. `debounce` para não refazer a
+       busca a cada tecla em uma carteira de mil marcas. */
+    const campo = el('div',{class:'field busca-cliente'});
+    campo.appendChild(el('label',{},'Buscar marca'));
+    const i = el('input',{type:'search', placeholder:'nome, CNPJ, domínio ou id da empresa…',
+      value:estado.filtros.buscaCliente, autocomplete:'off'});
+    const pop = el('div',{class:'busca-pop'});
+    const pintar = ()=>{
+      const termo = i.value.trim();
+      pop.innerHTML = '';
+      if(!termo){ pop.classList.remove('aberto'); return }
+      const achados = buscarClientes(termo, csDoFoco()).slice(0, 12);
+      if(!achados.length){
+        pop.appendChild(el('div',{class:'busca-vazio'},'Nenhuma marca com esse nome, CNPJ ou id.'));
+      }
+      achados.forEach(x=>{
+        const b = el('button',{class:'busca-item',type:'button'},
+          `<b>${escapar(x.c.nome)}</b><span>${escapar(x.c.cs||'Sem CS')} · domínio ${escapar(String(x.c.dominio||'—'))}`
+          + (x.c.cnpj ? ' · '+fmt.cnpj(x.c.cnpj) : '') + '</span>');
+        b.onmousedown = ev=>{ ev.preventDefault();
+          estado.filtros.buscaCliente = ''; estado.clienteFoco = x.c.dominio;
+          estado.cardAberto.cliente = null; renderPagina(); window.scrollTo({top:0}) };
+        pop.appendChild(b);
+      });
+      pop.classList.add('aberto');
+    };
+    i.oninput = debounce(()=>{ estado.filtros.buscaCliente = i.value.trim();
+      const n = $('#page .busca-cliente input'); pintar();
+      /* a lista embaixo da busca (quando não há marca aberta) acompanha o texto */
+      if(!estado.clienteFoco){ const foco = document.activeElement===i;
+        renderPagina();
+        const novo = $('#page .busca-cliente input');
+        if(novo && foco){ novo.focus(); novo.setSelectionRange(novo.value.length, novo.value.length);
+          novo.dispatchEvent(new Event('busca:repintar')); }
+      }
+    }, 180);
+    i.addEventListener('busca:repintar', pintar);
+    i.onfocus = pintar;
+    i.onblur = ()=>setTimeout(()=>pop.classList.remove('aberto'), 120);
+    campo.appendChild(i); campo.appendChild(pop);
+    box.appendChild(campo);
+  }
   if(t.filtros.includes('mesGerencial')){
     /* Mês civil fechado, do mais recente para o mais antigo — a aba Gerencial
        responde "como foi o mês", não "os últimos N dias". */
