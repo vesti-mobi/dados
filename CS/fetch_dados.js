@@ -83,8 +83,9 @@ const STATUS_EM_ABERTO = "'pending','expired','partially_paid','in_protest'";
    assim a coluna e o filtro contam a mesma história. */
 const ANJOS_FORA = ['Shirley Silva', 'Priscila Argolo'];
 
-/* A aba Reuniões mostra só o time de CS. Reunião de qualquer outro dono no
-   HubSpot (vendas, parceiros, sem responsável) fica de fora. */
+/* O time de CS. Desde 24/09/2026 isto NÃO filtra mais as reuniões (todas as do
+   ano entram, de qualquer dono, a pedido da Laura) — serve só para a carga
+   dizer no log quantas são do time e quantas vieram de fora dele. */
 const CS_TIME = ['Luana Coutinho', 'Thamiris Ribeiro', 'Cristiane Canatelli',
                  'Elisa Marques', 'Gabriella Busto', 'Alexia Oliveira', 'Tatiane Ayres'];
 
@@ -1156,11 +1157,13 @@ async function puxarOnboarding(pipes, owners) {
    viraria cinco negócios. Reunião que não tem negócio depois fica "Sem negócio";
    reunião futura fica "Agendada". */
 async function puxarReunioes(owners) {
-  const desde = Date.UTC(ANO, 0, 1);
-  const brutas = await buscarTudo('meetings',
+  /* Busca MÊS A MÊS, como os tickets: a busca do HubSpot só pagina até 10.000
+     resultados por consulta, e uma consulta única do ano inteiro cortaria as
+     reuniões mais antigas sem dar erro se o volume crescesse. */
+  const brutas = await buscarPorMes('meetings',
     ['hs_meeting_title', 'hs_meeting_start_time', 'hs_meeting_outcome', 'hs_meeting_body', 'hubspot_owner_id'],
-    [{ filters: [{ propertyName: 'hs_meeting_start_time', operator: 'GTE', value: String(desde) }] }],
-    [{ propertyName: 'hs_meeting_start_time', direction: 'DESCENDING' }]);
+    'hs_meeting_start_time', ANO, 11);
+  console.log('  reuniões no HubSpot (ano todo)'.padEnd(44) + String(brutas.length).padStart(8));
 
   const { empresaDo, nome: nomeEmpresa } =
     await empresasAssociadas('meetings', brutas.map(m => m.id));
@@ -1176,8 +1179,16 @@ async function puxarReunioes(owners) {
     valor: 0,
     // descrição/resumo da atividade (hs_meeting_body), sem o HTML do editor do HubSpot
     resumo: semHtml(m.properties.hs_meeting_body),
-  })).filter(r => r.data && Number(r.data.slice(0, 4)) === ANO && CS_TIME.includes(r.cs));
-  console.log('  reuniões (só o time de CS)'.padEnd(44) + String(reunioes.length).padStart(8));
+  /* Sem filtro de dono desde 24/09/2026 (pedido da Laura): "se tiver reunião
+     com o nome da marca mas o dono for outro que não seja as 3 CS, pode colocar
+     em reuniões". Antes só entravam as de sete nomes de CS, e reunião de
+     vendas, de parceiro ou de quem entrou no time depois sumia do painel sem
+     deixar rastro. Quem recorta por pessoa agora é o filtro de CS da aba. */
+  })).filter(r => r.data && Number(r.data.slice(0, 4)) === ANO);
+  const doTime = reunioes.filter(r => CS_TIME.includes(r.cs)).length;
+  console.log('  reuniões do ano'.padEnd(44) + String(reunioes.length).padStart(8));
+  console.log('    dos sete nomes de CS / de outros donos'.padEnd(44)
+    + (doTime + ' / ' + (reunioes.length - doTime)).padStart(8));
 
   /* Negócios ganhos de QUALQUER pipeline — o time fecha filial, upgrade e
      VestiPago em pipelines diferentes, e o painel das planilhas conta todos. */
@@ -2588,9 +2599,10 @@ function montar(bqd, hsd, tinoDados) {
         negociosCat: 'Upsell = só upgrade de plano. Filial e Multiloja contam como cross-sell. '
                    + 'Exceções decididas na revisão: Kelly Rodrigues Store Fortaleza = Filial; '
                    + 'Jay & Co e Landê Oficial = Upgrade.',
-        cs: 'Marcas de anjos que saíram da carteira (' + ANJOS_FORA.join(', ') + ') aparecem como "Sem CS". '
-          + 'A aba Reuniões mostra só: ' + CS_TIME.join(', ') + '.',
-        reunioes: 'Reuniões do HubSpot (objeto meetings) do time de CS, pela data de início. Mesma leitura do '
+        cs: 'Marcas de anjos que saíram da carteira (' + ANJOS_FORA.join(', ') + ') aparecem como "Sem CS".',
+        reunioes: 'Reuniões do HubSpot (objeto meetings) do ano, pela data de início — TODAS, de qualquer dono '
+               + '(até 23/09/2026 só entravam as de sete nomes de CS; mudou a pedido da Laura, para reunião com '
+               + 'a marca na frente não sumir por causa de quem a marcou). Mesma leitura do '
                + 'painel PlanilhasEPainelCS: o negócio ganho é creditado à ÚLTIMA reunião daquela empresa antes '
                + 'do fechamento, para uma empresa com cinco reuniões e um negócio não virar cinco negócios. '
                + 'Negócio ganho de qualquer pipeline conta. Reunião com data futura fica "Agendada".',

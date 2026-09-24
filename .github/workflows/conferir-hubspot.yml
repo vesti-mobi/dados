@@ -1,0 +1,35 @@
+# Cópia local do workflow que roda no vesti-mobi/dados.
+#
+# Conferência sob demanda: conta reuniões, tickets e negócios direto no HubSpot
+# e compara, mês a mês, com o que está no CS/dados.js publicado. Não escreve
+# nada — o resultado sai no log da execução.
+#
+# Rodar: aba Actions -> "Conferir HubSpot" -> Run workflow (dá para escolher o
+# ano). Usa o secret HUBSPOT_TOKEN, o mesmo da carga diária.
+
+name: Conferir HubSpot
+
+on:
+  workflow_dispatch:
+    inputs:
+      ano:
+        description: 'Ano a conferir (vazio = ano corrente)'
+        required: false
+        default: ''
+
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Conferir painel × HubSpot
+        working-directory: CS
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          ANO_CONFERENCIA: ${{ inputs.ano }}
+        run: node conferir_hubspot.js

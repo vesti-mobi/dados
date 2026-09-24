@@ -1530,9 +1530,15 @@ function mensalidadeAntesDe(dom, mes){
 /* --- 1. Reuniões ---------------------------------------------------------- */
 function linhasReunioesMes(m){
   const p = janelaDoMes(m);
+  /* Aqui o `cs` é o da MARCA, não o dono da reunião (pedido da Laura,
+     24/09/2026): "se tiver reunião com o nome da marca mas o dono for outro,
+     pode colocar em reuniões". A aba é a carteira das três — o que decide se a
+     linha entra é de quem é o cliente. Quem marcou fica na coluna Dono. */
   return soDoFoco((DATA.reunioes||[])
     .filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && r.resultado!=='Agendada')
-    .map(r=>({nome:r.cliente||'(sem empresa)', cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS',
+    .map(r=>({nome:r.cliente||'(sem empresa)',
+      cs: CS_POR_DOM[r.dominio] || CS_POR_CLIENTE[r.cliente] || normalizarCs(r.cs) || 'Sem CS',
+      dono: normalizarCs(r.cs) || '(sem responsável)',
       dominio:r.dominio, data:r.data, resultado:r.resultado, negocio:r.negocio||'—',
       valor:r.valor||0, resumo:r.resumo||''})))
     .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
@@ -1802,7 +1808,7 @@ const CARDS_GERENCIAL = [
   {
     id:'reunioes', titulo:'Reuniões', cor:'#B54A72',
     capa:'Reuniões realizadas com as marcas da carteira no mês',
-    fonte:'HubSpot — <code>meetings</code> (data de início da reunião e dono). Agendamentos futuros não entram; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento, igual à aba Reuniões.',
+    fonte:'HubSpot — <code>meetings</code> (data de início da reunião). Entram <b>todas</b> as reuniões do mês, de qualquer dono: o que decide se a linha é desta carteira é <b>de quem é a marca</b>, não quem marcou a reunião — quem marcou fica na coluna "Quem marcou". Agendamentos futuros não entram; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
     linhas:ctx=>linhasReunioesMes(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(r=>r.resultado==='Fechou negócio').length} fecharam negócio · ${fmt.moneyCompact(soma(rows.filter(r=>r.resultado==='Fechou negócio'),'valor'))}`
@@ -1819,7 +1825,8 @@ const CARDS_GERENCIAL = [
       {k:'qtd', l:'Reuniões realizadas', f:fmt.int, v:rows=>rows.length},
       {k:'fechou', l:'Com negócio fechado', f:fmt.int, v:rows=>rows.filter(r=>r.resultado==='Fechou negócio').length},
     ],
-    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'resultado', l:'Resultado'},
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, {k:'cs', l:'CS da marca'},
+      {k:'dono', l:'Quem marcou'}, {k:'resultado', l:'Resultado'},
       {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
   },
   {
@@ -3635,9 +3642,14 @@ const TABS = [
       {k:'data', l:'Data', tipo:'dataRel'},
       {k:'resultado', l:'Resultado', tipo:'resultadoReuniao'},
       {k:'valor', l:'Valor do negócio', tipo:'money', r:true},
-      {k:'cs', l:'Responsável', tipo:'cs'},
+      {k:'cs', l:'Quem marcou', tipo:'cs'},
+      /* O dono da reunião no HubSpot nem sempre é a CS da marca — desde
+         24/09/2026 entram reuniões de qualquer dono, então as duas colunas
+         ficam lado a lado. */
+      {k:'csDaMarca', l:'CS da marca', tipo:'cs'},
     ],
-    linhas:()=>DATA.reunioes,
+    linhas:()=>DATA.reunioes.map(r=>Object.assign({}, r,
+      {csDaMarca: CS_POR_DOM[r.dominio] || CS_POR_CLIENTE[r.cliente] || 'Sem CS'})),
     /* A série carrega o CS da própria linha (seriePropria): o cliente de uma
        reunião é a empresa do HubSpot, que nem sempre existe com o mesmo nome na
        carteira — filtrar o gráfico pela lista de marcas jogaria fora metade das
