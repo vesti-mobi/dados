@@ -597,11 +597,13 @@ async function puxarBQ() {
     `SELECT table_name FROM ${DS}.INFORMATION_SCHEMA.TABLES ORDER BY table_name`).catch(() => []);
   if (tabelasDS.length) console.log('    ' + tabelasDS.map(t => t.table_name).join(', '));
   /* Nomes candidatos, do mais provável ao menos: o primeiro que existir vira a
-     coluna. `null` quando nenhum existe — o painel mostra "—". */
-  const escolhe = (...nomes) => {
+     coluna, já qualificada com o alias da tabela e convertida para texto.
+     Nenhum existindo, o lugar vira NULL — a ficha mostra "—" e ninguém quebra. */
+  const colDe = (alias, ...nomes) => {
     const achou = nomes.find(n => COLS_EMP.has(n));
-    return achou ? '`' + achou + '`' : 'CAST(NULL AS STRING)';
+    return achou ? 'CAST(' + alias + '.`' + achou + '` AS STRING)' : 'CAST(NULL AS STRING)';
   };
+  const escolhe = (...nomes) => colDe('c', ...nomes);
   const C_END = escolhe('address', 'street', 'logradouro', 'endereco');
   const C_NUM = escolhe('address_number', 'number', 'numero');
   const C_BAIRRO = escolhe('neighborhood', 'district', 'bairro');
@@ -632,13 +634,13 @@ async function puxarBQ() {
     SELECT CAST(c.domain_id AS STRING) dom, CAST(c.id AS STRING) id,
            ANY_VALUE(c.company_name) fantasia, ANY_VALUE(c.social_name) social,
            ANY_VALUE(c.tax_document) cnpj, ANY_VALUE(c.status) status,
-           ANY_VALUE(CAST(c.${C_PARENT === 'CAST(NULL AS STRING)' ? 'id' : C_PARENT.replace(/`/g, '')} AS STRING)) parentId,
-           ANY_VALUE(c.${C_END.replace(/`/g, '')}) endereco, ANY_VALUE(CAST(c.${C_NUM.replace(/`/g, '')} AS STRING)) numero,
-           ANY_VALUE(c.${C_BAIRRO.replace(/`/g, '')}) bairro, ANY_VALUE(CAST(c.${C_COMPL.replace(/`/g, '')} AS STRING)) complemento,
-           ANY_VALUE(CAST(c.${C_CIDADE.replace(/`/g, '')} AS STRING)) cidade,
-           ANY_VALUE(CAST(c.${C_UF.replace(/`/g, '')} AS STRING)) uf, ANY_VALUE(CAST(c.${C_CEP.replace(/`/g, '')} AS STRING)) cep,
-           ANY_VALUE(CAST(c.${C_FONE.replace(/`/g, '')} AS STRING)) telefone,
-           ANY_VALUE(CAST(c.${C_FISICA.replace(/`/g, '')} AS STRING)) lojaFisica,
+           ANY_VALUE(${C_PARENT}) parentId,
+           ANY_VALUE(${C_END}) endereco, ANY_VALUE(${C_NUM}) numero,
+           ANY_VALUE(${C_BAIRRO}) bairro, ANY_VALUE(${C_COMPL}) complemento,
+           ANY_VALUE(${C_CIDADE}) cidade,
+           ANY_VALUE(${C_UF}) uf, ANY_VALUE(${C_CEP}) cep,
+           ANY_VALUE(${C_FONE}) telefone,
+           ANY_VALUE(${C_FISICA}) lojaFisica,
            SUBSTR(CAST(MIN(c.created_at) AS STRING),1,10) criado
     FROM ${DS}.odbc_companies c
     JOIN dom d ON d.id = CAST(c.domain_id AS STRING)
