@@ -1,6 +1,6 @@
 # Painel de Clientes — CS
 
-Painel estático de **13 abas**, grão de **dia**, filtrado por **data de início e fim** —
+Painel estático de **14 abas**, grão de **dia**, filtrado por **data de início e fim** —
 menos a de Bonificação e a Gerencial, que trabalham em **mês civil fechado**.
 
 ```
@@ -407,6 +407,60 @@ NPS e CSAT do Oráculo moram em planilhas (a do Oráculo, em comentários de cé
 o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da mesma
 carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
 números forem para o BigQuery, o card volta como os outros.
+
+## Aba Visão do cliente (24/09/2026)
+
+A ficha de uma marca só. A aba abre com as marcas da carteira das **três CS** e
+uma **busca** que casa por nome (com ou sem acento, já nas primeiras letras),
+CNPJ (com ou sem pontuação), domínio ou id da empresa — sugerindo enquanto se
+digita. Marca de outra CS aparece no fim da lista, marcada como fora da carteira
+das três, em vez de sumir.
+
+Escolhida a marca, ela vira uma grade de **doze cards**, a mesma mecânica da
+Visão geral e da Gerencial, com histórico **mês a mês dos últimos 12 meses**:
+
+| Card | O que mostra |
+|---|---|
+| RG do cliente | CNPJ, razão social, CS, canal, plano, integração (e o dono dela), data de cadastro, lojas do domínio com endereço e telefone |
+| Histórico de GMV | pedidos, pagos, GMV e ticket por mês |
+| Uso do Tino | eventos por mês, status na base do produto, último acesso |
+| Uso do Oráculo | atendimentos, % da IA, GMV iniciado e finalizado |
+| Uso do VestiPago | transacionado por mês, separado em PIX, cartão e links de cobrança |
+| Links × cliques | listas de produto que os vendedores compartilharam e os cliques que receberam |
+| Mensalidade | uma linha por fatura do Iugu, paga ou não, com dias de atraso |
+| Health score | a régua das cinco regras, aberta |
+| Tickets | chamados do HubSpot, abertos e encerrados, com tempo de fechamento |
+| Reuniões | reuniões realizadas e agendadas, e o que fechou negócio |
+| Negócios | cross-sell e upgrade, com temperatura e o ganho por mês do upgrade |
+| Implantação e marcos | tempo até 5 e 25 pedidos pagos e 100k de GMV, e há quanto tempo o negócio de onboarding está no estágio atual |
+
+O que a carga ganhou para isso:
+
+- **`odbc_companies` por domínio** (matriz + filiais) com CNPJ, endereço,
+  telefone e status. Duas armadilhas resolvidas no caminho: a tabela tem **2,16
+  milhões de linhas** (guarda a empresa de cada conta da plataforma, não só as
+  marcas), então a consulta dá `JOIN` com o mesmo filtro de domínios do cadastro
+  e guarda no máximo 60 empresas por marca no arquivo, com a contagem cheia em
+  `lojas`; e o espelho veio de um `SELECT *`, então **quais colunas de endereço
+  existem é perguntado ao `INFORMATION_SCHEMA`** em vez de chutado — coluna que
+  não existe vira `NULL` e o painel mostra "—".
+- **`iugu_invoices` uma linha por fatura**, paga ou não, casada com a marca pelo
+  mesmo mecanismo CNPJ → nome do pagador do resto da carga.
+- **`sucessodocliente_rankings`**: os cliques nos links compartilhados, ao lado
+  dos links que entraram em 22/09.
+- CNPJ, razão social, nome fantasia e dono da integração no cadastro da marca.
+
+Nenhuma dessas consultas é obrigatória: se uma falhar, o card diz que não tem o
+dado e o resto do painel carrega igual.
+
+**Cuidado ao ler o card de implantação:** a coluna *Origem* separa o que é marco
+medido no BigQuery do que é estágio arrastado no board do HubSpot. Os dois têm
+nomes iguais ("25 Pedidos Pagos") e querem dizer coisas diferentes — e o HubSpot
+não guarda quando o negócio entrou em cada estágio, então o que dá para medir é
+o tempo desde a criação do negócio.
+
+O catálogo de tabelas do dataset agora vai inteiro para o log da carga: a
+próxima pergunta do tipo "existe tabela de cidade?" custa zero rodada.
 
 ## Health score (22/09/2026)
 
