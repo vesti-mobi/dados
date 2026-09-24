@@ -2662,23 +2662,31 @@ const CARDS_CLIENTE = [
     vazio:'O cadastro não tem nenhuma empresa ligada a este domínio.',
     linhas:ctx=>(ctx.cliente.empresas||[]).map((e,i)=>({
       nome:e.fantasia || e.social || ('Empresa '+e.id), id:e.id, cnpj:e.cnpj,
-      tipo: i===0 ? 'Matriz' : 'Filial', cidade:[e.cidade, e.uf].filter(Boolean).join('/') || null,
-      endereco:[e.endereco, e.bairro].filter(Boolean).join(' — ') || null,
+      /* Matriz = a que não tem pai no cadastro; na falta do campo, a mais
+         antiga do domínio. */
+      tipo: e.parentId ? 'Filial' : (i===0 ? 'Matriz' : 'Filial'),
+      endereco:e.endereco, bairro:e.bairro, cep:e.cep,
       telefone:e.telefone, criado:e.criado, status:e.status, lojaFisica:e.lojaFisica})),
-    resumo:(rows,ctx)=>({v:fmt.int(rows.length || 1),
-      s: rows.length > 1 ? `${rows.length-1} filial(is) · ${ctx.cliente.canal}` : (ctx.cliente.canal || 'sem canal')}),
+    resumo:(rows,ctx)=>{ const n = ctx.cliente.lojas || rows.length;
+      return {v:fmt.int(n),
+        s: n > 1 ? `${fmt.int(n-1)} filial(is) · ${ctx.cliente.canal || 'sem canal'}`
+                 : (ctx.cliente.canal || 'sem canal')}; },
     kpis:(rows,ctx)=>{ const c = ctx.cliente;
       return [
         {l:'CNPJ da matriz', v: c.cnpj ? fmt.cnpj(c.cnpj) : '—', s: c.razaoSocial || c.nomeFantasia || 'sem razão social no cadastro'},
         {l:'CS responsável', v: c.cs || 'Sem CS', s:`canal ${c.canal || '—'} · plano ${c.plano || '—'}`},
-        {l:'Lojas cadastradas', v:fmt.int(rows.length), s: rows.length ? `matriz + ${rows.length-1} filial(is)` : 'nenhuma no cadastro'},
+        {l:'Lojas cadastradas', v:fmt.int(c.lojas || rows.length),
+         s: (c.lojas || rows.length) ? `matriz + ${fmt.int((c.lojas || rows.length)-1)} filial(is)`
+            + (c.lojas > rows.length ? ' · a lista mostra as '+fmt.int(rows.length)+' mais antigas' : '')
+            : 'nenhuma no cadastro'},
         {l:'Cliente desde', v: c.dataCadastro ? fmt.date(c.dataCadastro) : '—',
          s: c.dataCadastro ? tempoDeCasa(c.dataCadastro) + ' de casa · integração '+(c.integracao||'—')
             + (c.integracaoDona ? ' ('+c.integracaoDona+')' : '') : 'sem data de cadastro'},
       ]; },
     colunas:[{k:'nome', l:'Loja'}, {k:'tipo', l:'Tipo'}, {k:'id', l:'ID da empresa'},
-      {k:'cnpj', l:'CNPJ', f:v=>v?fmt.cnpj(v):'—'}, {k:'cidade', l:'Cidade/UF', f:v=>v||'—'},
-      {k:'endereco', l:'Endereço', f:v=>v||'—'}, {k:'telefone', l:'Telefone', f:v=>v||'—'},
+      {k:'cnpj', l:'CNPJ', f:v=>v?fmt.cnpj(v):'—'},
+      {k:'endereco', l:'Endereço', f:v=>v||'—'}, {k:'bairro', l:'Bairro', f:v=>v||'—'},
+      {k:'cep', l:'CEP', f:v=>v||'—'}, {k:'telefone', l:'Telefone', f:v=>v||'—'},
       {k:'criado', l:'Criada em', f:fmt.date}],
   },
   {

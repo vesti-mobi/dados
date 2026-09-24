@@ -590,7 +590,12 @@ async function puxarBQ() {
     `SELECT column_name FROM ${DS}.INFORMATION_SCHEMA.COLUMNS WHERE table_name = 'odbc_companies'`)
     .catch(() => []);
   const COLS_EMP = new Set(colsCompanies.map(c => c.column_name));
-  if (COLS_EMP.size) console.log('    ' + [...COLS_EMP].join(', ').slice(0, 400));
+  if (COLS_EMP.size) console.log('    ' + [...COLS_EMP].join(', '));
+  /* Catálogo do dataset no log: é a resposta para "existe tabela de cidade?",
+     "onde está o login do lojista?" — perguntas que já custaram duas rodadas. */
+  const tabelasDS = await q('tabelas do dataset',
+    `SELECT table_name FROM ${DS}.INFORMATION_SCHEMA.TABLES ORDER BY table_name`).catch(() => []);
+  if (tabelasDS.length) console.log('    ' + tabelasDS.map(t => t.table_name).join(', '));
   /* Nomes candidatos, do mais provável ao menos: o primeiro que existir vira a
      coluna. `null` quando nenhum existe — o painel mostra "—". */
   const escolhe = (...nomes) => {
@@ -600,26 +605,43 @@ async function puxarBQ() {
   const C_END = escolhe('address', 'street', 'logradouro', 'endereco');
   const C_NUM = escolhe('address_number', 'number', 'numero');
   const C_BAIRRO = escolhe('neighborhood', 'district', 'bairro');
-  const C_CIDADE = escolhe('city', 'cidade');
-  const C_UF = escolhe('state', 'uf', 'estado');
-  const C_CEP = escolhe('zip_code', 'zipcode', 'cep', 'postal_code');
+  const C_COMPL = escolhe('complement', 'complemento');
+  const C_CIDADE = escolhe('city', 'cidade', 'city_id');
+  const C_UF = escolhe('state', 'uf', 'estado', 'state_id');
+  const C_CEP = escolhe('cep', 'zip_code', 'zipcode', 'postal_code');
   const C_FONE = escolhe('phone', 'telefone', 'phone_number', 'cellphone');
-  const C_FISICA = escolhe('physical_store', 'is_physical_store', 'loja_fisica', 'store_type');
+  const C_FISICA = escolhe('acessar_loja', 'physical_store', 'is_physical_store', 'loja_fisica');
+  const C_PARENT = escolhe('parent_id');
 
   /* Uma linha por EMPRESA (não por domínio): a matriz é a mais antiga e o resto
      são as filiais. É daqui que saem "quantas lojas" e a lista de filiais do
      RG do cliente. */
+  /* SÓ os domínios da carteira: odbc_companies tem 2,1 MILHÕES de linhas (a
+     tabela guarda a empresa de cada conta da plataforma, não só as marcas), e
+     puxar tudo levava 172 segundos e inchava o dados.js em 2 MB. O JOIN com o
+     mesmo filtro de `cadastro` derruba isso para a ordem de grandeza da
+     carteira. */
   const empresasDaMarca = await q('empresas (matriz + filiais) por domínio', `
-    SELECT CAST(domain_id AS STRING) dom, CAST(id AS STRING) id,
-           ANY_VALUE(company_name) fantasia, ANY_VALUE(social_name) social,
-           ANY_VALUE(tax_document) cnpj, ANY_VALUE(status) status,
-           ANY_VALUE(${C_END}) endereco, ANY_VALUE(${C_NUM}) numero,
-           ANY_VALUE(${C_BAIRRO}) bairro, ANY_VALUE(${C_CIDADE}) cidade,
-           ANY_VALUE(${C_UF}) uf, ANY_VALUE(${C_CEP}) cep,
-           ANY_VALUE(${C_FONE}) telefone, ANY_VALUE(${C_FISICA}) lojaFisica,
-           SUBSTR(CAST(MIN(created_at) AS STRING),1,10) criado
-    FROM ${DS}.odbc_companies
-    WHERE SAFE_CAST(domain_id AS INT64) IS NOT NULL
+    WITH dom AS (
+      SELECT DISTINCT CAST(ID AS STRING) id
+      FROM ${DS}.odbc_domains
+      WHERE (LOWER(IFNULL(modulos,'')) LIKE '%vendas%'
+             OR CAST(ID AS STRING) IN (${DOMINIOS_EXTRA.map(x => "'" + x + "'").join(',')}))
+        AND LOWER(IFNULL(name,'')) NOT LIKE '%teste%'
+    )
+    SELECT CAST(c.domain_id AS STRING) dom, CAST(c.id AS STRING) id,
+           ANY_VALUE(c.company_name) fantasia, ANY_VALUE(c.social_name) social,
+           ANY_VALUE(c.tax_document) cnpj, ANY_VALUE(c.status) status,
+           ANY_VALUE(CAST(c.${C_PARENT === 'CAST(NULL AS STRING)' ? 'id' : C_PARENT.replace(/`/g, '')} AS STRING)) parentId,
+           ANY_VALUE(c.${C_END.replace(/`/g, '')}) endereco, ANY_VALUE(CAST(c.${C_NUM.replace(/`/g, '')} AS STRING)) numero,
+           ANY_VALUE(c.${C_BAIRRO.replace(/`/g, '')}) bairro, ANY_VALUE(CAST(c.${C_COMPL.replace(/`/g, '')} AS STRING)) complemento,
+           ANY_VALUE(CAST(c.${C_CIDADE.replace(/`/g, '')} AS STRING)) cidade,
+           ANY_VALUE(CAST(c.${C_UF.replace(/`/g, '')} AS STRING)) uf, ANY_VALUE(CAST(c.${C_CEP.replace(/`/g, '')} AS STRING)) cep,
+           ANY_VALUE(CAST(c.${C_FONE.replace(/`/g, '')} AS STRING)) telefone,
+           ANY_VALUE(CAST(c.${C_FISICA.replace(/`/g, '')} AS STRING)) lojaFisica,
+           SUBSTR(CAST(MIN(c.created_at) AS STRING),1,10) criado
+    FROM ${DS}.odbc_companies c
+    JOIN dom d ON d.id = CAST(c.domain_id AS STRING)
     GROUP BY 1, 2`).catch(e => {
       console.log('    empresas por domínio falharam: ' + String(e.message).slice(0, 140));
       return [];
@@ -1875,19 +1897,33 @@ function montar(bqd, hsd, tinoDados) {
   /* ---- RG do cliente: empresas do domínio (matriz + filiais), endereço e
      telefone. A matriz é a mais antiga; o resto são filiais. Entra na aba
      "Visão do cliente" (24/09/2026). */
-  const empresasPorDom = new Map();
+  const empresasPorDom = new Map(), lojasPorDom = new Map();
   (bqd.empresasDaMarca || []).forEach(e => {
+    lojasPorDom.set(e.dom, (lojasPorDom.get(e.dom) || 0) + 1);
     const arr = empresasPorDom.get(e.dom) || empresasPorDom.set(e.dom, []).get(e.dom);
     arr.push({
       id: e.id, fantasia: e.fantasia || null, social: e.social || null,
       cnpj: soDigitos(e.cnpj), status: e.status || null, criado: e.criado || null,
-      endereco: [e.endereco, e.numero].filter(Boolean).join(', ') || null,
+      /* `parent_id` é quem diz quem é filial de quem no cadastro; a ordem de
+         criação decide a matriz quando ele não vem preenchido. */
+      parentId: e.parentId && e.parentId !== e.id ? e.parentId : null,
+      endereco: [e.endereco, e.numero, e.complemento].filter(Boolean).join(', ') || null,
       bairro: e.bairro || null, cidade: e.cidade || null, uf: e.uf || null,
       cep: e.cep || null, telefone: e.telefone || null,
       lojaFisica: e.lojaFisica == null ? null : String(e.lojaFisica),
     });
   });
-  empresasPorDom.forEach(arr => arr.sort((a, b) => String(a.criado||'').localeCompare(String(b.criado||''))));
+  /* Teto por marca: a ficha lista as lojas, e marca com centenas de empresas
+     no cadastro (o campo guarda mais coisa do que filial) faria o dados.js
+     crescer sem que ninguém fosse ler a lista inteira. A contagem cheia vai
+     em `lojas`, à parte. */
+  const TETO_EMPRESAS = 60;
+  empresasPorDom.forEach((arr, dom) => {
+    arr.sort((a, b) => String(a.criado||'').localeCompare(String(b.criado||'')));
+    if (arr.length > TETO_EMPRESAS) empresasPorDom.set(dom, arr.slice(0, TETO_EMPRESAS));
+  });
+  const totalEmp = [...lojasPorDom.values()].reduce((a, b) => a + b, 0);
+  console.log('  empresas da carteira (matriz + filiais)'.padEnd(44) + String(totalEmp).padStart(8));
 
   const clientes = [];
   porDom.forEach(m => {
@@ -1942,6 +1978,7 @@ function montar(bqd, hsd, tinoDados) {
       nomeFantasia: m.fantasia || null,
       integracaoDona: m.integracaoDona || null,
       empresas: empresasPorDom.get(m.dom) || [],
+      lojas: lojasPorDom.get(m.dom) || 0,
       _dom: m.dom, _cnpj: m.cnpj,
     });
   });
