@@ -1157,6 +1157,9 @@ async function puxarOnboarding(pipes, owners) {
    viraria cinco negócios. Reunião que não tem negócio depois fica "Sem negócio";
    reunião futura fica "Agendada". */
 async function puxarReunioes(owners) {
+  /* Usado pela busca dos negócios ganhos, mais abaixo: o crédito da reunião só
+     olha o que fechou no ano corrente. */
+  const desde = Date.UTC(ANO, 0, 1);
   /* Busca MÊS A MÊS, como os tickets: a busca do HubSpot só pagina até 10.000
      resultados por consulta, e uma consulta única do ano inteiro cortaria as
      reuniões mais antigas sem dar erro se o volume crescesse. */
