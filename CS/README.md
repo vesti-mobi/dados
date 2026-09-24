@@ -8,6 +8,7 @@ index.html          o painel (layout + lógica, sem dependência externa)
 publicar.js         sobe para vesti-mobi/dados/CS via Git Data API
 dados.js            dados reais gerados pelo fetcher — window.PAINEL_DATA
 fetch_dados.js      carga: BigQuery + HubSpot + Tino -> dados.js
+conferir_hubspot.js  confere reunioes/tickets/negocios do painel contra a API do HubSpot (workflow "Conferir HubSpot")
 sincronizar_cs.js    roda ANTES do fetch: corrige angel_id no BigQuery comparando com a produção (Metabase)
 ingerir_stock_logs.js  roda ANTES do fetch: espelha public.stock_logs (Postgres) pra vestilake_BI.postgres_stock_logs
 carregar_tipo_empresa.js   leva a classificação Atacado × Varejo para o BigQuery
@@ -407,6 +408,49 @@ NPS e CSAT do Oráculo moram em planilhas (a do Oráculo, em comentários de cé
 o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da mesma
 carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
 números forem para o BigQuery, o card volta como os outros.
+
+## Conferência com o HubSpot (24/09/2026)
+
+`conferir_hubspot.js` + workflow **Conferir HubSpot** (`workflow_dispatch`, na
+aba Actions): conta reuniões, tickets e negócios direto na API e compara, mês a
+mês, com o `CS/dados.js` publicado. Não escreve nada — o resultado sai no log.
+A contagem usa o campo `total` da Search API, então conferir 12 meses custa 12
+chamadas, não 12 páginas inteiras.
+
+Resultado da primeira rodada, em 24/09/2026:
+
+| | HubSpot | painel | |
+|---|---|---|---|
+| Reuniões (2026) | 452 | **337** | faltavam 115 |
+| Tickets (2026) | 2.263 | 2.258 | faltavam 5, criados depois da carga |
+
+As 115 reuniões que faltavam eram o **filtro de dono**: a carga só aceitava as
+de sete nomes de CS e jogava fora reunião marcada por vendas, por parceiro ou
+por quem entrou no time depois. A Laura decidiu tirar o filtro ("se tiver
+reunião com o nome da marca mas o dono for outro, pode colocar em reuniões"), e
+depois disso a conferência fecha **452/452 e 2.265/2.265, mês a mês**.
+
+O que mudou junto:
+
+- a busca de reuniões passou a **paginar mês a mês**, como a de tickets: a
+  Search API corta em 10.000 por consulta e uma consulta única do ano perderia
+  as mais antigas em silêncio se o volume crescesse;
+- na aba **Gerencial**, quem decide se a reunião entra na carteira das três CS
+  passou a ser **de quem é a marca**, não quem marcou — as duas informações
+  ficam em colunas separadas ("CS da marca" e "Quem marcou"), ali e na aba
+  Reuniões;
+- os donos que apareceram depois disso: além das CS, `(sem responsável)` (68),
+  Gabrielly Ferreira, Alfredo Silva, Karoline Nobre, Victor da Silva e mais
+  seis nomes.
+
+Limites que **continuam** valendo, e que a conferência não desfaz:
+
+- **só o ano corrente**, nos dois objetos — reunião e ticket de 2025 não entram;
+- **casamento com a marca é parcial**: 204 das 452 reuniões e 710 dos 2.265
+  tickets têm domínio da carteira. O resto é empresa que não é marca com módulo
+  de vendas, ou registro sem empresa associada (73 reuniões);
+- o painel reflete o HubSpot **até a última carga** (04:00, ou quando rodada na
+  mão).
 
 ## Aba Visão do cliente (24/09/2026)
 
