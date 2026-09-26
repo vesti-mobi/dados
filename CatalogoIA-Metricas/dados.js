@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-09-25T23:44:34.872Z",
-  "hoje": "2026-09-25",
+  "gerado_em": "2026-09-26T15:24:54.332Z",
+  "hoje": "2026-09-26",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 279,
       "primeiro": "2026-08-10T19:02:35.392Z",
       "ultimo": "2026-09-23T13:54:28.234Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "opera-kids",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 152,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-09-25T13:47:17.896Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "amiska",
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 91,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-09-24T12:34:41.294Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "monnika-marikinha",
@@ -166,7 +166,7 @@ window.DADOS = {
       "envios": 12,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-09-24T23:43:13.925Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "optimist-jeans",
@@ -184,7 +184,7 @@ window.DADOS = {
       "envios": 5,
       "primeiro": "2026-08-07T13:23:05.929Z",
       "ultimo": "2026-08-07T14:55:31.596Z",
-      "dias": 49
+      "dias": 50
     },
     {
       "slug": "optimist-feirinha",
@@ -202,7 +202,7 @@ window.DADOS = {
       "envios": 2,
       "primeiro": "2026-08-07T13:33:14.591Z",
       "ultimo": "2026-08-07T14:33:01.598Z",
-      "dias": 49
+      "dias": 50
     },
     {
       "slug": "anne-blanc",
@@ -346,7 +346,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-08-04T14:28:52.117Z",
       "ultimo": "2026-09-24T15:08:14.914Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "ttng",
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 254,
           "primeiro": "2026-08-11T18:28:02.542Z",
           "ultimo": "2026-09-23T13:54:28.234Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 202,
           "atribuido": 0
         },
@@ -573,7 +573,7 @@ window.DADOS = {
           "envios": 136,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-09-25T13:45:25.403Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 109,
           "atribuido": 6
         },
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 4,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-09-24T23:43:13.925Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 3,
           "atribuido": 0
         },
@@ -1088,7 +1088,7 @@ window.DADOS = {
           "envios": 264,
           "primeiro": "2026-09-09T17:33:37.235Z",
           "ultimo": "2026-09-14T13:57:08.943Z",
-          "dias": 11,
+          "dias": 12,
           "produtos_medidos": 241,
           "atribuido": 0
         },
@@ -1128,7 +1128,7 @@ window.DADOS = {
           "envios": 53,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-09-24T12:34:39.418Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 51,
           "atribuido": 49
         },
@@ -1148,7 +1148,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 36,
+          "dias": 37,
           "produtos_medidos": 0,
           "atribuido": 8
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 4,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-09-25T13:47:16.661Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 3,
           "atribuido": 0
         },
@@ -1388,7 +1388,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T11:49:43.332Z",
           "ultimo": "2026-09-24T15:08:14.914Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 0,
           "atribuido": 0
         },
