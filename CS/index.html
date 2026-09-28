@@ -1338,7 +1338,7 @@ function healthDaMarca(c){
   const diasAte = iso => iso ? diasEntre(iso, idx.fim) : null;
   const dPedido = diasAte(ultimoPedido), dAtividade = diasAte(ultimaAtividade);
 
-  const linksDia = (a.links||0) / janela;
+  const linksDia = (c.links30||0) / janela;
   const pedidosDia = (a.pedidos||0) / janela;
   const gmv = a.gmv||0, gmvAnt = a.gmvAnt||0;
   const varGmv = gmvAnt ? (gmv-gmvAnt)/gmvAnt*100 : null;
