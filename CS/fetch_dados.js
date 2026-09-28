@@ -1705,20 +1705,52 @@ function montar(bqd, hsd, tinoDados) {
   /* Links compartilhados pelos vendedores, por dia — alimenta duas das cinco
      regras do health score: a média de links por dia e a "última atividade na
      plataforma". Só entram domínios da carteira, como o resto da série. */
+  /* Links e cliques NÃO entram na série diária da carteira. Eles chegam por
+     dia e em dias que não têm pedido nenhum — jogá-los ali criava linha nova e
+     a série pulou de 85 mil para 162 mil registros, o que fez a tabela geral e
+     a Carteira por CS levarem dezenas de segundos para abrir (achado em
+     28/09/2026, depois que a Laura reclamou da lentidão). Aqui viram:
+       · `linksSeries`  — por marca e MÊS, que é o grão que a ficha mostra;
+       · três campos no cadastro da marca — soma dos últimos 30 dias e a última
+         data com link — que é tudo que o health score precisa.
+     O dado diário continua no BigQuery para quem quiser consultar lá. */
+  const linkMes = new Map();     // dom|mês -> {links, cliques}
+  const link30 = new Map();      // dom -> {links, cliques} nos últimos 30 dias
+  const ultimoLink = new Map();  // dom -> última data com link
+  const INI_30 = (() => { const d = new Date(HOJE); d.setUTCDate(d.getUTCDate() - 29);
+    return d.toISOString().slice(0, 10); })();
+  const acumulaLink = (dom, dia, campo, valor) => {
+    const k = dom + '|' + dia.slice(0, 7);
+    const a = linkMes.get(k) || linkMes.set(k, { links: 0, cliques: 0 }).get(k);
+    a[campo] += valor;
+    if (dia >= INI_30) {
+      const b = link30.get(dom) || link30.set(dom, { links: 0, cliques: 0 }).get(dom);
+      b[campo] += valor;
+    }
+  };
   let diasComLink = 0;
   (bqd.linksVendedor || []).forEach(r => {
     if (!dataOk(r.d) || !porDom.has(r.dom)) return;
+    const n = Number(r.links) || 0;
+    if (!n) return;
     diasComLink++;
-    somaEm(serieCli, r.dom + '|' + r.d, {
-      linksCompartilhados: Number(r.links) || 0,
-      vendedoresComLink: Number(r.vendedores) || 0,
-    });
+    acumulaLink(r.dom, r.d, 'links', n);
+    if (!ultimoLink.has(r.dom) || r.d > ultimoLink.get(r.dom)) ultimoLink.set(r.dom, r.d);
   });
   (bqd.cliquesVendedor || []).forEach(r => {
     if (!dataOk(r.d) || !porDom.has(r.dom)) return;
-    somaEm(serieCli, r.dom + '|' + r.d, { cliquesLinks: Number(r.cliques) || 0 });
+    acumulaLink(r.dom, r.d, 'cliques', Number(r.cliques) || 0);
   });
+  const linksSeries = [];
+  linkMes.forEach((v, k) => {
+    const [dom, mes] = k.split('|');
+    const m = porDom.get(dom);
+    linksSeries.push({ mes, dominio: dom, cliente: m ? m.nome : dom,
+      links: v.links, cliques: v.cliques });
+  });
+  linksSeries.sort((a, b) => a.mes.localeCompare(b.mes));
   console.log('  dias-marca com link compartilhado'.padEnd(44) + String(diasComLink).padStart(8));
+  console.log('    viram linhas marca × mês'.padEnd(44) + String(linksSeries.length).padStart(8));
 
   /* Interchange já LÍQUIDO do banco. Vem de vestipago_transaction_detail (a única
      fonte com a quebra do MDR) e não mais dos pedidos — por isso ele entra aqui,
@@ -1827,10 +1859,7 @@ function montar(bqd, hsd, tinoDados) {
          GMV pago por pedido pago. */
       pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
       valorPedidos: v.valorPedidos || 0,
-      /* health score e ficha do cliente: links que os vendedores da marca
-         compartilharam no dia, e os cliques que esses links receberam */
-      linksCompartilhados: v.linksCompartilhados || 0,
-      cliquesLinks: v.cliquesLinks || 0,
+
       receitaInterchange: v.receitaInterchange || 0,
       receitaMensalidade: v.receitaMensalidade || 0,
       receitaOutrosIugu: v.receitaOutrosIugu || 0,
@@ -1989,6 +2018,11 @@ function montar(bqd, hsd, tinoDados) {
       temVestiPago: false,
       /* RG do cliente (aba Visão do cliente). `empresas` é a lista de lojas do
          domínio: a primeira é a matriz, as outras são filiais. */
+      /* Links compartilhados pelos vendedores: o que o health score precisa,
+         sem a série diária. */
+      links30: (link30.get(m.dom) || {}).links || 0,
+      cliques30: (link30.get(m.dom) || {}).cliques || 0,
+      ultimoLink: ultimoLink.get(m.dom) || null,
       cnpj: m.cnpj || null,
       razaoSocial: m.social || null,
       nomeFantasia: m.fantasia || null,
@@ -2669,6 +2703,8 @@ function montar(bqd, hsd, tinoDados) {
     tickets,
     onboarding: hsd.onboarding || [],
     marcosVolume,
+    /* Links compartilhados pelos vendedores e cliques, por marca e mês. */
+    linksSeries: empacotar(linksSeries),
     /* Uma linha por fatura do Iugu, com status — alimenta o card de
        mensalidade da aba Visão do cliente. */
     faturasCliente: empacotar(faturasCliente),
