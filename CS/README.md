@@ -325,6 +325,55 @@ mais uma linha de texto do tipo *"Reuniões realizadas: 14 · 56% acima do mês
 anterior (9) · 40% acima da média dos 6 meses anteriores (10)"*. Cards com duas
 métricas — Cross-sell e Upsell — desenham as duas barras lado a lado.
 
+### Churn: evento × foto (28/09/2026)
+
+Crítica do Walid: *"esse número está saltando mas não são de fato cancelados…
+e parece estranho ser só 1 no mês passado"*. Estava certo nas duas coisas, pelo
+mesmo motivo: o card lia `DATA.churn.linhas`, que é a leitura da aba Churn — uma
+**foto de hoje** de quem está em alerta, bloqueada ou cancelada agora.
+
+- **Foto não vira histórico.** Marca que cancelou em maio e já saiu da lista não
+  aparece em maio nenhum, e por isso os meses passados vinham quase vazios. Soma
+  a isso que `bloqueadoEm` vem de uma planilha que **só tem registro desde
+  07/07/2026**: antes disso a única data possível é o vencimento em aberto, que
+  também é de agora.
+- **"Em alerta" é fatura vencida há 1 a 10 dias** — não é cancelamento, e estava
+  sendo contado junto.
+
+Viraram dois cards:
+
+| Card | O que é | Obedece ao mês? |
+|---|---|---|
+| **Churn do mês** | marcas que **pararam de pagar** no mês: sem fatura paga há mais de `meta.diasChurn` (45) dias e sem fatura futura em aberto. Evento datado, existe desde 2025, comparável mês a mês | sim |
+| **Inadimplência hoje** | a foto: quem está em alerta, bloqueada ou cancelada **agora** | não — é foto |
+
+Na carteira das três CS, o churn por mês em 2026 ficou: jan 3, fev 0, mar 0, abr
+0, mai 2, jun 2, jul 1, ago 6, set 4.
+
+### As medidas da Bonificação na Gerencial (28/09/2026)
+
+Pedido do Walid: ver na Gerencial os mesmos pontos que a bonificação mede.
+Entraram cinco cards no bloco **Carteira e receita** / **Produtos**, lendo
+`DATA.bonificacao` (as mesmas `linhas` por CS e mês que a aba Bonificação usa,
+somadas para as CS em foco — então batem com ela por construção):
+
+| Card | Régua | Comparação |
+|---|---|---|
+| GMV da carteira | pedidos pagos das marcas do CS | mesmo mês do **ano anterior** |
+| TPV do VestiPago | transacionado com provider VestiPago | mesmo mês do **ano anterior** |
+| Mensalidade | só as linhas de plano da fatura Iugu | mês anterior e ano anterior |
+| Tino: marcas com 40+ eventos | marcas que passaram de 40 eventos no mês | mês anterior e marca d'água |
+| Integrações ativas | venderam no mês **e** têm `integration_owner = VESTI` | mês anterior, com quem entrou e quem saiu |
+
+Mais o **Health score da carteira**, que é a única coisa da aba que não olha para
+o mês: é a foto dos últimos 30 dias, com a distribuição entre saudável, atenção e
+risco.
+
+Com 18 cards, a grade passou a sair em **quatro blocos** — Crescimento e
+operação, Produtos, Risco, Carteira e receita. O componente agrupa sozinho quando
+os cards trazem `grupo`; sem isso (Visão geral e ficha do cliente) continua uma
+grade só.
+
 ### O que cada card mede
 
 | Card | Definição | Tabela / objeto de origem |

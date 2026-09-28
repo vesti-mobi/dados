@@ -433,6 +433,8 @@ td.strong{font-weight:600}
 
 /* --- cards da aba Gerencial --- */
 .gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:22px}
+.section-label.gsec{margin-top:6px}
+.section-label.gsec .eyebrow{color:var(--ink-3)}
 .gcard{
   display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
   background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gc,var(--acc));
@@ -1622,16 +1624,44 @@ function linhasVpChurn(m){
     .sort((a,b)=>b.valor-a.valor);
 }
 
-/* --- 6. Churn Geral -------------------------------------------------------
-   Mesma leitura da aba Churn (módulo de vendas cortado + fatura do Iugu),
-   recortada pelo mês em que a situação começou. */
-function linhasChurnGeral(m){
-  return soDoFoco((DATA.churn.linhas||[]).filter(c=>String(c.bloqueadoEm||c.vencMaisAntigo||'').slice(0,7)===m)
-    .map(c=>({nome:c.cliente, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
-      situacao:c.situacao, desde:c.bloqueadoEm||c.vencMaisAntigo,
-      ultimoPagamento:c.ultimoPagamento, mensalidade:c.valorMensal||0,
-      emAberto:c._semDivida ? 0 : (c.valorEmAberto||0)})))
-    .sort((a,b)=>(b.mensalidade||0)-(a.mensalidade||0));
+/* --- 6. Churn: o EVENTO do mês, e a foto de hoje --------------------------
+   Crítica do Walid em 28/09/2026: "esse número está saltando mas não são de
+   fato cancelados... e parece estranho ser só 1 no mês passado". Ele estava
+   certo nas duas coisas, e o motivo é o mesmo: o card lia `DATA.churn.linhas`,
+   que é a leitura da aba Churn — uma FOTO DE HOJE de quem está em alerta,
+   bloqueada ou cancelada agora.
+
+     · Foto não vira histórico. Marca que cancelou em maio e já saiu da lista
+       não aparece em maio nenhum, e por isso os meses passados vinham quase
+       vazios. Soma-se a isso que a data de bloqueio vem de uma planilha que só
+       começou em 07/07/2026: antes disso a única data possível é o vencimento
+       em aberto, que também é de agora.
+     · "Em alerta" é fatura vencida há 1 a 10 dias — não é cancelamento, e
+       estava sendo contado junto.
+
+   Agora são dois cards. O de churn usa `dataChurn`, que a carga calcula por
+   marca (sem fatura paga há mais de `meta.diasChurn` dias e sem fatura futura
+   em aberto): é EVENTO datado, existe desde 2025 e é comparável mês a mês. A
+   foto continua no card de inadimplência, dizendo o que é. */
+function linhasChurnMes(m){
+  const p = janelaDoMes(m);
+  return soDoFoco(DATA.clientes.filter(c=>c.dataChurn && c.dataChurn>=p.ini && c.dataChurn<=p.fim)
+    .map(c=>({nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
+      plano:c.plano, data:c.dataChurn, ultimoPedido:c.ultimoPedido,
+      diasSemPedido:c.diasSemPedido, emAberto:c.valorEmAberto||0})))
+    .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+}
+/* Foto de hoje. NÃO é recortada por mês de propósito: recortar foto por mês é
+   exatamente o que produzia o número estranho. */
+function linhasInadimplentes(){
+  return soDoFoco((DATA.churn.linhas||[]).map(c=>({
+    nome:c.cliente, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
+    situacao: c.situacao==='alerta' ? 'Em alerta' : c.situacao==='bloqueada' ? 'Bloqueada' : 'Cancelada',
+    desde:c.bloqueadoEm||c.vencMaisAntigo, bloqueadoEm:c.bloqueadoEm,
+    diasAtraso:c._semDivida ? null : (c.diasAtraso||0),
+    ultimoPagamento:c.ultimoPagamento, mensalidade:c.valorMensal||0,
+    emAberto:c._semDivida ? 0 : (c.valorEmAberto||0)})))
+    .sort((a,b)=>(b.diasAtraso||0)-(a.diasAtraso||0));
 }
 
 /* --- 7. GMV do 1º mês completo -------------------------------------------
@@ -1804,9 +1834,177 @@ const COL_NOME = {k:'nome', l:'Marca'};
 const COL_CS_CARD = {k:'cs', l:'CS'};
 const pct1 = v => v==null ? '—' : fmt.int(v)+'%';
 
+/* --- as regras da Bonificação, vistas pela carteira das três ---------------
+   Pedido do Walid em 28/09/2026: ver na Gerencial os mesmos pontos que a
+   bonificação mede — GMV e TPV do VestiPago contra o ano anterior, mensalidade,
+   marcas com 40+ eventos no Tino, integrações ativas — e o health score.
+
+   Tudo isso a carga já apura por CS e por mês em `DATA.bonificacao`: `linhas`
+   traz o total de cada CS (com a base de comparação que aquela regra usa) e
+   `detalhe`, uma linha por marca. Aqui só somamos as CS em foco, então o número
+   bate com a aba Bonificação por construção — não é uma segunda conta. */
+function bonifTotal(k, m){
+  const cs = csDoFoco();
+  const l = (DATA.bonificacao.linhas||[]).filter(x=>x.mes===m && x.k===k && cs.has(x.cs));
+  return {valor: l.reduce((a,x)=>a+(Number(x.valor)||0),0),
+          base:  l.reduce((a,x)=>a+(Number(x.base)||0),0)};
+}
+function bonifMarcas(k, m){
+  const cs = csDoFoco();
+  return (DATA.bonificacao.detalhe||[]).filter(x=>x.mes===m && x.k===k && cs.has(x.cs))
+    .map(x=>({nome:x.cliente, cs:x.cs, valor:Number(x.valor)||0,
+      dominio: DOM_POR_CLIENTE[x.cliente] || null}))
+    .sort((a,b)=>b.valor-a.valor || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+}
+/* Mesmo mês do ano anterior — a régua de GMV e TPV na bonificação. */
+function mesmoMesAnoAnterior(m){ return (Number(m.slice(0,4))-1) + m.slice(4) }
+function variacaoTexto(v, base){
+  if(!base) return v ? 'sem base no ano anterior' : 'sem base';
+  const pct = (v-base)/base*100;
+  return (pct>=0?'+':'') + fmt.pct1(pct) + ' vs ' + fmt.moneyCompact(base);
+}
+
+const CARDS_BONIF = [
+  {
+    id:'gmvAno', titulo:'GMV da carteira', grupo:'Carteira e receita', cor:'#2E7D46',
+    capa:'GMV do mês contra o mesmo mês do ano passado',
+    fonte:'BigQuery — pedidos pagos das marcas da carteira, a mesma medida da regra de <b>GMV</b> da aba Bonificação (que compara com o mesmo mês do ano anterior). O número aqui é a soma das CS em foco.',
+    linhas:ctx=>bonifMarcas('gmv', ctx.m),
+    resumo:(rows,ctx)=>{ const t = bonifTotal('gmv', ctx.m);
+      return {v:fmt.moneyCompact(t.valor), s: t.base ? variacaoTexto(t.valor, t.base) : `${rows.length} marcas com venda`}; },
+    kpis:(rows,ctx)=>{ const t = bonifTotal('gmv', ctx.m);
+      const ant = bonifTotal('gmv', mesAnterior(ctx.m));
+      return [
+        {l:'GMV no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.length)+' marcas com venda'},
+        {l:rotuloMes(mesmoMesAnoAnterior(ctx.m)), v:fmt.moneyCompact(t.base), s:variacaoTexto(t.valor, t.base)},
+        {l:'Mês anterior', v:fmt.moneyCompact(ant.valor),
+         s: ant.valor ? (t.valor>=ant.valor?'+':'')+fmt.pct1((t.valor-ant.valor)/ant.valor*100)+' vs '+rotuloMes(mesAnterior(ctx.m)) : 'sem base'},
+        {l:'Maior marca', v: rows[0] ? fmt.moneyCompact(rows[0].valor) : '—', s: rows[0] ? rows[0].nome : ''},
+      ]; },
+    metricas:[{k:'gmv', l:'GMV da carteira', f:fmt.money, v:(rows,m)=>bonifTotal('gmv', m).valor}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'GMV no mês', r:true, f:fmt.money}],
+  },
+  {
+    id:'tpvVp', titulo:'TPV do VestiPago', grupo:'Carteira e receita', cor:'#00B894',
+    capa:'Valor transacionado no VestiPago, contra o mesmo mês do ano passado',
+    fonte:'BigQuery — pedidos pagos com provider VestiPago (cartão + PIX) das marcas da carteira: a regra de <b>VestiPago</b> da aba Bonificação, que compara com o mesmo mês do ano anterior.',
+    linhas:ctx=>bonifMarcas('vestipago', ctx.m),
+    resumo:(rows,ctx)=>{ const t = bonifTotal('vestipago', ctx.m);
+      return {v:fmt.moneyCompact(t.valor), s: t.base ? variacaoTexto(t.valor, t.base) : `${rows.length} marcas transacionando`}; },
+    kpis:(rows,ctx)=>{ const t = bonifTotal('vestipago', ctx.m);
+      const ant = bonifTotal('vestipago', mesAnterior(ctx.m));
+      const gmv = bonifTotal('gmv', ctx.m);
+      return [
+        {l:'TPV no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.length)+' marcas transacionando'},
+        {l:rotuloMes(mesmoMesAnoAnterior(ctx.m)), v:fmt.moneyCompact(t.base), s:variacaoTexto(t.valor, t.base)},
+        {l:'Mês anterior', v:fmt.moneyCompact(ant.valor),
+         s: ant.valor ? (t.valor>=ant.valor?'+':'')+fmt.pct1((t.valor-ant.valor)/ant.valor*100)+' vs '+rotuloMes(mesAnterior(ctx.m)) : 'sem base'},
+        {l:'Do GMV da carteira', v:pctTexto(t.valor, gmv.valor), s:'quanto do que vendeu passou pelo VestiPago'},
+      ]; },
+    metricas:[{k:'vestipago', l:'TPV do VestiPago', f:fmt.money, v:(rows,m)=>bonifTotal('vestipago', m).valor}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Transacionado no mês', r:true, f:fmt.money}],
+  },
+  {
+    id:'mensalidadeCarteira', titulo:'Mensalidade', grupo:'Carteira e receita', cor:'#B7791F',
+    capa:'Mensalidade de plano faturada no mês, marca a marca',
+    fonte:'BigQuery — só as linhas de <b>plano</b> das faturas Iugu pagas das marcas da carteira, pelo vencimento (Oráculo, filial, assistente e ativação ficam fora). É a regra de <b>Mensalidade</b> da aba Bonificação. O card Receita T3+, ao lado, é outra pergunta: lá entra a fatura inteira dos clientes não-Starter.',
+    linhas:ctx=>bonifMarcas('mensalidade', ctx.m),
+    resumo:(rows,ctx)=>{ const t = bonifTotal('mensalidade', ctx.m), ant = bonifTotal('mensalidade', mesAnterior(ctx.m));
+      return {v:fmt.moneyCompact(t.valor),
+        s: ant.valor ? (t.valor>=ant.valor?'+':'')+fmt.pct1((t.valor-ant.valor)/ant.valor*100)+' vs '+rotuloMes(mesAnterior(ctx.m))
+                     : `${rows.length} marcas pagantes`}; },
+    kpis:(rows,ctx)=>{ const t = bonifTotal('mensalidade', ctx.m);
+      const ant = bonifTotal('mensalidade', mesAnterior(ctx.m));
+      const anoAnt = bonifTotal('mensalidade', mesmoMesAnoAnterior(ctx.m));
+      return [
+        {l:'Mensalidade no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.length)+' marcas pagantes'},
+        {l:'Mês anterior', v:fmt.moneyCompact(ant.valor),
+         s: ant.valor ? (t.valor-ant.valor>=0?'+':'')+fmt.moneyCompact(t.valor-ant.valor)+' de diferença' : 'sem base'},
+        {l:rotuloMes(mesmoMesAnoAnterior(ctx.m)), v:fmt.moneyCompact(anoAnt.valor),
+         s: anoAnt.valor ? variacaoTexto(t.valor, anoAnt.valor) : 'sem base no ano anterior'},
+        {l:'Ticket médio', v:fmt.money(rows.length ? t.valor/rows.length : 0), s:'por marca pagante'},
+      ]; },
+    metricas:[{k:'mensalidade', l:'Mensalidade', f:fmt.money, v:(rows,m)=>bonifTotal('mensalidade', m).valor}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Mensalidade no mês', r:true, f:fmt.money}],
+  },
+  {
+    id:'tino40', titulo:'Tino: marcas com 40+ eventos', grupo:'Produtos', cor:'#B7791F',
+    capa:'Marcas da carteira que passaram de 40 eventos no Tino dentro do mês',
+    fonte:'API do Tino — eventos por marca no mês, com o limiar de 40 (era 60 até 27/08/2026). É a regra de <b>Tino</b> da aba Bonificação; a coluna mostra quantos eventos cada marca gerou.',
+    vazio:'Nenhuma marca da carteira passou de 40 eventos no Tino neste mês.',
+    /* O detalhe da bonificação marca 1 por marca (é contagem de marcas), então
+       os eventos de verdade vêm da série do Tino, pelo domínio. */
+    linhas:ctx=>{ const t = idxMensal().tino;
+      return bonifMarcas('tino60', ctx.m).map(x=>Object.assign({}, x,
+        {valor: t[(x.dominio||x.nome)+'|'+ctx.m] || null})); },
+    resumo:(rows,ctx)=>{ const ant = bonifMarcas('tino60', mesAnterior(ctx.m)).length;
+      return {v:fmt.int(rows.length),
+        s: rows.length ? `${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))} · ${fmt.compact(soma(rows,'valor'))} eventos`
+                       : 'ninguém bateu 40 eventos'}; },
+    kpis:(rows,ctx)=>{ const ant = bonifMarcas('tino60', mesAnterior(ctx.m));
+      const recorde = MESES_GERENCIAL.filter(m=>m < ctx.m)
+        .reduce((mx,m)=>Math.max(mx, bonifMarcas('tino60', m).length), 0);
+      return [
+        {l:'Marcas 40+ no Tino', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        {l:'Eventos dessas marcas', v:fmt.compact(soma(rows,'valor')),
+         s: rows.some(r=>r.valor==null) ? 'algumas marcas sem casar com a série do Tino' : 'no mês'},
+        {l:'Marca d’água', v:fmt.int(recorde), s:'melhor mês anterior da carteira em foco'},
+        {l:'Maior uso', v: rows[0] ? fmt.compact(rows[0].valor) : '—', s: rows[0] ? rows[0].nome : ''},
+      ]; },
+    metricas:[{k:'qtd', l:'Marcas 40+ no Tino', f:fmt.int, v:rows=>rows.length}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Eventos no mês', r:true, f:v=>v==null?'—':fmt.int(v)}],
+  },
+  {
+    id:'integraAtivas', titulo:'Integrações ativas', grupo:'Produtos', cor:'#1E74C8',
+    capa:'Marcas que venderam no mês e têm integração mantida pela Vesti',
+    fonte:'BigQuery — marcas da carteira que venderam no mês <b>e</b> têm <code>integration_owner = VESTI</code>, a definição da medida <i>Integração Ativa</i> do Power BI. É a regra de <b>Integrações ativas</b> da aba Bonificação. É estoque, não fluxo: conta quem TEM integração e vendeu, não quem integrou no mês.',
+    linhas:ctx=>bonifMarcas('integracoesAtivas', ctx.m),
+    resumo:(rows,ctx)=>{ const ant = bonifMarcas('integracoesAtivas', mesAnterior(ctx.m)).length;
+      return {v:fmt.int(rows.length), s: `${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`}; },
+    kpis:(rows,ctx)=>{ const ant = bonifMarcas('integracoesAtivas', mesAnterior(ctx.m));
+      const nomesAnt = new Set(ant.map(x=>x.nome));
+      const novas = rows.filter(x=>!nomesAnt.has(x.nome));
+      const sairam = ant.filter(x=>!rows.some(r=>r.nome===x.nome));
+      const recorde = MESES_GERENCIAL.filter(m=>m < ctx.m)
+        .reduce((mx,m)=>Math.max(mx, bonifMarcas('integracoesAtivas', m).length), 0);
+      return [
+        {l:'Integrações ativas', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        {l:'Entraram no mês', v:fmt.int(novas.length), s: novas.length ? novas.slice(0,3).map(x=>x.nome).join(', ') : 'nenhuma marca nova'},
+        {l:'Saíram', v:fmt.int(sairam.length), s: sairam.length ? 'venderam no mês passado e não neste' : 'nenhuma'},
+        {l:'Marca d’água', v:fmt.int(recorde), s:'melhor mês anterior da carteira em foco'},
+      ]; },
+    metricas:[{k:'qtd', l:'Integrações ativas', f:fmt.int, v:rows=>rows.length}],
+    colunas:[COL_NOME, COL_CS_CARD],
+  },
+  {
+    id:'healthCarteira', titulo:'Health score da carteira', grupo:'Risco', cor:'#0E7A73',
+    capa:'A saúde das marcas da carteira hoje, pela régua das cinco regras',
+    fonte:'Mesma régua da coluna Health score da tabela geral: pedido recente, atividade na plataforma, links por dia, GMV estável e pedidos por dia. <b>É uma foto dos últimos 30 dias corridos</b> — não muda com o mês escolhido no filtro, e é a única coisa nesta aba que não olha para o mês.',
+    linhas:()=>{ const cs = csDoFoco();
+      return DATA.clientes.filter(c=>cs.has(c.cs)).map(c=>{ const h = healthDaMarca(c);
+        return {nome:c.nome, cs:c.cs, dominio:c.dominio, valor:h.score, faixa:h.faixa.l,
+          regras:h.regras.filter(r=>r.ok).length, status:c.status==='ativo'?'Ativa':'Inativa',
+          ultimoPedido:c.ultimoPedido};
+      }).sort((a,b)=>b.valor-a.valor); },
+    resumo:rows=>{ const bons = rows.filter(r=>r.faixa==='Saudável').length;
+      return {v: rows.length ? fmt.int(Math.round(media(rows,'valor'))) : '—',
+        s: rows.length ? `${bons} saudáveis de ${rows.length} marcas` : 'sem marcas na seleção'}; },
+    kpis:rows=>{ const por = f=>rows.filter(r=>r.faixa===f).length;
+      return [
+        {l:'Health score médio', v: rows.length ? fmt.int(Math.round(media(rows,'valor'))) : '—', s:'foto dos últimos 30 dias'},
+        {l:'Saudáveis', v:fmt.int(por('Saudável')), s:pctTexto(por('Saudável'), rows.length)+' da carteira (80+)'},
+        {l:'Em atenção', v:fmt.int(por('Atenção')), s:'entre 50 e 79'},
+        {l:'Em risco', v:fmt.int(por('Em risco')), s:'abaixo de 50'},
+      ]; },
+    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Health score', r:true, f:fmt.int},
+      {k:'faixa', l:'Faixa'}, {k:'regras', l:'Regras batidas', r:true, f:v=>fmt.int(v)+'/5'},
+      {k:'status', l:'Situação'}, {k:'ultimoPedido', l:'Último pedido', f:fmt.date}],
+  },
+];
+
 const CARDS_GERENCIAL = [
   {
-    id:'reunioes', titulo:'Reuniões', cor:'#B54A72',
+    id:'reunioes', titulo:'Reuniões', grupo:'Crescimento e operação', cor:'#B54A72',
     capa:'Reuniões realizadas com as marcas da carteira no mês',
     fonte:'HubSpot — <code>meetings</code> (data de início da reunião). Entram <b>todas</b> as reuniões do mês, de qualquer dono: o que decide se a linha é desta carteira é <b>de quem é a marca</b>, não quem marcou a reunião — quem marcou fica na coluna "Quem marcou". Agendamentos futuros não entram; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
     linhas:ctx=>linhasReunioesMes(ctx.m),
@@ -1830,7 +2028,7 @@ const CARDS_GERENCIAL = [
       {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
   },
   {
-    id:'vpNovos', titulo:'Novos VestiPago', cor:'#00B894',
+    id:'vpNovos', titulo:'Novos VestiPago', grupo:'Produtos', cor:'#00B894',
     capa:'Marcas com conta de pagamento criada dentro do mês',
     fonte:'BigQuery — criação da conta de pagamento (mesma data da coluna "Implantado em" da aba VestiPago).',
     linhas:ctx=>linhasVpNovos(ctx.m),
@@ -1849,7 +2047,7 @@ const CARDS_GERENCIAL = [
       {k:'pagos', l:'Links pagos', r:true, f:fmt.int}],
   },
   {
-    id:'tinoNovos', titulo:'Novo Tino', cor:'#B7791F',
+    id:'tinoNovos', titulo:'Novo Tino', grupo:'Produtos', cor:'#B7791F',
     capa:'Marcas que entraram na base do Tino dentro do mês',
     fonte:'API do Tino — <code>created_at</code> da marca lá dentro (a coluna "Implantado em" da aba Uso do Tino). Ter o Tino não é usar: as colunas ao lado mostram se a marca já logou e quantos eventos ela gerou no mês.',
     linhas:ctx=>linhasTinoNovos(ctx.m),
@@ -1871,7 +2069,7 @@ const CARDS_GERENCIAL = [
       {k:'ultimoAcesso', l:'Último acesso', f:fmt.date}],
   },
   {
-    id:'oraculoNovos', titulo:'Novo Oráculo', cor:'#1E74C8',
+    id:'oraculoNovos', titulo:'Novo Oráculo', grupo:'Produtos', cor:'#1E74C8',
     capa:'Marcas que passaram a ter o Oráculo dentro do mês',
     fonte:'BigQuery — a MENOR entre a criação da configuração do produto (<code>o-configurations.created_at</code>) e o primeiro atendimento registrado; a coluna Origem diz qual das duas valeu. <b>Cuidado com janeiro/2026</b>: 699 dos 1.055 domínios têm configuração criada naquele mês, que é quando a tabela nasceu no espelho — ali a data é do espelho, não da venda.',
     linhas:ctx=>linhasOraculoNovos(ctx.m),
@@ -1893,7 +2091,7 @@ const CARDS_GERENCIAL = [
       {k:'gmv', l:'GMV iniciado no mês', r:true, f:fmt.money}],
   },
   {
-    id:'vpChurn', titulo:'Churn VestiPago', cor:'#E17055',
+    id:'vpChurn', titulo:'Churn VestiPago', grupo:'Risco', cor:'#E17055',
     capa:'Marcas cuja última transação no VestiPago foi neste mês e que seguem sem transacionar',
     fonte:'BigQuery — série diária do VestiPago (última data com valor transacionado por marca). Entra na lista quem está há '+DIAS_SUMIDO_VP+'+ dias sem transacionar; vira churn confirmado aos '+(DATA.meta.diasChurn||45)+'.',
     linhas:ctx=>linhasVpChurn(ctx.m),
@@ -1916,28 +2114,58 @@ const CARDS_GERENCIAL = [
       {k:'pix', l:'PIX', r:true, f:fmt.money}, {k:'cartao', l:'Cartão', r:true, f:fmt.money}],
   },
   {
-    id:'churnGeral', titulo:'Churn Geral', cor:'#C0453B',
-    capa:'Marcas que entraram em alerta, bloqueio ou cancelamento no mês',
-    fonte:'Mesma leitura da aba Churn: módulo de vendas cortado (planilha da automação) + fatura do Iugu no BigQuery.',
-    linhas:ctx=>linhasChurnGeral(ctx.m),
-    resumo:rows=>({v:fmt.int(rows.length),
-      s: rows.length ? `${rows.filter(x=>x.situacao==='cancelada').length} cancelada(s) · ${fmt.moneyCompact(soma(rows,'mensalidade'))}/mês em risco`
-                     : 'ninguém entrou em churn no mês'}),
-    kpis:rows=>{ const por = s=>rows.filter(x=>x.situacao===s);
+    id:'churnMes', titulo:'Churn do mês', grupo:'Risco', cor:'#C0453B',
+    capa:'Marcas que pararam de pagar dentro do mês',
+    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
+    vazio:'Nenhuma marca da carteira parou de pagar neste mês.',
+    linhas:ctx=>linhasChurnMes(ctx.m),
+    resumo:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m)).length;
+      return {v:fmt.int(rows.length),
+        s: rows.length ? `${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
+                       : 'ninguém parou de pagar no mês'}; },
+    kpis:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m));
+      const doze = MESES_GERENCIAL.slice(0,12).map(m=>linhasChurnMes(m).length);
+      const media12 = doze.length ? doze.reduce((a,b)=>a+b,0)/doze.length : 0;
+      const semPedido = rows.filter(r=>r.diasSemPedido != null && r.diasSemPedido > 60).length;
       return [
-        {l:'Marcas afetadas', v:fmt.int(rows.length), s:'situação começou neste mês'},
-        {l:'Canceladas', v:fmt.int(por('cancelada').length), s:'módulo cortado e fatura cancelada'},
-        {l:'Bloqueadas', v:fmt.int(por('bloqueada').length), s:'11+ dias, ou módulo já cortado'},
-        {l:'Mensalidade em risco', v:fmt.moneyCompact(soma(rows,'mensalidade')), s:fmt.moneyCompact(soma(rows,'emAberto'))+' em aberto'},
+        {l:'Marcas que pararam', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        {l:'Média dos 12 meses', v:fmt.int(Math.round(media12)), s:'na carteira em foco'},
+        {l:'Já sem vender', v:fmt.int(semPedido), s:'mais de 60 dias sem pedido quando saíram'},
+        {l:'Deixaram em aberto', v:fmt.moneyCompact(soma(rows,'emAberto')), s:'fatura vencida e não paga'},
       ]; },
-    metricas:[{k:'qtd', l:'Marcas afetadas', f:fmt.int, v:rows=>rows.length}],
+    metricas:[{k:'qtd', l:'Marcas que pararam de pagar', f:fmt.int, v:rows=>rows.length}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Parou de pagar em', f:fmt.date}, {k:'plano', l:'Plano'},
+      {k:'canal', l:'Canal'}, {k:'ultimoPedido', l:'Último pedido', f:fmt.date},
+      {k:'diasSemPedido', l:'Dias sem pedido', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
+  },
+  {
+    id:'inadimplentes', titulo:'Inadimplência hoje', grupo:'Risco', cor:'#E17055',
+    capa:'Quem está em alerta, bloqueada ou cancelada neste momento',
+    fonte:'Mesma leitura da aba Churn — módulo de vendas cortado (planilha da automação, que só tem registro desde <b>07/07/2026</b>) + status da fatura no Iugu. <b>É uma foto de agora, não um recorte do mês</b>: o filtro de mês da aba não mexe neste card. Em alerta = 1 a 10 dias de atraso; bloqueada = 11+ dias ou módulo já cortado; cancelada = módulo cortado e fatura cancelada na Iugu.',
+    vazio:'Nenhuma marca da carteira em alerta, bloqueio ou cancelamento hoje.',
+    linhas:()=>linhasInadimplentes(),
+    resumo:rows=>{ const por = s=>rows.filter(x=>x.situacao===s).length;
+      return {v:fmt.int(rows.length),
+        s: rows.length ? `${por('Em alerta')} em alerta · ${por('Bloqueada')} bloqueadas · ${por('Cancelada')} canceladas`
+                       : 'ninguém em atraso hoje'}; },
+    kpis:rows=>{ const por = s=>rows.filter(x=>x.situacao===s);
+      const emRisco = rows.filter(x=>x.situacao!=='Cancelada');
+      return [
+        {l:'Marcas em atraso hoje', v:fmt.int(rows.length), s:'foto do momento, não do mês'},
+        {l:'Em alerta', v:fmt.int(por('Em alerta').length), s:'1 a 10 dias de atraso — ainda dá para virar'},
+        {l:'Bloqueadas', v:fmt.int(por('Bloqueada').length), s:'11+ dias, ou módulo já cortado'},
+        {l:'Em aberto', v:fmt.moneyCompact(soma(emRisco,'emAberto')), s:'de quem ainda não cancelou'},
+      ]; },
     colunas:[COL_NOME, COL_CS_CARD, {k:'situacao', l:'Situação'}, {k:'canal', l:'Canal'},
-      {k:'desde', l:'Desde', f:fmt.date}, {k:'ultimoPagamento', l:'Último pagamento', f:fmt.date},
+      {k:'desde', l:'Situação começou em', f:fmt.date},
+      {k:'diasAtraso', l:'Dias de atraso', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'ultimoPagamento', l:'Último pagamento', f:fmt.date},
       {k:'mensalidade', l:'Mensalidade', r:true, f:fmt.money},
       {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
   },
   {
-    id:'gmv1', titulo:'GMV do 1º mês completo', cor:'#0E7A73',
+    id:'gmv1', titulo:'GMV do 1º mês completo', grupo:'Carteira e receita', cor:'#0E7A73',
     capa:'Marcas que viveram neste mês o primeiro mês civil inteiro de Vesti',
     fonte:'BigQuery — data de criação do domínio (<code>odbc_domains.created_at</code>) + pedidos da marca no mês (<code>MongoDB_Pedidos_Geral</code>, pela data de criação do pedido). O GMV conta só pedido PAGO; a contagem de pedidos mostra os dois.',
     linhas:ctx=>linhasGmvPrimeiroMes(ctx.m),
@@ -1960,7 +2188,7 @@ const CARDS_GERENCIAL = [
       {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
   },
   {
-    id:'top80', titulo:'Clientes 80+ pedidos/mês', cor:'#7A4FB5',
+    id:'top80', titulo:'Clientes 80+ pedidos/mês', grupo:'Carteira e receita', cor:'#7A4FB5',
     capa:'Marcas que bateram 80 pedidos dentro do mês',
     fonte:'BigQuery — <code>MongoDB_Pedidos_Geral</code>, pedidos por marca no mês (mesma base da tabela geral). A meta de 80 conta <b>todos</b> os pedidos, pagos ou não, que é a régua do painel antigo; o GMV ao lado soma só os pagos.',
     linhas:ctx=>linhasTop80(ctx.m),
@@ -1985,7 +2213,7 @@ const CARDS_GERENCIAL = [
       {k:'ticket', l:'Ticket médio', r:true, f:fmt.money}],
   },
   {
-    id:'t3plus', titulo:'Receita T3+', cor:'#2D3436',
+    id:'t3plus', titulo:'Receita T3+', grupo:'Carteira e receita', cor:'#2D3436',
     capa:'A fatura inteira do Iugu dos clientes que não são Starter',
     fonte:'BigQuery — faturas pagas do Iugu, mês do vencimento. Soma a fatura toda: <b>plano</b> (com integração) + <b>outros itens</b> (Oráculo, filial, assistente, ativação, setup); desconto concedido é linha negativa da própria fatura e já sai abatido. <b>Não é um tier específico</b>: entra toda marca cujo plano no cadastro não contenha "starter" — Pro, Avançado, Profissional, Essencial, Básico, Portal Têxtil, Light, Conecta.',
     linhas:ctx=>linhasT3Plus(ctx.m),
@@ -2012,7 +2240,7 @@ const CARDS_GERENCIAL = [
       {k:'variacao', l:'Variação', r:true, f:v=>(v>0?'+':'')+fmt.money(v)}],
   },
   {
-    id:'cross', titulo:'Cross-sell', cor:'#4048B8',
+    id:'cross', titulo:'Cross-sell', grupo:'Crescimento e operação', cor:'#4048B8',
     capa:'Oportunidades de produto novo criadas e ganhas no mês',
     fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, categoria cross-sell. <b>Criada</b> usa a data de criação do negócio (<code>createdate</code>); <b>ganha</b> usa a de fechamento (<code>closedate</code>), então um negócio criado em julho e ganho em agosto conta em cada mês no seu lugar.',
     linhas:ctx=>linhasNegociosMes('cross', ctx.m),
@@ -2040,7 +2268,7 @@ const CARDS_GERENCIAL = [
       {k:'data', l:'Criado em', f:fmt.date}, {k:'fechadoEm', l:'Fechado em', f:fmt.date}],
   },
   {
-    id:'up', titulo:'Upsell — ganho no upgrade', cor:'#8046C4',
+    id:'up', titulo:'Upsell — ganho no upgrade', grupo:'Crescimento e operação', cor:'#8046C4',
     capa:'Upgrades criados e ganhos no mês, e quanto a mais por mês a Vesti passou a receber',
     fonte:'HubSpot (valor do plano novo, por <code>createdate</code> para as criadas e <code>closedate</code> para as ganhas) menos a última mensalidade da marca no Iugu/BigQuery antes do upgrade.',
     linhas:ctx=>linhasUpsellMes(ctx.m),
@@ -2074,6 +2302,9 @@ const CARDS_GERENCIAL = [
   },
 ];
 
+/* Os cards que vieram da régua da bonificação entram no fim da lista; o `grupo`
+   de cada um é que decide onde eles aparecem na tela. */
+CARDS_GERENCIAL.push(...CARDS_BONIF);
 function cardGerencial(id){ return CARDS_GERENCIAL.find(c=>c.id===id) }
 
 /* ============================================================================
@@ -2293,7 +2524,20 @@ function renderGradeCards(abaId, cards, ctx){
     `<span class="eyebrow">Cards de ${ctx.rotulo} · clique para abrir os dados</span>`));
 
   const abertoId = estado.cardAberto[abaId] || null;
+  /* Com mais de uma dezena de cards a grade vira parede: quando os cards trazem
+     `grupo`, a tela sai em seções ("Carteira e receita", "Produtos", "Risco"…),
+     na ordem em que os grupos aparecem na lista. Sem `grupo`, é uma grade só,
+     como a Visão geral e a ficha do cliente continuam sendo. */
+  const secoes = [...new Set(cards.map(c=>c.grupo).filter(Boolean))];
   const grid = el('div',{class:'gcards'});
+  const gridDe = {};
+  if(secoes.length){
+    secoes.forEach(g=>{
+      wrap.appendChild(el('div',{class:'section-label gsec'},`<span class="eyebrow">${g}</span>`));
+      const gg = el('div',{class:'gcards'});
+      gridDe[g] = gg; wrap.appendChild(gg);
+    });
+  }
   cards.forEach(c=>{
     const r = c.resumo(linhasDoCard(c, ctx), ctx);
     const aberto = abertoId===c.id;
@@ -2305,9 +2549,9 @@ function renderGradeCards(abaId, cards, ctx){
        <span class="gc-go">${aberto?'fechar':'ver os dados →'}</span>`);
     btn.onclick=()=>{ estado.cardAberto[abaId] = aberto ? null : c.id; renderPagina();
       if(!aberto) setTimeout(()=>{ const d=$('#gdetalhe'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0) };
-    grid.appendChild(btn);
+    (gridDe[c.grupo] || grid).appendChild(btn);
   });
-  wrap.appendChild(grid);
+  if(!secoes.length) wrap.appendChild(grid);
 
   const c = cards.find(x=>x.id===abertoId);
   if(!c) return wrap;
@@ -2354,14 +2598,14 @@ function kpisGerencial(){
   });
   const cs = csDoFoco();
   const novas = DATA.clientes.filter(c=>cs.has(c.cs) && String(c.dataCadastro||'').slice(0,7)===m).length;
-  const churn = linhasDoCard(cardGerencial('churnGeral'), ctx).length;
+  const churn = linhasDoCard(cardGerencial('churnMes'), ctx).length;
   return [
     {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s: temPagos
       ? fmt.int(pagos)+' pedidos pagos de '+fmt.int(pedidos)+' no mês'
       : fmt.int(pedidos)+' pedidos no mês (pagos e não pagos)'},
     {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
-    {l:'Entraram em churn', v:fmt.int(churn), s:'alerta, bloqueio ou cancelamento'},
+    {l:'Pararam de pagar', v:fmt.int(churn), s:'sem fatura paga e sem fatura futura'},
   ];
 }
 
@@ -3406,6 +3650,8 @@ const TABS = [
       + 'Saiu o card de <b>Frete Onlog</b> e entraram <b>Reuniões</b>, <b>Novo Tino</b>, <b>Novo Oráculo</b>, <b>Cross-sell</b> e <b>Upsell</b>. Em Cross-sell e Upsell as <b>oportunidades criadas</b> e as <b>ganhas</b> aparecem separadas: criada conta pela data de criação do negócio, ganha pela de fechamento, então um negócio criado em julho e ganho em agosto entra em cada mês no seu lugar. No de Upsell o número grande é a <b>diferença</b>, não o valor do plano novo: a marca que pagava 499 e foi para 1.299 entra como 800 — valor do negócio de upgrade no HubSpot menos a última mensalidade dela no Iugu antes do upgrade. Quem não tinha mensalidade no Iugu (paga por fora, canal parceiro) fica com o ganho em branco e é contada à parte, para não inflar o total. '
       + 'Ao abrir um card vem também o <b>gráfico dos últimos 12 meses</b> daquela métrica, com o mês escolhido em cor cheia e uma linha dizendo quanto ele está acima ou abaixo do mês anterior e da média da janela. '
       + '<b>GMV aqui é só pedido PAGO</b>, com teto de R$ 50 mil por pedido e pela data de criação do pedido — a mesma régua do resto deste painel. Por isso o número é menor que o do Painel Elisa e o do painel de Sucesso do Cliente, que somam todo pedido criado, inclusive pendente e cancelado: agosto/2026 dá R$ 79 mi aqui e R$ 106 mi lá. A contagem de pedidos mostra os dois lados (total e pagos). '
+      + 'Os cards estão em quatro blocos: <b>Crescimento e operação</b>, <b>Produtos</b>, <b>Risco</b> e <b>Carteira e receita</b> — este último traz as mesmas medidas da aba Bonificação (GMV e TPV do VestiPago contra o mesmo mês do ano passado, mensalidade, Tino 40+ e integrações ativas), somadas para as CS em foco, então os números batem com a Bonificação por construção. '
+      + '<b>Churn do mês</b> conta quem PAROU DE PAGAR no mês (sem fatura paga há mais de 45 dias e sem fatura futura), que é evento datado e comparável; a foto de quem está em atraso agora ficou no card <b>Inadimplência hoje</b>, que não obedece ao filtro de mês. '
       + 'Tudo é recortado pelo <b>mês</b> escolhido no filtro, mês civil fechado. Também ficou de fora o card de <b>Satisfação (CSAT + NPS)</b> do painel antigo: era o único número que não existe no BigQuery (vinha de planilhas e de um formulário do HubSpot), e a Laura pediu que não viesse.',
     filtros:['cs','mesGerencial'],
     semTabela:true,
