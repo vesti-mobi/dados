@@ -2133,20 +2133,62 @@ function serieMensalDoCard(c, ctx){
    seguem a régua do resto do painel e agrupam por mês. */
 function graoDosCards(p, ctx){
   if(ctx && ctx.grao) return ctx.grao;   // a ficha do cliente pede mês a mês
+  /* Semana é o passo padrão (pedido da Laura em 18/09/2026: dia a dia virava
+     uma floresta de barras de 1). Mas período de até duas semanas em semana
+     vira UMA barra, que não mostra evolução nenhuma — aí volta a ser dia. */
+  const dias = diasEntre(p.ini, p.fim) + 1;
+  if(dias <= 14) return 'dia';
   const g = grãoDoPeriodo(p); return g === 'dia' ? 'semana' : g;
+}
+/* Barras do gráfico de um card, recortadas ao período escolhido.
+   Por que não usa `bucketsDoPeriodo` (a semana ISO do resto do painel): a
+   Laura escolheu 20/09 a 26/09 — e 20/09/2026 é um DOMINGO. Na semana ISO esse
+   domingo pertence à semana que começou em 14/set, então a primeira barra saía
+   rotulada "14/09 – 20/09" com o valor 1, quando aquela semana inteira teve 19
+   reuniões: o rótulo prometia a semana cheia e mostrava só o pedaço que cabia
+   no período (reportado em 28/09/2026). Aqui a semana passa a correr a partir
+   do PRIMEIRO DIA do período — 20 a 26, 27 a 03 — e cada barra carrega o
+   intervalo que ela de fato cobre, que é o que o balãozinho mostra. O mês
+   continua sendo mês civil, só que recortado nas pontas pelo período. */
+function bucketsDosCards(p, grao){
+  const out = [];
+  if(grao === 'mes'){
+    let m = p.ini.slice(0,7);
+    while(m <= p.fim.slice(0,7)){
+      const ini = (m+'-01') < p.ini ? p.ini : (m+'-01');
+      const fimMes = ultimoDiaDoMes(m+'-01');
+      out.push({bucket:m, ini, fim: fimMes > p.fim ? p.fim : fimMes,
+        rotulo:fmt.mes(m+'-01'), grao});
+      const [y,mm] = m.split('-').map(Number);
+      m = new Date(Date.UTC(y, mm, 1)).toISOString().slice(0,7);
+    }
+    return out;
+  }
+  const passo = grao === 'dia' ? 1 : 7;
+  let d = p.ini, guarda = 0;
+  while(d <= p.fim && guarda++ < 400){
+    const fim = somarDias(d, passo - 1);
+    out.push({bucket:d, ini:d, fim: fim > p.fim ? p.fim : fim, rotulo:fmt.dia(d), grao});
+    d = somarDias(d, passo);
+  }
+  return out;
 }
 function seriePorBucketDoCard(c, ctx, rows){
   const grao = graoDosCards(ctx.p, ctx);
-  const mapa = new Map();
-  bucketsDoPeriodo(ctx.p, grao).forEach(b=>mapa.set(b, []));
+  const buckets = bucketsDosCards(ctx.p, grao);
+  const listas = buckets.map(()=>[]);
+  const passo = grao === 'dia' ? 1 : 7;
+  const indice = d => grao === 'mes'
+    ? buckets.findIndex(b=>b.bucket === d.slice(0,7))
+    : Math.floor(diasEntre(ctx.p.ini, d) / passo);
   rows.forEach(r=>{
     const d = String(r[c.campoData]||'').slice(0,10); if(!d) return;
-    const b = bucketDe(d, grao);
-    if(mapa.has(b)) mapa.get(b).push(r);
+    const i = indice(d);
+    if(i >= 0 && i < listas.length) listas[i].push(r);
   });
-  return [...mapa.entries()].map(([b, lista])=>{
-    const o = {bucket:b, rotulo:rotuloBucket(b, grao), grao};
-    c.metricas.forEach(x=>{ o[x.k] = x.v(lista, ctx) });
+  return buckets.map((b, i)=>{
+    const o = Object.assign({}, b);
+    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], ctx) });
     return o;
   });
 }
@@ -2196,13 +2238,18 @@ function graficoDoCard(c, ctx, rows){
     if(anterior.ini <= LIMITE_DADOS.ini && anterior.fim <= LIMITE_DADOS.ini)
       return `<b>${met.l}: ${met.f(atual)}</b> · sem período anterior no arquivo (ele começa em ${fmt.date(LIMITE_DADOS.ini)})`;
     const antes = met.v(linhasDoCard(c, ant), ant);
-    return frasesComparativas(met, atual, [{v:antes, de:'do período anterior', ao:'ao período anterior'}]);
+    /* Com as datas na frase: "período anterior" sozinho já fez a Laura comparar
+       o número com a semana que ela tinha acabado de olhar, que não era a mesma
+       janela (28/09/2026). O período anterior é a MESMA janela deslocada para
+       trás em dias corridos — 20 a 26 compara com 13 a 19, não com 14 a 20. */
+    const quando = fmt.date(anterior.ini)+' a '+fmt.date(anterior.fim);
+    return frasesComparativas(met, atual, [{v:antes, de:'de '+quando, ao:'a '+quando}]);
   }).filter(Boolean);
 
   const card = el('div',{class:'card'});
   const leg = c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
   const titulo = ctx.tipo === 'mes' ? `Últimos ${dados.length} meses`
-    : 'No período, ' + ({semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
+    : 'No período, ' + ({dia:'dia a dia', semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
   card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><div class="legend">${leg}</div></div>
                     <div class="chart-wrap" id="gch-${c.id}"></div>
                     <div class="gcomp">${comparacoes.join('<br>')}</div>`;
@@ -2402,8 +2449,8 @@ const CARDS_VISAO = [
   },
   {
     id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
-    capa:'Reuniões do time de CS já realizadas dentro do período',
-    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
+    capa:'Reuniões já realizadas dentro do período',
+    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Desde 24/09/2026 entram as de <b>qualquer dono</b>, não só as do time de CS: reunião marcada por vendas ou por parceiro também conta. Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
     campoData:'data',
     linhas:ctx=>reunioesNoPeriodo(ctx.p).map(r=>({nome:r.cliente||'(sem empresa)',
       cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS', data:r.data, resultado:r.resultado,
@@ -5271,6 +5318,9 @@ function desenharCategorias(host, cats){
    início — aqui vale dizer o intervalo inteiro, senão "10/ago" parece um dia. */
 function rotuloCheio(d){
   if(!d || !d.bucket) return '';
+  /* Barra que veio recortada pelo período (gráficos dos cards) diz o intervalo
+     que ela de fato cobre — inclusive quando é um dia só. */
+  if(d.ini && d.fim) return d.ini===d.fim ? fmt.date(d.ini) : fmt.date(d.ini)+' – '+fmt.date(d.fim);
   if(d.grao==='mes') return MESES_LONGOS[Number(d.bucket.slice(5,7))-1]+' de '+d.bucket.slice(0,4);
   if(d.grao==='dia') return fmt.date(d.bucket);
   return fmt.date(d.bucket)+' – '+fmt.date(somarDias(d.bucket,6));

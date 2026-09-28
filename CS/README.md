@@ -245,11 +245,33 @@ for dono do registro no HubSpot — nos últimos 90 dias de 17/09/2026, por exem
 as reuniões eram de cinco pessoas diferentes. Quem tem o recorte das três é a aba
 Gerencial. Confirmado com a Laura em 18/09/2026.
 
-O gráfico dos cards vai de **semana em semana** mesmo em período curto (pedido da
-Laura, 18/09/2026): uma reunião por dia vira uma floresta de barras de 1, e por
-semana dá para ver a tendência. Janela longa (mais de 400 dias) agrupa por mês, e
-quando a janela anterior cai antes do começo do arquivo o card diz "sem período
-anterior no arquivo" em vez de comparar contra zero.
+O gráfico dos cards vai de **semana em semana** (pedido da Laura, 18/09/2026):
+uma reunião por dia vira uma floresta de barras de 1, e por semana dá para ver a
+tendência. Duas exceções: **período de até 14 dias volta a ser dia a dia** (em
+semana ele viraria uma barra só, que não mostra evolução nenhuma) e janela longa
+agrupa por mês. Quando a janela anterior cai antes do começo do arquivo, o card
+diz "sem período anterior no arquivo" em vez de comparar contra zero.
+
+### A semana do gráfico começa no primeiro dia do período (28/09/2026)
+
+A Laura escolheu **20/09 a 26/09** e o gráfico mostrou uma barra rotulada
+"14/09 – 20/09" com o valor **1**, quando aquela semana inteira tinha 19
+reuniões. O motivo: 20/09/2026 é um **domingo**, e na semana ISO (segunda a
+domingo) ele pertence à semana que começou em 14/set — então a barra carregava o
+rótulo da semana cheia e só o pedaço que cabia dentro do período.
+
+Nos gráficos dos cards a semana passou a correr **a partir do primeiro dia do
+período** (20 a 26, 27 a 03…), e cada barra guarda o intervalo que de fato cobre
+— é esse intervalo que o balãozinho mostra, inclusive quando a ponta é um dia
+só. O resto do painel (régua e gráficos das abas de produto) continua na semana
+ISO, onde ela faz sentido: lá a barra "semana de 10/ago" precisa ser sempre a
+mesma.
+
+Na mesma conversa, a linha de comparação passou a dizer **as datas** do período
+anterior ("39% abaixo de 13/09/2026 a 19/09/2026") em vez de só "período
+anterior": foi comparando o número com a semana que ela tinha acabado de olhar
+(14 a 20) que a diferença pareceu erro. O período anterior é a mesma janela
+deslocada para trás em dias corridos — 20 a 26 compara com 13 a 19.
 
 ### Ajustes de 21/09/2026 (pedidos da Laura)
 
