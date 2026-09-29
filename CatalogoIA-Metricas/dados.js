@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-09-28T18:58:48.855Z",
+  "gerado_em": "2026-09-29T00:43:46.348Z",
   "hoje": "2026-09-28",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 3
+      "dias": 4
     },
     {
       "slug": "kauly",
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 3,
+          "dias": 4,
           "produtos_medidos": 774,
           "atribuido": 0
         },
