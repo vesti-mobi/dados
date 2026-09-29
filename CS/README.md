@@ -517,13 +517,26 @@ aceita só as linhas cuja coluna *observação* é **"solicitou cancelamento"** 
 | Inadimplência hoje | quem está **em atraso agora** (foto) |
 | Churn declarado (planilha) | o que o time **registrou**, com o motivo escrito |
 
-**Pendente:** a planilha ainda não está acessível para a carga — o link responde
-401. Para funcionar, ela precisa estar compartilhada com a service account do
-BigQuery (a mesma da carga, como Leitor) **ou** marcada como "qualquer pessoa
-com o link pode ver". O script tenta as duas coisas, nessa ordem, e enquanto não
-der ele avisa no log, sai sem escrever nada e o card aparece vazio dizendo isso.
-Se a planilha mudar de endereço, dá para apontar outra pelo `CHURN_SHEET_ID` nas
-variáveis do repositório, sem mexer no código.
+Funcionando desde 29/09/2026, quando a planilha foi liberada: **539 linhas na
+aba, 425 aceitas** — 245 "solicitou cancelamento" e 180 "inadimplente". Ficam de
+fora upsell para pro, upsell para avançado, troca de canal, downsell e retorno
+na recuperação.
+
+Três coisas que a planilha real ensinou:
+
+- a coluna **domínio vem de fórmula** e chega como `#REF!` ou `None` na maioria
+  das linhas — só vale quando é número mesmo. Célula com erro de fórmula passou
+  a valer o mesmo que vazia em qualquer coluna;
+- **`mensalidade` antes de `valor`**: existe uma coluna "valor reajuste" que o
+  prefixo pegaria primeiro, e ela não é o que a marca pagava;
+- a planilha **não tem CS, tem vendedora** — são coisas diferentes. A vendedora
+  virou coluna própria e o CS sai do cadastro, casando por **CNPJ** (262 das 425
+  linhas têm) e, na falta dele, por domínio ou nome.
+
+O script tenta primeiro o link público e depois a service account, nessa ordem;
+se nenhuma der, ele avisa no log, sai sem escrever e o card aparece vazio
+dizendo isso. Se a planilha mudar de endereço, dá para apontar outra pelo
+`CHURN_SHEET_ID` nas variáveis do repositório, sem mexer no código.
 
 ## Conferência com o HubSpot (24/09/2026)
 
