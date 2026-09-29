@@ -118,12 +118,20 @@ def ler_aba(xlsx: bytes) -> list[dict]:
     return [dict(zip(cabec, linha)) for linha in linhas[1:]]
 
 
+# Fórmula quebrada na planilha chega como texto ("#REF!", "#N/D"); vale o mesmo
+# que célula vazia.
+ERRO_PLANILHA = re.compile(r"^#(ref|n/?d|name|value|div/0|null)", re.IGNORECASE)
+
+
 def pegar(linha: dict, *nomes: str):
     for n in nomes:
         for k, v in linha.items():
             if k and (k == chave(n) or k.startswith(chave(n))):
-                if v not in (None, ""):
-                    return v
+                if v in (None, ""):
+                    continue
+                if isinstance(v, str) and ERRO_PLANILHA.match(v.strip()):
+                    continue
+                return v
     return None
 
 
@@ -180,15 +188,24 @@ def main() -> None:
         nome = pegar(l, "marca", "cliente", "empresa", "nome")
         if not nome:
             continue
+        # A coluna de domínio da planilha vem de fórmula e chega como "#REF!" ou
+        # "None" em boa parte das linhas — só vale quando é número mesmo.
+        dom = re.sub(r"\D", "", str(pegar(l, "dominio", "domain") or ""))
+        # `mensalidade` antes de `valor`: existe uma coluna "valor reajuste" que
+        # o prefixo "valor" pegaria primeiro, e ela não é o que a marca pagava.
+        valor = numero(pegar(l, "mensalidade", "total cobrado", "mrr", "valor"))
         aceitos.append({
             "cliente": str(nome).strip(),
-            "dominio": (str(pegar(l, "dominio", "domain", "id")) or "").strip() or None,
-            "cs": (str(pegar(l, "cs", "anjo", "responsavel") or "")).strip() or None,
+            "dominio": dom or None,
+            "cnpj": re.sub(r"\D", "", str(pegar(l, "cnpj", "cpf/cnpj") or "")) or None,
+            "vendedora": (str(pegar(l, "vendedora", "vendedor", "cs", "anjo") or "")).strip() or None,
+            "canal": (str(pegar(l, "canal") or "")).strip() or None,
+            "subconta": (str(pegar(l, "subconta") or "")).strip() or None,
             "motivo": "Solicitou cancelamento" if alvo == "solicitou cancelamento" else "Inadimplente",
             "observacao": str(obs).strip(),
-            "data": iso(pegar(l, "data", "data churn", "data do churn", "mes", "cancelamento")),
+            "data": iso(pegar(l, "data da perda", "data", "data do churn", "mes", "cancelamento")),
             "plano": (str(pegar(l, "plano") or "")).strip() or None,
-            "valor": numero(pegar(l, "valor", "mensalidade", "mrr")),
+            "valor": valor,
         })
 
     print(f"[churn] aceitos: {len(aceitos)} (solicitou cancelamento / inadimplente)")

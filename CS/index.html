@@ -2164,13 +2164,25 @@ const CARDS_GERENCIAL = [
     capa:'O que o time registrou como cancelamento na planilha do mês',
     fonte:'Planilha do Google que o time preenche, <b>aba 2026</b> — só as linhas cuja coluna <i>observação</i> é <b>"solicitou cancelamento"</b> ou <b>"inadimplente"</b>; as outras observações são ignoradas, como o Walid pediu em 29/09/2026. <b>É a única leitura de churn do painel escrita por uma pessoa</b>: as outras duas saem de fato — "Churn do mês" é a marca que parou de pagar e "Inadimplência hoje" é quem está em atraso agora. A planilha precisa estar compartilhada com a service account da carga (ou pública) — sem isso este card fica vazio e o resto da aba não muda.',
     vazio:'Nenhuma linha da planilha com essas observações neste mês — ou a planilha ainda não está acessível para a carga.',
+    /* A planilha não tem a CS: ela traz a VENDEDORA, que é outra coisa. O CS
+       sai do cadastro, casando por CNPJ e, na falta dele, pelo domínio ou pelo
+       nome da marca — 262 das 425 linhas têm CNPJ, que é a chave mais
+       confiável. */
     linhas:ctx=>{ const p = janelaDoMes(ctx.m);
+      const porCnpj = {};
+      DATA.clientes.forEach(c=>{ if(c.cnpj) porCnpj[c.cnpj] = c });
       return soDoFoco((DATA.churnPlanilha.linhas||[])
         .filter(l=>!l.data || (l.data>=p.ini && l.data<=p.fim))
-        .map(l=>({nome:l.cliente, cs: l.cs || CS_POR_CLIENTE[l.cliente] || 'Sem CS',
-          dominio:l.dominio, motivo:l.motivo, observacao:l.observacao,
-          data:l.data, plano:l.plano, valor:l.valor||0})))
-        .sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))); },
+        .map(l=>{ const c = (l.cnpj && porCnpj[l.cnpj])
+            || (l.dominio && CLIENTE_POR_DOM[l.dominio]) || null;
+          return {nome: (c && c.nome) || l.cliente,
+            cs: (c && c.cs) || CS_POR_CLIENTE[l.cliente] || 'Sem CS',
+            dominio: (c && c.dominio) || l.dominio, vendedora: l.vendedora || '—',
+            canal: (c && c.canal) || l.canal, motivo:l.motivo, observacao:l.observacao,
+            data:l.data, plano: l.plano || (c && c.plano), valor:l.valor||0,
+            naCarteira: !!c}; }))
+        .sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
+    },
     resumo:rows=>{ const canc = rows.filter(r=>r.motivo==='Solicitou cancelamento').length;
       return {v:fmt.int(rows.length),
         s: rows.length ? `${canc} pediram cancelamento · ${rows.length-canc} inadimplentes`
@@ -2181,12 +2193,14 @@ const CARDS_GERENCIAL = [
         {l:'Registros no mês', v:fmt.int(rows.length), s:'só "solicitou cancelamento" e "inadimplente"'},
         {l:'Solicitaram cancelamento', v:fmt.int(canc.length), s:'pediram para sair'},
         {l:'Inadimplentes', v:fmt.int(inad.length), s:'saíram por falta de pagamento'},
-        {l:'Valor registrado', v:fmt.moneyCompact(soma(rows,'valor')), s:'quando a planilha traz o valor'},
+        {l:'Mensalidade perdida', v:fmt.moneyCompact(soma(rows,'valor')),
+         s: fmt.int(rows.filter(r=>r.naCarteira).length)+' de '+fmt.int(rows.length)+' casaram com o cadastro'},
       ]; },
     metricas:[{k:'qtd', l:'Churn declarado', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'motivo', l:'Motivo'},
-      {k:'data', l:'Data', f:fmt.date}, {k:'plano', l:'Plano'},
-      {k:'valor', l:'Valor', r:true, f:v=>v?fmt.money(v):'—'},
+    colunas:[COL_NOME, COL_CS_CARD, {k:'vendedora', l:'Vendedora (planilha)'},
+      {k:'motivo', l:'Motivo'}, {k:'data', l:'Data da perda', f:fmt.date},
+      {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
+      {k:'valor', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
       {k:'observacao', l:'Observação na planilha'}],
   },
   {
