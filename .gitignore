@@ -30,3 +30,6 @@ Thumbs.db
 
 # Vesti API token (NUNCA commitar)
 .token
+
+# Painel CS — intermediário da planilha de churn (o dado final vai no dados.js)
+CS/churn_planilha.json

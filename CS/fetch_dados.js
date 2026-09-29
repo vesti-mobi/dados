@@ -677,6 +677,20 @@ async function puxarBQ() {
       return [];
     });
 
+  /* Churn declarado pelo time, da planilha do Google (aba 2026), só as linhas
+     cuja observação é "solicitou cancelamento" ou "inadimplente" — regra do
+     Walid em 29/09/2026. Quem escreve o arquivo é o fetch_churn_planilha.py,
+     passo opcional do workflow; sem ele a lista fica vazia e o card diz isso.
+     É a terceira leitura de churn do painel e a única declarada por uma
+     pessoa: as outras duas (parou de pagar / está em atraso) saem de fato. */
+  let churnPlanilha = { linhas: [], geradoEm: null, aba: null };
+  try {
+    churnPlanilha = JSON.parse(fs.readFileSync(path.join(__dirname, 'churn_planilha.json'), 'utf8'));
+    console.log('  churn declarado na planilha'.padEnd(44) + String((churnPlanilha.linhas || []).length).padStart(8));
+  } catch {
+    console.log('  sem churn_planilha.json — o card do churn declarado fica vazio');
+  }
+
   /* Cliques nos links compartilhados. `rankings_shared_links` é um snapshot
      diário acumulado por usuário — o Painel Elisa soma o diário, e é o mesmo
      que fazemos aqui, para os dois painéis contarem igual. */
@@ -703,7 +717,7 @@ async function puxarBQ() {
 
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
-           linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist,
+           linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -1104,9 +1118,15 @@ async function puxarHubSpot() {
    existir aqui (buscado via `propertiesWithHistory` no batch/read), removido
    junto por ter ficado sem uso. */
 async function puxarOnboarding(pipes, owners) {
+  /* Entram os pipelines que têm estágio "Implantado" OU "Novo cliente". O
+     segundo critério entrou em 29/09/2026 a pedido do Walid ("pegar todos que
+     são novo cliente independente do pipeline") e trouxe o <b>Varejo -
+     Jornada</b>, que ficava de fora porque o estágio final dele se chama
+     "Implementado", com E. */
+  const temEstagio = (p, re) => (p.stages || []).some(s => re.test((s.label || '').trim()));
   const alvo = (pipes.results || [])
-    .filter(p => (p.stages || []).some(s => /^implantado$/i.test((s.label || '').trim())));
-  console.log('  pipelines de onboarding (têm estágio "Implantado")'.padEnd(44) + String(alvo.length).padStart(8));
+    .filter(p => temEstagio(p, /^implantado$/i) || temEstagio(p, /^novo\s*cliente$/i));
+  console.log('  pipelines de onboarding (Implantado ou Novo cliente)'.padEnd(44) + String(alvo.length).padStart(8));
   if (!alvo.length) return [];
   alvo.forEach(p => console.log('    - ' + p.label));
 
@@ -1135,7 +1155,13 @@ async function puxarOnboarding(pipes, owners) {
       cliente: nomeEmpresa[empresaDo[d.id]] || p.dealname || '(sem empresa)',
       pipeline: nomePipeline[p.pipeline] || '—',
       estagio: nomeEstagio[p.dealstage] || '—',
+      /* `cs` aqui é o DONO DO NEGÓCIO no HubSpot, não o CS da marca — os dois
+         divergem com frequência (venda da Cris e da Elisa no mesmo pipeline,
+         exemplo do Walid em 29/09/2026). O painel mostra os dois lado a lado;
+         o nome do campo fica por compatibilidade e `proprietario` é o
+         explícito. */
       cs: owners[p.hubspot_owner_id] || '',
+      proprietario: owners[p.hubspot_owner_id] || '(sem proprietário)',
       valor: r2(p.amount),
       data: iso(p.createdate),
       fechadoEm: iso(p.closedate) || iso(p.hs_lastmodifieddate),
@@ -2703,6 +2729,9 @@ function montar(bqd, hsd, tinoDados) {
     tickets,
     onboarding: hsd.onboarding || [],
     marcosVolume,
+    /* Churn declarado pelo time na planilha (aba 2026), já filtrado pelas duas
+       observações que contam. */
+    churnPlanilha: bqd.churnPlanilha || { linhas: [] },
     /* Links compartilhados pelos vendedores e cliques, por marca e mês. */
     linksSeries: empacotar(linksSeries),
     /* Uma linha por fatura do Iugu, com status — alimenta o card de

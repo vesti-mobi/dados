@@ -949,6 +949,8 @@ const DATA = converterSemanaEmData(desempacotar(DADOS_REAIS ? window.PAINEL_DATA
 if(!DATA.tickets) DATA.tickets = [];
 if(!DATA.reunioes) DATA.reunioes = [];
 if(!DATA.faturasCliente) DATA.faturasCliente = [];   // histórico de faturas: carga de 24/09/2026 em diante
+if(!DATA.linksSeries) DATA.linksSeries = [];         // links × cliques por mês: carga de 28/09/2026 em diante
+if(!DATA.churnPlanilha) DATA.churnPlanilha = {linhas:[]};  // churn declarado: carga de 29/09/2026 em diante
 if(!DATA.tino) DATA.tino = {tabela:[], series:[]};
 if(!DATA.tino.kpis) DATA.tino.kpis = {};
 DATA.clientes.forEach(c=>{ if(!c.canal) c.canal = 'Sem canal' });
@@ -2158,6 +2160,36 @@ const CARDS_GERENCIAL = [
       {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
   },
   {
+    id:'churnDeclarado', titulo:'Churn declarado (planilha)', cor:'#C0453B',
+    capa:'O que o time registrou como cancelamento na planilha do mês',
+    fonte:'Planilha do Google que o time preenche, <b>aba 2026</b> — só as linhas cuja coluna <i>observação</i> é <b>"solicitou cancelamento"</b> ou <b>"inadimplente"</b>; as outras observações são ignoradas, como o Walid pediu em 29/09/2026. <b>É a única leitura de churn do painel escrita por uma pessoa</b>: as outras duas saem de fato — "Churn do mês" é a marca que parou de pagar e "Inadimplência hoje" é quem está em atraso agora. A planilha precisa estar compartilhada com a service account da carga (ou pública) — sem isso este card fica vazio e o resto da aba não muda.',
+    vazio:'Nenhuma linha da planilha com essas observações neste mês — ou a planilha ainda não está acessível para a carga.',
+    linhas:ctx=>{ const p = janelaDoMes(ctx.m);
+      return soDoFoco((DATA.churnPlanilha.linhas||[])
+        .filter(l=>!l.data || (l.data>=p.ini && l.data<=p.fim))
+        .map(l=>({nome:l.cliente, cs: l.cs || CS_POR_CLIENTE[l.cliente] || 'Sem CS',
+          dominio:l.dominio, motivo:l.motivo, observacao:l.observacao,
+          data:l.data, plano:l.plano, valor:l.valor||0})))
+        .sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))); },
+    resumo:rows=>{ const canc = rows.filter(r=>r.motivo==='Solicitou cancelamento').length;
+      return {v:fmt.int(rows.length),
+        s: rows.length ? `${canc} pediram cancelamento · ${rows.length-canc} inadimplentes`
+                       : ((DATA.churnPlanilha.linhas||[]).length ? 'nada registrado no mês' : 'planilha ainda não acessível')}; },
+    kpis:rows=>{ const canc = rows.filter(r=>r.motivo==='Solicitou cancelamento');
+      const inad = rows.filter(r=>r.motivo==='Inadimplente');
+      return [
+        {l:'Registros no mês', v:fmt.int(rows.length), s:'só "solicitou cancelamento" e "inadimplente"'},
+        {l:'Solicitaram cancelamento', v:fmt.int(canc.length), s:'pediram para sair'},
+        {l:'Inadimplentes', v:fmt.int(inad.length), s:'saíram por falta de pagamento'},
+        {l:'Valor registrado', v:fmt.moneyCompact(soma(rows,'valor')), s:'quando a planilha traz o valor'},
+      ]; },
+    metricas:[{k:'qtd', l:'Churn declarado', f:fmt.int, v:rows=>rows.length}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'motivo', l:'Motivo'},
+      {k:'data', l:'Data', f:fmt.date}, {k:'plano', l:'Plano'},
+      {k:'valor', l:'Valor', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'observacao', l:'Observação na planilha'}],
+  },
+  {
     id:'inadimplentes', titulo:'Inadimplência hoje', cor:'#E17055',
     capa:'Quem está em alerta, bloqueada ou cancelada neste momento',
     fonte:'Mesma leitura da aba Churn — módulo de vendas cortado (planilha da automação, que só tem registro desde <b>07/07/2026</b>) + status da fatura no Iugu. <b>É uma foto de agora, não um recorte do mês</b>: o filtro de mês da aba não mexe neste card. Em alerta = 1 a 10 dias de atraso; bloqueada = 11+ dias ou módulo já cortado; cancelada = módulo cortado e fatura cancelada na Iugu.',
@@ -2636,14 +2668,21 @@ const CARDS_VISAO = [
   {
     id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
     capa:'Negócios criados nos quatro pipelines de CS dentro do período',
-    fonte:'HubSpot — <code>createdate</code> do negócio, em qualquer um dos 4 pipelines de CS (Sucesso do Cliente, Integração, Plataforma e CS - Starter). O plano sai do pipeline: Starter é o "CS - Starter", Pro são os outros três — não existe campo de plano nesses negócios.',
+    fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b> (este entrou em 29/09/2026 a pedido do Walid — ficava de fora porque o estágio final dele se chama "Implementado", com E). O plano sai do pipeline: Starter é o "CS - Starter", Pro são os outros. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca: as duas colunas ficam lado a lado e o gráfico de composição soma por proprietário.',
     campoData:'data',
     /* `valor` (amount do negócio) entrou em 21/09/2026 a pedido da Laura. Só
        existe nas cargas a partir dessa data: num dados.js mais velho o campo
        vem ausente e o painel mostra "—" em vez de somar zeros como se todas as
        vendas fossem de graça. */
-    linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
+    /* `proprietario` é o DONO DO NEGÓCIO no HubSpot; `cs` é o da marca no
+       cadastro. Andam separados de propósito desde 29/09/2026 (pedido do
+       Walid): "tem vendas da Cris, da Elisa no mesmo pipe — precisamos somar
+       os 2 mas separar eles". */
+    linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>({nome:o.cliente,
+      proprietario: normalizarCs(o.proprietario || o.cs) || '(sem proprietário)',
+      cs: CS_POR_CLIENTE[o.cliente] || 'Sem CS',
       plano:planoBucketHS(o.pipeline), pipeline:o.pipeline, estagio:o.estagio,
+      novoCliente: /^novo\s*cliente$/i.test(String(o.estagio||'').trim()),
       valor: o.valor==null ? null : (o.valor||0), data:o.data}))
       .sort((a,b)=>(b.valor||0)-(a.valor||0) || String(b.data).localeCompare(String(a.data))),
     resumo:rows=>{ const temValor = rows.some(r=>r.valor!=null);
@@ -2661,16 +2700,29 @@ const CARDS_VISAO = [
         {l:'Valor das novas vendas', v: temValor ? fmt.moneyCompact(valor) : '—',
          s: temValor ? fmt.int(comValor)+' com valor preenchido no HubSpot'
                      : 'a carga ainda não traz o valor do negócio'},
-        {l:'Starter', v:fmt.int(st.length), s:pctTexto(st.length, rows.length)+' das novas'
-          + (temValor ? ' · '+fmt.moneyCompact(soma(st,'valor')) : '')},
-        {l:'Pro', v:fmt.int(pro.length), s:pctTexto(pro.length, rows.length)+' das novas'
-          + (temValor ? ' · '+fmt.moneyCompact(soma(pro,'valor')) : '')},
+        {l:'Ainda em "Novo cliente"', v:fmt.int(rows.filter(r=>r.novoCliente).length),
+         s:'dos criados no período, quem não saiu do primeiro estágio'},
+        /* Negócio sem dono no HubSpot é comum e costuma ser o "maior" grupo —
+           mas "quem mais vendeu" tem que ser gente. */
+        {l:'Quem mais vendeu', v: (()=>{ const comDono = rows.filter(r=>r.proprietario!=='(sem proprietário)');
+          return comDono.length ? maisFrequente(comDono,'proprietario') : '—' })(),
+         s: fmt.int(new Set(rows.map(r=>r.proprietario)).size)+' proprietários diferentes · '
+            + fmt.int(st.length)+' Starter / '+fmt.int(pro.length)+' Pro'},
       ]; },
     metricas:[
       {k:'starter', l:'Starter', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Starter').length},
       {k:'pro', l:'Pro', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Pro').length},
     ],
-    colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD,
+    tituloCategorias:'Novas vendas por proprietário do negócio',
+    categorias:ctx=>{ const rows = linhasDoCard(cardVisao('novasVendas'), ctx);
+      const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--neg)','var(--ink-3)'];
+      const por = new Map();
+      rows.forEach(r=>{ const l = por.get(r.proprietario) || {l:r.proprietario, v:0, quem:[]};
+        l.v++; l.quem.push(r.nome); por.set(r.proprietario, l) });
+      return [...por.values()].sort((a,b)=>b.v-a.v)
+        .map((x,i)=>Object.assign(x, {cor:cores[i%cores.length]})); },
+    colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME,
+      {k:'proprietario', l:'Proprietário do negócio'}, {k:'cs', l:'CS da marca'},
       {k:'plano', l:'Plano'}, {k:'valor', l:'Valor', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
   },

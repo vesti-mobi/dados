@@ -76,6 +76,26 @@ jobs:
           METABASE_API_KEY: ${{ secrets.METABASE_API_KEY }}
         run: node ingerir_stock_logs.js
 
+      # Opcional: churn declarado pelo time, de uma planilha do Google (aba 2026,
+      # só as linhas com observação "solicitou cancelamento" ou "inadimplente").
+      # Tenta o link público e, se não der, a mesma service account do BigQuery
+      # — nesse caso a planilha precisa estar compartilhada com o e-mail dela.
+      # Falhou, a carga segue: só aquele card fica vazio.
+      - name: Preparar Python (planilha de churn)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar openpyxl e google-auth
+        run: pip install --quiet openpyxl google-auth
+
+      - name: Puxar churn declarado da planilha
+        working-directory: CS
+        continue-on-error: true
+        env:
+          CHURN_SHEET_ID: ${{ vars.CHURN_SHEET_ID }}
+        run: python fetch_churn_planilha.py
+
       - name: Rodar carga (BigQuery + HubSpot + Tino)
         working-directory: CS
         env:
