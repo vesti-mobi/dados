@@ -159,6 +159,19 @@ function tabela(titulo, linhas) {
     console.log('  painel (ano corrente + abertos de qualquer ano): ' + (data.negocios || []).length);
   }
 
+  /* Catálogo de pipelines e estágios: é a resposta para "quais pipelines têm
+     o estágio Novo cliente?" — pergunta do Walid em 29/09/2026 — sem precisar
+     abrir o HubSpot. */
+  console.log('\nPIPELINES DE NEGÓCIO e seus estágios');
+  (pipes.results || []).forEach(p => {
+    console.log('  ' + p.label);
+    console.log('    ' + (p.stages || []).map(s => s.label).join(' · '));
+  });
+  const comNovo = (pipes.results || []).filter(p =>
+    (p.stages || []).some(s => /novo\s*cliente/i.test(s.label || '')));
+  console.log('  pipelines com estágio "Novo cliente": '
+    + (comNovo.map(p => p.label).join(', ') || 'nenhum'));
+
   console.log('\nResumo: reuniões ' + totR.painel + '/' + totR.hubspot
     + ' · tickets ' + totT.painel + '/' + totT.hubspot);
 })().catch(e => { console.error('FALHOU:', e.message); process.exit(1); });
