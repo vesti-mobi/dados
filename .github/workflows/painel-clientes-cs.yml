@@ -86,8 +86,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      # `requests` entra porque o refresh do token da service account
+      # (google.auth.transport.requests) depende dele — sem ele o script falha
+      # com "The requests library is not installed".
       - name: Instalar openpyxl e google-auth
-        run: pip install --quiet openpyxl google-auth
+        run: pip install --quiet openpyxl google-auth requests
 
       - name: Puxar churn declarado da planilha
         working-directory: CS
