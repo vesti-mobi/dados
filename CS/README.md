@@ -8,6 +8,7 @@ index.html          o painel (layout + lógica, sem dependência externa)
 publicar.js         sobe para vesti-mobi/dados/CS via Git Data API
 dados.js            dados reais gerados pelo fetcher — window.PAINEL_DATA
 fetch_dados.js      carga: BigQuery + HubSpot + Tino -> dados.js
+fetch_churn_planilha.py  opcional, roda ANTES do fetch: churn declarado na planilha do time -> churn_planilha.json
 conferir_hubspot.js  confere reunioes/tickets/negocios do painel contra a API do HubSpot (workflow "Conferir HubSpot")
 sincronizar_cs.js    roda ANTES do fetch: corrige angel_id no BigQuery comparando com a produção (Metabase)
 ingerir_stock_logs.js  roda ANTES do fetch: espelha public.stock_logs (Postgres) pra vestilake_BI.postgres_stock_logs
@@ -479,6 +480,50 @@ NPS e CSAT do Oráculo moram em planilhas (a do Oráculo, em comentários de cé
 o CSAT da Plataforma, num formulário do HubSpot. Sem ele, a aba inteira sai da mesma
 carga diária do resto do painel, sem fonte nova para manter de pé. Se um dia esses
 números forem para o BigQuery, o card volta como os outros.
+
+## Novas vendas: proprietário do negócio e pipelines (29/09/2026)
+
+Pedido do Walid: *"no visão geral em novas vendas dá pra olhar, ao invés do CS,
+o proprietário do negócio? Tem vendas da Cris, da Elisa no mesmo pipe;
+precisamos somar os 2 mas separar eles"*.
+
+- O card passou a mostrar **duas colunas lado a lado**: *Proprietário do
+  negócio* (o dono no HubSpot) e *CS da marca* (o do cadastro). Elas divergem
+  com frequência.
+- Ganhou um gráfico de composição **somando por proprietário**.
+- O KPI "quem mais vendeu" **ignora os negócios sem dono** — são muitos (26 dos
+  62 nos últimos 90 dias) e seriam sempre o maior grupo.
+
+E *"pegar todos que são novo cliente independente do pipeline"*: a carga
+escolhia os pipelines pelo estágio **Implantado**; agora aceita também os que
+têm **Novo cliente**. Isso trouxe o **Varejo - Jornada**, que ficava de fora
+porque o estágio final dele se chama "Implementado", com E — são 916 negócios
+que o painel não via. Os cinco pipelines com esse estágio: Sucesso do Cliente,
+Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter e
+Varejo - Jornada. (O catálogo de pipelines e estágios sai no log do workflow
+**Conferir HubSpot**.)
+
+## Churn declarado na planilha (29/09/2026)
+
+Terceira leitura de churn do painel, e a única **escrita por uma pessoa**:
+`fetch_churn_planilha.py` lê a **aba 2026** da planilha que o time preenche e
+aceita só as linhas cuja coluna *observação* é **"solicitou cancelamento"** ou
+**"inadimplente"** — as outras são ignoradas, como o Walid pediu. Vira o card
+*Churn declarado (planilha)* na Gerencial, ao lado de:
+
+| Card | O que é |
+|---|---|
+| Churn do mês | a marca **parou de pagar** (fato, calculado na carga) |
+| Inadimplência hoje | quem está **em atraso agora** (foto) |
+| Churn declarado (planilha) | o que o time **registrou**, com o motivo escrito |
+
+**Pendente:** a planilha ainda não está acessível para a carga — o link responde
+401. Para funcionar, ela precisa estar compartilhada com a service account do
+BigQuery (a mesma da carga, como Leitor) **ou** marcada como "qualquer pessoa
+com o link pode ver". O script tenta as duas coisas, nessa ordem, e enquanto não
+der ele avisa no log, sai sem escrever nada e o card aparece vazio dizendo isso.
+Se a planilha mudar de endereço, dá para apontar outra pelo `CHURN_SHEET_ID` nas
+variáveis do repositório, sem mexer no código.
 
 ## Conferência com o HubSpot (24/09/2026)
 
