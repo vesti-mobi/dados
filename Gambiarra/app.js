@@ -400,40 +400,21 @@ function renderTable(tableId, columns, rows) {
 }
 
 // Exporta o que esta NA TELA (thead/tbody ja renderizados) -- lendo do DOM em
-// vez de recalcular os dados, o CSV sempre bate com os filtros e a ordenacao
-// que a pessoa esta vendo, sem precisar duplicar logica de filtro aqui.
-// Separador ";" (nao ",") porque e' o padrao regional pt-BR que o Excel espera
-// pra abrir direto com um duplo-clique sem vir tudo numa coluna so'.
-function csvCell(v) {
-  const s = String(v ?? "").trim();
-  if (/[;"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-  return s;
-}
+// vez de recalcular os dados, o .xlsx sempre bate com os filtros e a
+// ordenacao que a pessoa esta vendo, sem precisar duplicar logica de filtro
+// aqui. table_to_sheet (SheetJS) cuida do cabecalho/escapes sozinho.
+// XLSX.writeFile grava o arquivo direto, sem blob/URL.revoke manual -- era
+// exatamente esse blob: URL feito na mao que as vezes derrubava a pagina no
+// meio do download. Trocado de CSV pra .xlsx de verdade, pedido da Laura,
+// 30/09/2026 ("deveria baixar um xlsx").
 function exportTableToExcel(tableId, filename) {
   const tbl = document.getElementById(tableId);
   if (!tbl) return;
-  const linhas = [];
-  tbl.querySelectorAll("thead th").forEach((th, i) => {
-    linhas[0] = linhas[0] || [];
-    linhas[0][i] = csvCell(th.textContent);
-  });
-  tbl.querySelectorAll("tbody tr").forEach(tr => {
-    linhas.push(Array.from(tr.querySelectorAll("td")).map(td => csvCell(td.textContent)));
-  });
-  const csv = linhas.map(l => l.join(";")).join("\r\n");
-  // BOM no inicio -- sem isso o Excel abre acento (ã, ç, é) quebrado
-  const blob = new Blob(["﻿" + csv], {type: "text/csv;charset=utf-8;"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const wb = XLSX.utils.table_to_book(tbl, {sheet: "Dados"});
+  XLSX.writeFile(wb, filename);
 }
 function baixarInadimplentesExcel() {
-  exportTableToExcel("tbl-inadimplentes", `inadimplentes_${new Date().toISOString().slice(0,10)}.csv`);
+  exportTableToExcel("tbl-inadimplentes", `inadimplentes_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // Copia o link de checkout da fatura (Iugu) pra CS colar e mandar pro
