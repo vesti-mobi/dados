@@ -1,6 +1,20 @@
 {
   "_leia": "Marcacao manual Atacado x Varejo das filiais novas, usada pela aba de Bonificacao do Painel de Clientes. Vale mais que a classificacao do Relatorio Confeccoes (congelada em 30/03/2026). Escrito pelo botao \"Salvar para todo mundo\" do proprio painel, via stark-admin /api/varejo. Lido por CS/fetch_dados.js em cada carga.",
-  "filiais": {},
-  "extras": [],
-  "atualizadoEm": "2026-08-26T19:18:09.020Z"
+  "filiais": {
+    "01ffd419-f980-4c4a-a2dd-10f42f0560a2": {
+      "tipo": "Atacado",
+      "nome": "Pijamas Lua Cheia Filial",
+      "em": "2026-09-30"
+    }
+  },
+  "extras": [
+    {
+      "mes": "2026-09",
+      "dom": "1375391",
+      "nome": "Charisma",
+      "cs": "Luana Coutinho",
+      "em": "2026-09-30"
+    }
+  ],
+  "atualizadoEm": "2026-09-30T20:23:33.042Z"
 }
