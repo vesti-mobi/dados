@@ -429,6 +429,15 @@ mensalidade do mês atual"*.
 | **todo item recorrente** da fatura: plano, Oráculo, Assistente, Filial, Varejo | **ativação, setup e integração** — cobrança única, não se repete no mês seguinte |
 | a fatura **emitida** no mês, pelo vencimento, paga ou não | fatura **cancelada** — deixou de ser cobrança |
 | a **venda ganha no mês** que ainda não virou fatura, pelo que falta faturar dela | o que já foi faturado no próprio mês (senão conta duas vezes) |
+| | a fatura não paga **com mais de 10 dias de atraso** — prazo em que a plataforma é bloqueada |
+
+O desconto por bloqueio é pedido da Laura no mesmo dia: *"se a plataforma for
+bloqueada precisamos descontar esse valor da mensalidade, no caso das que não
+pagarem a fatura no mês"*. A régua é a mesma da inadimplência do painel
+(`INAD_LIMITE_ALERTA`, 10 dias, decidida em 24/08/2026) e é **datada**, então
+vale para todo mês do histórico — ao contrário da lista de bloqueadas do Painel
+Elisa, que é foto de hoje. Fatura recém-vencida continua contando até completar
+o prazo; se a marca pagar depois, a carga seguinte devolve o valor sozinha.
 
 A consulta `mensalidadeBonif` sai **por categoria de item** (plano, oraculo,
 assistente, filial, setup) e é isso que deixa o desconto funcionar: o negócio

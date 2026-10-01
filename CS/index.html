@@ -1912,12 +1912,13 @@ function linhasMensalidade(m){
   const acc = {};
   const por = (k, campo) => bonifMarcas(k, m).forEach(x=>{
     const a = acc[x.nome] || (acc[x.nome] = {nome:x.nome, cs:x.cs, dominio:x.dominio,
-      valor:0, aberto:0, vendaNova:0});
+      valor:0, aberto:0, vendaNova:0, bloqueada:0});
     a[campo] += x.valor;
   });
   por('mensalidade', 'valor');
   por('mensalidadeEmAberto', 'aberto');
   por('mensalidadeVendaNova', 'vendaNova');
+  por('mensalidadeBloqueada', 'bloqueada');
   return Object.values(acc).map(a=>Object.assign(a, {pago: Math.round((a.valor - a.aberto)*100)/100}))
     .sort((a,b)=>b.valor-a.valor || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
 }
@@ -1973,7 +1974,7 @@ const CARDS_BONIF = [
   {
     id:'mensalidadeCarteira', titulo:'Mensalidade', cor:'#B7791F',
     capa:'Receita recorrente da carteira no mês, marca a marca',
-    fonte:'BigQuery + HubSpot, régua reescrita em <b>01/10/2026</b>. Entra <b>todo item recorrente</b> da fatura Iugu — plano, Oráculo, Assistente, Filial, Varejo —, pelo vencimento e com a fatura <b>emitida</b>, paga ou não (cancelada não conta). Entra também a <b>venda ganha no mês que ainda não virou fatura</b>, pelo que falta faturar dela: negócio fechado dia 3 que só será cobrado no ciclo seguinte conta no mês em que foi vendido, sem contar duas vezes o que já foi faturado. Ficam de fora <b>ativação, setup e integração</b> — cobrança única, não se repete no mês seguinte. É a regra de <b>Mensalidade</b> da aba Bonificação. O card Receita T3+ é outra pergunta: lá entra a fatura inteira dos clientes não-Starter.',
+    fonte:'BigQuery + HubSpot, régua reescrita em <b>01/10/2026</b>. Entra <b>todo item recorrente</b> da fatura Iugu — plano, Oráculo, Assistente, Filial, Varejo —, pelo vencimento e com a fatura <b>emitida</b>, paga ou não (cancelada não conta). Entra também a <b>venda ganha no mês que ainda não virou fatura</b>, pelo que falta faturar dela: negócio fechado dia 3 que só será cobrado no ciclo seguinte conta no mês em que foi vendido, sem contar duas vezes o que já foi faturado. <b>Sai da conta</b> a fatura não paga que já passou de 10 dias de atraso — o prazo em que a plataforma é bloqueada: a marca parou de usar, então deixou de ser receita da carteira (se ela pagar depois, a carga seguinte devolve o valor). Ficam de fora <b>ativação, setup e integração</b> — cobrança única, não se repete no mês seguinte. É a regra de <b>Mensalidade</b> da aba Bonificação. O card Receita T3+ é outra pergunta: lá entra a fatura inteira dos clientes não-Starter.',
     linhas:ctx=>linhasMensalidade(ctx.m),
     resumo:(rows,ctx)=>{ const t = bonifTotal('mensalidade', ctx.m), ant = bonifTotal('mensalidade', mesAnterior(ctx.m));
       return {v:fmt.moneyCompact(t.valor),
@@ -1984,12 +1985,15 @@ const CARDS_BONIF = [
       const anoAnt = bonifTotal('mensalidade', mesmoMesAnoAnterior(ctx.m));
       const aberto = soma(rows,'aberto'), nAberto = rows.filter(r=>r.aberto>0).length;
       const novo = soma(rows,'vendaNova'), nNovo = rows.filter(r=>r.vendaNova>0).length;
+      const bloq = soma(rows,'bloqueada'), nBloq = rows.filter(r=>r.bloqueada>0).length;
       return [
         {l:'Recorrente no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.length)+' marcas na conta'},
         {l:'Venda nova do mês', v:fmt.moneyCompact(novo),
          s: novo ? fmt.int(nNovo)+' marcas com venda ganha ainda não faturada' : 'nenhuma venda nova fora da fatura'},
         {l:'Ainda não pago', v:fmt.moneyCompact(aberto),
-         s: aberto ? fmt.int(nAberto)+' marcas com fatura emitida e não paga' : 'tudo pago no mês'},
+         s: aberto ? fmt.int(nAberto)+' marcas com fatura no prazo de atraso' : 'tudo pago no mês'},
+        {l:'Descontado por bloqueio', v:fmt.moneyCompact(bloq),
+         s: bloq ? fmt.int(nBloq)+' marcas passaram de 10 dias sem pagar — saíram da conta' : 'nenhuma marca bloqueada no mês'},
         {l:'Mês anterior', v:fmt.moneyCompact(ant.valor),
          s: ant.valor ? (t.valor-ant.valor>=0?'+':'')+fmt.moneyCompact(t.valor-ant.valor)+' de diferença'
                       + (aberto ? ' · '+fmt.moneyCompact(aberto)+' ainda em cobrança' : '') : 'sem base'},
@@ -2001,7 +2005,8 @@ const CARDS_BONIF = [
     colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Recorrente no mês', r:true, f:fmt.money},
       {k:'pago', l:'Do qual já pago', r:true, f:fmt.money},
       {k:'aberto', l:'Ainda não pago', r:true, f:v=>v?fmt.money(v):'—'},
-      {k:'vendaNova', l:'Venda nova (sem fatura)', r:true, f:v=>v?fmt.money(v):'—'}],
+      {k:'vendaNova', l:'Venda nova (sem fatura)', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'bloqueada', l:'Descontado (bloqueio)', r:true, f:v=>v?fmt.money(v):'—'}],
   },
   {
     id:'tino40', titulo:'Tino: marcas com 40+ eventos', cor:'#B7791F',
@@ -4487,6 +4492,7 @@ function linhasBonificacao(mesForcado){
       l.filiaisSemTipo = 0; l['_quem_filiaisSemTipo'] = [];   // não é regra, é aviso
       l.mensalidadeEmAberto = 0; l['_quem_mensalidadeEmAberto'] = [];  // idem
       l.mensalidadeVendaNova = 0; l['_quem_mensalidadeVendaNova'] = []; // idem
+      l.mensalidadeBloqueada = 0; l['_quem_mensalidadeBloqueada'] = []; // idem
       porCs.set(cs,l);
     }
     return l;
@@ -6049,8 +6055,10 @@ function celula(r,c){
          quanto ainda não entrou no caixa. */
       if(c.k==='mensalidade'){
         const novo = r.mensalidadeVendaNova || 0, aberto = r.mensalidadeEmAberto || 0;
+        const bloq = r.mensalidadeBloqueada || 0;
         if(novo) sub = sub + `<span class="cell-sub">${fmt.moneyCompact(novo)} <em>de venda nova</em></span>`;
         if(aberto) sub = sub + `<span class="cell-sub">${fmt.moneyCompact(aberto)} <em>ainda não pago</em></span>`;
+        if(bloq) sub = sub + `<span class="cell-sub h-bad">−${fmt.moneyCompact(bloq)} <em>bloqueadas</em></span>`;
       }
       /* Mês em andamento: embaixo do número real vem quanto ele deve virar até
          o fim do mês, com o método escrito no balãozinho. Mês fechado não tem

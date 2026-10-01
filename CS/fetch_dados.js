@@ -499,7 +499,19 @@ async function puxarBQ() {
     SELECT cnpj, ANY_VALUE(payer) payer,
            FORMAT_DATE('%Y-%m-%d', DATE(due)) d, categoria,
            ROUND(SUM(cents)/100,2) valor,
-           ROUND(SUM(IF(status IN ('paid','externally_paid'), cents, 0))/100,2) valor_pago
+           ROUND(SUM(IF(status IN ('paid','externally_paid'), cents, 0))/100,2) valor_pago,
+           /* O que não foi pago e já passou do prazo que bloqueia a plataforma.
+              Pedido da Laura em 01/10/2026: "se a plataforma for bloqueada
+              precisamos descontar esse valor da mensalidade, no caso das que
+              não pagarem a fatura no mês". A régua é a mesma da inadimplência
+              do painel (${INAD_LIMITE_ALERTA} dias de atraso, decidida em
+              24/08/2026) — e é datada, então vale para todo mês do histórico,
+              ao contrário da lista de bloqueadas, que é foto de hoje.
+              Fatura que vencer agora segue contando até completar o prazo; se
+              a marca pagar depois, a carga seguinte devolve o valor sozinha. */
+           ROUND(SUM(IF(status NOT IN ('paid','externally_paid')
+                        AND DATE(due) < DATE_SUB(CURRENT_DATE(), INTERVAL ${INAD_LIMITE_ALERTA} DAY),
+                        cents, 0))/100,2) valor_bloqueado
     FROM cat
     GROUP BY cnpj, d, categoria`);
 
@@ -2452,6 +2464,9 @@ function montar(bqd, hsd, tinoDados) {
            + 'Entra TODO item recorrente da fatura Iugu — plano, Oráculo, Assistente, Filial, Varejo —, '
            + 'pelo vencimento e com a fatura EMITIDA, paga ou não (cancelada não conta). '
            + 'Entra também a VENDA GANHA no mês que ainda não virou fatura, pelo que falta faturar dela. '
+           + 'SAI a fatura não paga que já passou de ' + INAD_LIMITE_ALERTA + ' dias de atraso — prazo em que a '
+           + 'plataforma é bloqueada: a marca parou de usar, então deixa de ser receita da carteira (se pagar '
+           + 'depois, a carga seguinte devolve o valor). '
            + 'Fica de fora só ativação/setup e integração: são cobrança única, não se repetem no mês seguinte. '
            + 'O comparativo é a MARCA D\'ÁGUA do CS: a maior mensalidade que ele já fez em um mês, '
            + 'não o mês anterior (mudou em 31/08/2026).' },
@@ -2563,10 +2578,15 @@ function montar(bqd, hsd, tinoDados) {
     const a = fatDoMes.get(ch) || (fatDoMes.set(ch, {}), fatDoMes.get(ch));
     a[r.categoria] = r2((a[r.categoria] || 0) + num(r.valor));
     if (r.categoria === 'setup') return;          // cobrança única fica fora da régua
-    somaBon(mes, m.cs, 'mensalidade', num(r.valor), m.nome);
+    /* Fatura não paga que já passou do prazo de bloqueio sai da conta: a marca
+       parou de usar a plataforma, então aquilo não é receita da carteira. */
+    const bloqueado = num(r.valor_bloqueado);
+    const conta = r2(num(r.valor) - bloqueado);
+    if (conta > 0) somaBon(mes, m.cs, 'mensalidade', conta, m.nome);
+    if (bloqueado > 0) somaBon(mes, m.cs, 'mensalidadeBloqueada', bloqueado, m.nome);
     /* Não é regra: é o "deste total, tanto ainda não entrou" que a célula
-       mostra ao lado, para a CS saber o que está só esperando pagamento. */
-    const naoPago = r2(num(r.valor) - num(r.valor_pago));
+       mostra ao lado — só o que ainda está no prazo, porque o resto já saiu. */
+    const naoPago = r2(num(r.valor) - num(r.valor_pago) - bloqueado);
     if (naoPago > 0) somaBon(mes, m.cs, 'mensalidadeEmAberto', naoPago, m.nome);
   });
 
