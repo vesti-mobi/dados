@@ -340,9 +340,9 @@ button,input,select{font:inherit;color:inherit}
 .kpi:first-child{background:var(--acc-soft)}
 .kpi:first-child .eyebrow{color:var(--acc)}
 .kpi:first-child .kpi-val{color:var(--acc)}
-.kpi .eyebrow{display:block;margin-bottom:9px}
-.kpi-val{font-family:var(--f-num);font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
-.kpi-sub{margin-top:6px;font-size:11.5px;color:var(--ink-3)}
+.kpi .eyebrow{display:block;margin-bottom:9px;font-size:11px;font-weight:600;letter-spacing:.1em}
+.kpi-val{font-family:var(--f-num);font-size:28px;font-weight:650;letter-spacing:-.025em;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-sub{margin-top:7px;font-size:12.5px;color:var(--ink-2);line-height:1.45}
 .kpi-sub b{color:var(--ink-2);font-weight:600}
 
 /* --- régua do período (elemento-assinatura) --- */
@@ -361,7 +361,7 @@ button,input,select{font:inherit;color:inherit}
 .card-head{display:flex;align-items:center;gap:14px;padding:15px 18px 0;flex-wrap:wrap}
 .card-head h3{font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:-.012em;margin:0}
 .legend{margin-left:auto;display:flex;gap:13px;flex-wrap:wrap}
-.legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:11.5px;color:var(--ink-2)}
+.legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:12.5px;color:var(--ink-2)}
 .legend i b{width:9px;height:9px;border-radius:2px;display:block}
 .chart-wrap{position:relative;padding:6px 8px 10px}
 .tip{
@@ -496,19 +496,24 @@ td.strong{font-weight:600}
 /* --- cards da aba Gerencial --- */
 .gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:22px}
 
+/* Card da grade, engrossado em 02/10/2026: "a fonte está muito pequena e fina
+   dos cards". Era rótulo de 10px, número de 26 e legenda de 11,5 em cinza
+   claro — no monitor da sala dava para ver o número e mais nada. Subiu tudo um
+   degrau, e a legenda saiu do cinza mais claro para o médio. */
 .gcard{
   display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
   background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gc,var(--acc));
-  border-radius:var(--r-lg);box-shadow:var(--shadow);padding:15px 17px 14px;
+  border-radius:var(--r-lg);box-shadow:var(--shadow);padding:17px 19px 16px;
   font-family:inherit;color:inherit;transition:transform .13s ease,box-shadow .13s ease,background .13s ease;
 }
 .gcard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(17,20,24,.05), 0 16px 28px -18px rgba(17,20,24,.45)}
 .gcard.on{background:var(--gc-soft,var(--acc-soft));border-color:var(--gc,var(--acc))}
-.gc-t{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc,var(--ink-3))}
-.gc-v{font-family:var(--f-num);font-size:26px;font-weight:600;letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums;line-height:1.1;margin-top:5px}
-.gc-s{font-size:11.5px;color:var(--ink-3);line-height:1.35}
-.gc-go{margin-top:9px;font-size:11.5px;font-weight:600;color:var(--gc,var(--acc))}
+.gc-t{font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--gc,var(--ink-3))}
+.gc-v{font-family:var(--f-num);font-size:31px;font-weight:650;letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;line-height:1.08;margin-top:7px}
+.gc-s{font-size:13px;color:var(--ink-2);line-height:1.45;margin-top:2px}
+.gc-go{margin-top:11px;font-size:12.5px;font-weight:600;color:var(--gc,var(--acc))}
 
 .gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
 .gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}

@@ -37,6 +37,13 @@ precisar de contraste de família — e a família Plex já estava aqui, no mono
 rótulos. KPI, valor de card e health score usam `--f-num` (Public Sans com
 `tabular-nums`, para as colunas baterem na vertical).
 
+**Corpo de texto legível.** Na mesma rodada a Laura apontou que a fonte dos
+cards estava "muito pequena e fina": rótulo de 10px, número de 26 e legenda de
+11,5px em cinza claro. Tudo subiu um degrau — rótulo 11px em 600, número 31px
+em 650, legenda 13px no cinza médio (`--ink-2`, não mais o `--ink-3`) — e o
+mesmo valeu para os KPIs do topo e a legenda dos gráficos. Texto pequeno em
+grotesca leve, num monitor de sala, simplesmente não é lido.
+
 **O "?" no lugar do parágrafo.** O `desc` de cada aba continua sendo a régua
 dela — só não mora mais embaixo do título, onde virava paredão e empurrava a
 tabela para baixo. O botão ao lado do título abre um modal com quatro blocos,
