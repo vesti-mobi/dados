@@ -461,14 +461,19 @@ async function puxarBQ() {
       AND DATE(due) BETWEEN DATE '${INICIO}' AND DATE '${HOJE_ISO}'
     GROUP BY 1,3`);
 
-  /* A MESMA conta, com as faturas que ainda NÃO foram pagas. A régua da
-     bonificação é "plano pago, pelo vencimento", e isso deixa o mês recém-
-     fechado sempre menor do que vai ficar: marca que vence dia 28 costuma
-     pagar depois. Em 01/10/2026 a Luana via setembro R$ 6,2 mil abaixo de
-     agosto, e R$ 5,9 mil disso eram seis faturas emitidas e ainda em aberto,
-     não perda. O número da regra não muda — isto entra ao lado, para a célula
-     dizer quanto ainda está em cobrança. */
-  const mensalidadeAberta = await q('Iugu: plano ainda em aberto, por CNPJ × dia', `
+  /* RECEITA DE MENSALIDADE da bonificação — régua reescrita em 01/10/2026 a
+     pedido da Laura. Antes era "só a linha de PLANO das faturas PAGAS", e isso
+     deixava a CS num lugar esquisito: ela fechava R$ 10 mil no mês e via o
+     número cair, porque (a) Oráculo, Assistente, Filial e Varejo não contavam
+     e (b) quem vence dia 28 paga em novembro. Agora:
+       - entra TODO item recorrente da fatura, não só o plano;
+       - fica de fora só ativação/setup, que é cobrança única e não se repete
+         no mês seguinte — inflar a mensalidade com ela criaria um degrau falso;
+       - conta a fatura EMITIDA no mês (vencimento), paga ou não; cancelada não
+         entra, porque deixou de ser cobrança.
+     Sai por categoria de item: é por ela que a venda nova do mês sabe se já
+     foi faturada, lá na montagem da bonificação. */
+  const mensalidadeBonif = await q('Iugu: mensalidade da bonificação, por CNPJ × dia × categoria', `
     WITH itens AS (
       SELECT id, items_id,
              ANY_VALUE(payer_cpf_cnpj) cnpj, ANY_VALUE(payer_name) payer, ANY_VALUE(status) status,
@@ -478,19 +483,25 @@ async function puxarBQ() {
       FROM ${DS}.iugu_invoices
       WHERE payer_cpf_cnpj IS NOT NULL AND payer_cpf_cnpj != ''
       GROUP BY id, items_id
+    ),
+    cat AS (
+      SELECT REGEXP_REPLACE(cnpj,'[^0-9]','') cnpj, payer, status, cents, due,
+        CASE
+          WHEN LOWER(IFNULL(item,'')) LIKE '%oraculo%' OR LOWER(IFNULL(item,'')) LIKE '%oráculo%' THEN 'oraculo'
+          WHEN LOWER(IFNULL(item,'')) LIKE '%assistente%' OR LOWER(IFNULL(item,'')) LIKE '%agente%' THEN 'assistente'
+          WHEN LOWER(IFNULL(item,'')) LIKE '%filial%' THEN 'filial'
+          WHEN LOWER(IFNULL(item,'')) LIKE '%ativa%' OR LOWER(IFNULL(item,'')) LIKE '%setup%' THEN 'setup'
+          ELSE 'plano' END categoria
+      FROM itens
+      WHERE status IN ('paid','externally_paid',${STATUS_EM_ABERTO}) AND due IS NOT NULL
+        AND DATE(due) BETWEEN DATE '${INICIO}' AND DATE '${HOJE_ISO}'
     )
-    SELECT REGEXP_REPLACE(cnpj,'[^0-9]','') cnpj, ANY_VALUE(payer) payer,
-           FORMAT_DATE('%Y-%m-%d', DATE(due)) d,
-           ROUND(SUM(IF(
-             LOWER(IFNULL(item,'')) LIKE '%oraculo%' OR LOWER(IFNULL(item,'')) LIKE '%oráculo%'
-          OR LOWER(IFNULL(item,'')) LIKE '%assistente%' OR LOWER(IFNULL(item,'')) LIKE '%agente%'
-          OR LOWER(IFNULL(item,'')) LIKE '%filial%'
-          OR LOWER(IFNULL(item,'')) LIKE '%ativa%'  OR LOWER(IFNULL(item,'')) LIKE '%setup%',
-             0, cents))/100,2) plano
-    FROM itens
-    WHERE status IN (${STATUS_EM_ABERTO}) AND due IS NOT NULL
-      AND DATE(due) BETWEEN DATE '${INICIO}' AND DATE '${HOJE_ISO}'
-    GROUP BY 1,3`);
+    SELECT cnpj, ANY_VALUE(payer) payer,
+           FORMAT_DATE('%Y-%m-%d', DATE(due)) d, categoria,
+           ROUND(SUM(cents)/100,2) valor,
+           ROUND(SUM(IF(status IN ('paid','externally_paid'), cents, 0))/100,2) valor_pago
+    FROM cat
+    GROUP BY cnpj, d, categoria`);
 
   /* O plano não é uma coluna: é a linha de item mais cara da fatura, tirando
      desconto/Oráculo. Mesma regra do CS-Sucesso, para os dois painéis
@@ -764,7 +775,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
-           primeiraVP, mensalidadeAberta,
+           primeiraVP, mensalidadeBonif,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -2437,8 +2448,11 @@ function montar(bqd, hsd, tinoDados) {
            + 'não o mês anterior (mudou em 31/08/2026) — a régua da Laura é "a cada cliente extra".' },
     { k: 'mensalidade', titulo: 'Receita de mensalidade', unidade: 'R$',
       comparacao: 'marcaDagua',
-      regra: 'Soma das linhas de PLANO das faturas Iugu pagas das marcas do CS, pelo vencimento. '
-           + 'Não inclui Oráculo, Filial, Assistente nem ativação (esses são "Outros (Iugu)"). '
+      regra: 'Receita recorrente das marcas do CS no mês (régua reescrita em 01/10/2026). '
+           + 'Entra TODO item recorrente da fatura Iugu — plano, Oráculo, Assistente, Filial, Varejo —, '
+           + 'pelo vencimento e com a fatura EMITIDA, paga ou não (cancelada não conta). '
+           + 'Entra também a VENDA GANHA no mês que ainda não virou fatura, pelo que falta faturar dela. '
+           + 'Fica de fora só ativação/setup e integração: são cobrança única, não se repetem no mês seguinte. '
            + 'O comparativo é a MARCA D\'ÁGUA do CS: a maior mensalidade que ele já fez em um mês, '
            + 'não o mês anterior (mudou em 31/08/2026).' },
     { k: 'vestipago', titulo: 'VestiPago transacionado', unidade: 'R$',
@@ -2535,22 +2549,71 @@ function montar(bqd, hsd, tinoDados) {
     const m = porDom.get(ch.slice(i + 1));
     somaBon(ch.slice(0, i), m.cs, 'integracoesAtivas', 1, m.nome);
   });
-  // Mensalidade: passa pelo mesmo casamento CNPJ -> nome do pagador da tabela geral
-  bqd.mensalidade.forEach(r => {
+  /* MENSALIDADE — fatura recorrente EMITIDA no mês (ver a consulta
+     mensalidadeBonif). Mesmo casamento CNPJ -> nome do pagador do resto da
+     carga. `fatDoMes` guarda o valor por categoria de item: é com ele que a
+     venda nova, logo abaixo, descobre se já foi faturada. */
+  const fatDoMes = new Map();
+  (bqd.mensalidadeBonif || []).forEach(r => {
     if (!dataOk(r.d)) return;
     const dom = domDaFatura(r); if (!dom) return;
     const m = porDom.get(dom); if (!m) return;
-    somaBon(mesDe(r.d), m.cs, 'mensalidade', num(r.plano), m.nome);
+    const mes = mesDe(r.d);
+    const ch = mes + '|' + dom;
+    const a = fatDoMes.get(ch) || (fatDoMes.set(ch, {}), fatDoMes.get(ch));
+    a[r.categoria] = r2((a[r.categoria] || 0) + num(r.valor));
+    if (r.categoria === 'setup') return;          // cobrança única fica fora da régua
+    somaBon(mes, m.cs, 'mensalidade', num(r.valor), m.nome);
+    /* Não é regra: é o "deste total, tanto ainda não entrou" que a célula
+       mostra ao lado, para a CS saber o que está só esperando pagamento. */
+    const naoPago = r2(num(r.valor) - num(r.valor_pago));
+    if (naoPago > 0) somaBon(mes, m.cs, 'mensalidadeEmAberto', naoPago, m.nome);
   });
-  /* Não é regra (não está em METRICAS_BONIFICACAO): é o "ainda em cobrança"
-     que a célula mostra ao lado do número, para ninguém ler fatura atrasada
-     como queda de carteira. */
-  (bqd.mensalidadeAberta || []).forEach(r => {
-    if (!dataOk(r.d)) return;
-    const dom = domDaFatura(r); if (!dom) return;
-    const m = porDom.get(dom); if (!m) return;
-    somaBon(mesDe(r.d), m.cs, 'mensalidadeEmAberto', num(r.plano), m.nome);
+
+  /* VENDA NOVA DO MÊS. Pedido da Laura em 01/10/2026: "as vendas do mês atual
+     já devem entrar na mensalidade do mês atual". O negócio ganho no HubSpot
+     entra pelo valor dele; se a fatura daquele MESMO produto já caiu no mês,
+     entra só a diferença — senão a Vesti contaria duas vezes a mesma venda.
+     Ex. real de setembro/2026: o upgrade da Lesto (ganho em 03/09, R$ 1.100)
+     entra, porque a fatura de 15/09 ainda veio com o plano antigo de R$ 298;
+     o setup da Biotipo não entra, porque setup está fora da régua. */
+  const CAT_DO_PRODUTO = {
+    'Oráculo': 'oraculo',
+    'Tino': 'assistente', 'Assistente do Vendedor': 'assistente',
+    'Filial': 'filial', 'Multiloja': 'filial',
+    'Upgrade de plano': 'plano', 'Outros': 'plano',
+    /* Fora da régua, como o setup: cobrança de uma vez só. */
+    'Integração': null, 'VestiPago': null, 'Antecipação': null,
+  };
+  const marcaDoNegocio = (() => {
+    const porNome = new Map(), porChave = new Map();
+    porDom.forEach(m => {
+      [m.nome, m.social].filter(Boolean).forEach(n => {
+        const k = semAcento(n); if (k && !porNome.has(k)) porNome.set(k, m);
+        const c = chaveMarca(n); if (c.length > 3 && !porChave.has(c)) porChave.set(c, m);
+      });
+    });
+    return nome => porNome.get(semAcento(nome || '')) || porChave.get(chaveMarca(nome || '')) || null;
+  })();
+  let vendaNova = 0, vendaSemMarca = 0;
+  (hsd.negocios || []).forEach(n => {
+    if (n.status !== 'Ganho' || !n.fechadoEm || !dataOk(n.fechadoEm)) return;
+    const cat = CAT_DO_PRODUTO[n.produto]; if (!cat) return;
+    const valor = num(n.valor); if (!(valor > 0)) return;
+    const m = marcaDoNegocio(n.cliente);
+    if (!m) { vendaSemMarca++; return; }
+    const mes = mesDe(n.fechadoEm);
+    const jaFaturado = (fatDoMes.get(mes + '|' + m.dom) || {})[cat] || 0;
+    const novo = r2(Math.max(0, valor - jaFaturado));
+    if (novo <= 0) return;
+    vendaNova = r2(vendaNova + novo);
+    somaBon(mes, m.cs, 'mensalidade', novo, m.nome);
+    somaBon(mes, m.cs, 'mensalidadeVendaNova', novo, m.nome);
   });
+  console.log('  venda nova somada à mensalidade'.padEnd(44) + ('R$ ' + Math.round(vendaNova)).padStart(8));
+  if (vendaSemMarca) {
+    console.log('  negócio ganho sem marca no cadastro'.padEnd(44) + String(vendaSemMarca).padStart(8));
+  }
   /* Varejos novos: só filial classificada como VAREJO entra na conta. A que a
      classificação ainda não alcançou é contada à parte, em 'filiaisSemTipo', que
      não é uma regra (não está em METRICAS_BONIFICACAO) — serve só para a célula
