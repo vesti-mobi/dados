@@ -1909,7 +1909,39 @@ function montar(bqd, hsd, tinoDados) {
       if (k && k.length >= 4 && !fatPorNome.has(k)) fatPorNome.set(k, r);
     });
   });
-  const faturaDaMarca = (m) => (m.cnpj && fatPorCnpj.get(m.cnpj))
+
+  /* A agregação acima é por CNPJ, e marca com MAIS DE UM CNPJ ficava partida:
+     o grupo achado pelo CNPJ do cadastro era o único olhado, e o resgate por
+     nome nem chegava a rodar. Quando a assinatura é reemitida em outro CNPJ
+     (troca de razão social, matriz que passa a pagar pela filial), a última
+     fatura paga congelava na do CNPJ antigo e a marca virava churn sozinha —
+     foi o caso da Mon Clos, com churn em 05/09/2026 e fatura paga em
+     23/09/2026. Aqui os grupos da MESMA marca são somados, pelo mesmo
+     casamento CNPJ -> nome do pagador que o resto da carga usa. */
+  const fatPorDom = new Map();
+  const menorData = (a, b) => (a && b) ? (a < b ? a : b) : (a || b);
+  const maiorData = (a, b) => (a && b) ? (a > b ? a : b) : (a || b);
+  let fatUnidas = 0;
+  bqd.faturas.forEach(r => {
+    const dom = domDaFatura(r);
+    if (!dom) return;
+    const a = fatPorDom.get(dom);
+    if (!a) { fatPorDom.set(dom, Object.assign({}, r)); return; }
+    fatUnidas++;
+    a.proximo_venc     = menorData(a.proximo_venc, r.proximo_venc);
+    a.ultima_paga      = maiorData(a.ultima_paga, r.ultima_paga);
+    a.venc_mais_antigo = menorData(a.venc_mais_antigo, r.venc_mais_antigo);
+    a.faturas_vencidas = (a.faturas_vencidas || 0) + (r.faturas_vencidas || 0);
+    a.valor_vencido    = r2((a.valor_vencido || 0) + (r.valor_vencido || 0));
+    /* Plano e pagador saem da fatura paga mais recente entre os CNPJs. */
+    if (r.ultima && (!a.ultima || String(r.ultima.due) > String(a.ultima.due))) {
+      a.ultima = r.ultima; a.cnpj = r.cnpj; a.payer = r.payer;
+    }
+  });
+  console.log('  faturas de CNPJ extra unidas à marca'.padEnd(44) + String(fatUnidas).padStart(8));
+
+  const faturaDaMarca = (m) => fatPorDom.get(m.dom)
+    || (m.cnpj && fatPorCnpj.get(m.cnpj))
     || fatPorNome.get(chaveMarca(m.nome || ''))
     || fatPorNome.get(chaveMarca(m.social || ''))
     || null;

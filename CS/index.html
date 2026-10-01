@@ -1665,10 +1665,28 @@ function linhasVpChurn(m){
    foto continua no card de inadimplência, dizendo o que é. */
 function linhasChurnMes(m){
   const p = janelaDoMes(m);
+  /* O contexto da fatura vem junto desde 01/10/2026: a Laura viu a Kelly
+     Rodrigues Fortaleza no card e estranhou, porque a marca continua vendendo
+     todo dia. Ela está certa em estranhar, e o card tinha que explicar sozinho:
+     a régua aqui é de PAGAMENTO — a última fatura paga completou os 45 dias e a
+     de setembro foi CANCELADA no Iugu, então não existe fatura futura em
+     aberto. Marca que vende e não paga é exatamente o caso que interessa ver,
+     mas sem a data da última fatura ao lado a linha parece erro. */
+  const porDom = {};
+  (DATA.faturasCliente||[]).forEach(f=>{
+    const a = porDom[f.dominio] || (porDom[f.dominio] = {paga:null, ultima:null});
+    if(f.pago && (!a.paga || f.vencimento > a.paga.vencimento)) a.paga = f;
+    if(!a.ultima || f.vencimento > a.ultima.vencimento) a.ultima = f;
+  });
   return soDoFoco(DATA.clientes.filter(c=>c.dataChurn && c.dataChurn>=p.ini && c.dataChurn<=p.fim)
-    .map(c=>({nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
-      plano:c.plano, data:c.dataChurn, ultimoPedido:c.ultimoPedido,
-      diasSemPedido:c.diasSemPedido, emAberto:c.valorEmAberto||0})))
+    .map(c=>{ const f = porDom[c.dominio] || {};
+      const dias = diasDe(c.ultimoPedido);
+      return {nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
+        plano:c.plano, data:c.dataChurn, ultimoPedido:c.ultimoPedido,
+        diasSemPedido:c.diasSemPedido, emAberto:c.valorEmAberto||0,
+        ultimaPaga: f.paga ? f.paga.vencimento : null,
+        ultimaFatura: f.ultima ? fmt.date(f.ultima.vencimento) + ' · ' + (f.ultima.pago ? 'paga' : (f.ultima.status||'em aberto')) : null,
+        aindaVende: dias != null && dias <= 7}; }))
     .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
 }
 /* Foto de hoje. NÃO é recortada por mês de propósito: recortar foto por mês é
@@ -2136,7 +2154,7 @@ const CARDS_GERENCIAL = [
   {
     id:'churnMes', titulo:'Churn do mês', cor:'#C0453B',
     capa:'Marcas que pararam de pagar dentro do mês',
-    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
+    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. <b>A régua é de pagamento, não de venda</b>: marca que continua vendendo todo dia aparece aqui se a fatura dela foi cancelada no Iugu ou passou a ser paga por outro CNPJ — por isso as colunas de fatura e "ainda vende" ficam ao lado, para a linha se explicar. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
     vazio:'Nenhuma marca da carteira parou de pagar neste mês.',
     linhas:ctx=>linhasChurnMes(ctx.m),
     resumo:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m)).length;
@@ -2150,13 +2168,17 @@ const CARDS_GERENCIAL = [
       return [
         {l:'Marcas que pararam', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
         {l:'Média dos 12 meses', v:fmt.int(Math.round(media12)), s:'na carteira em foco'},
-        {l:'Já sem vender', v:fmt.int(semPedido), s:'mais de 60 dias sem pedido quando saíram'},
+        {l:'Ainda vendendo', v:fmt.int(rows.filter(r=>r.aindaVende).length),
+         s:'pararam de pagar mas venderam esta semana — fatura cancelada ou trocada de CNPJ'},
         {l:'Deixaram em aberto', v:fmt.moneyCompact(soma(rows,'emAberto')), s:'fatura vencida e não paga'},
       ]; },
     metricas:[{k:'qtd', l:'Marcas que pararam de pagar', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Parou de pagar em', f:fmt.date}, {k:'plano', l:'Plano'},
-      {k:'canal', l:'Canal'}, {k:'ultimoPedido', l:'Último pedido', f:fmt.date},
-      {k:'diasSemPedido', l:'Dias sem pedido', r:true, f:v=>v==null?'—':fmt.int(v)},
+    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Parou de pagar em', f:fmt.date},
+      {k:'ultimaPaga', l:'Última fatura paga', f:fmt.date},
+      {k:'ultimaFatura', l:'Última fatura emitida', f:v=>v||'—'},
+      {k:'aindaVende', l:'Ainda vende?', f:v=>v?'sim, vendeu esta semana':'não'},
+      {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
+      {k:'ultimoPedido', l:'Último pedido', f:fmt.date},
       {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
   },
   {

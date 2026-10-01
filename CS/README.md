@@ -351,6 +351,33 @@ Viraram dois cards:
 Na carteira das três CS, o churn por mês em 2026 ficou: jan 3, fev 0, mar 0, abr
 0, mai 2, jun 2, jul 1, ago 6, set 4.
 
+#### Duas correções a partir de um caso real (01/10/2026)
+
+Pergunta da Laura: *"na aba churn dentro da gerencial aparece Kelly Rodrigues
+Fortaleza, por que ela aparece? o pagamento parece que foi há 3 dias"*. Puxar o
+fio dessa marca achou um acerto e um erro.
+
+**Acerto — a régua é de pagamento, não de venda.** A Kelly Rodrigues Fortaleza
+(domínio 2052347) tem a última fatura paga vencendo em **14/08**, a de **14/09
+cancelada no Iugu** e nenhuma futura em aberto: aos 45 dias, 28/09, ela entrou
+no card. Só que a loja **vende todo dia** — 17, 36 e 9 pedidos em 28, 29 e 30/09.
+É exatamente o caso que interessa ver (vende e não paga), mas a linha não se
+explicava sozinha. O card ganhou três colunas — **última fatura paga**, **última
+fatura emitida** (com o status, inclusive `canceled`) e **ainda vende?** — e um
+KPI "Ainda vendendo". Nos dados da carga não existe pagamento dela depois de
+30/07 em nenhum dos dois CNPJs do grupo (o da Fortaleza, 66.285.192/0001-38, e o
+da Kelly Rodrigues Store, 50.545.774/0001-76, que pagou pela última vez em
+28/08); o espelho do Iugu está em dia (há pagamentos registrados até 29/09).
+
+**Erro — marca com mais de um CNPJ virava churn sozinha.** O agregado de faturas
+é por CNPJ e `faturaDaMarca()` olhava **um** grupo: o do CNPJ do cadastro. Quando
+a assinatura é reemitida em outro CNPJ, a "última fatura paga" congelava na do
+CNPJ antigo. A **Mon Clos** aparecia com churn em 05/09 — 22/07 + 45 dias — tendo
+pago R$ 1.100 de Plano Pro em **23/08 e 23/09**. Agora os grupos da mesma marca
+são unidos por domínio (mesmo casamento CNPJ → nome do pagador do resto da
+carga) antes de calcular churn, plano, vencimento e inadimplência; a carga
+registra quantas faturas de CNPJ extra foram unidas.
+
 ### As medidas da Bonificação na Gerencial (28/09/2026)
 
 Pedido do Walid: ver na Gerencial os mesmos pontos que a bonificação mede.
