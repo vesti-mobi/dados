@@ -2154,7 +2154,7 @@ const CARDS_GERENCIAL = [
   {
     id:'churnMes', titulo:'Churn do mês', cor:'#C0453B',
     capa:'Marcas que pararam de pagar dentro do mês',
-    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. <b>A régua é de pagamento, não de venda</b>: marca que continua vendendo todo dia aparece aqui se a fatura dela foi cancelada no Iugu ou passou a ser paga por outro CNPJ — por isso as colunas de fatura e "ainda vende" ficam ao lado, para a linha se explicar. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
+    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. A coluna <b>Virou churn em</b> é a data em que a marca completou os 45 dias — ela é calculada (última fatura paga + 45), <b>não é a data de um pagamento</b>; o pagamento está na coluna ao lado. <b>A régua é de pagamento, não de venda</b>: marca que continua vendendo todo dia aparece aqui se a fatura dela foi cancelada no Iugu ou passou a ser paga por outro CNPJ — por isso as colunas de fatura e "ainda vende" ficam ao lado, para a linha se explicar. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
     vazio:'Nenhuma marca da carteira parou de pagar neste mês.',
     linhas:ctx=>linhasChurnMes(ctx.m),
     resumo:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m)).length;
@@ -2173,7 +2173,7 @@ const CARDS_GERENCIAL = [
         {l:'Deixaram em aberto', v:fmt.moneyCompact(soma(rows,'emAberto')), s:'fatura vencida e não paga'},
       ]; },
     metricas:[{k:'qtd', l:'Marcas que pararam de pagar', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Parou de pagar em', f:fmt.date},
+    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Virou churn em', f:fmt.date},
       {k:'ultimaPaga', l:'Última fatura paga', f:fmt.date},
       {k:'ultimaFatura', l:'Última fatura emitida', f:v=>v||'—'},
       {k:'aindaVende', l:'Ainda vende?', f:v=>v?'sim, vendeu esta semana':'não'},
