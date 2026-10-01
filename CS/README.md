@@ -378,6 +378,25 @@ são unidos por domínio (mesmo casamento CNPJ → nome do pagador do resto da
 carga) antes de calcular churn, plano, vencimento e inadimplência; a carga
 registra quantas faturas de CNPJ extra foram unidas.
 
+### "Novos VestiPago" marcava 0 — conta criada × começou a usar (01/10/2026)
+
+A Luana implantou 3 VestiPago em setembro e o card mostrava **0**. O card lia
+só `MongoDB_Payment_Companies.createdAt`, a **criação da conta de pagamento** —
+e em setembro/2026 nasceram 9 contas, todas de marcas em onboarding (7 da
+Jennyfer Rabelo, 2 da Tatiane Ayres), nenhuma na carteira das três CS.
+
+A conta de pagamento nasce quando a marca **entra**. Numa carteira madura ela já
+existe há meses, e o que a CS chama de implantar é a marca **passar a usar**.
+São duas datas diferentes e o card agora mostra as duas:
+
+| Entrou como | O que é |
+|---|---|
+| **conta criada no mês** | `MongoDB_Payment_Companies.createdAt` — marca nova, contrata e abre a conta |
+| **começou a movimentar** | primeiro link de cobrança ou primeira transação da marca em **toda** a história dela (`primeiraVP`, sem recorte de ano — quem operou em 2025 não pode reaparecer como novo em 2026) |
+
+Pela segunda leitura, setembro na carteira da Luana tem **Upper Concept (11/09)**
+e **TEAM BASIC (09/09)**.
+
 ### As medidas da Bonificação na Gerencial (28/09/2026)
 
 Pedido do Walid: ver na Gerencial os mesmos pontos que a bonificação mede.

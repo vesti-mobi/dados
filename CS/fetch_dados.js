@@ -331,6 +331,21 @@ async function puxarBQ() {
       AND (${LINK_COBRANCA} OR ${VIA_VESTIPAGO})
     GROUP BY 1,2`);
 
+  /* PRIMEIRA MOVIMENTAÇÃO no VestiPago, de todo o histórico — não só do ano.
+     A Luana disse ter implantado 3 VestiPago em setembro/2026 e o card
+     "Novos VestiPago" mostrava 0: ele conta CONTA DE PAGAMENTO CRIADA, e as
+     marcas de uma carteira madura já têm conta criada há tempos — o que a CS
+     chama de implantar é a marca passar a USAR. As duas datas são coisas
+     diferentes e agora o painel mostra as duas. Sem filtro de período de
+     propósito: quem operou em 2025 não pode reaparecer como nova em 2026. */
+  const primeiraVP = await q('VestiPago: primeira movimentação da marca', `
+    SELECT CAST(domainId AS STRING) dom,
+           FORMAT_DATE('%Y-%m-%d', MIN(DATE(CAST(settings_createdAt AS TIMESTAMP)))) d
+    FROM ${DS}.MongoDB_Pedidos_Geral
+    WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
+      AND (${LINK_COBRANCA} OR ${VIA_VESTIPAGO})
+    GROUP BY 1`);
+
   const fatorRows = await q('fator Vesti sobre antecipação', `
     SELECT ROUND(SAFE_DIVIDE(SUM(SAFE_CAST(antecipationVestiFee AS FLOAT64)),
                              SUM(SAFE_CAST(antecipationValue AS FLOAT64))), 4) fator
@@ -718,6 +733,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
+           primeiraVP,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -2269,9 +2285,12 @@ function montar(bqd, hsd, tinoDados) {
       linksGerados: num(r.gerados), linksPagos: num(r.pagos), transacoes: num(r.transacoes),
     });
   });
+  const primeiraMovVP = new Map();
+  (bqd.primeiraVP || []).forEach(r => { if (r.d) primeiraMovVP.set(r.dom, r.d); });
   const vpTab = [...vpAcc.entries()].map(([dom, v]) => ({
     cliente: nomeDe(dom), dominio: dom, cs: csDe(dom),
     implantado: implVP.get(dom) || null,
+    operouEm: primeiraMovVP.get(dom) || null,
     valorTransacionado: v.valorTransacionado,
     valorCartao: v.valorCartao, valorPix: v.valorPix,
     receitaFee: r2(v.receitaFee), receitaAntecipacao: r2(v.receitaAntecipacao),

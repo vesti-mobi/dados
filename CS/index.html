@@ -1568,13 +1568,24 @@ function linhasReunioesMes(m){
 
 /* --- 2. Novos VestiPago --------------------------------------------------- */
 function linhasVpNovos(m){
+  /* Duas entradas, não uma. A Luana implantou 3 VestiPago em setembro e o card
+     marcava 0: ele só contava CONTA DE PAGAMENTO CRIADA no mês, e numa carteira
+     madura a conta da marca já existe há tempos — o que a CS faz é a marca
+     passar a usar. Quem começou a MOVIMENTAR no mês (primeiro link de cobrança
+     ou primeira transação de toda a história da marca) entra junto, com a
+     coluna "Entrou como" dizendo qual dos dois foi. */
   const {vp} = idxMensal();
-  return soDoFoco((DATA.vestiPago.tabela||[]).filter(v=>String(v.implantado||'').slice(0,7)===m)
+  return soDoFoco((DATA.vestiPago.tabela||[])
+    .filter(v=>String(v.implantado||'').slice(0,7)===m || String(v.operouEm||'').slice(0,7)===m)
     .map(v=>{
       const dom = v.dominio || v.cliente;
       const s = vp[dom+'|'+m] || {};
       const marca = marcaDoDominio(dom, v.cliente);
+      const contaNova = String(v.implantado||'').slice(0,7)===m;
       return {nome:marca.nome, cs:marca.cs, dominio:marca.dominio, implantado:v.implantado,
+        operouEm:v.operouEm||null,
+        entrouComo: contaNova ? 'conta criada no mês' : 'começou a movimentar',
+        contaNova,
         valor:s.valor||0, pix:s.pix||0, cartao:s.cartao||0, pagos:s.pagos||0};
     }))
     .sort((a,b)=>b.valor-a.valor || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
@@ -2067,19 +2078,22 @@ const CARDS_GERENCIAL = [
   },
   {
     id:'vpNovos', titulo:'Novos VestiPago', cor:'#00B894',
-    capa:'Marcas com conta de pagamento criada dentro do mês',
-    fonte:'BigQuery — criação da conta de pagamento (mesma data da coluna "Implantado em" da aba VestiPago).',
+    capa:'Marcas que entraram no VestiPago no mês — conta criada ou primeira movimentação',
+    fonte:'BigQuery, <b>duas datas diferentes</b>. <b>Conta criada</b> é <code>MongoDB_Payment_Companies.createdAt</code> (a coluna "Implantado em" da aba VestiPago) — serve para marca nova, que contrata e já abre a conta. <b>Começou a movimentar</b> é o primeiro link de cobrança ou a primeira transação da marca em TODA a história dela — é o que acontece na carteira madura, onde a conta já existia e a CS faz a marca usar. Até 01/10/2026 o card só olhava a primeira, e por isso marcava 0 em meses em que as CS implantaram o produto em marcas antigas.',
     linhas:ctx=>linhasVpNovos(ctx.m),
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? fmt.moneyCompact(soma(rows,'valor'))+' transacionados no mês' : 'nenhuma marca nova no mês'}),
     kpis:rows=>[
-      {l:'Marcas novas no VestiPago', v:fmt.int(rows.length), s:'conta criada no mês'},
+      {l:'Marcas que entraram', v:fmt.int(rows.length), s:'conta criada ou 1ª movimentação no mês'},
+      {l:'Começaram a movimentar', v:fmt.int(rows.filter(r=>!r.contaNova).length), s:'conta já existia antes do mês'},
       {l:'Transacionado no mês', v:fmt.moneyCompact(soma(rows,'valor')), s:'só as marcas novas'},
       {l:'PIX', v:fmt.moneyCompact(soma(rows,'pix')), s:pctTexto(soma(rows,'pix'),soma(rows,'valor'))+' do volume'},
       {l:'Cartão', v:fmt.moneyCompact(soma(rows,'cartao')), s:pctTexto(soma(rows,'cartao'),soma(rows,'valor'))+' do volume'},
     ],
     metricas:[{k:'qtd', l:'Marcas novas', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'implantado', l:'Conta criada em', f:fmt.date},
+    colunas:[COL_NOME, COL_CS_CARD, {k:'entrouComo', l:'Entrou como'},
+      {k:'implantado', l:'Conta criada em', f:fmt.date},
+      {k:'operouEm', l:'1ª movimentação', f:fmt.date},
       {k:'valor', l:'Transacionado no mês', r:true, f:fmt.money},
       {k:'pix', l:'PIX', r:true, f:fmt.money}, {k:'cartao', l:'Cartão', r:true, f:fmt.money},
       {k:'pagos', l:'Links pagos', r:true, f:fmt.int}],
