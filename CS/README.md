@@ -397,6 +397,39 @@ São duas datas diferentes e o card agora mostra as duas:
 Pela segunda leitura, setembro na carteira da Luana tem **Upper Concept (11/09)**
 e **TEAM BASIC (09/09)**.
 
+### Mensalidade caindo com a CS vendendo (01/10/2026)
+
+A Luana fechou R$ 10.681 em setembro e viu a **mensalidade cair** R$ 6,2 mil
+(ago R$ 78.490 → set R$ 72.244). Decompondo marca a marca, oito caíram:
+
+| Marca | Agosto | Setembro | O que houve |
+|---|---|---|---|
+| Santo Vício | 1.579 | 0 | fatura venc. 30/09 **pendente** |
+| Galpão 43 | 1.921 | 821 | fatura venc. 27/09 **pendente** |
+| MISSMEL | 1.100 | 0 | fatura venc. 20/09 **pendente** (e reajustada p/ 1.149) |
+| Estação Fit | 1.081 | 0 | fatura venc. 20/09 **pendente** |
+| Bela Gaia | 759 | 0 | fatura venc. 28/09 **pendente** (reajustada p/ 793) |
+| Meiatrês | 249 | 0 | fatura venc. 28/09 **pendente** |
+| Kelly Rodrigues Fortaleza | 1.100 | 0 | fatura de setembro **cancelada** |
+| Kelly Rodrigues Store | 1.091 | 0 | fatura de setembro **cancelada** |
+
+Só as duas últimas são perda. **R$ 5,95 mil são faturas emitidas e ainda não
+pagas** — a régua da bonificação é *plano pago, pelo vencimento*, e em agosto
+essas mesmas marcas pagaram em 26, 28, 29, 31/08, 01/09 e até 09/09. O mês
+recém-fechado nasce menor do que vai ficar.
+
+Duas coisas, então, e nenhuma delas é erro de conta:
+
+1. **O que a CS vende em setembro quase não é "mensalidade".** Setup, Oráculo,
+   Varejo e Filial são "Outros (Iugu)" por definição da regra; só o upgrade
+   entra em plano — e na cobrança do ciclo seguinte.
+2. **Faltava dizer o que ainda está em cobrança.** Entrou `mensalidadeEmAberto`
+   (mesma consulta da mensalidade, com `status IN (pending, expired,
+   partially_paid, in_protest)`): não é regra, não muda nenhum número da
+   bonificação, só aparece ao lado — KPI "Ainda em cobrança" e coluna
+   "Em aberto" no card da Gerencial, e um `+R$ X em cobrança` embaixo da célula
+   na aba Bonificação, com os nomes no balãozinho.
+
 ### As medidas da Bonificação na Gerencial (28/09/2026)
 
 Pedido do Walid: ver na Gerencial os mesmos pontos que a bonificação mede.

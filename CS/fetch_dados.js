@@ -461,6 +461,37 @@ async function puxarBQ() {
       AND DATE(due) BETWEEN DATE '${INICIO}' AND DATE '${HOJE_ISO}'
     GROUP BY 1,3`);
 
+  /* A MESMA conta, com as faturas que ainda NÃO foram pagas. A régua da
+     bonificação é "plano pago, pelo vencimento", e isso deixa o mês recém-
+     fechado sempre menor do que vai ficar: marca que vence dia 28 costuma
+     pagar depois. Em 01/10/2026 a Luana via setembro R$ 6,2 mil abaixo de
+     agosto, e R$ 5,9 mil disso eram seis faturas emitidas e ainda em aberto,
+     não perda. O número da regra não muda — isto entra ao lado, para a célula
+     dizer quanto ainda está em cobrança. */
+  const mensalidadeAberta = await q('Iugu: plano ainda em aberto, por CNPJ × dia', `
+    WITH itens AS (
+      SELECT id, items_id,
+             ANY_VALUE(payer_cpf_cnpj) cnpj, ANY_VALUE(payer_name) payer, ANY_VALUE(status) status,
+             ANY_VALUE(items_description) item,
+             ANY_VALUE(SAFE_CAST(items_price_cents AS FLOAT64)) cents,
+             ANY_VALUE(COALESCE(due_date, SUBSTR(created_at_iso,1,10))) due
+      FROM ${DS}.iugu_invoices
+      WHERE payer_cpf_cnpj IS NOT NULL AND payer_cpf_cnpj != ''
+      GROUP BY id, items_id
+    )
+    SELECT REGEXP_REPLACE(cnpj,'[^0-9]','') cnpj, ANY_VALUE(payer) payer,
+           FORMAT_DATE('%Y-%m-%d', DATE(due)) d,
+           ROUND(SUM(IF(
+             LOWER(IFNULL(item,'')) LIKE '%oraculo%' OR LOWER(IFNULL(item,'')) LIKE '%oráculo%'
+          OR LOWER(IFNULL(item,'')) LIKE '%assistente%' OR LOWER(IFNULL(item,'')) LIKE '%agente%'
+          OR LOWER(IFNULL(item,'')) LIKE '%filial%'
+          OR LOWER(IFNULL(item,'')) LIKE '%ativa%'  OR LOWER(IFNULL(item,'')) LIKE '%setup%',
+             0, cents))/100,2) plano
+    FROM itens
+    WHERE status IN (${STATUS_EM_ABERTO}) AND due IS NOT NULL
+      AND DATE(due) BETWEEN DATE '${INICIO}' AND DATE '${HOJE_ISO}'
+    GROUP BY 1,3`);
+
   /* O plano não é uma coluna: é a linha de item mais cara da fatura, tirando
      desconto/Oráculo. Mesma regra do CS-Sucesso, para os dois painéis
      mostrarem o mesmo nome de plano. */
@@ -733,7 +764,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
-           primeiraVP,
+           primeiraVP, mensalidadeAberta,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -2510,6 +2541,15 @@ function montar(bqd, hsd, tinoDados) {
     const dom = domDaFatura(r); if (!dom) return;
     const m = porDom.get(dom); if (!m) return;
     somaBon(mesDe(r.d), m.cs, 'mensalidade', num(r.plano), m.nome);
+  });
+  /* Não é regra (não está em METRICAS_BONIFICACAO): é o "ainda em cobrança"
+     que a célula mostra ao lado do número, para ninguém ler fatura atrasada
+     como queda de carteira. */
+  (bqd.mensalidadeAberta || []).forEach(r => {
+    if (!dataOk(r.d)) return;
+    const dom = domDaFatura(r); if (!dom) return;
+    const m = porDom.get(dom); if (!m) return;
+    somaBon(mesDe(r.d), m.cs, 'mensalidadeEmAberto', num(r.plano), m.nome);
   });
   /* Varejos novos: só filial classificada como VAREJO entra na conta. A que a
      classificação ainda não alcançou é contada à parte, em 'filiaisSemTipo', que

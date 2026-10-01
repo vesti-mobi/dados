@@ -1905,6 +1905,25 @@ function bonifMarcas(k, m){
       dominio: DOM_POR_CLIENTE[x.cliente] || null}))
     .sort((a,b)=>b.valor-a.valor || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
 }
+/* Mensalidade com as duas metades: o que já foi PAGO no mês (a regra da
+   bonificação) e o que foi emitido e ainda está EM ABERTO. A régua é "plano
+   pago, pelo vencimento", então o mês recém-fechado nasce menor do que vai
+   ficar — marca que vence dia 28 costuma pagar depois. Sem a segunda coluna,
+   fatura atrasada parece queda de carteira (foi o que aconteceu com a Luana em
+   01/10/2026: setembro R$ 6,2 mil abaixo de agosto, R$ 5,9 mil deles em seis
+   faturas só esperando pagamento). */
+function linhasMensalidade(m){
+  const acc = {};
+  const por = (k, campo) => bonifMarcas(k, m).forEach(x=>{
+    const a = acc[x.nome] || (acc[x.nome] = {nome:x.nome, cs:x.cs, dominio:x.dominio, pago:0, aberto:0});
+    a[campo] += x.valor;
+  });
+  por('mensalidade', 'pago');
+  por('mensalidadeEmAberto', 'aberto');
+  return Object.values(acc).map(a=>Object.assign(a, {valor:a.pago, total:a.pago+a.aberto}))
+    .sort((a,b)=>b.total-a.total || String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+}
+
 /* Mesmo mês do ano anterior — a régua de GMV e TPV na bonificação. */
 function mesmoMesAnoAnterior(m){ return (Number(m.slice(0,4))-1) + m.slice(4) }
 function variacaoTexto(v, base){
@@ -1956,8 +1975,8 @@ const CARDS_BONIF = [
   {
     id:'mensalidadeCarteira', titulo:'Mensalidade', cor:'#B7791F',
     capa:'Mensalidade de plano faturada no mês, marca a marca',
-    fonte:'BigQuery — só as linhas de <b>plano</b> das faturas Iugu pagas das marcas da carteira, pelo vencimento (Oráculo, filial, assistente e ativação ficam fora). É a regra de <b>Mensalidade</b> da aba Bonificação. O card Receita T3+, ao lado, é outra pergunta: lá entra a fatura inteira dos clientes não-Starter.',
-    linhas:ctx=>bonifMarcas('mensalidade', ctx.m),
+    fonte:'BigQuery — só as linhas de <b>plano</b> das faturas Iugu pagas das marcas da carteira, pelo vencimento (Oráculo, filial, assistente e ativação ficam fora). É a regra de <b>Mensalidade</b> da aba Bonificação. <b>Conta fatura PAGA</b>: o mês que acabou de fechar nasce menor do que vai ficar, porque quem vence no fim do mês costuma pagar depois — por isso a coluna <b>Em aberto</b> e o KPI "Ainda em cobrança" ficam ao lado. O card Receita T3+ é outra pergunta: lá entra a fatura inteira dos clientes não-Starter.',
+    linhas:ctx=>linhasMensalidade(ctx.m),
     resumo:(rows,ctx)=>{ const t = bonifTotal('mensalidade', ctx.m), ant = bonifTotal('mensalidade', mesAnterior(ctx.m));
       return {v:fmt.moneyCompact(t.valor),
         s: ant.valor ? (t.valor>=ant.valor?'+':'')+fmt.pct1((t.valor-ant.valor)/ant.valor*100)+' vs '+rotuloMes(mesAnterior(ctx.m))
@@ -1965,16 +1984,22 @@ const CARDS_BONIF = [
     kpis:(rows,ctx)=>{ const t = bonifTotal('mensalidade', ctx.m);
       const ant = bonifTotal('mensalidade', mesAnterior(ctx.m));
       const anoAnt = bonifTotal('mensalidade', mesmoMesAnoAnterior(ctx.m));
+      const aberto = soma(rows,'aberto'), nAberto = rows.filter(r=>r.aberto>0).length;
       return [
-        {l:'Mensalidade no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.length)+' marcas pagantes'},
+        {l:'Mensalidade no mês', v:fmt.moneyCompact(t.valor), s:fmt.int(rows.filter(r=>r.pago>0).length)+' marcas pagantes'},
+        {l:'Ainda em cobrança', v:fmt.moneyCompact(aberto),
+         s: aberto ? fmt.int(nAberto)+' faturas emitidas e não pagas — entram aqui quando pagarem' : 'nada em aberto no mês'},
         {l:'Mês anterior', v:fmt.moneyCompact(ant.valor),
-         s: ant.valor ? (t.valor-ant.valor>=0?'+':'')+fmt.moneyCompact(t.valor-ant.valor)+' de diferença' : 'sem base'},
+         s: ant.valor ? (t.valor-ant.valor>=0?'+':'')+fmt.moneyCompact(t.valor-ant.valor)+' de diferença'
+                      + (aberto ? ' · '+fmt.moneyCompact(aberto)+' ainda em cobrança' : '') : 'sem base'},
         {l:rotuloMes(mesmoMesAnoAnterior(ctx.m)), v:fmt.moneyCompact(anoAnt.valor),
          s: anoAnt.valor ? variacaoTexto(t.valor, anoAnt.valor) : 'sem base no ano anterior'},
         {l:'Ticket médio', v:fmt.money(rows.length ? t.valor/rows.length : 0), s:'por marca pagante'},
       ]; },
     metricas:[{k:'mensalidade', l:'Mensalidade', f:fmt.money, v:(rows,m)=>bonifTotal('mensalidade', m).valor}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'valor', l:'Mensalidade no mês', r:true, f:fmt.money}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'pago', l:'Pago no mês', r:true, f:fmt.money},
+      {k:'aberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'total', l:'Emitido no mês', r:true, f:fmt.money}],
   },
   {
     id:'tino40', titulo:'Tino: marcas com 40+ eventos', cor:'#B7791F',
@@ -4458,6 +4483,7 @@ function linhasBonificacao(mesForcado){
       l = {cs};
       met.forEach(m=>{ l[m.k]=0; l['_base_'+m.k]=null; l['_quem_'+m.k]=[] });
       l.filiaisSemTipo = 0; l['_quem_filiaisSemTipo'] = [];   // não é regra, é aviso
+      l.mensalidadeEmAberto = 0; l['_quem_mensalidadeEmAberto'] = [];  // idem
       porCs.set(cs,l);
     }
     return l;
@@ -6015,6 +6041,14 @@ function celula(r,c){
         const semTipo = r.filiaisSemTipo || 0;
         if(semTipo) sub = `<span class="cell-sub">+${fmt.int(semTipo)} sem classificação</span>`;
       }
+      /* Mensalidade conta fatura PAGA, pelo vencimento: o mês recém-fechado
+         nasce menor do que vai ficar, porque quem vence no fim do mês paga
+         depois. O que está emitido e ainda não pago vem embaixo, para ninguém
+         ler atraso de pagamento como queda de carteira. */
+      if(c.k==='mensalidade'){
+        const aberto = r.mensalidadeEmAberto || 0;
+        if(aberto) sub = sub + `<span class="cell-sub">+${fmt.moneyCompact(aberto)} <em>em cobrança</em></span>`;
+      }
       /* Mês em andamento: embaixo do número real vem quanto ele deve virar até
          o fim do mês, com o método escrito no balãozinho. Mês fechado não tem
          projeção nenhuma — o número dele já é o número. */
@@ -6028,7 +6062,8 @@ function celula(r,c){
         sub = sub + projTxt;
       }
       td.innerHTML = `<span class="cell-main">${dinheiro?fmt.moneyCompact(vv):fmt.int(vv)}</span>` + sub;
-      const quemSem = c.k==='filiais' ? (r['_quem_filiaisSemTipo']||[]) : [];
+      const quemSem = c.k==='filiais' ? (r['_quem_filiaisSemTipo']||[])
+        : c.k==='mensalidade' ? (r['_quem_mensalidadeEmAberto']||[]) : [];
       const p2 = proj != null ? projecaoBonificacao() : null;
       const projTitulo = p2
         ? 'projeção do fim do mês (' + (p2.metodo[c.k] || 'regra de três pelos dias corridos')
@@ -6038,7 +6073,9 @@ function celula(r,c){
       let titulo = (projTitulo ? projTitulo + ' · ' : '')
         + (emPct && deltaTxt ? deltaTxt + (quem.length?' · ':'') : '')
         + quem.slice(0,40).join(', ')
-        + (quemSem.length ? (quem.length?' · ':'') + 'sem classificação: ' + quemSem.slice(0,20).join(', ') : '');
+        + (quemSem.length ? (quem.length?' · ':'')
+            + (c.k==='mensalidade' ? 'em cobrança: ' : 'sem classificação: ')
+            + quemSem.slice(0,20).join(', ') : '');
       /* Varejos é a única coluna editável do painel: o cadastro não sabe dizer
          se a filial é de varejo (a classificação está parada em 30/03/2026),
          então quem sabe é a CS. Clicar abre a lista daquele mês. */
