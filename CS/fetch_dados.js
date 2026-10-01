@@ -2581,7 +2581,12 @@ function montar(bqd, hsd, tinoDados) {
     'Oráculo': 'oraculo',
     'Tino': 'assistente', 'Assistente do Vendedor': 'assistente',
     'Filial': 'filial', 'Multiloja': 'filial',
-    'Upgrade de plano': 'plano', 'Outros': 'plano',
+    'Upgrade de plano': 'plano',
+    /* 'Outros' é o balde do classificador, e na carteira ele é quase sempre
+       venda de VAREJO — que é uma filial, não o plano. Deduzir contra o plano
+       engolia a venda: a Charisma vendeu varejo de R$ 650 em 30/09/2026 e ele
+       sumia porque o Plano Básico de R$ 868 já tinha sido faturado no mês. */
+    'Outros': 'filial',
     /* Fora da régua, como o setup: cobrança de uma vez só. */
     'Integração': null, 'VestiPago': null, 'Antecipação': null,
   };

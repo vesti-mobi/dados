@@ -418,17 +418,36 @@ pagas** — a régua da bonificação é *plano pago, pelo vencimento*, e em ago
 essas mesmas marcas pagaram em 26, 28, 29, 31/08, 01/09 e até 09/09. O mês
 recém-fechado nasce menor do que vai ficar.
 
-Duas coisas, então, e nenhuma delas é erro de conta:
+Diante disso a Laura reescreveu a régua no mesmo dia: *"considere os outros
+também (ex: oráculo, tino e etc) e as vendas do mês atual já devem entrar na
+mensalidade do mês atual"*.
 
-1. **O que a CS vende em setembro quase não é "mensalidade".** Setup, Oráculo,
-   Varejo e Filial são "Outros (Iugu)" por definição da regra; só o upgrade
-   entra em plano — e na cobrança do ciclo seguinte.
-2. **Faltava dizer o que ainda está em cobrança.** Entrou `mensalidadeEmAberto`
-   (mesma consulta da mensalidade, com `status IN (pending, expired,
-   partially_paid, in_protest)`): não é regra, não muda nenhum número da
-   bonificação, só aparece ao lado — KPI "Ainda em cobrança" e coluna
-   "Em aberto" no card da Gerencial, e um `+R$ X em cobrança` embaixo da célula
-   na aba Bonificação, com os nomes no balãozinho.
+#### A régua nova de "Receita de mensalidade" (01/10/2026)
+
+| Entra | Não entra |
+|---|---|
+| **todo item recorrente** da fatura: plano, Oráculo, Assistente, Filial, Varejo | **ativação, setup e integração** — cobrança única, não se repete no mês seguinte |
+| a fatura **emitida** no mês, pelo vencimento, paga ou não | fatura **cancelada** — deixou de ser cobrança |
+| a **venda ganha no mês** que ainda não virou fatura, pelo que falta faturar dela | o que já foi faturado no próprio mês (senão conta duas vezes) |
+
+A consulta `mensalidadeBonif` sai **por categoria de item** (plano, oraculo,
+assistente, filial, setup) e é isso que deixa o desconto funcionar: o negócio
+ganho no HubSpot entra por `valor − já faturado naquela categoria no mês`.
+Em setembro/2026, na carteira da Luana:
+
+| Marca | Venda | Entrou | Por quê |
+|---|---|---|---|
+| Lesto | Oráculo 1.300 + upgrade 1.100 | **2.102** | a fatura de 15/09 ainda veio com o plano velho (298) |
+| Charisma | upgrade 1.299 | **431** | o Plano Básico de 868 já tinha sido faturado no mês |
+| Diva Donna / Pijamas Lua Cheia | filial 499 cada | **998** | nenhuma linha de filial na fatura do mês |
+
+Com a régua nova, setembro da Luana é **R$ 96.515** contra R$ 99.109 de agosto,
+e a queda inteira são as duas Kelly, com as faturas de setembro canceladas no
+Iugu (R$ 7.648). O resto subiu.
+
+Duas leituras continuam visíveis ao lado do número, sem mudar a conta:
+`mensalidadeVendaNova` (quanto veio de venda ainda não faturada) e
+`mensalidadeEmAberto` (quanto do emitido ainda não foi pago).
 
 ### As medidas da Bonificação na Gerencial (28/09/2026)
 
