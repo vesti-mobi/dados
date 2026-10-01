@@ -1918,33 +1918,49 @@ function montar(bqd, hsd, tinoDados) {
      foi o caso da Mon Clos, com churn em 05/09/2026 e fatura paga em
      23/09/2026. Aqui os grupos da MESMA marca são somados, pelo mesmo
      casamento CNPJ -> nome do pagador que o resto da carga usa. */
-  const fatPorDom = new Map();
-  const menorData = (a, b) => (a && b) ? (a < b ? a : b) : (a || b);
-  const maiorData = (a, b) => (a && b) ? (a > b ? a : b) : (a || b);
-  let fatUnidas = 0;
+  const gruposPorDom = new Map();
   bqd.faturas.forEach(r => {
     const dom = domDaFatura(r);
     if (!dom) return;
-    const a = fatPorDom.get(dom);
-    if (!a) { fatPorDom.set(dom, Object.assign({}, r)); return; }
-    fatUnidas++;
-    a.proximo_venc     = menorData(a.proximo_venc, r.proximo_venc);
-    a.ultima_paga      = maiorData(a.ultima_paga, r.ultima_paga);
-    a.venc_mais_antigo = menorData(a.venc_mais_antigo, r.venc_mais_antigo);
-    a.faturas_vencidas = (a.faturas_vencidas || 0) + (r.faturas_vencidas || 0);
-    a.valor_vencido    = r2((a.valor_vencido || 0) + (r.valor_vencido || 0));
-    /* Plano e pagador saem da fatura paga mais recente entre os CNPJs. */
-    if (r.ultima && (!a.ultima || String(r.ultima.due) > String(a.ultima.due))) {
-      a.ultima = r.ultima; a.cnpj = r.cnpj; a.payer = r.payer;
-    }
+    const l = gruposPorDom.get(dom) || (gruposPorDom.set(dom, []), gruposPorDom.get(dom));
+    l.push(r);
   });
-  console.log('  faturas de CNPJ extra unidas à marca'.padEnd(44) + String(fatUnidas).padStart(8));
+  const menorData = (a, b) => (a && b) ? (a < b ? a : b) : (a || b);
+  const maiorData = (a, b) => (a && b) ? (a > b ? a : b) : (a || b);
+  function unir(grupos) {
+    const a = Object.assign({}, grupos[0]);
+    grupos.slice(1).forEach(r => {
+      a.proximo_venc     = menorData(a.proximo_venc, r.proximo_venc);
+      a.ultima_paga      = maiorData(a.ultima_paga, r.ultima_paga);
+      a.venc_mais_antigo = menorData(a.venc_mais_antigo, r.venc_mais_antigo);
+      a.faturas_vencidas = (a.faturas_vencidas || 0) + (r.faturas_vencidas || 0);
+      a.valor_vencido    = r2((a.valor_vencido || 0) + (r.valor_vencido || 0));
+      /* Plano e pagador saem da fatura paga mais recente entre os CNPJs. */
+      if (r.ultima && (!a.ultima || String(r.ultima.due) > String(a.ultima.due))) {
+        a.ultima = r.ultima; a.cnpj = r.cnpj; a.payer = r.payer;
+      }
+    });
+    return a;
+  }
 
-  const faturaDaMarca = (m) => fatPorDom.get(m.dom)
-    || (m.cnpj && fatPorCnpj.get(m.cnpj))
-    || fatPorNome.get(chaveMarca(m.nome || ''))
-    || fatPorNome.get(chaveMarca(m.social || ''))
-    || null;
+  /* O grupo do CNPJ do cadastro é sempre o primeiro da lista: `domDaFatura`
+     resolve CNPJ -> domínio pelo PRIMEIRO cadastro que tem aquele CNPJ, então
+     tomar só o que ele devolve podia trocar o grupo certo por outro. Aqui ele
+     entra junto com os demais, sem repetição. */
+  const fatUnida = new Map();
+  let fatUnidas = 0;
+  const faturaDaMarca = (m) => {
+    if (fatUnida.has(m.dom)) return fatUnida.get(m.dom);
+    const vistos = new Set(), grupos = [];
+    const add = g => { if (g && !vistos.has(g)) { vistos.add(g); grupos.push(g); } };
+    add(m.cnpj && fatPorCnpj.get(m.cnpj));
+    add(fatPorNome.get(chaveMarca(m.nome || '')));
+    add(fatPorNome.get(chaveMarca(m.social || '')));
+    (gruposPorDom.get(m.dom) || []).forEach(add);
+    const r = !grupos.length ? null : (grupos.length === 1 ? grupos[0] : (fatUnidas++, unir(grupos)));
+    fatUnida.set(m.dom, r);
+    return r;
+  };
 
   const churnLinhas = carregarChurnGambiarra(porDom, faturaDaMarca);
 
@@ -2335,6 +2351,7 @@ function montar(bqd, hsd, tinoDados) {
     c.temTino = domComTino.has(c._dom);
     c.temVestiPago = implVP.has(c._dom);
   });
+  console.log('  marcas com fatura em mais de um CNPJ'.padEnd(44) + String(fatUnidas).padStart(8));
   console.log('  marcas com Tino na tabela geral'.padEnd(44)
     + String(clientesFinal.filter(c => c.temTino).length).padStart(8));
   console.log('  marcas com Oráculo na tabela geral'.padEnd(44)
