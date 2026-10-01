@@ -637,15 +637,22 @@ function renderTabGmv() {
     data:{labels:meses, datasets:[{label:"GMV", data:vals, borderColor:COLORS[0], backgroundColor:"rgba(108,92,231,.15)", fill:true, tension:.3}]},
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{ticks:{callback:v=>"R$"+(v/1000).toFixed(0)+"k"}}}}
   });
-  // canal: Starter vs Parceiros no período
-  let st=0, pa=0;
+  // canal real por empresa (mesma classificacao da coluna "Canal" da tabela
+  // logo abaixo) -- a versao antiga so separava Starter vs "resto=Parceiros",
+  // jogando Vesti/Uemtel/Atta tudo em Parceiros. Ficava invisivel no "Todas as
+  // empresas" (Parceiros domina mesmo), mas gerava fatia errada pra qualquer
+  // empresa filtrada de canal Vesti/Uemtel/Atta -- achado filtrando "Fábrica
+  // Zoe" (canal Vesti) com Anual/2026, pedido da Laura, 01/10/2026.
+  const porCanalGmv = {};
   for (const e of lista) {
-    const v = bucket(e).valTotal;
-    if (e.starter_interno) st+=v; else pa+=v;
+    const c = canalDe(e);
+    porCanalGmv[c] = (porCanalGmv[c]||0) + bucket(e).valTotal;
   }
+  const canaisGmv = CANAIS.filter(c => porCanalGmv[c]);
   makeChart("chart-gmv-canal", {
     type:"doughnut",
-    data:{labels:["Starter Interno","Parceiros"], datasets:[{data:[st,pa], backgroundColor:[COLORS[0],COLORS[3]]}]},
+    data:{labels:canaisGmv, datasets:[{data:canaisGmv.map(c=>porCanalGmv[c]),
+      backgroundColor:canaisGmv.map(c=>COLORS[CANAIS.indexOf(c)])}]},
     options:{responsive:true, maintainAspectRatio:false}
   });
   const rows = lista.map(e=>({...e,_g:bucket(e)})).filter(e=>e._g.valTotal>0).sort((a,b)=>b._g.valTotal-a._g.valTotal);
