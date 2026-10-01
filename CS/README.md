@@ -27,13 +27,15 @@ de cada página num botão de interrogação em vez de solta embaixo do título,
 diferenciar. **Nenhuma lógica, nenhum dado e nenhuma página mudaram** — só a
 casca.
 
-**Tipografia.** Saiu a Bricolage Grotesque, entrou a dupla clássica de
-publicação: títulos em **Source Serif 4** (serifada de texto) e corpo em
-**Public Sans** — a fonte do serviço público americano, desenhada para
-formulário e tabela, que é o que este painel é. Número grande não vai em
-serifada: KPI, valor de card e health score usam `--f-num` (Public Sans com
-`tabular-nums`, para as colunas baterem na vertical). `IBM Plex Mono` continua
-nos rótulos e nas datas.
+**Tipografia.** Saiu a Bricolage Grotesque. A serifada que entrou no lugar
+durou uma rodada — a Laura viu e também não quis ("não gostei da fonte do nome
+das abas"). Ficou assim: títulos em **IBM Plex Sans**, a tipografia corporativa
+da IBM, feita para produto técnico e painel de dados; corpo em **Public Sans**,
+do serviço público americano, desenhada para formulário e tabela. As duas são
+grotescas, mas os terminais angulares da Plex separam título de texto sem
+precisar de contraste de família — e a família Plex já estava aqui, no mono dos
+rótulos. KPI, valor de card e health score usam `--f-num` (Public Sans com
+`tabular-nums`, para as colunas baterem na vertical).
 
 **O "?" no lugar do parágrafo.** O `desc` de cada aba continua sendo a régua
 dela — só não mora mais embaixo do título, onde virava paredão e empurrava a

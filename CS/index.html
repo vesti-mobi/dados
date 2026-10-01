@@ -6,7 +6,7 @@
 <title>Painel de Clientes · CS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    TOKENS
@@ -47,11 +47,14 @@
 
   /* Tipografia de relatório, trocada em 02/10/2026: a Laura pediu "uma fonte
      mais profissional, menos cara de IA". Saiu a Bricolage Grotesque (display
-     de startup) e entrou a dupla clássica de publicação — serifada de texto
-     nos títulos, grotesca neutra no corpo. Public Sans é a fonte do serviço
-     público americano: foi desenhada para formulário e tabela, que é
-     exatamente o que este painel é. */
-  --f-display:'Source Serif 4',Georgia,'Times New Roman',serif;
+     de startup). A serifada que entrou no lugar durou uma rodada — ela viu e
+     também não quis. Agora os títulos são IBM Plex Sans, a tipografia
+     corporativa da IBM, feita para produto técnico e painel de dados; o corpo
+     fica na Public Sans, do serviço público americano, desenhada para
+     formulário e tabela. As duas são grotescas, mas a Plex tem terminais
+     angulares que dão a diferença entre título e texto sem precisar de
+     contraste de família. A família Plex já estava aqui, no mono dos rótulos. */
+  --f-display:'IBM Plex Sans','Public Sans',system-ui,-apple-system,sans-serif;
   --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   /* Número grande não vai em serifada: fica em grotesca, com tabular-nums para
      as colunas baterem na vertical. */
@@ -111,7 +114,7 @@ button,input,select{font:inherit;color:inherit}
   background-image:var(--logo-icone);
   background-size:20px auto;background-position:center 54%;background-repeat:no-repeat;
 }
-.brand-name{font-family:var(--f-display);font-weight:600;font-size:16px;letter-spacing:0;line-height:1.1}
+.brand-name{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:-.015em;line-height:1.1}
 .brand-sub{font-size:11px;color:var(--ink-3);line-height:1.1;margin-top:2px}
 
 .nav-group+.nav-group{margin-top:22px}
@@ -181,7 +184,7 @@ button,input,select{font:inherit;color:inherit}
   max-height:calc(100vh - 80px)}
 .aj-head{display:flex;align-items:flex-start;gap:16px;padding:26px 30px 20px;border-bottom:1px solid var(--line)}
 .aj-head .eyebrow{color:var(--acc);display:block;margin-bottom:6px}
-.aj-head h2{font-family:var(--f-display);font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+.aj-head h2{font-family:var(--f-display);font-size:21px;font-weight:600;margin:0;letter-spacing:-.02em}
 .aj-fechar{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);
   width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--ink-3);font-size:15px;line-height:1;
   display:grid;place-items:center}
@@ -211,7 +214,7 @@ button,input,select{font:inherit;color:inherit}
 }
 .page-head h1{
   font-family:var(--f-display);font-weight:600;
-  font-size:29px;letter-spacing:-.012em;margin:7px 0 0;line-height:1.15;
+  font-size:27px;letter-spacing:-.022em;margin:7px 0 0;line-height:1.15;
 }
 .page-head p{margin:0;color:var(--ink-2);font-size:13.5px;max-width:62ch}
 
@@ -356,7 +359,7 @@ button,input,select{font:inherit;color:inherit}
 .charts.two{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--acc-line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
 .card-head{display:flex;align-items:center;gap:14px;padding:15px 18px 0;flex-wrap:wrap}
-.card-head h3{font-family:var(--f-display);font-size:16px;font-weight:600;letter-spacing:0;margin:0}
+.card-head h3{font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:-.012em;margin:0}
 .legend{margin-left:auto;display:flex;gap:13px;flex-wrap:wrap}
 .legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:11.5px;color:var(--ink-2)}
 .legend i b{width:9px;height:9px;border-radius:2px;display:block}
@@ -374,7 +377,7 @@ button,input,select{font:inherit;color:inherit}
 /* --- tabela --- */
 .table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
 .table-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
-.table-head h3{font-family:var(--f-display);font-size:16px;font-weight:600;margin:0;letter-spacing:0}
+.table-head h3{font-family:var(--f-display);font-size:15px;font-weight:600;margin:0;letter-spacing:-.012em}
 .table-head .count{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 .table-head .btn{margin-left:auto}
 .table-scroll{overflow:auto;max-height:620px}
@@ -470,7 +473,7 @@ td.strong{font-weight:600}
 .ficha-topo{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:18px;
   padding:16px 18px;background:var(--surface);border:1px solid var(--line);
   border-top:2px solid var(--acc);border-radius:var(--r-lg);box-shadow:var(--shadow)}
-.ficha-topo h2{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.01em;margin:5px 0 4px}
+.ficha-topo h2{font-family:var(--f-display);font-size:23px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
 .ficha-topo p{margin:0;font-size:12.5px;color:var(--ink-2);max-width:78ch}
 .ficha-topo .btn{margin-left:auto}
 .ficha-health{text-align:right;padding-left:18px;border-left:1px solid var(--line)}
@@ -510,7 +513,7 @@ td.strong{font-weight:600}
 .gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
 .gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
 .gdet-head .eyebrow{color:var(--gc,var(--acc))}
-.gdet-head h2{font-family:var(--f-display);font-size:21px;font-weight:600;letter-spacing:-.01em;margin:5px 0 4px}
+.gdet-head h2{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
 .gdet-head p{margin:0;color:var(--ink-2);font-size:12.5px;max-width:78ch}
 .gdet-head .btn{margin-left:auto}
 .gdetalhe .kpis{border-top-color:var(--gc,var(--acc))}
