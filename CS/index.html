@@ -6,7 +6,7 @@
 <title>Painel de Clientes · CS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    TOKENS
@@ -45,8 +45,17 @@
 
   --shadow:0 1px 2px rgba(17,20,24,.04), 0 10px 22px -16px rgba(17,20,24,.30);
 
-  --f-display:'Bricolage Grotesque','Instrument Sans',system-ui,sans-serif;
-  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  /* Tipografia de relatório, trocada em 02/10/2026: a Laura pediu "uma fonte
+     mais profissional, menos cara de IA". Saiu a Bricolage Grotesque (display
+     de startup) e entrou a dupla clássica de publicação — serifada de texto
+     nos títulos, grotesca neutra no corpo. Public Sans é a fonte do serviço
+     público americano: foi desenhada para formulário e tabela, que é
+     exatamente o que este painel é. */
+  --f-display:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  /* Número grande não vai em serifada: fica em grotesca, com tabular-nums para
+     as colunas baterem na vertical. */
+  --f-num:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
 
   /* logo da Vesti embutido: o arquivo original tem o ícone verde e a palavra
@@ -102,7 +111,7 @@ button,input,select{font:inherit;color:inherit}
   background-image:var(--logo-icone);
   background-size:20px auto;background-position:center 54%;background-repeat:no-repeat;
 }
-.brand-name{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:-.01em;line-height:1.1}
+.brand-name{font-family:var(--f-display);font-weight:600;font-size:16px;letter-spacing:0;line-height:1.1}
 .brand-sub{font-size:11px;color:var(--ink-3);line-height:1.1;margin-top:2px}
 
 .nav-group+.nav-group{margin-top:22px}
@@ -131,7 +140,7 @@ button,input,select{font:inherit;color:inherit}
   background:var(--canvas);position:sticky;top:0;z-index:20;
 }
 .week-now{display:flex;align-items:baseline;gap:9px}
-.week-now b{font-family:var(--f-display);font-size:14px;font-weight:600}
+.week-now b{font-family:var(--f-body);font-size:13.5px;font-weight:600}
 .week-now span{font-size:12.5px;color:var(--ink-3)}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .chip-demo{
@@ -148,11 +157,61 @@ button,input,select{font:inherit;color:inherit}
 
 .page{padding:26px 30px 64px;max-width:1500px;width:100%}
 
-.page-head{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+/* O cabeçalho perdeu o parágrafo corrido em 02/10/2026: a explicação da
+   página saiu daqui e foi para o modal do "?", porque colada embaixo do título
+   ela virava um bloco de texto que ninguém lia e que empurrava a tabela para
+   baixo. O título ficou sozinho, com ar em volta. */
+.page-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:24px}
 .page-head .eyebrow{color:var(--acc)}
+.page-head .titulo-bloco{min-width:0}
+.btn-ajuda{
+  width:26px;height:26px;flex:none;border-radius:50%;cursor:pointer;
+  border:1px solid var(--acc-line);background:var(--acc-soft);color:var(--acc);
+  font-family:var(--f-body);font-size:13px;font-weight:700;line-height:1;
+  display:grid;place-items:center;align-self:flex-end;margin-bottom:5px;
+  transition:background .13s,transform .13s;
+}
+.btn-ajuda:hover{background:var(--acc);border-color:var(--acc);color:#fff;transform:translateY(-1px)}
+
+/* --- modal de ajuda da página --- */
+.aj-back{position:fixed;inset:0;z-index:70;background:rgba(17,20,24,.38);
+  display:flex;align-items:flex-start;justify-content:center;padding:40px 24px;overflow:auto}
+.aj-box{background:var(--surface);border-radius:var(--r-lg);width:min(820px,100%);
+  box-shadow:0 30px 70px -24px rgba(17,20,24,.5);display:flex;flex-direction:column;
+  max-height:calc(100vh - 80px)}
+.aj-head{display:flex;align-items:flex-start;gap:16px;padding:26px 30px 20px;border-bottom:1px solid var(--line)}
+.aj-head .eyebrow{color:var(--acc);display:block;margin-bottom:6px}
+.aj-head h2{font-family:var(--f-display);font-size:22px;font-weight:600;margin:0;letter-spacing:-.01em}
+.aj-fechar{margin-left:auto;flex:none;border:1px solid var(--line);background:var(--surface);
+  width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--ink-3);font-size:15px;line-height:1;
+  display:grid;place-items:center}
+.aj-fechar:hover{background:var(--sunken);color:var(--ink)}
+.aj-corpo{overflow:auto;padding:4px 30px 30px}
+.aj-sec{padding-top:26px}
+.aj-sec+.aj-sec{border-top:1px solid var(--line-2);margin-top:4px}
+.aj-sec>.eyebrow{display:block;color:var(--acc);margin-bottom:12px}
+.aj-texto{margin:0;font-size:14px;line-height:1.65;color:var(--ink-2);max-width:70ch}
+.aj-texto+.aj-texto{margin-top:12px}
+.aj-texto b{color:var(--ink);font-weight:600}
+.aj-lista{display:flex;flex-direction:column;gap:0;margin-top:4px}
+.aj-item{display:grid;grid-template-columns:minmax(150px,210px) minmax(0,1fr);gap:20px;
+  padding:13px 0;border-bottom:1px solid var(--line-2);align-items:baseline}
+.aj-item:last-child{border-bottom:0}
+.aj-item dt{font-size:13.5px;font-weight:600;color:var(--ink)}
+.aj-item dd{margin:0;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.aj-dd-p{margin:0}
+.aj-dd-p+.aj-dd-p{margin-top:9px}
+.aj-item dd.vazio{color:var(--ink-3);font-style:italic}
+.aj-chip{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:100px;
+  padding:2px 9px;margin-left:8px;vertical-align:middle}
+@media (max-width:620px){
+  .aj-item{grid-template-columns:1fr;gap:4px}
+  .aj-head,.aj-corpo{padding-left:20px;padding-right:20px}
+}
 .page-head h1{
   font-family:var(--f-display);font-weight:600;
-  font-size:27px;letter-spacing:-.025em;margin:6px 0 4px;line-height:1.1;
+  font-size:29px;letter-spacing:-.012em;margin:7px 0 0;line-height:1.15;
 }
 .page-head p{margin:0;color:var(--ink-2);font-size:13.5px;max-width:62ch}
 
@@ -166,7 +225,7 @@ button,input,select{font:inherit;color:inherit}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field label{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
 .field input,.field select{
-  border:1px solid var(--line);background:var(--sunken);
+  border:1px solid var(--line);background:var(--surface);
   border-radius:var(--r-sm);padding:7px 10px;font-size:13px;
   min-width:190px;transition:border-color .13s, background .13s;
 }
@@ -180,7 +239,7 @@ button,input,select{font:inherit;color:inherit}
 /* seletor de período (e o de CS/canal, que herda os mesmos botões) */
 .wk-pick{position:relative}
 .wk-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:210px;
-  border:1px solid var(--line);background:var(--sunken);border-radius:var(--r-sm);
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);
   padding:7px 10px;font-size:13px;cursor:pointer;color:var(--ink)}
 .wk-btn:hover{border-color:#CDD3DC}
 .wk-btn svg{color:var(--ink-3);flex:none}
@@ -232,7 +291,7 @@ button,input,select{font:inherit;color:inherit}
 .ed-sec{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-3);margin:18px 0 0}
 .ed-add{display:flex;gap:6px;margin-top:8px}
-.ed-add input{flex:1;border:1px solid var(--line);background:var(--sunken);
+.ed-add input{flex:1;border:1px solid var(--line);background:var(--surface);
   border-radius:var(--r-sm);padding:7px 9px;font-size:12.5px;color:var(--ink)}
 .ed-foot{padding:12px 18px;border-top:1px solid var(--line-2);display:flex;
   align-items:center;gap:8px;flex-wrap:wrap}
@@ -279,7 +338,7 @@ button,input,select{font:inherit;color:inherit}
 .kpi:first-child .eyebrow{color:var(--acc)}
 .kpi:first-child .kpi-val{color:var(--acc)}
 .kpi .eyebrow{display:block;margin-bottom:9px}
-.kpi-val{font-family:var(--f-display);font-size:25px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.kpi-val{font-family:var(--f-num);font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
 .kpi-sub{margin-top:6px;font-size:11.5px;color:var(--ink-3)}
 .kpi-sub b{color:var(--ink-2);font-weight:600}
 
@@ -297,7 +356,7 @@ button,input,select{font:inherit;color:inherit}
 .charts.two{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
 .card{background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--acc-line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
 .card-head{display:flex;align-items:center;gap:14px;padding:15px 18px 0;flex-wrap:wrap}
-.card-head h3{font-family:var(--f-display);font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin:0}
+.card-head h3{font-family:var(--f-display);font-size:16px;font-weight:600;letter-spacing:0;margin:0}
 .legend{margin-left:auto;display:flex;gap:13px;flex-wrap:wrap}
 .legend i{display:inline-flex;align-items:center;gap:6px;font-style:normal;font-size:11.5px;color:var(--ink-2)}
 .legend i b{width:9px;height:9px;border-radius:2px;display:block}
@@ -315,7 +374,7 @@ button,input,select{font:inherit;color:inherit}
 /* --- tabela --- */
 .table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
 .table-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
-.table-head h3{font-family:var(--f-display);font-size:14.5px;font-weight:600;margin:0;letter-spacing:-.01em}
+.table-head h3{font-family:var(--f-display);font-size:16px;font-weight:600;margin:0;letter-spacing:0}
 .table-head .count{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
 .table-head .btn{margin-left:auto}
 .table-scroll{overflow:auto;max-height:620px}
@@ -411,11 +470,11 @@ td.strong{font-weight:600}
 .ficha-topo{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:18px;
   padding:16px 18px;background:var(--surface);border:1px solid var(--line);
   border-top:2px solid var(--acc);border-radius:var(--r-lg);box-shadow:var(--shadow)}
-.ficha-topo h2{font-family:var(--f-display);font-size:23px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
+.ficha-topo h2{font-family:var(--f-display);font-size:24px;font-weight:600;letter-spacing:-.01em;margin:5px 0 4px}
 .ficha-topo p{margin:0;font-size:12.5px;color:var(--ink-2);max-width:78ch}
 .ficha-topo .btn{margin-left:auto}
 .ficha-health{text-align:right;padding-left:18px;border-left:1px solid var(--line)}
-.ficha-health b{display:block;font-family:var(--f-display);font-size:30px;font-weight:600;line-height:1.1}
+.ficha-health b{display:block;font-family:var(--f-num);font-size:30px;font-weight:600;line-height:1.1}
 .ficha-health span{font-size:11.5px;color:var(--ink-3)}
 .ficha-health.h-ok b{color:var(--pos)}.ficha-health.h-warn b{color:var(--gold)}.ficha-health.h-bad b{color:var(--neg)}
 .cs-chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2)}
@@ -443,7 +502,7 @@ td.strong{font-weight:600}
 .gcard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(17,20,24,.05), 0 16px 28px -18px rgba(17,20,24,.45)}
 .gcard.on{background:var(--gc-soft,var(--acc-soft));border-color:var(--gc,var(--acc))}
 .gc-t{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gc,var(--ink-3))}
-.gc-v{font-family:var(--f-display);font-size:25px;font-weight:600;letter-spacing:-.03em;
+.gc-v{font-family:var(--f-num);font-size:26px;font-weight:600;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;line-height:1.1;margin-top:5px}
 .gc-s{font-size:11.5px;color:var(--ink-3);line-height:1.35}
 .gc-go{margin-top:9px;font-size:11.5px;font-weight:600;color:var(--gc,var(--acc))}
@@ -451,7 +510,7 @@ td.strong{font-weight:600}
 .gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
 .gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
 .gdet-head .eyebrow{color:var(--gc,var(--acc))}
-.gdet-head h2{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
+.gdet-head h2{font-family:var(--f-display);font-size:21px;font-weight:600;letter-spacing:-.01em;margin:5px 0 4px}
 .gdet-head p{margin:0;color:var(--ink-2);font-size:12.5px;max-width:78ch}
 .gdet-head .btn{margin-left:auto}
 .gdetalhe .kpis{border-top-color:var(--gc,var(--acc))}
@@ -5140,6 +5199,205 @@ function agregarSerie(t){
   return [...mapa.values()].map(o=>{ for(const k in o) if(o[k]==null) o[k]=0; return o });
 }
 
+/* ============================================================
+   AJUDA DA PÁGINA (modal do "?")
+   ============================================================
+   Até 02/10/2026 a explicação de cada aba era um parágrafo colado embaixo do
+   título. Pedido da Laura: tirar dali e pôr num "?" que abre a explicação da
+   página, das colunas e dos cards, "certinho, não tudo grudado". O texto é o
+   mesmo `desc` que já existia — nada de dado mudou, só onde ele aparece.
+
+   O dicionário cobre as colunas cujo nome não se explica sozinho. Coluna que
+   não está aqui aparece com o rótulo e sem linha de explicação — melhor do que
+   inventar descrição para "CEP". */
+const AJUDA_COL = {
+  cliente:'Nome da marca como está no cadastro da plataforma.',
+  nome:'Nome da marca como está no cadastro da plataforma.',
+  status:'Ativa é quem teve pedido nos últimos 45 dias; o resto fica inativa.',
+  integracao:'ERP ou sistema integrado à plataforma, quando existe.',
+  temTino:'A marca tem o Tino contratado — ter não é usar.',
+  temOraculo:'A marca tem o Oráculo contratado.',
+  temVestiPago:'A marca tem conta de pagamento no VestiPago.',
+  dataCadastro:'Entrada da marca na Vesti: criação do domínio na plataforma.',
+  cs:'CS dona da marca no cadastro da plataforma (não é o proprietário do negócio no HubSpot).',
+  csDaMarca:'CS dona da marca no cadastro, para comparar com quem fez o registro no HubSpot.',
+  canal:'Canal de venda do cadastro: Vesti, parceiro, indicação.',
+  dominio:'Número do domínio da marca na plataforma — é a chave que liga todas as bases.',
+  cnpj:'CNPJ do cadastro da marca. Faturas de outro CNPJ da mesma marca são unidas por ele e pelo nome do pagador.',
+  plano:'Plano da última fatura paga, pela linha de item mais cara (fora Oráculo e desconto).',
+  gmv:'Valor dos pedidos PAGOS no período. GMV criado — pedido feito e não pago — é outra conta.',
+  valorPedidos:'Valor dos pedidos pagos no período.',
+  pedidos:'Quantidade de pedidos criados, pagos ou não.',
+  pedidosPagos:'Quantidade de pedidos efetivamente pagos.',
+  ticketMedio:'GMV pago dividido pelo número de pedidos pagos.',
+  ultimoPedido:'Data do pedido mais recente da marca, pago ou não.',
+  diasSemPedido:'Dias corridos desde o último pedido.',
+  ultimoAcesso:'Último acesso registrado na plataforma.',
+  vencimento:'Vencimento da próxima fatura em aberto.',
+  vencMaisAntigo:'Vencimento da fatura vencida mais antiga — é por ele que se contam os dias de atraso.',
+  diasAtraso:'Dias desde o vencimento mais antigo ainda em aberto. Acima de 10 a plataforma é bloqueada.',
+  valorEmAberto:'Soma das faturas vencidas e não pagas.',
+  faturasVencidas:'Quantas faturas estão vencidas sem pagamento.',
+  inadimplente:'Atraso acima de 10 dias no vencimento mais antigo.',
+  dataChurn:'Dia em que a marca completou 45 dias sem fatura paga e sem fatura futura em aberto.',
+  riscoChurn:'Leitura combinada de pedido, fatura e atraso — alto, médio ou baixo.',
+  ultimaPaga:'Vencimento da última fatura que a marca pagou.',
+  ultimaFatura:'Última fatura emitida, com o status que o Iugu deu (inclusive cancelada).',
+  aindaVende:'Se a marca registrou pedido nos últimos 7 dias, mesmo tendo parado de pagar.',
+  emAberto:'Valor de fatura vencida e não paga que a marca deixou.',
+  valor:'Valor da linha, na unidade que o título da coluna indica.',
+  vendaNova:'Venda ganha no mês que ainda não virou fatura — entra pelo que falta faturar dela.',
+  bloqueada:'Fatura não paga com mais de 10 dias de atraso: sai da conta da mensalidade.',
+  aberto:'Fatura emitida e ainda não paga, dentro do prazo de atraso.',
+  temperatura:'Quente, morno ou frio — como o dono do negócio marcou no HubSpot.',
+  estagio:'Estágio do negócio no pipeline do HubSpot.',
+  fechadoEm:'Data em que o negócio foi ganho ou perdido.',
+  eventos:'Interações registradas no Tino no período.',
+  statusTino:'Situação da marca na base do próprio Tino.',
+  ultimoAcessoTino:'Último login de alguém da marca no Tino.',
+  implantado:'Data em que o produto passou a existir para a marca.',
+  operouEm:'Primeira movimentação da marca no produto, em toda a história dela.',
+  entrouComo:'Se a marca entrou no mês por conta criada ou por ter começado a movimentar.',
+  linksGerados:'Links de cobrança criados no período.',
+  linksPagos:'Links de cobrança que alguém pagou.',
+  cliquesLinks:'Cliques nos links compartilhados pelos vendedores.',
+  valorPix:'Volume transacionado em PIX.',
+  valorCartao:'Volume transacionado em cartão.',
+  valorTransacionado:'Volume pago por um provedor do VestiPago, de qualquer origem.',
+  atendimentos:'Atendimentos registrados no Oráculo.',
+  atendimentosIA:'Atendimentos resolvidos pela IA, sem passar por pessoa.',
+  reunioes:'Reuniões do HubSpot no período, pelo dono do registro.',
+  situacao:'Situação da marca na régua de cobrança: em alerta, bloqueada ou cancelada.',
+  health:'Nota de 0 a 100 montada pelas cinco regras de health score.',
+  regras:'Quais das cinco regras do health score a marca cumpriu.',
+  duracao:'Quantos dias a marca ficou nesse estágio.',
+  etapa:'Marco do onboarding em que a marca está.',
+  tipo:'Tipo do registro — o rótulo da linha diz qual classificação é.',
+  categoria:'Cross-sell (produto novo) ou upsell (upgrade do que já tem).',
+  produto:'Produto do negócio, lido do nome dele no HubSpot.',
+  negocio:'Nome do negócio como está escrito no HubSpot.',
+  proprietario:'Dono do negócio no HubSpot — quem vendeu, que nem sempre é a CS da marca.',
+  assunto:'Assunto do ticket, como foi aberto no HubSpot.',
+  prioridade:'Prioridade do ticket no HubSpot.',
+  data:'Data do registro — o rótulo da coluna diz qual data é.',
+  mensalidade:'Valor de plano cobrado da marca no mês.',
+  receitaTotal:'Tudo que a marca pagou no período, plano e demais itens.',
+  receitaFee:'O que fica para a Vesti no fee do VestiPago, já líquido do banco.',
+  receitaAntecipacao:'Parte da Vesti na antecipação de recebíveis.',
+  lojas:'Quantas empresas (matriz e filiais) a marca tem na plataforma.',
+  pix:'Volume transacionado em PIX.',
+  cartao:'Volume transacionado em cartão.',
+  pagos:'Links de cobrança que alguém pagou.',
+  subcontasTxt:'Subconta do Iugu em que a marca é cobrada.',
+  vendedora:'Vendedora que o time anotou na planilha — é a coluna de lá, não a CS do cadastro.',
+  motivo:'Motivo registrado pelo time na planilha de churn.',
+  observacao:'Observação escrita por uma pessoa na planilha.',
+};
+
+function colunasDaAba(t){
+  if(Array.isArray(t.colunas) && t.colunas.length) return t.colunas;
+  return [];
+}
+
+/* Os cards de Gerencial, Visão geral e Visão do cliente já carregam a própria
+   explicação em `capa` e `fonte` — o modal só junta tudo num lugar. */
+function cardsDaAba(id){
+  if(id==='gerencial') return CARDS_GERENCIAL;
+  if(id==='visaoGeral') return CARDS_VISAO;
+  if(id==='cliente') return CARDS_CLIENTE;
+  return null;
+}
+
+/* '01/10/2026 17:22' — a data da carga, do jeito que o chip do topo já mostra. */
+function quandoCarregou(){
+  const g = (DATA.meta||{}).geradoEm ? new Date(DATA.meta.geradoEm) : null;
+  if(!g) return 'não informada';
+  return g.toLocaleDateString('pt-BR') + ' às '
+    + g.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* Os textos de régua são longos de propósito — eles contam a história do
+   número. Corridos num bloco só viram paredão, que foi a reclamação da Laura
+   ("está tudo grudado"). Aqui cada frase que ABRE EM NEGRITO vira parágrafo
+   novo: o negrito já era usado para começar tópico, então a quebra cai no
+   lugar certo sem precisar reescrever um texto sequer. */
+function emParagrafos(txt, classe){
+  const partes = String(txt || '').split(/(?<=[.:])\s+(?=<b>)/);
+  return partes.filter(p=>p.trim()).map(p=>`<p class="${classe}">${p}</p>`).join('');
+}
+
+function abrirAjuda(){
+  const t = aba();
+  document.querySelectorAll('.aj-back').forEach(x=>x.remove());
+  const back = el('div',{class:'aj-back'});
+  const box = el('div',{class:'aj-box'});
+  back.appendChild(box);
+  const aoTeclar = e => { if(e.key==='Escape') fechar() };
+  const fechar = ()=>{ back.remove(); document.removeEventListener('keydown', aoTeclar) };
+  document.addEventListener('keydown', aoTeclar);
+  back.onclick = e => { if(e.target===back) fechar() };
+
+  const head = el('div',{class:'aj-head'});
+  head.innerHTML = `<div><span class="eyebrow">${t.grupo}</span><h2>${t.titulo}</h2></div>`;
+  const x = el('button',{class:'aj-fechar','aria-label':'Fechar'},'&times;');
+  x.onclick = fechar;
+  head.appendChild(x);
+  box.appendChild(head);
+
+  const corpo = el('div',{class:'aj-corpo'});
+  box.appendChild(corpo);
+
+  if(t.desc){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">O que esta página mostra</span>`
+      + emParagrafos(t.desc, 'aj-texto');
+    corpo.appendChild(sec);
+  }
+
+  const cards = cardsDaAba(t.id);
+  if(cards){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">Os cards desta página</span>`;
+    const dl = el('dl',{class:'aj-lista'});
+    cards.forEach(c=>{
+      const item = el('div',{class:'aj-item'});
+      item.innerHTML = `<dt>${c.titulo}</dt><dd>${emParagrafos(c.fonte || c.capa || '', 'aj-dd-p')}</dd>`;
+      dl.appendChild(item);
+    });
+    sec.appendChild(dl);
+    corpo.appendChild(sec);
+  }
+
+  const cols = colunasDaAba(t);
+  if(cols.length){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">As colunas da tabela</span>`;
+    const dl = el('dl',{class:'aj-lista'});
+    cols.forEach(c=>{
+      const texto = AJUDA_COL[c.k];
+      const item = el('div',{class:'aj-item'});
+      item.innerHTML = `<dt>${c.l || c.k}</dt>`
+        /* Coluna cujo nome já se explica ("CEP", "Bairro") fica sem linha de
+           texto — inventar descrição para ela só encheria a tela. */
+        + (texto ? `<dd>${texto}</dd>` : `<dd class="vazio"></dd>`);
+      dl.appendChild(item);
+    });
+    sec.appendChild(dl);
+    corpo.appendChild(sec);
+  }
+
+  const sec = el('div',{class:'aj-sec'});
+  sec.innerHTML = `<span class="eyebrow">De onde vêm os dados</span>
+    <p class="aj-texto">A carga roda todo dia às 04:00 (BRT) e refaz o arquivo inteiro:
+    BigQuery (pedidos, faturas, VestiPago, Oráculo), HubSpot (reuniões, tickets, negócios)
+    e a API do Tino. Nada é digitado à mão aqui — mudança de régua vale para o histórico todo,
+    porque a carga recalcula todos os meses do zero.</p>
+    <p class="aj-texto">Última carga: <b>${quandoCarregou()}</b>.</p>`;
+  corpo.appendChild(sec);
+
+  document.body.appendChild(back);
+}
+
 function renderPagina(){
   const t = aba();
   aplicarAcento(t);
@@ -5147,13 +5405,14 @@ function renderPagina(){
   const page = $('#page'); page.innerHTML='';
 
   const head = el('div',{class:'page-head'});
-  /* O `desc` de cada aba já existia no código desde o começo, documentando de
-     onde vem cada número — só nunca tinha sido desenhado (o CSS de .page-head p
-     estava lá, sem ninguém para usar). É o disclaimer da aba: fica embaixo do
-     título, antes dos filtros, para quem abre a tela ler a régua antes de
-     interpretar a tabela. */
-  head.innerHTML = `<div><span class="eyebrow">${t.grupo}</span><h1>${t.titulo}</h1>`
-    + (t.desc ? `<p>${t.desc}</p>` : '') + `</div>`;
+  /* O `desc` continua sendo a régua da aba — só não mora mais aqui embaixo do
+     título, onde virava parágrafo corrido que empurrava a tabela. Agora abre
+     no "?", junto com a explicação das colunas e dos cards. */
+  head.innerHTML = `<div class="titulo-bloco"><span class="eyebrow">${t.grupo}</span><h1>${t.titulo}</h1></div>`;
+  const ajuda = el('button',{class:'btn-ajuda',title:'O que esta página mostra',
+    'aria-label':'Explicação da página'},'?');
+  ajuda.onclick = abrirAjuda;
+  head.appendChild(ajuda);
   page.appendChild(head);
 
   page.appendChild(renderFiltros(t));

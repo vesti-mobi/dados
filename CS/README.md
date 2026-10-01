@@ -19,6 +19,40 @@ varejo_manual.json         marcação FEITA NA MÃO de quais filiais são de var
 painel-clientes.html  layout de referência original (não é usado em produção)
 ```
 
+## A repaginada de 02/10/2026
+
+Pedido da Laura: *"uma fonte mais profissional, menos cara de IA"*, a explicação
+de cada página num botão de interrogação em vez de solta embaixo do título,
+"certinho, porque está tudo grudado", fundo branco puro e algumas cores para
+diferenciar. **Nenhuma lógica, nenhum dado e nenhuma página mudaram** — só a
+casca.
+
+**Tipografia.** Saiu a Bricolage Grotesque, entrou a dupla clássica de
+publicação: títulos em **Source Serif 4** (serifada de texto) e corpo em
+**Public Sans** — a fonte do serviço público americano, desenhada para
+formulário e tabela, que é o que este painel é. Número grande não vai em
+serifada: KPI, valor de card e health score usam `--f-num` (Public Sans com
+`tabular-nums`, para as colunas baterem na vertical). `IBM Plex Mono` continua
+nos rótulos e nas datas.
+
+**O "?" no lugar do parágrafo.** O `desc` de cada aba continua sendo a régua
+dela — só não mora mais embaixo do título, onde virava paredão e empurrava a
+tabela para baixo. O botão ao lado do título abre um modal com quatro blocos,
+separados por linha e respiro:
+
+| Bloco | O que traz |
+|---|---|
+| O que esta página mostra | o `desc` da aba, quebrado em parágrafos |
+| Os cards desta página | só em Gerencial, Visão geral e Visão do cliente: o `fonte` de cada card |
+| As colunas da tabela | o rótulo e, quando o nome não se explica sozinho, uma linha do dicionário `AJUDA_COL` |
+| De onde vêm os dados | as fontes da carga e a data da última |
+
+A quebra em parágrafos é automática: `emParagrafos()` corta antes de cada frase
+que **abre em negrito**. O negrito já era usado para começar tópico nesses
+textos, então a quebra cai no lugar certo sem reescrever um texto sequer.
+Coluna que não está no dicionário aparece só com o nome — inventar descrição
+para "CEP" e "Bairro" só encheria a tela.
+
 ## O filtro é por data (mudou em 26/08/2026)
 
 Era uma seleção de semanas ISO. A Laura levantou o problema: **semana ISO
