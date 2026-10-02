@@ -27,6 +27,10 @@ on:
         description: 'Mostrar os valores no log (o log é público)'
         required: false
         default: '0'
+      modo:
+        description: 'conferir (padrão) ou explorar — explorar só lista o catálogo do lake'
+        required: false
+        default: 'conferir'
 
 jobs:
   conferir:
@@ -49,9 +53,17 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
 
       - name: Conferir painel × BigQuery
+        if: inputs.modo != 'explorar'
         working-directory: CS
         env:
           MESES: ${{ inputs.meses }}
           CS: ${{ inputs.cs }}
           VERBOSE: ${{ inputs.verbose }}
         run: node conferir_bigquery.js
+
+      # Só olha o catálogo do dataset: que tabelas existem, quais têm coluna de
+      # anjo/CS e quais têm cara de histórico. Nenhum dado de cliente no log.
+      - name: Explorar o lake
+        if: inputs.modo == 'explorar'
+        working-directory: CS
+        run: node explorar_carteira.js
