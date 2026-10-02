@@ -855,6 +855,34 @@ Duas ressalvas que estão escritas na própria aba:
   carga roda de madrugada, e incluir o dia de hoje (ainda sem pedido nenhum)
   derrubaria toda projeção na primeira hora da manhã.
 
+## Não existe carteira histórica (02/10/2026)
+
+A Laura pediu GMV e TPV de out/nov/dez de 2025 **com a carteira da época**, não
+com a de hoje aplicada para trás. Procurei e o dado não existe:
+
+1. **No lake.** Varri o dataset inteiro (`conferir-bigquery.yml`, modo
+   `explorar`): a única coluna de CS é `odbc_domains.angel_id`, que guarda o
+   estado **atual**. Não há tabela de histórico, log de troca nem retrato
+   mensal — trocar a CS de uma marca sobrescreve o campo e o passado some.
+   `Metas_CS_Faturamento` tem CS, marca e data, mas só de meta batida: é
+   esparsa, não é carteira.
+2. **No HubSpot.** O histórico de `hubspot_owner_id` das empresas é datado e
+   cobriria 2025 (57% das marcas têm registro anterior a 2026). Só que o dono
+   da empresa **não é a CS**: das 1.337 marcas da carteira que casam com uma
+   empresa lá, o dono de hoje é a CS de hoje em **7,8%**. É o vendedor, não
+   quem cuida da conta. Por isso `carteira_2025.js` mede essa concordância
+   antes de usar o número e recusa quando fica abaixo de 70% — número errado
+   com cara de certo é pior que número nenhum.
+
+Fica o aviso para a próxima vez que a pergunta aparecer: **todo recorte por CS
+anterior a hoje usa a carteira de hoje**, inclusive a comparação ano a ano da
+Bonificação. Para ter a carteira real da época seria preciso guardar um retrato
+mensal de `angel_id` daqui para a frente, ou achar uma planilha do time com a
+carteira de então.
+
+> `CS/carteira_2025.js` + workflow "Carteira da época" ficam no repositório: é o
+> diagnóstico pronto para rodar de novo se alguém tiver a mesma dúvida.
+
 ## Ressalvas que mudam a leitura do número
 
 Estão também dentro do painel: clique no selo do topo direito.
