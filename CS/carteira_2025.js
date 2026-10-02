@@ -88,7 +88,8 @@ async function empresasComHistorico() {
   const out = [];
   let after = null;
   do {
-    const j = await hs('GET', '/crm/v3/objects/companies?limit=100'
+    /* 50, não 100: com propertiesWithHistory a API corta em 50 por página. */
+    const j = await hs('GET', '/crm/v3/objects/companies?limit=50'
       + '&properties=name,cnpj,hs_tax_id,domain'
       + '&propertiesWithHistory=hubspot_owner_id'
       + (after ? '&after=' + after : ''));
