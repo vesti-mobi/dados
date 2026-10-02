@@ -99,7 +99,12 @@ function lerPainel() {
     for (const k in o) o[k] = desempacotar(o[k]);
     return o;
   };
-  return desempacotar(global.window.PAINEL_DATA);
+  const d = desempacotar(global.window.PAINEL_DATA);
+  /* A gaiola tem que ser desfeita: a biblioteca do BigQuery decide se está num
+     navegador olhando `typeof window`, e com a global de pé ela tenta usar o
+     fetch do browser — "fetchImpl is not a function" na primeira consulta. */
+  delete global.window;
+  return d;
 }
 
 const money = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
