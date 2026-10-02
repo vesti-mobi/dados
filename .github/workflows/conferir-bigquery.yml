@@ -1,0 +1,57 @@
+# Cópia local do workflow que roda no vesti-mobi/dados.
+#
+# Conferência sob demanda: refaz em SQL, do zero, o GMV e o TPV do VestiPago
+# por CS e mês, e compara com o que está publicado no CS/dados.js. Não escreve
+# nada — o resultado sai no log da execução.
+#
+# O log deste repositório é público, então o script imprime o VEREDITO ("=" ou
+# a diferença), não os valores. VERBOSE=1 mostra os números.
+#
+# Rodar: aba Actions -> "Conferir BigQuery" -> Run workflow (dá para escolher
+# meses e carteiras). Usa o secret GCP_SA_KEY, o mesmo da carga diária.
+
+name: Conferir BigQuery
+
+on:
+  workflow_dispatch:
+    inputs:
+      meses:
+        description: 'Meses, separados por vírgula (vazio = out/nov/dez de 2025)'
+        required: false
+        default: ''
+      cs:
+        description: 'Carteiras, separadas por vírgula (vazio = Gabriella, Thamiris, Luana)'
+        required: false
+        default: ''
+      verbose:
+        description: 'Mostrar os valores no log (o log é público)'
+        required: false
+        default: '0'
+
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias Node
+        run: npm install --no-audit --no-fund
+
+      - name: Gravar credencial BigQuery (SA key)
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          printf '%s' "$GCP_SA_KEY" > "$RUNNER_TEMP/gcp_sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
+
+      - name: Conferir painel × BigQuery
+        working-directory: CS
+        env:
+          MESES: ${{ inputs.meses }}
+          CS: ${{ inputs.cs }}
+          VERBOSE: ${{ inputs.verbose }}
+        run: node conferir_bigquery.js
