@@ -54,6 +54,19 @@ const DS = '`vesti-data-499015.vestilake_BI`';
     + String(r.row_count).padStart(12) + ' linhas · ' + r.mb + ' MB · criada ' + r.criada));
   if (!hist.length) console.log('  (nenhuma)');
 
+  /* As duas únicas candidatas a guardar carteira: a tabela de metas por CS e a
+     `capivaras`, que tem coluna CS. Aqui sai só o ESQUELETO delas — nome de
+     coluna e tipo —, nunca o conteúdo: o log deste repositório é público. */
+  for (const t of ['Metas_CS_Faturamento', 'capivaras']) {
+    console.log('\nESQUEMA DE ' + t);
+    const [c] = await bq.query({ query: `
+      SELECT column_name, data_type
+      FROM ${DS}.INFORMATION_SCHEMA.COLUMNS
+      WHERE table_name = '${t}' ORDER BY ordinal_position` });
+    c.forEach(r => console.log('  ' + r.column_name.padEnd(34) + r.data_type));
+    if (!c.length) console.log('  (tabela sem colunas / inexistente)');
+  }
+
   console.log('\nTODAS AS TABELAS DO DATASET');
   const [todas] = await bq.query({ query: `
     SELECT table_id table_name, row_count,
