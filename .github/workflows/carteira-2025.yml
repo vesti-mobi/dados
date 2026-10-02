@@ -1,0 +1,62 @@
+# Cópia local do workflow que roda no vesti-mobi/dados.
+#
+# GMV e TPV por CS com a carteira DA ÉPOCA, não a de hoje. O lake não guarda
+# histórico de angel_id, então a fonte é o histórico de dono das empresas no
+# HubSpot — e o script mede se esse dono é mesmo a CS antes de usar o número.
+#
+# Rodar: aba Actions -> "Carteira da época" -> Run workflow.
+#   modo=diagnostico (padrão) só mede a concordância e a cobertura;
+#   modo=excel gera a planilha e a anexa como artifact do run.
+#
+# O artifact de um repositório público é público: baixe e apague depois
+# (gh run download / gh api -X DELETE .../artifacts/<id>).
+
+name: Carteira da época
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'diagnostico (padrão) ou excel'
+        required: false
+        default: 'diagnostico'
+      meses:
+        description: 'Meses, separados por vírgula (vazio = out/nov/dez de 2025)'
+        required: false
+        default: ''
+
+jobs:
+  carteira:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias Node
+        run: npm install --no-audit --no-fund
+
+      - name: Gravar credencial BigQuery (SA key)
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          printf '%s' "$GCP_SA_KEY" > "$RUNNER_TEMP/gcp_sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
+
+      - name: Carteira da época
+        working-directory: CS
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          MODO: ${{ inputs.modo }}
+          MESES: ${{ inputs.meses }}
+        run: node carteira_2025.js
+
+      - name: Anexar a planilha
+        if: inputs.modo == 'excel'
+        uses: actions/upload-artifact@v4
+        with:
+          name: carteira-2025
+          path: CS/carteira_2025.xlsx
+          retention-days: 1
