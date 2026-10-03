@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-02T17:05:05.994Z",
+  "gerado_em": "2026-10-03T00:05:26.922Z",
   "hoje": "2026-10-02",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -15,12 +15,12 @@ window.DADOS = {
     "ativas": 4,
     "usando": 11,
     "nunca_usaram": 8,
-    "paradas": 4,
+    "paradas": 6,
     "com_conta": 11,
     "contas": 10,
-    "produtos_total": 2301,
-    "produtos_7d": 135,
-    "descricoes_total": 2613,
+    "produtos_total": 2302,
+    "produtos_7d": 136,
+    "descricoes_total": 2614,
     "total_estimado": true
   },
   "marcas": [
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 7
+      "dias": 8
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 7
+      "dias": 8
     },
     {
       "slug": "petit",
@@ -84,17 +84,17 @@ window.DADOS = {
       "arquetipo": "explorador",
       "tem_conta": true,
       "email": "nicoboco.shop@nicoboco.com.br",
-      "produtos": 212,
+      "produtos": 213,
       "estimado": false,
-      "produtos_7d": 72,
+      "produtos_7d": 73,
       "ativa": true,
       "acessos": 73,
       "buscas": 345,
-      "descricoes": 325,
-      "envios": 351,
+      "descricoes": 326,
+      "envios": 352,
       "primeiro": "2026-08-10T19:02:35.392Z",
-      "ultimo": "2026-09-30T13:57:09.926Z",
-      "dias": 2
+      "ultimo": "2026-10-02T18:00:10.892Z",
+      "dias": 0
     },
     {
       "slug": "opera-kids",
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 100,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-10-01T17:09:44.355Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "monnika-marikinha",
@@ -470,7 +470,7 @@ window.DADOS = {
     {
       "inicio": "2026-09-28",
       "fim": "2026-10-04",
-      "produtos": 135,
+      "produtos": 136,
       "ativas": 4,
       "usaram": 5,
       "cadastros": 10,
@@ -487,12 +487,12 @@ window.DADOS = {
         "ativas": 3,
         "usando": 9,
         "nunca_usaram": 10,
-        "paradas": 3,
+        "paradas": 5,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1933,
-        "produtos_7d": 107,
-        "descricoes_total": 2119,
+        "produtos_total": 1934,
+        "produtos_7d": 108,
+        "descricoes_total": 2120,
         "total_estimado": false,
         "produtos_atribuidos": 0
       },
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -543,18 +543,18 @@ window.DADOS = {
           "arquetipo": "explorador",
           "tem_conta": true,
           "email": "nicoboco.shop@nicoboco.com.br",
-          "produtos": 210,
+          "produtos": 211,
           "estimado": false,
-          "produtos_7d": 72,
+          "produtos_7d": 73,
           "ativa": true,
           "acessos": 64,
           "buscas": 305,
-          "descricoes": 322,
-          "envios": 326,
+          "descricoes": 323,
+          "envios": 327,
           "primeiro": "2026-08-11T18:28:02.542Z",
-          "ultimo": "2026-09-30T13:57:09.926Z",
-          "dias": 2,
-          "produtos_medidos": 210,
+          "ultimo": "2026-10-02T18:00:10.892Z",
+          "dias": 0,
+          "produtos_medidos": 211,
           "atribuido": 0
         },
         {
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 3,
+          "dias": 4,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 22,
+          "dias": 23,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-09-28",
           "fim": "2026-10-04",
-          "produtos": 107,
+          "produtos": 108,
           "ativas": 3,
           "usaram": 4,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 107,
+          "produtos_medidos": 108,
           "atribuido": 0
         }
       ]
@@ -1025,11 +1025,11 @@ window.DADOS = {
         "paradas": 2,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1643,
+        "produtos_total": 1644,
         "produtos_7d": 28,
         "descricoes_total": 404,
         "total_estimado": true,
-        "produtos_atribuidos": 1320
+        "produtos_atribuidos": 1321
       },
       "marcas": [
         {
@@ -1108,7 +1108,7 @@ window.DADOS = {
           "envios": 62,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-10-01T17:09:42.907Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 58,
           "atribuido": 49
         },
@@ -1118,7 +1118,7 @@ window.DADOS = {
           "arquetipo": "explorador",
           "tem_conta": true,
           "email": "nicoboco.shop@nicoboco.com.br",
-          "produtos": 86,
+          "produtos": 87,
           "estimado": true,
           "produtos_7d": 0,
           "ativa": false,
@@ -1130,7 +1130,7 @@ window.DADOS = {
           "ultimo": "",
           "dias": null,
           "produtos_medidos": 0,
-          "atribuido": 86
+          "atribuido": 87
         },
         {
           "slug": "opera-kids",
@@ -1505,13 +1505,13 @@ window.DADOS = {
         {
           "inicio": "2026-09-07",
           "fim": "2026-09-13",
-          "produtos": 265,
+          "produtos": 266,
           "ativas": 2,
           "usaram": 4,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 246,
-          "atribuido": 19
+          "atribuido": 20
         },
         {
           "inicio": "2026-09-14",
