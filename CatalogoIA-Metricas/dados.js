@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-04T16:11:41.593Z",
+  "gerado_em": "2026-10-04T23:41:49.324Z",
   "hoje": "2026-10-04",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -18,9 +18,9 @@ window.DADOS = {
     "paradas": 6,
     "com_conta": 11,
     "contas": 10,
-    "produtos_total": 2312,
-    "produtos_7d": 146,
-    "descricoes_total": 2624,
+    "produtos_total": 2319,
+    "produtos_7d": 153,
+    "descricoes_total": 2631,
     "total_estimado": true
   },
   "marcas": [
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "petit",
@@ -84,16 +84,16 @@ window.DADOS = {
       "arquetipo": "explorador",
       "tem_conta": true,
       "email": "nicoboco.shop@nicoboco.com.br",
-      "produtos": 223,
+      "produtos": 230,
       "estimado": false,
-      "produtos_7d": 83,
+      "produtos_7d": 90,
       "ativa": true,
       "acessos": 73,
       "buscas": 345,
-      "descricoes": 336,
-      "envios": 362,
+      "descricoes": 343,
+      "envios": 369,
       "primeiro": "2026-08-10T19:02:35.392Z",
-      "ultimo": "2026-10-04T02:47:08.314Z",
+      "ultimo": "2026-10-04T22:17:44.744Z",
       "dias": 0
     },
     {
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 100,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-10-01T17:09:44.355Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "monnika-marikinha",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 17,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-09-18T16:10:36.275Z",
-      "dias": 15
+      "dias": 16
     },
     {
       "slug": "trimix",
@@ -184,7 +184,7 @@ window.DADOS = {
       "envios": 13,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-09-28T16:09:38.397Z",
-      "dias": 5
+      "dias": 6
     },
     {
       "slug": "optimist-jeans",
@@ -470,7 +470,7 @@ window.DADOS = {
     {
       "inicio": "2026-09-28",
       "fim": "2026-10-04",
-      "produtos": 146,
+      "produtos": 153,
       "ativas": 4,
       "usaram": 5,
       "cadastros": 10,
@@ -490,9 +490,9 @@ window.DADOS = {
         "paradas": 5,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1944,
-        "produtos_7d": 118,
-        "descricoes_total": 2130,
+        "produtos_total": 1951,
+        "produtos_7d": 125,
+        "descricoes_total": 2137,
         "total_estimado": false,
         "produtos_atribuidos": 0
       },
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -543,18 +543,18 @@ window.DADOS = {
           "arquetipo": "explorador",
           "tem_conta": true,
           "email": "nicoboco.shop@nicoboco.com.br",
-          "produtos": 221,
+          "produtos": 228,
           "estimado": false,
-          "produtos_7d": 83,
+          "produtos_7d": 90,
           "ativa": true,
           "acessos": 64,
           "buscas": 305,
-          "descricoes": 333,
-          "envios": 337,
+          "descricoes": 340,
+          "envios": 344,
           "primeiro": "2026-08-11T18:28:02.542Z",
-          "ultimo": "2026-10-04T02:47:08.314Z",
+          "ultimo": "2026-10-04T22:17:44.744Z",
           "dias": 0,
-          "produtos_medidos": 221,
+          "produtos_medidos": 228,
           "atribuido": 0
         },
         {
@@ -613,7 +613,7 @@ window.DADOS = {
           "envios": 16,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-09-18T16:10:36.275Z",
-          "dias": 15,
+          "dias": 16,
           "produtos_medidos": 16,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 24,
+          "dias": 25,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -673,7 +673,7 @@ window.DADOS = {
           "envios": 5,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-09-28T16:09:38.397Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 4,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-09-28",
           "fim": "2026-10-04",
-          "produtos": 118,
+          "produtos": 125,
           "ativas": 3,
           "usaram": 4,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 118,
+          "produtos_medidos": 125,
           "atribuido": 0
         }
       ]
@@ -1108,7 +1108,7 @@ window.DADOS = {
           "envios": 62,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-10-01T17:09:42.907Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 58,
           "atribuido": 49
         },
