@@ -196,6 +196,26 @@ rodar na mão pela aba Actions ("Painel de Clientes CS" → Run workflow).
 ⚠️ O `index.html` e o `README.md` **não** são publicados pelo workflow — mudança
 de layout continua indo por `node publicar.js`.
 
+## Exportar: .xlsx com moeda de verdade (05/10/2026)
+
+A Laura: *"quando exporto a tabela, os valores não estão vindo em formatação de
+reais"*. O botão gerava CSV com o número cru (`1234.56`) e o Excel em português
+não reconhece ponto como decimal — a coluna chegava como texto.
+
+Agora o botão é **Exportar Excel** e sai `.xlsx`: o número continua número (dá
+para somar, filtrar, fazer tabela dinâmica) e a célula leva o formato
+`R$ #,##0.00`. As datas saem em dd/mm/aaaa e os centavos são arredondados, para
+não aparecer `57,92999999999999` na barra de fórmulas.
+
+Como o painel sabe qual coluna é dinheiro: as tabelas das abas declaram `tipo`
+(`money`, `moneyC`, `money0traco`) e as tabelas dos cards passam a função em
+`f` (`fmt.money`, `fmt.moneyCompact`) — o export olha os dois. Datas idem
+(`date`, `cadastro`, `implantado`, `dataRel`, `dataTicket`, `rel`).
+
+A biblioteca (SheetJS) é carregada do CDN **no clique**, não no load da página.
+Sem internet ou com o CDN bloqueado, cai no CSV de antes — agora com vírgula
+decimal, que é o que o Excel brasileiro entende sem perguntar nada.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |

@@ -6223,8 +6223,8 @@ function renderTabela(t, rows){
   const card = el('div',{class:'table-card'});
   const head = el('div',{class:'table-head'});
   head.innerHTML = `<h3>${t.tabela}</h3><span class="count">${rows.length} ${rows.length===1?'registro':'registros'}</span>`;
-  const exp = el('button',{class:'btn',type:'button'},'Exportar CSV');
-  exp.onclick = exportarCSV;
+  const exp = el('button',{class:'btn',type:'button'},'Exportar Excel');
+  exp.onclick = () => exportarPlanilha(exp);
   head.appendChild(exp);
   card.appendChild(head);
 
@@ -6882,21 +6882,109 @@ function abrirEditorVarejo(cs){
   document.body.appendChild(back);
 }
 
+/* ---- EXPORTAR
+   Até 05/10/2026 isto gerava CSV com o número cru ("1234.56"), e o Excel em
+   português não reconhece ponto como decimal: a coluna chegava como texto e a
+   Laura via valor sem cara de dinheiro. Agora sai .xlsx de verdade, com o
+   número sendo número e o formato de moeda aplicado na célula — some em cima
+   dele, filtre, faça tabela dinâmica.
+
+   A biblioteca é carregada só no clique, do CDN. Sem internet ou com o CDN
+   bloqueado, cai no CSV de sempre, agora com vírgula decimal, que é o que o
+   Excel brasileiro entende. */
+const URL_XLSX = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+function carregarXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((ok, falhou)=>{
+    const s = document.createElement('script');
+    s.src = URL_XLSX;
+    s.onload = ()=> window.XLSX ? ok(window.XLSX) : falhou(new Error('XLSX não subiu'));
+    s.onerror = ()=> falhou(new Error('não deu para baixar a biblioteca'));
+    document.head.appendChild(s);
+  });
+}
+
+/* Coluna de dinheiro e de data, nos dois jeitos que o painel declara: as
+   tabelas das abas usam `tipo` (o renderizador decide como desenhar) e as
+   tabelas dos cards passam a função direto em `f`. */
+const TIPOS_DINHEIRO = ['money', 'moneyC', 'money0traco'];
+/* 'rel' mostra "há 3 dias" na tela, mas o dado é uma data — na planilha ela
+   vale mais como data do que como texto relativo. */
+const TIPOS_DATA = ['date', 'cadastro', 'implantado', 'dataRel', 'dataTicket', 'rel'];
+const colunaDeDinheiro = c => !!c && (TIPOS_DINHEIRO.includes(c.tipo)
+  || c.f === fmt.money || c.f === fmt.moneyCompact);
+const colunaDeData = c => !!c && (TIPOS_DATA.includes(c.tipo) || c.f === fmt.date);
+
+function valorCru(r, c){
+  let v = r[c.k];
+  if(c.tipo==='clienteNegocio') return `${r.cliente} — ${r.negocio||''}`;
+  if(Array.isArray(v)) return v.join(' · ');
+  if(c.tipo==='diasPedido') return v==null ? 'nunca vendeu' : v;
+  if(v==null) return '';
+  if(typeof v === 'boolean') return v ? 'sim' : 'não';
+  return v;
+}
+
+function nomeArquivo(ext){
+  return `${estado.aba}-${periodo().ini}_a_${periodo().fim}.${ext}`;
+}
+
+async function exportarPlanilha(botao){
+  const {rows, colunas} = ultimoRender;
+  const antes = botao ? botao.textContent : null;
+  if(botao){ botao.textContent = 'Gerando…'; botao.disabled = true }
+  try{
+    const XLSX = await carregarXLSX();
+    const aoa = [colunas.map(c=>c.l)];
+    rows.forEach(r=>aoa.push(colunas.map(c=>valorCru(r,c))));
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    /* Formato por coluna: moeda onde a tela mostra moeda, data onde mostra
+       data. O cabeçalho (linha 0) fica de fora. */
+    const ref = XLSX.utils.decode_range(ws['!ref']);
+    colunas.forEach((c, i)=>{
+      const moeda = colunaDeDinheiro(c), data = colunaDeData(c);
+      if(!moeda && !data) return;
+      for(let L=1; L<=ref.e.r; L++){
+        const cel = ws[XLSX.utils.encode_cell({r:L, c:i})];
+        if(!cel) continue;
+        if(moeda && cel.t === 'n'){
+          /* 57.92999999999999 vira 57,93: o centavo a mais é ruído de ponto
+             flutuante, e na planilha ele apareceria na barra de fórmulas. */
+          cel.v = Math.round(cel.v * 100) / 100;
+          cel.z = 'R$ #,##0.00';
+        }
+        if(data && typeof cel.v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(cel.v)){
+          const [a,m,d] = cel.v.split('-');
+          cel.v = d+'/'+m+'/'+a;
+        }
+      }
+    });
+    ws['!cols'] = colunas.map(c=>({wch: Math.min(38, Math.max(12, String(c.l).length + 4))}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, String(estado.aba).slice(0,28) || 'Dados');
+    XLSX.writeFile(wb, nomeArquivo('xlsx'));
+  }catch(e){
+    console.warn('[export] caiu no CSV:', e.message);
+    exportarCSV();
+  }finally{
+    if(botao){ botao.textContent = antes; botao.disabled = false }
+  }
+}
+
+/* Fallback. Vírgula decimal e ponto e vírgula de separador: é assim que o
+   Excel em português abre sem pedir nada. */
 function exportarCSV(){
   const {rows, colunas} = ultimoRender;
-  const linhas = [colunas.map(c=>c.l).join(';')];
+  const texto = v => String(v).replace(/;/g, ',');
+  const linhas = [colunas.map(c=>texto(c.l)).join(';')];
   rows.forEach(r=>linhas.push(colunas.map(c=>{
-    let v = r[c.k];
-    if(c.tipo==='clienteNegocio') v = `${r.cliente} — ${r.negocio||''}`;
-    /* O racional é uma lista; sem isso o CSV sairia com os critérios colados
-       por vírgula e ninguém entenderia onde um termina e o outro começa. */
-    if(Array.isArray(v)) v = v.join(' · ');
-    if(c.tipo==='diasPedido') v = v==null ? 'nunca vendeu' : v;
-    return String(v==null?'':v).replace(/;/g,',');
+    const v = valorCru(r, c);
+    if(typeof v === 'number') return String(v).replace('.', ',');
+    return texto(v);
   }).join(';')));
   const blob = new Blob(['\ufeff'+linhas.join('\n')],{type:'text/csv;charset=utf-8'});
   const a = el('a'); a.href = URL.createObjectURL(blob);
-  a.download = `${estado.aba}-${periodo().ini}_a_${periodo().fim}.csv`; a.click();
+  a.download = nomeArquivo('csv'); a.click();
   URL.revokeObjectURL(a.href);
 }
 
