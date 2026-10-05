@@ -667,9 +667,20 @@ dentro moram quatro coisas diferentes:
 | **Interesse** — estágio de pré-venda do Varejo - Jornada, R$ 0 | Vallen Store, Grupo Sorella, Vixi Maria kids |
 | **A mesma marca duas vezes** — negócio aberto em dois pipelines | Calu Acessórios, três vezes no mês |
 
-Agora cada linha tem a coluna **Origem**, e o número grande conta **só cliente
-novo, por marca e não por negócio**. Setembro saiu de "19 novas vendas" para
-**8 clientes novos (R$ 5,2 mil)**, com 10 linhas identificadas e postas de lado.
+O card passou a ser **só de cliente novo** — tabela, gráfico e números —, e o
+que ficou de fora aparece no KPI "Fora da conta", com a quebra entre expansão e
+interesse. Some sem dizer seria esconder, que foi o que gerou a dúvida da
+Biotipo.
+
+**Uma linha por marca.** A Calu Acessórios abriu três negócios de R$ 499 em
+setembro; somar daria R$ 1.497 de uma venda que foi uma. Fica valendo o de
+maior valor (empate, o mais antigo) e a coluna *Negócios no período* mostra
+quantos foram.
+
+**O número grande é o valor ganho** (`amount` do negócio no HubSpot), não a
+contagem — pedido da Laura em 05/10/2026. A contagem desceu para a linha de
+baixo e é o que o gráfico desenha ao longo do período escolhido no filtro.
+Setembro: **R$ 4,7 mil de 8 clientes novos**, contra R$ 18 mil de 19 em agosto.
 
 **De parceiro × direto.** A coluna **Canal** é o parceiro dono da conta no
 cadastro. Attasoft, Uemtel, Ve Vantagens, ProRoi, Glads, Up Agency, Onix e
