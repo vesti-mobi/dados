@@ -1531,8 +1531,13 @@ const RE_INTERESSE = /interesse|lead|prospec|qualifica|contato inicial/i;
 
 function marcaDoNegocioCS(o){
   if(o.cnpj && CLIENTE_POR_CNPJ[String(o.cnpj)]) return CLIENTE_POR_CNPJ[String(o.cnpj)];
-  const limpo = String(o.cliente||'').replace(/\s*[-.|]\s*(starter|starrter|varejo|plataforma|integra\w*|pro)\s*$/i,'').trim();
-  return CLIENTE_POR_NOME[limpo] || CLIENTE_POR_NOME[String(o.cliente||'').trim()] || null;
+  /* Sem acento e sem caixa: o nome do negócio vem do jeito que a pessoa
+     digitou ("CALLISAYA MODAS", "Callisaya Modas") e o cadastro tem a terceira
+     versão. Casar com `===` fazia cliente antigo passar por novo. */
+  const cru = chaveNomeMarca(o.cliente);
+  const limpo = chaveNomeMarca(String(o.cliente||'')
+    .replace(/\s*[-.|]\s*(starter|starrter|varejo|plataforma|integra\w*|pro)\s*$/i,''));
+  return CLIENTE_POR_NOME[limpo] || CLIENTE_POR_NOME[cru] || null;
 }
 
 function origemDaVenda(o){
@@ -1543,7 +1548,10 @@ function origemDaVenda(o){
   const novo = dias == null || dias <= DIAS_CLIENTE_NOVO;
   return {origem: novo ? 'Cliente novo' : 'Cliente existente', marca, canal: marca.canal || null};
 }
-const CLIENTE_POR_NOME = (()=>{ const m={}; DATA.clientes.forEach(c=>{ m[String(c.nome).trim()]=c }); return m })();
+const chaveNomeMarca = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/\s+/g,' ').trim();
+const CLIENTE_POR_NOME = (()=>{ const m={};
+  DATA.clientes.forEach(c=>{ const k = chaveNomeMarca(c.nome); if(k && !m[k]) m[k]=c }); return m })();
 
 /* --- o recorte das três CS ------------------------------------------------
    Toda linha da aba passa por aqui. `CS_CARTEIRA` é a mesma lista da aba
@@ -2902,11 +2910,11 @@ const CARDS_VISAO = [
       const interesse = rows.filter(r=>r.origem==='Interesse');
       return [
         {l:'Clientes novos', v:fmt.int(marcasUnicas(novos)),
-         s:(dif>=0?'+':'')+fmt.int(dif)+' vs periodo anterior'+(temValor?' · '+fmt.moneyCompact(soma(novos,'valor')):'')},
+         s:(dif>=0?'+':'')+fmt.int(dif)+' vs período anterior'+(temValor?' · '+fmt.moneyCompact(soma(novos,'valor')):'')},
         {l:'Direto da Vesti', v:fmt.int(marcasUnicas(direto)),
          s: temValor ? fmt.moneyCompact(soma(direto,'valor'))+' · sem parceiro no meio' : 'sem parceiro no meio'},
         {l:'De parceiro', v:fmt.int(marcasUnicas(parc)),
-         s: parc.length ? fmt.moneyCompact(soma(parc,'valor'))+' · maior: '+maisFrequente(parc,'canal') : 'nenhum no periodo'},
+         s: parc.length ? fmt.moneyCompact(soma(parc,'valor'))+' · maior: '+maisFrequente(parc,'canal') : 'nenhum no período'},
         /* Negocio sem dono no HubSpot e comum e costuma ser o "maior" grupo —
            mas "quem mais vendeu" tem que ser gente. */
         {l:'Quem mais vendeu', v: (()=>{ const comDono = novos.filter(r=>r.proprietario!=='(sem proprietário)');

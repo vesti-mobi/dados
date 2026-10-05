@@ -653,6 +653,37 @@ Sucesso do cliente - Integração, Sucesso do Cliente - Plataforma, CS - Starter
 Varejo - Jornada. (O catálogo de pipelines e estágios sai no log do workflow
 **Conferir HubSpot**.)
 
+## Novas vendas: o que é venda nova, afinal (05/10/2026)
+
+Crítica da Laura: *"não dá pra ver de cara quanto vendeu de novos clientes
+(Cris), quanto vendeu de clientes de parceiros… entrou tipo Biotipo que foi uma
+integração"*. O card contava **todo negócio criado** nos pipelines de CS, e ali
+dentro moram quatro coisas diferentes:
+
+| O que é | Exemplo de setembro/2026 |
+|---|---|
+| **Cliente novo** — marca que não estava no cadastro ou entrou há menos de 90 dias | Ladycor, Confecções AFP, Bressia Modas |
+| **Cliente existente** — expansão em quem já era da casa | **Biotipo** (cliente desde 20/02/2025, negócio de integração aberto em "Novo Cliente"), Callisaya, Provenza, Versally |
+| **Interesse** — estágio de pré-venda do Varejo - Jornada, R$ 0 | Vallen Store, Grupo Sorella, Vixi Maria kids |
+| **A mesma marca duas vezes** — negócio aberto em dois pipelines | Calu Acessórios, três vezes no mês |
+
+Agora cada linha tem a coluna **Origem**, e o número grande conta **só cliente
+novo, por marca e não por negócio**. Setembro saiu de "19 novas vendas" para
+**8 clientes novos (R$ 5,2 mil)**, com 10 linhas identificadas e postas de lado.
+
+**De parceiro × direto.** A coluna **Canal** é o parceiro dono da conta no
+cadastro. Attasoft, Uemtel, Ve Vantagens, ProRoi, Glads, Up Agency, Onix e
+Tizeefy contam como venda de parceiro; Vesti, Varejo Vesti, Starter, Trial e
+Treino contam como direto. A lista de fora é a curta e estável, então parceiro
+novo que apareça no cadastro cai em "parceiro" sozinho. Em setembro: 3 de
+parceiro (todos Uemtel, R$ 1,5 mil) e 5 diretos (R$ 3,7 mil).
+
+**Como a marca é achada.** O onboarding passou a trazer o **CNPJ da empresa
+associada** no HubSpot. Sem ele não dava: o nome do negócio vem com sufixo de
+pipeline ("Confecções AFP - Starter") e não casa com o cadastro. Na falta do
+CNPJ, o nome é comparado sem acento e sem caixa, com o sufixo removido — casar
+com `===` fazia cliente antigo passar por novo (caso da Callisaya Modas).
+
 ## Churn declarado na planilha (29/09/2026)
 
 Terceira leitura de churn do painel, e a única **escrita por uma pessoa**:
