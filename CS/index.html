@@ -1553,14 +1553,37 @@ function marcaDoNegocioCS(o){
   return CLIENTE_POR_NOME[limpo] || CLIENTE_POR_NOME[cru] || null;
 }
 
+/* ATIVAÇÃO DE ASSINATURA paga, por marca — o sinal de que a marca (re)começou
+   a pagar plano. "Setup de Integração" fica de fora de propósito: é expansão
+   em quem já é cliente, não contrato novo. Foi o que separou a Callisaya
+   Modas (voltou em 09/09/2026 depois de um churn em janeiro de 2025, pagando
+   R$ 499 de ativação) da Biotipo (cliente da casa que comprou integração). */
+const RE_ATIVACAO = /ativa[çc]/i;
+const DIAS_ATIVACAO = 45;
+const ATIVACOES_POR_DOM = (()=>{ const m = {};
+  (DATA.faturasCliente||[]).forEach(f=>{ if(!f.pago || !RE_ATIVACAO.test(f.item||'')) return;
+    (m[f.dominio] = m[f.dominio] || []).push(f.vencimento); });
+  return m })();
+function reativouPerto(marca, data){
+  if(!marca || !marca.dominio) return false;
+  return (ATIVACOES_POR_DOM[marca.dominio]||[])
+    .some(v => Math.abs(diasEntre(v, data)) <= DIAS_ATIVACAO);
+}
+
 function origemDaVenda(o){
   const marca = marcaDoNegocioCS(o);
   if(RE_INTERESSE.test(o.estagio||'')) return {origem:'Interesse', marca, canal: marca?marca.canal:null};
   if(!marca) return {origem:'Cliente novo', marca:null, canal:null};
   const dias = marca.dataCadastro ? diasEntre(marca.dataCadastro, o.data) : null;
-  const novo = dias == null || dias <= DIAS_CLIENTE_NOVO;
-  return {origem: novo ? 'Cliente novo' : 'Cliente existente', marca, canal: marca.canal || null};
+  if(dias == null || dias <= DIAS_CLIENTE_NOVO)
+    return {origem:'Cliente novo', marca, canal: marca.canal || null};
+  /* Cadastro antigo mas pagou ativação agora: é cliente que voltou, e isso é
+     venda — entra no card com o nome certo. */
+  if(reativouPerto(marca, o.data))
+    return {origem:'Reativação', marca, canal: marca.canal || null};
+  return {origem:'Cliente existente', marca, canal: marca.canal || null};
 }
+const ORIGENS_QUE_CONTAM = ['Cliente novo', 'Reativação'];
 const chaveNomeMarca = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
   .toLowerCase().replace(/\s+/g,' ').trim();
 const CLIENTE_POR_NOME = (()=>{ const m={};
@@ -2877,8 +2900,8 @@ function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL
 const CARDS_VISAO = [
   {
     id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
-    capa:'Quanto a Vesti ganhou com cliente novo no período',
-    fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b>. <b>O card é só de CLIENTE NOVO</b>: marca que não estava no cadastro ou entrou há menos de 90 dias. Fica de fora a expansão em quem já era da casa (a Biotipo, cliente desde fevereiro de 2025, tinha um negócio de integração aberto em "Novo Cliente") e o interesse do Varejo - Jornada, que não é venda — o KPI <b>Fora da conta</b> diz quantos foram. <b>Uma linha por marca</b>: a mesma marca abre negócio em dois pipelines (a Calu Acessórios, três vezes em setembro/2026) e fica valendo o de maior valor, nunca a soma. O número grande é o <b>valor ganho</b> (<code>amount</code> do negócio no HubSpot); o gráfico desenha esse valor pelo período escolhido no filtro. <b>Canal</b> é o parceiro dono da conta no cadastro: Attasoft, Uemtel e afins contam como venda de parceiro; Vesti, Varejo Vesti, Starter, Trial e Treino contam como direto. A marca é achada pelo <b>CNPJ da empresa associada</b> no HubSpot e, na falta dele, pelo nome sem acento. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca.',
+    capa:'Quanto a Vesti ganhou com marca que entrou ou voltou no período',
+    fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b>. <b>Conta a marca que entrou ou que VOLTOU</b>, na coluna Origem: <b>Cliente novo</b> é marca que não estava no cadastro ou entrou há menos de 90 dias; <b>Reativação</b> é marca de cadastro antigo que pagou <b>Ativação de Assinatura</b> até 45 dias do negócio — foi o caso da Callisaya Modas, cliente desde 2024, que deu churn em janeiro de 2025 e voltou em 09/09/2026 pagando R$ 499. Fica de fora a <b>expansão</b> em quem já era da casa (a Biotipo comprou Setup de Integração, que não é contrato novo) e o <b>interesse</b> do Varejo - Jornada; o KPI <b>Fora da conta</b> diz quantos foram. <b>Uma linha por marca</b>: a mesma marca abre negócio em dois pipelines (a Calu Acessórios, três vezes em setembro/2026) e fica valendo o de maior valor, nunca a soma. O número grande é o <b>valor ganho</b> (<code>amount</code> do negócio no HubSpot); o gráfico desenha esse valor pelo período escolhido no filtro. <b>Canal</b> é o parceiro dono da conta no cadastro: Attasoft, Uemtel e afins contam como venda de parceiro; Vesti, Varejo Vesti, Starter, Trial e Treino contam como direto. A marca é achada pelo <b>CNPJ da empresa associada</b> no HubSpot e, na falta dele, pelo nome sem acento. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca.',
     campoData:'data',
     /* `valor` (amount do negócio) entrou em 21/09/2026 a pedido da Laura. Só
        existe nas cargas a partir dessa data: num dados.js mais velho o campo
@@ -2898,7 +2921,7 @@ const CARDS_VISAO = [
        somar daria R$ 1.497 de uma venda que foi uma. */
     linhas:ctx=>{ const porMarca = new Map();
       novasVendasNoPeriodo(ctx.p).forEach(o=>{ const or = origemDaVenda(o);
-        if(or.origem !== 'Cliente novo') return;
+        if(!ORIGENS_QUE_CONTAM.includes(or.origem)) return;
         const chave = chaveNomeMarca(o.cliente);
         const linha = {nome:o.cliente,
           origem: or.origem,
@@ -2935,10 +2958,12 @@ const CARDS_VISAO = [
        gráfico desenha mês a mês. */
     resumo:(rows,ctx)=>{ const temValor = rows.some(r=>r.valor!=null);
       const parc = rows.filter(r=>r.parceiro).length;
+      const reat = rows.filter(r=>r.origem==='Reativação').length;
       const fora = foraDaConta(ctx.p);
       return {v: temValor ? fmt.moneyCompact(soma(rows,'valor')) : fmt.int(rows.length),
-        s: !rows.length ? 'nenhum cliente novo no período'
-          : fmt.int(rows.length) + (rows.length===1?' cliente novo':' clientes novos')
+        s: !rows.length ? 'nenhuma venda nova no período'
+          : fmt.int(rows.length) + (rows.length===1?' marca':' marcas')
+            + (reat ? ' · '+reat+' de volta' : '')
             + ' · ' + parc + ' de parceiro'
             + (fora ? ' · ' + fora + ' fora da conta' : '')}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('novasVendas'), ctxPeriodo(periodoAnterior(ctx.p)));
@@ -2948,14 +2973,14 @@ const CARDS_VISAO = [
       const parc = rows.filter(r=>r.parceiro), direto = rows.filter(r=>!r.parceiro);
       const fora = foraDaConta(ctx.p, true);
       return [
-        {l:'Ganho com clientes novos', v: temValor ? fmt.moneyCompact(valor) : '—',
+        {l:'Ganho com venda nova', v: temValor ? fmt.moneyCompact(valor) : '—',
          /* 'R$ -10k' fica feio e lê mal: o sinal vem à frente e o valor, em
             módulo. */
          s: valorAnt ? (dif>=0?'+':'−')+fmt.moneyCompact(Math.abs(dif))+' vs período anterior'
-                     : fmt.int(rows.length)+' clientes novos'},
-        {l:'Clientes novos', v:fmt.int(rows.length),
-         s: ant.length ? (rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs período anterior'
-                       : 'no período'},
+                     : fmt.int(rows.length)+' marcas no período'},
+        {l:'Marcas', v:fmt.int(rows.length),
+         s: (()=>{ const reat = rows.filter(r=>r.origem==='Reativação').length;
+           return fmt.int(rows.length - reat)+' entraram agora · '+fmt.int(reat)+' voltaram' })()},
         {l:'Direto da Vesti', v:fmt.int(direto.length),
          s: temValor ? fmt.moneyCompact(soma(direto,'valor'))+' · sem parceiro no meio' : 'sem parceiro no meio'},
         {l:'De parceiro', v:fmt.int(parc.length),
@@ -2983,6 +3008,7 @@ const CARDS_VISAO = [
       return [...por.values()].sort((a,b)=>b.v-a.v)
         .map((x,i)=>Object.assign(x, {cor:cores[i%cores.length]})); },
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME,
+      {k:'origem', l:'Origem'},
       {k:'canal', l:'Canal'},
       {k:'negocios', l:'Negócios no período', r:true, f:v=>v>1?fmt.int(v):'1'},
       {k:'cadastro', l:'Marca cadastrada em', f:v=>v?fmt.date(v):'—'},

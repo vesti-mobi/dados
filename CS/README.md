@@ -667,10 +667,21 @@ dentro moram quatro coisas diferentes:
 | **Interesse** — estágio de pré-venda do Varejo - Jornada, R$ 0 | Vallen Store, Grupo Sorella, Vixi Maria kids |
 | **A mesma marca duas vezes** — negócio aberto em dois pipelines | Calu Acessórios, três vezes no mês |
 
-O card passou a ser **só de cliente novo** — tabela, gráfico e números —, e o
-que ficou de fora aparece no KPI "Fora da conta", com a quebra entre expansão e
-interesse. Some sem dizer seria esconder, que foi o que gerou a dúvida da
+O card conta **marca que entrou ou que voltou** — tabela, gráfico e números —, e
+o que ficou de fora aparece no KPI "Fora da conta", com a quebra entre expansão
+e interesse. Some sem dizer seria esconder, que foi o que gerou a dúvida da
 Biotipo.
+
+**Reativação** (05/10/2026). A Laura: *"Callisaya Modas . Starter, essa por
+exemplo, por que não aparece?"*. A marca entrou na Vesti em junho de 2024, deu
+**churn em janeiro de 2025** e **voltou em 09/09/2026 pagando R$ 499 de Ativação
+de Assinatura**. Pela régua de cadastro ela era "cliente existente" — mas pagar
+ativação de novo é venda. Marca de cadastro antigo com **Ativação de Assinatura
+paga até 45 dias do negócio** passa a contar, com a Origem dizendo *Reativação*.
+O item importa: "Ativação de Assinatura" é contrato novo, "Setup de Integração"
+não — é o que separa a Callisaya da Biotipo. Em setembro entraram duas
+(Callisaya e Provenza) e o card foi de R$ 4,7 mil / 8 marcas para R$ 5,7 mil /
+10 marcas.
 
 **Uma linha por marca.** A Calu Acessórios abriu três negócios de R$ 499 em
 setembro; somar daria R$ 1.497 de uma venda que foi uma. Fica valendo o de
