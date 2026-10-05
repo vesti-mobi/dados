@@ -1216,13 +1216,21 @@ async function puxarOnboarding(pipes, owners) {
     [{ propertyName: 'createdate', direction: 'DESCENDING' }]);
   console.log('  negócios nesses pipelines'.padEnd(44) + String(deals.length).padStart(8));
 
-  const { empresaDo, nome: nomeEmpresa } = await empresasAssociadas('deals', deals.map(d => d.id));
+  const { empresaDo, nome: nomeEmpresa, doc: cnpjEmpresa } = await empresasAssociadas('deals', deals.map(d => d.id));
 
   const linhas = deals.map(d => {
     const p = d.properties;
     return {
       id: d.id,
       cliente: nomeEmpresa[empresaDo[d.id]] || p.dealname || '(sem empresa)',
+      /* O CNPJ da empresa associada entrou em 05/10/2026. Sem ele o card de
+         Novas vendas não tinha como saber se a marca já era cliente: o nome do
+         negócio vem com sufixo ("Confecções AFP - Starter") e não casa com o
+         cadastro. Com o CNPJ, a Visão geral separa venda de cliente NOVO de
+         expansão em cliente antigo — foi o caso da Biotipo, cliente desde
+         fevereiro de 2025, que aparecia como venda nova por causa de um
+         negócio de integração aberto no estágio "Novo Cliente". */
+      cnpj: cnpjEmpresa[empresaDo[d.id]] || null,
       pipeline: nomePipeline[p.pipeline] || '—',
       estagio: nomeEstagio[p.dealstage] || '—',
       /* `cs` aqui é o DONO DO NEGÓCIO no HubSpot, não o CS da marca — os dois

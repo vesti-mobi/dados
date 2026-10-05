@@ -1504,6 +1504,46 @@ function mesAnterior(m){ const [y,mm]=m.split('-').map(Number);
 function janelaDoMes(m){ return {ini:m+'-01', fim:ultimoDiaDoMes(m+'-01')} }
 
 const CLIENTE_POR_DOM = (()=>{ const m={}; DATA.clientes.forEach(c=>{ if(c.dominio) m[c.dominio]=c }); return m })();
+const CLIENTE_POR_CNPJ = (()=>{ const m={}; DATA.clientes.forEach(c=>{ if(c.cnpj) m[String(c.cnpj)]=c }); return m })();
+
+/* ---- Origem de uma venda nova (05/10/2026)
+   Crítica da Laura: "não dá pra ver de cara quanto vendeu de novos clientes,
+   quanto vendeu de clientes de parceiros… entrou tipo Biotipo que foi uma
+   integração". O card contava TODO negócio criado nos pipelines de CS, e ali
+   dentro moram quatro coisas diferentes: cliente que acabou de chegar, cliente
+   antigo que comprou mais, marca que só demonstrou interesse e a mesma marca
+   repetida em dois pipelines. Aqui cada linha ganha nome.
+
+   A marca é achada pelo CNPJ da empresa associada no HubSpot; sem ele, pelo
+   nome do negócio sem o sufixo de pipeline ("Confecções AFP - Starter"). */
+const DIAS_CLIENTE_NOVO = 90;
+/* Canal próprio da Vesti × canal de parceiro. A lista de fora é a curta e
+   estável (o que a Vesti vende direto); canal novo que apareça no cadastro cai
+   em "parceiro" sozinho, que é o certo — parceiro novo entra toda hora, canal
+   próprio não. */
+const CANAIS_VESTI = ['Vesti', 'Varejo Vesti', 'Starter', 'Trial', 'Treino', 'Sem canal'];
+const ehParceiro = canal => !!canal && !CANAIS_VESTI.includes(canal);
+/* A mesma marca abre negócio em dois pipelines e vira duas linhas — a Calu
+   Acessórios apareceu três vezes em setembro/2026. Contagem de cliente é por
+   marca, não por negócio. */
+const marcasUnicas = rows => new Set(rows.map(r=>String(r.nome||'').trim().toLowerCase())).size;
+const RE_INTERESSE = /interesse|lead|prospec|qualifica|contato inicial/i;
+
+function marcaDoNegocioCS(o){
+  if(o.cnpj && CLIENTE_POR_CNPJ[String(o.cnpj)]) return CLIENTE_POR_CNPJ[String(o.cnpj)];
+  const limpo = String(o.cliente||'').replace(/\s*[-.|]\s*(starter|starrter|varejo|plataforma|integra\w*|pro)\s*$/i,'').trim();
+  return CLIENTE_POR_NOME[limpo] || CLIENTE_POR_NOME[String(o.cliente||'').trim()] || null;
+}
+
+function origemDaVenda(o){
+  const marca = marcaDoNegocioCS(o);
+  if(RE_INTERESSE.test(o.estagio||'')) return {origem:'Interesse', marca, canal: marca?marca.canal:null};
+  if(!marca) return {origem:'Cliente novo', marca:null, canal:null};
+  const dias = marca.dataCadastro ? diasEntre(marca.dataCadastro, o.data) : null;
+  const novo = dias == null || dias <= DIAS_CLIENTE_NOVO;
+  return {origem: novo ? 'Cliente novo' : 'Cliente existente', marca, canal: marca.canal || null};
+}
+const CLIENTE_POR_NOME = (()=>{ const m={}; DATA.clientes.forEach(c=>{ m[String(c.nome).trim()]=c }); return m })();
 
 /* --- o recorte das três CS ------------------------------------------------
    Toda linha da aba passa por aqui. `CS_CARTEIRA` é a mesma lista da aba
@@ -2816,8 +2856,8 @@ function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL
 const CARDS_VISAO = [
   {
     id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
-    capa:'Negócios criados nos quatro pipelines de CS dentro do período',
-    fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b> (este entrou em 29/09/2026 a pedido do Walid — ficava de fora porque o estágio final dele se chama "Implementado", com E). O plano sai do pipeline: Starter é o "CS - Starter", Pro são os outros. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca: as duas colunas ficam lado a lado e o gráfico de composição soma por proprietário.',
+    capa:'Clientes novos no período, separados de expansão e de interesse',
+    fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b>. <b>Nem tudo que nasce nesses pipelines é venda nova</b>, e desde 05/10/2026 o card separa as três coisas, pela coluna <b>Origem</b>: <b>Cliente novo</b> é marca que não estava no cadastro ou entrou há menos de 90 dias; <b>Cliente existente</b> é expansão em quem já era da casa (foi o caso da Biotipo, cliente desde fevereiro de 2025, com um negócio de integração aberto em "Novo Cliente"); <b>Interesse</b> são os estágios de pré-venda do Varejo - Jornada. O número grande conta só o primeiro grupo, e por <b>marca</b>, não por negócio — a mesma marca abre negócio em dois pipelines (a Calu Acessórios apareceu três vezes em setembro). A marca é achada pelo <b>CNPJ da empresa associada</b> no HubSpot. <b>Canal</b> é o parceiro dono da conta no cadastro: Attasoft, Uemtel e afins contam como venda de parceiro; Vesti, Varejo Vesti, Starter, Trial e Treino contam como direto. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca.',
     campoData:'data',
     /* `valor` (amount do negócio) entrou em 21/09/2026 a pedido da Laura. Só
        existe nas cargas a partir dessa data: num dados.js mais velho o campo
@@ -2827,43 +2867,60 @@ const CARDS_VISAO = [
        cadastro. Andam separados de propósito desde 29/09/2026 (pedido do
        Walid): "tem vendas da Cris, da Elisa no mesmo pipe — precisamos somar
        os 2 mas separar eles". */
-    linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>({nome:o.cliente,
+    linhas:ctx=>novasVendasNoPeriodo(ctx.p).map(o=>{ const or = origemDaVenda(o);
+      return {nome:o.cliente,
+      origem: or.origem,
+      canal: or.canal || '—',
+      parceiro: ehParceiro(or.canal),
+      cadastro: or.marca ? or.marca.dataCadastro : null,
       proprietario: normalizarCs(o.proprietario || o.cs) || '(sem proprietário)',
-      cs: CS_POR_CLIENTE[o.cliente] || 'Sem CS',
+      cs: (or.marca && or.marca.cs) || CS_POR_CLIENTE[o.cliente] || 'Sem CS',
       plano:planoBucketHS(o.pipeline), pipeline:o.pipeline, estagio:o.estagio,
       novoCliente: /^novo\s*cliente$/i.test(String(o.estagio||'').trim()),
-      valor: o.valor==null ? null : (o.valor||0), data:o.data}))
+      valor: o.valor==null ? null : (o.valor||0), data:o.data}; })
       .sort((a,b)=>(b.valor||0)-(a.valor||0) || String(b.data).localeCompare(String(a.data))),
-    resumo:rows=>{ const temValor = rows.some(r=>r.valor!=null);
-      return {v:fmt.int(rows.length),
-        s: !rows.length ? 'nenhuma venda nova no período'
-          : (temValor ? fmt.moneyCompact(soma(rows,'valor'))+' · ' : '')
-            + `${rows.filter(r=>r.plano==='Starter').length} Starter · ${rows.filter(r=>r.plano==='Pro').length} Pro`}; },
+    /* O número grande passou a ser CLIENTE NOVO, não "negócio criado num
+       pipeline de CS" (05/10/2026). A Laura: "não dá pra ver de cara quanto
+       vendeu de novos clientes, quanto vendeu de clientes de parceiros...
+       entrou tipo Biotipo que foi uma integração". Interesse e expansão em
+       cliente antigo continuam na tabela, com o nome delas, fora da conta. */
+    resumo:rows=>{ const novos = rows.filter(r=>r.origem==='Cliente novo');
+      const temValor = novos.some(r=>r.valor!=null);
+      const parc = novos.filter(r=>r.parceiro).length;
+      const fora = rows.length - novos.length;
+      return {v:fmt.int(marcasUnicas(novos)),
+        s: !novos.length ? 'nenhum cliente novo no período'
+          : (temValor ? fmt.moneyCompact(soma(novos,'valor'))+' · ' : '')
+            + parc + ' de parceiro' + (fora ? ' · ' + fora + ' fora da conta' : '')}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('novasVendas'), ctxPeriodo(periodoAnterior(ctx.p)));
-      const st = rows.filter(r=>r.plano==='Starter'), pro = rows.filter(r=>r.plano==='Pro');
-      const dif = rows.length - ant.length;
-      const temValor = rows.some(r=>r.valor!=null), valor = soma(rows,'valor');
-      const comValor = rows.filter(r=>r.valor>0).length;
+      const novos = rows.filter(r=>r.origem==='Cliente novo');
+      const novosAnt = ant.filter(r=>r.origem==='Cliente novo');
+      const dif = marcasUnicas(novos) - marcasUnicas(novosAnt);
+      const temValor = novos.some(r=>r.valor!=null);
+      const parc = novos.filter(r=>r.parceiro), direto = novos.filter(r=>!r.parceiro);
+      const existentes = rows.filter(r=>r.origem==='Cliente existente');
+      const interesse = rows.filter(r=>r.origem==='Interesse');
       return [
-        {l:'Novas vendas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
-        {l:'Valor das novas vendas', v: temValor ? fmt.moneyCompact(valor) : '—',
-         s: temValor ? fmt.int(comValor)+' com valor preenchido no HubSpot'
-                     : 'a carga ainda não traz o valor do negócio'},
-        {l:'Ainda em "Novo cliente"', v:fmt.int(rows.filter(r=>r.novoCliente).length),
-         s:'dos criados no período, quem não saiu do primeiro estágio'},
-        /* Negócio sem dono no HubSpot é comum e costuma ser o "maior" grupo —
+        {l:'Clientes novos', v:fmt.int(marcasUnicas(novos)),
+         s:(dif>=0?'+':'')+fmt.int(dif)+' vs periodo anterior'+(temValor?' · '+fmt.moneyCompact(soma(novos,'valor')):'')},
+        {l:'Direto da Vesti', v:fmt.int(marcasUnicas(direto)),
+         s: temValor ? fmt.moneyCompact(soma(direto,'valor'))+' · sem parceiro no meio' : 'sem parceiro no meio'},
+        {l:'De parceiro', v:fmt.int(marcasUnicas(parc)),
+         s: parc.length ? fmt.moneyCompact(soma(parc,'valor'))+' · maior: '+maisFrequente(parc,'canal') : 'nenhum no periodo'},
+        /* Negocio sem dono no HubSpot e comum e costuma ser o "maior" grupo —
            mas "quem mais vendeu" tem que ser gente. */
-        {l:'Quem mais vendeu', v: (()=>{ const comDono = rows.filter(r=>r.proprietario!=='(sem proprietário)');
+        {l:'Quem mais vendeu', v: (()=>{ const comDono = novos.filter(r=>r.proprietario!=='(sem proprietário)');
           return comDono.length ? maisFrequente(comDono,'proprietario') : '—' })(),
-         s: fmt.int(new Set(rows.map(r=>r.proprietario)).size)+' proprietários diferentes · '
-            + fmt.int(st.length)+' Starter / '+fmt.int(pro.length)+' Pro'},
+         s: fmt.int(new Set(novos.map(r=>r.proprietario)).size)+' proprietários diferentes'},
+        {l:'Fora da conta', v:fmt.int(existentes.length + interesse.length),
+         s: fmt.int(existentes.length)+' em cliente que já era da casa · '+fmt.int(interesse.length)+' só interesse'},
       ]; },
     metricas:[
       {k:'starter', l:'Starter', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Starter').length},
       {k:'pro', l:'Pro', f:fmt.int, v:rows=>rows.filter(r=>r.plano==='Pro').length},
     ],
-    tituloCategorias:'Novas vendas por proprietário do negócio',
-    categorias:ctx=>{ const rows = linhasDoCard(cardVisao('novasVendas'), ctx);
+    tituloCategorias:'Clientes novos por proprietário do negócio',
+    categorias:ctx=>{ const rows = linhasDoCard(cardVisao('novasVendas'), ctx).filter(r=>r.origem==='Cliente novo');
       const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--neg)','var(--ink-3)'];
       const por = new Map();
       rows.forEach(r=>{ const l = por.get(r.proprietario) || {l:r.proprietario, v:0, quem:[]};
@@ -2871,6 +2928,9 @@ const CARDS_VISAO = [
       return [...por.values()].sort((a,b)=>b.v-a.v)
         .map((x,i)=>Object.assign(x, {cor:cores[i%cores.length]})); },
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME,
+      {k:'origem', l:'Origem'},
+      {k:'canal', l:'Canal'},
+      {k:'cadastro', l:'Marca cadastrada em', f:v=>v?fmt.date(v):'—'},
       {k:'proprietario', l:'Proprietário do negócio'}, {k:'cs', l:'CS da marca'},
       {k:'plano', l:'Plano'}, {k:'valor', l:'Valor', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
@@ -2894,8 +2954,8 @@ const CARDS_VISAO = [
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
         {l:'Período anterior', v:fmt.int(ant.length), s:rotuloPeriodo(periodoAnterior(ctx.p))},
-        {l:'Contra as novas vendas', v:pctTexto(rows.length, novas.length), s:fmt.int(novas.length)+' vendas novas no mesmo período'},
-        {l:'Marcas distintas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas diferentes'},
+        {l:'Contra os clientes novos', v:pctTexto(rows.length, marcasUnicas(novas.filter(r=>r.origem==='Cliente novo'))),
+         s:fmt.int(marcasUnicas(novas.filter(r=>r.origem==='Cliente novo')))+' clientes novos no mesmo período'},
       ]; },
     metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
     colunas:[{k:'fechadoEm', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
