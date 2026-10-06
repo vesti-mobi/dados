@@ -809,13 +809,22 @@ async function puxarBQ() {
      varejo tendo nascido no atacado. Empresa que a classificação ainda não
      alcançou (a carga é de 30/03/2026) não conta para nenhum dos dois. */
   const tipoPorMarca = await q('Atacado x Varejo por marca', `
+    /* Só os domínios da carteira: odbc_companies tem 2,1 MILHÕES de linhas e
+       sem este JOIN a consulta devolvia 2,17 milhões de grupos — 52 segundos
+       para um dado que cabe em mil linhas. */
+    WITH carteira AS (
+      SELECT CAST(ID AS STRING) id
+      FROM ${DS}.odbc_domains
+      WHERE LOWER(IFNULL(modulos,'')) LIKE '%vendas%'
+        AND LOWER(IFNULL(name,'')) NOT LIKE '%teste%'
+      GROUP BY id
+    )
     SELECT CAST(c.domain_id AS STRING) dom,
            COUNTIF(t.tipo = 'Varejo')  > 0 tem_varejo,
-           COUNTIF(t.tipo = 'Atacado') > 0 tem_atacado,
-           COUNTIF(t.tipo IS NULL)     > 0 tem_sem_classificacao
+           COUNTIF(t.tipo = 'Atacado') > 0 tem_atacado
     FROM ${DS}.odbc_companies c
+    JOIN carteira k ON k.id = CAST(c.domain_id AS STRING)
     LEFT JOIN ${DS}.confeccao_tipo_empresa t ON t.id_empresa = CAST(c.id AS STRING)
-    WHERE SAFE_CAST(c.domain_id AS INT64) IS NOT NULL
     GROUP BY 1`);
 
   /* Até quando a classificação cobre. Vai para o painel avisar — sem isso um mês
