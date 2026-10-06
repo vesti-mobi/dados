@@ -214,6 +214,35 @@ async function porStatus(bq) {
   fontes.forEach(l => console.log('  ' + String(l.origem).slice(0,24).padEnd(26)
     + String(l.qt).padStart(8) + mi(l.pago).padStart(14) + mi(l.criado).padStart(14)));
 
+  /* O relatório do Power BI corta o tempo por SEMANA ("Semana Ajustada",
+     "Ano Ajustado"), não por mês civil — e tem um slicer de Status Payment na
+     tela, então pago x criado depende do que estiver marcado. "Agosto" lá pode
+     ser um conjunto de 4 ou 5 semanas, e aí o total não tem por que bater com
+     01 a 31 de agosto. Aqui ficam as janelas semanais vizinhas. */
+  const janelas = [
+    ['mês civil            01/08 a 31/08', '2026-08-01', '2026-08-31'],
+    ['4 semanas ISO 32-35  03/08 a 30/08', '2026-08-03', '2026-08-30'],
+    ['5 semanas ISO 31-35  27/07 a 30/08', '2026-07-27', '2026-08-30'],
+    ['5 semanas ISO 32-36  03/08 a 06/09', '2026-08-03', '2026-09-06'],
+    ['4 semanas dom-sáb    02/08 a 29/08', '2026-08-02', '2026-08-29'],
+    ['5 semanas dom-sáb    26/07 a 29/08', '2026-07-26', '2026-08-29'],
+  ];
+  console.log('\nJANELAS SEMANAIS (carteira, com teto)');
+  console.log('  janela                                      pago        criado');
+  for (const [rotulo, de, ate] of janelas) {
+    const [[j]] = await bq.query({ query: `
+      WITH carteira AS (${CARTEIRA})
+      SELECT ROUND(SUM(IF(o.payment_isPaid='True', SAFE_CAST(o.summary_total AS FLOAT64), 0)),2) pago,
+             ROUND(SUM(SAFE_CAST(o.summary_total AS FLOAT64)),2) criado
+      FROM ${DS}.MongoDB_Pedidos_Geral o
+      JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+      WHERE o.settings_createdAt IS NOT NULL
+        AND SAFE_CAST(o.summary_total AS FLOAT64) > 0
+        AND SAFE_CAST(o.summary_total AS FLOAT64) < ${TETO}
+        AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${de}' AND DATE '${ate}'` });
+    console.log('  ' + rotulo.padEnd(40) + mi(j.pago).padStart(13) + mi(j.criado).padStart(14));
+  }
+
   /* Mês a mês, as duas réguas principais: às vezes o número que não bate é o
      de outro mês, ou de outro ano. */
   const [serie] = await bq.query({ query: `
