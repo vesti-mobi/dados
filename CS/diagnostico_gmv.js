@@ -47,8 +47,7 @@ WITH carteira AS (${CARTEIRA}),
 ped AS (
   SELECT CAST(domainId AS STRING) dom,
          SAFE_CAST(summary_total AS FLOAT64) total,
-         payment_isPaid = 'True' pago,
-         settings_status status
+         payment_isPaid = 'True' pago
   FROM ${DS}.MongoDB_Pedidos_Geral
   WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
     AND SAFE_CAST(summary_total AS FLOAT64) > 0
