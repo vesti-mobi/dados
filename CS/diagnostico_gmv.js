@@ -243,6 +243,21 @@ async function porStatus(bq) {
     console.log('  ' + rotulo.padEnd(40) + mi(j.pago).padStart(13) + mi(j.criado).padStart(14));
   }
 
+  /* Faltou o combo completo: janela de 4 semanas E sem os dois filtros que são
+     NOSSOS, não do Power BI — o teto de R$ 50 mil (descarte de outlier) e o
+     recorte da carteira (só domínio com módulo de vendas). */
+  console.log('\nSEM OS NOSSOS FILTROS (base toda, sem teto)');
+  for (const [rotulo, de, ate] of janelas) {
+    const [[j]] = await bq.query({ query: `
+      SELECT ROUND(SUM(IF(payment_isPaid='True', SAFE_CAST(summary_total AS FLOAT64), 0)),2) pago,
+             ROUND(SUM(SAFE_CAST(summary_total AS FLOAT64)),2) criado
+      FROM ${DS}.MongoDB_Pedidos_Geral
+      WHERE settings_createdAt IS NOT NULL
+        AND SAFE_CAST(summary_total AS FLOAT64) > 0
+        AND DATE(CAST(settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${de}' AND DATE '${ate}'` });
+    console.log('  ' + rotulo.padEnd(40) + mi(j.pago).padStart(13) + mi(j.criado).padStart(14));
+  }
+
   /* Mês a mês, as duas réguas principais: às vezes o número que não bate é o
      de outro mês, ou de outro ano. */
   const [serie] = await bq.query({ query: `
