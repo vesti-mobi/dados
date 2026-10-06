@@ -255,6 +255,30 @@ async function puxarBQ() {
     LEFT JOIN ${DS}.odbc_angels a ON CAST(a.id AS STRING) = d.angel_id
     LEFT JOIN part p ON p.id = d.partner_id`);
 
+  /* GMV NA RÉGUA DO POWER BI (06/10/2026).
+     A Laura somou a coluna de GMV da Tabela geral para agosto e deu R$ 79,6 mi
+     onde o relatório "GMV - Métricas 2025" mostra 98. Abrindo o .pbix: a
+     medida de lá é "Total Valor Pedidos", conta TODO pedido criado (pago ou
+     não — pago é um slicer na tela, não uma regra), não tem o teto de R$ 50 mil
+     que usamos para descartar outlier, e corta o tempo por semana ajustada.
+     Decompondo agosto/2026: 79,6 (nosso) → 105,6 contando criado → 96,5 nas 4
+     semanas de 03 a 30/08 → 98,6 sem teto e sem recortar a carteira.
+
+     Decisão dela: a Tabela geral e o card GMV da Gerencial passam a usar essa
+     régua. Esta consulta traz o GMV criado sem teto; o recorte de tempo
+     continua sendo o filtro do painel (o pago, com teto, segue na coluna
+     `valor` porque a Bonificação mede dinheiro que entrou). */
+  const pedidosCriados = await q('GMV criado por marca × dia (régua Power BI)', `
+    SELECT CAST(domainId AS STRING) dom,
+      ${DIA('settings_createdAt')} d,
+      COUNT(*) criados,
+      ROUND(SUM(CAST(summary_total AS FLOAT64)),2) valor_criado
+    FROM ${DS}.MongoDB_Pedidos_Geral
+    WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
+      AND SAFE_CAST(summary_total AS FLOAT64) > 0
+      AND ${FILTRO_PERIODO('settings_createdAt')}
+    GROUP BY 1,2`);
+
   const pedidos = await q('pedidos por marca × dia', `
     SELECT CAST(domainId AS STRING) dom,
       ${DIA('settings_createdAt')} d,
@@ -787,7 +811,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
-           primeiraVP, mensalidadeBonif,
+           primeiraVP, mensalidadeBonif, pedidosCriados,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -1805,6 +1829,13 @@ function montar(bqd, hsd, tinoDados) {
       receitaAntecipacao: num(r.antec) * FATOR_ANTECIPACAO_VESTI,
     });
   });
+  /* GMV criado (régua do Power BI), na mesma série: todo pedido, sem teto. */
+  (bqd.pedidosCriados || []).forEach(r => {
+    if (!dataOk(r.d) || !porDom.has(r.dom)) return;
+    somaEm(serieCli, r.dom + '|' + r.d, {
+      pedidosCriados: num(r.criados), valorCriado: num(r.valor_criado),
+    });
+  });
 
   /* Links compartilhados pelos vendedores, por dia — alimenta duas das cinco
      regras do health score: a média de links por dia e a "última atividade na
@@ -1963,6 +1994,12 @@ function montar(bqd, hsd, tinoDados) {
          GMV pago por pedido pago. */
       pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
       valorPedidos: v.valorPedidos || 0,
+      /* GMV na régua do relatório do Power BI (06/10/2026): TODO pedido
+         criado, sem o teto de R$ 50 mil. A Tabela geral e o card GMV da
+         Gerencial mostram este; a Bonificação continua no `valorPedidos`,
+         que é dinheiro que entrou. */
+      valorCriado: r2(v.valorCriado || 0),
+      pedidosCriados: v.pedidosCriados || 0,
 
       receitaInterchange: v.receitaInterchange || 0,
       receitaMensalidade: v.receitaMensalidade || 0,

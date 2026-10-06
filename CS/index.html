@@ -1189,8 +1189,10 @@ function montarClientesAgregados(){
     const d = x.data;
     if(!d || d < pIni || d > pFim) return;
     const k = chave(x);
-    const a = acc[k] || (acc[k] = {pedidos:0,valorPedidos:0,receitaInterchange:0,receitaMensalidade:0,receitaOutrosIugu:0,receitaAntecipacao:0});
+    const a = acc[k] || (acc[k] = {pedidos:0,valorPedidos:0,valorCriado:0,receitaInterchange:0,receitaMensalidade:0,receitaOutrosIugu:0,receitaAntecipacao:0});
     a.pedidos+=x.pedidos; a.valorPedidos+=x.valorPedidos;
+    /* GMV na régua do Power BI. Carga antiga não traz o campo: cai no pago. */
+    a.valorCriado += Number(x.valorCriado != null ? x.valorCriado : x.valorPedidos)||0;
     a.receitaInterchange+=x.receitaInterchange;
     a.receitaMensalidade+=x.receitaMensalidade;
     a.receitaOutrosIugu+=(x.receitaOutrosIugu||0);
@@ -1198,7 +1200,7 @@ function montarClientesAgregados(){
   });
   return DATA.clientes.map(c=>{
     const a = acc[c.dominio] || acc[c.nome]
-      || {pedidos:0,valorPedidos:0,receitaInterchange:0,receitaMensalidade:0,receitaOutrosIugu:0,receitaAntecipacao:0};
+      || {pedidos:0,valorPedidos:0,valorCriado:0,receitaInterchange:0,receitaMensalidade:0,receitaOutrosIugu:0,receitaAntecipacao:0};
     /* Health score (Laura, 22/09/2026): não depende do período escolhido no
        filtro — é uma foto dos últimos 30 dias corridos, sempre. Misturar as
        duas coisas faria "a marca está saudável" mudar de resposta conforme a
@@ -1206,7 +1208,7 @@ function montarClientesAgregados(){
     const h = healthDaMarca(c);
     return Object.assign({}, c, a, {
       health: h.score, _health: h,
-      ticketMedio: a.pedidos ? Math.round(a.valorPedidos/a.pedidos*100)/100 : 0,
+      ticketMedio: a.pedidos ? Math.round(a.valorCriado/a.pedidos*100)/100 : 0,
       // total = tudo que a marca gerou de receita para a Vesti no período
       receitaTotal: Math.round((a.receitaInterchange + a.receitaMensalidade
                               + a.receitaOutrosIugu + a.receitaAntecipacao)*100)/100,
@@ -1622,7 +1624,7 @@ const idxMensal = (()=>{
       const dom = x.dominio || x.cliente; if(!dom || !x.data) return;
       const mes = String(x.data).slice(0,7);
       const k = dom+'|'+mes;
-      const a = carteira[k] || (carteira[k] = {pedidos:0, pagos:0, gmv:0, mensalidade:0, outrosIugu:0, cliente:x.cliente, dominio:x.dominio||null});
+      const a = carteira[k] || (carteira[k] = {pedidos:0, pagos:0, gmv:0, gmvCriado:0, mensalidade:0, outrosIugu:0, cliente:x.cliente, dominio:x.dominio||null});
       /* `pedidos` é a contagem CHEIA do dia (pago, pendente, cancelado) e `gmv`
          soma só o que foi pago — a carga sempre separou assim. `pedidosPagos`
          só existe nas cargas a partir de 17/09/2026; num dados.js mais velho
@@ -1632,6 +1634,10 @@ const idxMensal = (()=>{
       if(x.pedidosPagos!=null) a.pagos += Number(x.pedidosPagos)||0;
       else a.pagos = null;
       a.gmv += Number(x.valorPedidos)||0;
+      /* GMV na régua do Power BI: todo pedido criado, sem teto. Carga velha
+         não tem o campo — nesse caso o KPI cai no pago, em vez de mostrar
+         zero como se a carteira não tivesse vendido. */
+      a.gmvCriado += Number(x.valorCriado != null ? x.valorCriado : x.valorPedidos)||0;
       a.mensalidade += Number(x.receitaMensalidade)||0;
       a.outrosIugu += Number(x.receitaOutrosIugu)||0;
     });
@@ -2862,11 +2868,11 @@ function kpisGerencial(){
   const m = ctx.m;
   const {carteira} = idxMensal();
   const doms = domsDoFoco();
-  let gmv=0, pedidos=0, pagos=0, temPagos=true, plano=0, outros=0;
+  let gmv=0, gmvCriado=0, pedidos=0, pagos=0, temPagos=true, plano=0, outros=0;
   Object.entries(carteira).forEach(([k,a])=>{
     const [dom, mes] = k.split('|');
     if(mes!==m || !doms.has(dom)) return;
-    gmv += a.gmv||0; pedidos += a.pedidos||0;
+    gmv += a.gmv||0; gmvCriado += a.gmvCriado||0; pedidos += a.pedidos||0;
     plano += a.mensalidade||0; outros += a.outrosIugu||0;
     if(a.pagos==null) temPagos=false; else pagos += a.pagos;
   });
@@ -2874,9 +2880,11 @@ function kpisGerencial(){
   const novas = DATA.clientes.filter(c=>cs.has(c.cs) && String(c.dataCadastro||'').slice(0,7)===m).length;
   const churn = linhasDoCard(cardGerencial('churnMes'), ctx).length;
   return [
-    {l:'GMV da carteira', v:fmt.moneyCompact(gmv), s: temPagos
-      ? fmt.int(pagos)+' pedidos pagos de '+fmt.int(pedidos)+' no mês'
-      : fmt.int(pedidos)+' pedidos no mês (pagos e não pagos)'},
+    /* GMV na régua do relatório do Power BI desde 06/10/2026 (decisão da
+       Laura): todo pedido criado, sem o teto de R$ 50 mil. O pago continua
+       visível na linha de baixo, porque é ele que vira dinheiro. */
+    {l:'GMV da carteira', v:fmt.moneyCompact(gmvCriado),
+     s: fmt.int(pedidos)+' pedidos no mês · '+fmt.moneyCompact(gmv)+' de fato pagos'},
     {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
     {l:'Pararam de pagar', v:fmt.int(churn), s:'sem fatura paga e sem fatura futura'},
@@ -4000,7 +4008,7 @@ const TABS = [
   {
     id:'gerencial', grupo:'Visão geral', nav:'Gerencial', cor:'#6C5CE7', cor2:'#00B894',
     titulo:'Gerencial',
-    desc:'Os mesmos cards do <a href="https://vesti-mobi.github.io/dados/PainelCSGerencial/" target="_blank" rel="noopener">Painel CS Gerencial</a>, refeitos em cima do <b>BigQuery</b> que já alimenta este painel — o antigo lia Fabric e planilhas. <b>Cada card abre os dados por trás dele</b>: clique e a tabela aparece embaixo, com os KPIs daquele número. '
+    desc:'Os mesmos cards do <a href="https://vesti-mobi.github.io/dados/PainelCSGerencial/" target="_blank" rel="noopener">Painel CS Gerencial</a>, refeitos em cima do <b>BigQuery</b> que já alimenta este painel — o antigo lia Fabric e planilhas. <b>O KPI GMV da carteira, no topo, segue a régua do relatório do Power BI desde 06/10/2026</b>: todo pedido criado, sem o teto de R$ 50 mil; a linha de baixo mostra quanto daquilo foi de fato pago. Os cards abaixo e a aba Bonificação continuam no GMV pago. <b>Cada card abre os dados por trás dele</b>: clique e a tabela aparece embaixo, com os KPIs daquele número. '
       + '<b>A aba inteira é a carteira da Thamiris, da Luana e da Gabriella</b> — marca de outra CS não entra em card nenhum. O seletor de CS no topo estreita para uma delas; sem nada marcado valem as três. '
       + 'Saiu o card de <b>Frete Onlog</b> e entraram <b>Reuniões</b>, <b>Novo Tino</b>, <b>Novo Oráculo</b>, <b>Cross-sell</b> e <b>Upsell</b>. Em Cross-sell e Upsell as <b>oportunidades criadas</b> e as <b>ganhas</b> aparecem separadas: criada conta pela data de criação do negócio, ganha pela de fechamento, então um negócio criado em julho e ganho em agosto entra em cada mês no seu lugar. No de Upsell o número grande é a <b>diferença</b>, não o valor do plano novo: a marca que pagava 499 e foi para 1.299 entra como 800 — valor do negócio de upgrade no HubSpot menos a última mensalidade dela no Iugu antes do upgrade. Quem não tinha mensalidade no Iugu (paga por fora, canal parceiro) fica com o ganho em branco e é contada à parte, para não inflar o total. '
       + 'Ao abrir um card vem também o <b>gráfico dos últimos 12 meses</b> daquela métrica, com o mês escolhido em cor cheia e uma linha dizendo quanto ele está acima ou abaixo do mês anterior e da média da janela. '
@@ -4017,7 +4025,7 @@ const TABS = [
   {
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
     titulo:'Tabela geral dos clientes',
-    desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
+    desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>GMV (pedidos feitos)</b> segue a régua do relatório <i>GMV - Métricas</i> do Power BI desde 06/10/2026: conta <b>todo pedido criado</b>, pago ou não, e <b>sem o teto de R$ 50 mil</b> por pedido que o painel usava para descartar outlier. A coluna <b>Do qual pago</b> ao lado mostra quanto virou dinheiro — em agosto/2026 foram R$ 105,6 mi feitos contra R$ 79,6 mi pagos na carteira inteira. A aba <b>Bonificação continua no pago</b>, que é o que vale meta. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
       + '<b>Health score</b> (régua da Laura, 22/09/2026) é uma nota de 0 a 100 da saúde da marca, <b>independente do período do filtro</b>: ela olha sempre os <b>últimos 30 dias corridos</b>. '
       + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
       + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
@@ -4040,7 +4048,8 @@ const TABS = [
       {k:'ultimoAcesso', l:'Último acesso', tipo:'rel'},
       {k:'ultimoPedido', l:'Último pedido', tipo:'rel'},
       {k:'pedidos', l:'Pedidos', tipo:'int', r:true},
-      {k:'valorPedidos', l:'Valor dos pedidos', tipo:'money', r:true},
+      {k:'valorCriado', l:'GMV (pedidos feitos)', tipo:'money', r:true},
+      {k:'valorPedidos', l:'Do qual pago', tipo:'money', r:true},
       {k:'ticketMedio', l:'Ticket médio', tipo:'moneyC', r:true},
       {k:'receitaTotal', l:'Receita total', tipo:'money', r:true, forte:true},
       {k:'receitaInterchange', l:'Interchange', tipo:'money', r:true},
@@ -4056,6 +4065,10 @@ const TABS = [
         {l:'Clientes ativos', v:fmt.int(rows.filter(r=>r.status==='ativo').length), s:`de ${rows.length} na visão`},
         {l:'Health score médio', v:fmt.int(Math.round(media(rows,'health'))),
          s:`${fmt.int(porFaixa('Saudável'))} saudáveis · ${fmt.int(porFaixa('Atenção'))} em atenção · ${fmt.int(porFaixa('Em risco'))} em risco`},
+        /* O GMV entrou nos KPIs em 06/10/2026: era somando a coluna à mão que
+           a Laura comparava com o Power BI. */
+        {l:'GMV no período', v:fmt.moneyCompact(soma(rows,'valorCriado')),
+         s: fmt.moneyCompact(soma(rows,'valorPedidos'))+' foram pagos'},
         {l:'Receita total', v:fmt.moneyCompact(soma(rows,'receitaTotal')), s:'soma da coluna no período'},
         {l:'Ticket médio', v:fmt.money(media(rows,'ticketMedio')), s:'média entre clientes'},
         // "último acesso" ainda não tem fonte; o sinal de abandono disponível é o pedido
@@ -4457,7 +4470,7 @@ const TABS = [
     seriePropria:true,
     series:()=>DATA.clientesSeries.filter(x=>CS_POR_CLIENTE[x.cliente]===estado.filtros.csFoco),
     graficos:[
-      {t:'GMV da carteira', s:[{k:'valorPedidos', l:'GMV', tipo:'bar', cor:'var(--acc)', f:fmt.moneyCompact}]},
+      {t:'GMV da carteira', s:[{k:'valorCriado', l:'GMV', tipo:'bar', cor:'var(--acc)', f:fmt.moneyCompact}]},
       {t:'Cross-sell x Upsell fechados', categorias:()=>categoriasNegociosCs()},
     ],
     extra:()=>extraCarteiraCs(),
