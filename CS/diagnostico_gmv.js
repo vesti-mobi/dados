@@ -163,6 +163,24 @@ async function porStatus(bq) {
 
   await porStatus(bq);
 
+  /* Mês a mês, as duas réguas principais: às vezes o número que não bate é o
+     de outro mês, ou de outro ano. */
+  const [serie] = await bq.query({ query: `
+    WITH carteira AS (${CARTEIRA})
+    SELECT FORMAT_DATE('%Y-%m', DATE(CAST(o.settings_createdAt AS TIMESTAMP))) mes,
+           ROUND(SUM(IF(o.payment_isPaid='True', SAFE_CAST(o.summary_total AS FLOAT64), 0)),2) pago,
+           ROUND(SUM(SAFE_CAST(o.summary_total AS FLOAT64)),2) criado
+    FROM ${DS}.MongoDB_Pedidos_Geral o
+    JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+    WHERE o.settings_createdAt IS NOT NULL
+      AND SAFE_CAST(o.summary_total AS FLOAT64) > 0
+      AND SAFE_CAST(o.summary_total AS FLOAT64) < ${TETO}
+      AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) >= DATE '2025-01-01'
+    GROUP BY 1 ORDER BY 1` });
+  console.log('\nMÊS A MÊS (carteira, com teto):');
+  console.log('  mês        pago           criado');
+  serie.forEach(l => console.log('  ' + l.mes.padEnd(10) + mi(l.pago).padStart(12) + mi(l.criado).padStart(15)));
+
   /* O número que a Laura espera fica ENTRE pago e criado. O palpite é "criado
      menos o que foi cancelado" — aqui ele é medido, junto com as variações
      vizinhas, para a conversa ter número em vez de teoria. */
