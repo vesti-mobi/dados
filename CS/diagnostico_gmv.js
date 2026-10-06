@@ -193,6 +193,27 @@ async function porStatus(bq) {
     console.log('  ' + n.padEnd(34) + mi(p).padStart(13) + mi(c2).padStart(15));
   });
 
+  /* `settings.source` está entre os campos do relatório do Power BI: se ele
+     exclui alguma origem de pedido, o total cai — é o último lugar onde os
+     98 milhões poderiam estar escondidos. */
+  const [fontes] = await bq.query({ query: `
+    WITH carteira AS (${CARTEIRA})
+    SELECT IFNULL(o.settings_source,'(vazio)') origem,
+           COUNT(*) qt,
+           ROUND(SUM(IF(o.payment_isPaid='True', SAFE_CAST(o.summary_total AS FLOAT64), 0)),2) pago,
+           ROUND(SUM(SAFE_CAST(o.summary_total AS FLOAT64)),2) criado
+    FROM ${DS}.MongoDB_Pedidos_Geral o
+    JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+    WHERE o.settings_createdAt IS NOT NULL
+      AND SAFE_CAST(o.summary_total AS FLOAT64) > 0
+      AND SAFE_CAST(o.summary_total AS FLOAT64) < ${TETO}
+      AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${ini}' AND DATE '${fim}'
+    GROUP BY 1 ORDER BY criado DESC` });
+  console.log('\nPOR ORIGEM DO PEDIDO (carteira, com teto)');
+  console.log('  origem                     pedidos         pago        criado');
+  fontes.forEach(l => console.log('  ' + String(l.origem).slice(0,24).padEnd(26)
+    + String(l.qt).padStart(8) + mi(l.pago).padStart(14) + mi(l.criado).padStart(14)));
+
   /* Mês a mês, as duas réguas principais: às vezes o número que não bate é o
      de outro mês, ou de outro ano. */
   const [serie] = await bq.query({ query: `
