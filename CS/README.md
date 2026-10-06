@@ -216,6 +216,50 @@ A biblioteca (SheetJS) é carregada do CDN **no clique**, não no load da págin
 Sem internet ou com o CDN bloqueado, cai no CSV de antes — agora com vírgula
 decimal, que é o que o Excel brasileiro entende sem perguntar nada.
 
+## O GMV da Tabela geral e da Gerencial virou a régua do Power BI (06/10/2026)
+
+A Laura somou a coluna de GMV da Tabela geral para agosto/2026 e deu R$ 79,6 mi
+onde o relatório **GMV - Métricas** (Power BI) mostra 98. Abrindo o `.pbix`
+(o modelo mora num dataset remoto, mas o layout do relatório é legível):
+
+- o cartão é a medida **"GMV Total"**, nome original *Total Valor Pedidos*, com
+  um único filtro visível — fora o canal **Treino**;
+- a página corta o tempo por **"Semana Ajustada"**: "agosto" lá são as 4 semanas
+  de **03 a 30/08**, não 01 a 31;
+- existe um **slicer de "Status Payment"** na tela, ou seja, pago × não pago é
+  escolha de quem olha, não regra do relatório.
+
+Decompondo agosto/2026 no BigQuery, um filtro por vez:
+
+| Régua | Valor |
+|---|---|
+| painel: pago, mês civil, teto R$ 50 mil, só carteira | R$ 79,6 mi |
+| contando **pedido criado e não pago** (+26,1) | R$ 105,6 mi |
+| no **mês de 4 semanas** do Power BI (−9,1) | R$ 96,5 mi |
+| **sem o teto** de R$ 50 mil (+0,9) | R$ 97,4 mi |
+| **sem recortar a carteira** (+1,2) | **R$ 98,6 mi** |
+
+**O que mudou no painel** (decisão da Laura: "use a mesma regra e fonte do
+arquivo powerbi para esse card"):
+
+- a série ganhou `valorCriado` e `pedidosCriados` — todo pedido, sem teto;
+- **Tabela geral**: a coluna virou **GMV (pedidos feitos)**, com **Do qual
+  pago** ao lado, e entrou um KPI **GMV no período** no topo (era somando a
+  coluna à mão que a comparação acontecia);
+- **Gerencial**: o KPI *GMV da carteira* mostra o criado, com o pago na linha
+  de baixo;
+- o gráfico "GMV da carteira" da Carteira por CS acompanha.
+
+**O que NÃO mudou, de propósito:** a aba **Bonificação** continua no GMV pago —
+é dinheiro que entrou e é o que vale meta de CS. Os demais cards de GMV também
+seguem no pago; o rótulo de cada um diz qual régua usa.
+
+Duas diferenças que sobram contra o Power BI, e são de conceito, não de conta:
+o painel **não exclui o canal Treino** (7 marcas, volume irrelevante) e **só
+enxerga a carteira** — domínio sem módulo de vendas não tem linha de cliente
+aqui. Em agosto isso responde por R$ 0,5 mi: no recorte de 03 a 30/08 o painel
+dá R$ 98,09 mi contra os R$ 98,57 mi do relatório.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |
