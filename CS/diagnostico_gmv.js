@@ -86,6 +86,44 @@ WHERE p.payment_isPaid = 'True'
 
 const mi = v => 'R$ ' + (Number(v) / 1e6).toFixed(2).replace('.', ',') + ' mi';
 
+/* Nenhuma das réguas acima deu os 98 milhões que a Laura esperava, e o número
+   fica entre "pago" e "criado" — cheira a "criado menos o que foi cancelado".
+   Para saber, é preciso achar a coluna de status do pedido: a tabela não tem
+   `settings_status`, então aqui o script procura o nome certo e quebra o GMV
+   criado por ele. */
+async function porStatus(bq) {
+  const [cols] = await bq.query({ query: `
+    SELECT column_name
+    FROM ${DS}.INFORMATION_SCHEMA.COLUMNS
+    WHERE table_name = 'MongoDB_Pedidos_Geral'
+      AND (LOWER(column_name) LIKE '%status%' OR LOWER(column_name) LIKE '%cancel%'
+           OR LOWER(column_name) LIKE '%situac%' OR LOWER(column_name) LIKE '%estado%')
+    ORDER BY column_name` });
+  console.log('\nCOLUNAS COM CARA DE STATUS: ' + (cols.map(c => c.column_name).join(', ') || 'nenhuma'));
+
+  for (const { column_name: col } of cols.slice(0, 4)) {
+    try {
+      const [linhas] = await bq.query({ query: `
+        WITH carteira AS (${CARTEIRA})
+        SELECT IFNULL(CAST(p.\`${col}\` AS STRING), '(vazio)') valor,
+               COUNT(*) qt,
+               ROUND(SUM(SAFE_CAST(p.summary_total AS FLOAT64)),2) total
+        FROM ${DS}.MongoDB_Pedidos_Geral p
+        JOIN carteira c ON c.id = CAST(p.domainId AS STRING)
+        WHERE p.settings_createdAt IS NOT NULL
+          AND SAFE_CAST(p.summary_total AS FLOAT64) > 0
+          AND SAFE_CAST(p.summary_total AS FLOAT64) < ${TETO}
+          AND DATE(CAST(p.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${ini}' AND DATE '${fim}'
+        GROUP BY 1 ORDER BY total DESC LIMIT 12` });
+      console.log('\n  ' + col + ':');
+      linhas.forEach(l => console.log('    ' + String(l.valor).slice(0, 28).padEnd(30)
+        + String(l.qt).padStart(7) + ' pedidos' + mi(l.total).padStart(14)));
+    } catch (e) {
+      console.log('\n  ' + col + ': não deu para agrupar (' + String(e.message).slice(0, 60) + ')');
+    }
+  }
+}
+
 (async () => {
   console.log('GMV de ' + MES + ' — todas as réguas\n');
   const bq = new BigQuery({ projectId: PROJETO });
@@ -116,4 +154,6 @@ const mi = v => 'R$ ' + (Number(v) / 1e6).toFixed(2).replace('.', ',') + ' mi';
   console.log('  valor criado e NÃO pago:      ' + mi(r.valor_nao_pago_carteira));
   console.log('  pago acima do teto de R$ 50 mil: ' + mi(r.acima_do_teto_carteira)
     + ' em ' + r.qt_acima_do_teto + ' pedidos');
+
+  await porStatus(bq);
 })().catch(e => { console.error('FALHOU:', e.message); process.exit(1); });
