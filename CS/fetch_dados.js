@@ -801,6 +801,23 @@ async function puxarBQ() {
       return [];
     });
 
+  /* ATACADO x VAREJO por MARCA (06/10/2026, pedido da Laura: filtro de "se tem
+     varejo ou não" na Tabela geral). A classificação é por EMPRESA, em
+     `confeccao_tipo_empresa`; aqui ela sobe para o domínio: a marca "tem
+     varejo" se qualquer empresa dela for varejo, e o mesmo para atacado — as
+     duas coisas convivem na mesma marca, que é o caso de quem abriu loja de
+     varejo tendo nascido no atacado. Empresa que a classificação ainda não
+     alcançou (a carga é de 30/03/2026) não conta para nenhum dos dois. */
+  const tipoPorMarca = await q('Atacado x Varejo por marca', `
+    SELECT CAST(c.domain_id AS STRING) dom,
+           COUNTIF(t.tipo = 'Varejo')  > 0 tem_varejo,
+           COUNTIF(t.tipo = 'Atacado') > 0 tem_atacado,
+           COUNTIF(t.tipo IS NULL)     > 0 tem_sem_classificacao
+    FROM ${DS}.odbc_companies c
+    LEFT JOIN ${DS}.confeccao_tipo_empresa t ON t.id_empresa = CAST(c.id AS STRING)
+    WHERE SAFE_CAST(c.domain_id AS INT64) IS NOT NULL
+    GROUP BY 1`);
+
   /* Até quando a classificação cobre. Vai para o painel avisar — sem isso um mês
      recente apareceria com zero varejos como se nenhum tivesse sido criado. */
   const coberturaTipo = await q('cobertura da classificação Atacado/Varejo', `
@@ -811,7 +828,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
-           primeiraVP, mensalidadeBonif, pedidosCriados,
+           primeiraVP, mensalidadeBonif, pedidosCriados, tipoPorMarca,
            temIntegrationOwner: TEM_OWNER };
 }
 
@@ -2205,6 +2222,9 @@ function montar(bqd, hsd, tinoDados) {
       temOraculo: !!m.temOraculo,
       temTino: false,
       temVestiPago: false,
+      /* Preenchidos logo abaixo, junto com os outros produtos. */
+      temVarejo: false,
+      temAtacado: false,
       /* RG do cliente (aba Visão do cliente). `empresas` é a lista de lojas do
          domínio: a primeira é a matriz, as outras são filiais. */
       /* Links compartilhados pelos vendedores: o que o health score precisa,
@@ -2460,6 +2480,12 @@ function montar(bqd, hsd, tinoDados) {
   });
   console.log('  marcos de volume (BigQuery)'.padEnd(44) + String(marcosVolume.length).padStart(8));
 
+  const tipoDaMarca = new Map();
+  (bqd.tipoPorMarca || []).forEach(r => tipoDaMarca.set(String(r.dom),
+    { varejo: !!r.tem_varejo, atacado: !!r.tem_atacado }));
+  console.log('  marcas com empresa de varejo'.padEnd(44)
+    + String([...tipoDaMarca.values()].filter(x => x.varejo).length).padStart(8));
+
   /* TEM o produto, que não é o mesmo que USA o produto. Para o VestiPago o
      sinal é a CONTA DE PAGAMENTO criada (implVP, de MongoDB_Payment_Companies),
      igual ao Tino, que sai da base do próprio produto. De propósito não é
@@ -2468,6 +2494,9 @@ function montar(bqd, hsd, tinoDados) {
   clientesFinal.forEach(c => {
     c.temTino = domComTino.has(c._dom);
     c.temVestiPago = implVP.has(c._dom);
+    const t = tipoDaMarca.get(c._dom);
+    c.temVarejo  = !!(t && t.varejo);
+    c.temAtacado = !!(t && t.atacado);
   });
   console.log('  marcas com fatura em mais de um CNPJ'.padEnd(44) + String(fatUnidas).padStart(8));
   console.log('  marcas com Tino na tabela geral'.padEnd(44)

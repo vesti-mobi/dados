@@ -269,6 +269,49 @@ button,input,select{font:inherit;color:inherit}
 .wk-s.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .wk-s.hoje{box-shadow:0 0 0 2px var(--acc-soft)}
 
+/* --- filtros avançados da Tabela geral (06/10/2026) ---------------------
+   Dez perguntas não cabem como dez campos na barra: viram um painel que abre
+   sob demanda, em colunas, e o que está marcado volta como chip na barra —
+   quem olha a tela vê o recorte sem precisar abrir nada. */
+.btn-filtros{position:relative}
+.btn-filtros .cont{
+  display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;
+  border-radius:100px;background:var(--acc);color:#fff;
+  font-family:var(--f-mono);font-size:10px;font-weight:600;
+}
+.fa-pop{
+  display:none;position:absolute;z-index:45;top:calc(100% + 8px);right:0;
+  width:min(780px,86vw);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:0 18px 44px -18px rgba(17,20,24,.45);
+}
+.fa-pop.aberto{display:block}
+.fa-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+.fa-head h4{margin:0;font-family:var(--f-display);font-size:14px;font-weight:600}
+.fa-head .btn{margin-left:auto}
+.fa-corpo{padding:4px 18px 18px;max-height:min(62vh,560px);overflow:auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px 24px}
+.fa-grupo{padding-top:14px;min-width:0}
+.fa-grupo>.eyebrow{display:block;color:var(--acc);margin-bottom:9px}
+.fa-op{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--ink-2)}
+.fa-op:hover{color:var(--ink)}
+.fa-op input{appearance:none;width:15px;height:15px;flex:none;cursor:pointer;
+  border:1.5px solid var(--line);border-radius:4px;background:var(--surface);transition:background .12s,border-color .12s}
+.fa-op input:checked{background:var(--acc);border-color:var(--acc);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'><path d='M1 4l3 3 5-6' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat:no-repeat;background-position:center}
+.fa-op input:checked+span{color:var(--ink);font-weight:500}
+.fa-op small{margin-left:auto;font-family:var(--f-mono);font-size:10.5px;color:var(--ink-3)}
+/* chips do que está marcado, na barra de filtros */
+.fa-chips{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%;margin-top:2px}
+.fa-chip{display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--acc-line);background:var(--acc-soft);color:var(--acc);
+  border-radius:100px;padding:3px 6px 3px 10px;font-size:12px}
+.fa-chip b{font-weight:600}
+.fa-chip button{border:0;background:none;cursor:pointer;color:inherit;opacity:.65;
+  font-size:14px;line-height:1;padding:0 2px}
+.fa-chip button:hover{opacity:1}
+
 /* --- editor de varejos (aba de Bonificação): marcar filial por filial --- */
 .td-edit{cursor:pointer}
 .td-edit:hover{background:var(--acc-soft)}
@@ -1507,6 +1550,112 @@ function janelaDoMes(m){ return {ini:m+'-01', fim:ultimoDiaDoMes(m+'-01')} }
 
 const CLIENTE_POR_DOM = (()=>{ const m={}; DATA.clientes.forEach(c=>{ if(c.dominio) m[c.dominio]=c }); return m })();
 const CLIENTE_POR_CNPJ = (()=>{ const m={}; DATA.clientes.forEach(c=>{ if(c.cnpj) m[String(c.cnpj)]=c }); return m })();
+
+/* ============================================================================
+   FILTROS AVANÇADOS DA TABELA GERAL (06/10/2026)
+   Pedido da Laura: poder recortar a carteira por plano, estrutura (filial,
+   varejo), produto contratado e faixa de GMV / health — tudo em caixinha, mais
+   de uma marcável. Cada grupo é uma lista de opções com um teste; marcar várias
+   dentro do MESMO grupo é "ou" (plano Pro ou Starter), e grupos diferentes se
+   somam com "e" (plano Pro E com filial).
+   ========================================================================== */
+
+/* O nome do plano vem do item mais caro da fatura e está escrito de dez jeitos
+   ("Plano PRO", "Assinatura: Vesti Pro", "plano_profissional"). O filtro
+   trabalha com a FAMÍLIA, senão viram dez caixinhas para a mesma coisa. */
+const FAMILIAS_PLANO = [
+  ['Pro',           /\bpro\b|profissional/i],
+  ['Avançado',      /avan[çc]ado/i],
+  ['Essencial',     /essencial/i],
+  ['Básico',        /b[áa]sico/i],
+  ['Starter',       /starter/i],
+  ['Light',         /light/i],
+  ['Enterprise',    /enterprise/i],
+  ['Conecta',       /conecta/i],
+  ['Catálogo',      /cat[áa]logo/i],
+  ['Portal têxtil', /portal/i],
+  ['Assistente',    /assistente|agente/i],
+];
+function familiaPlano(plano){
+  const p = String(plano || '').trim();
+  if(!p || /sem plano/i.test(p)) return 'Sem plano';
+  const f = FAMILIAS_PLANO.find(([, re]) => re.test(p));
+  return f ? f[0] : 'Outros';
+}
+
+/* Tino ATIVO é diferente de ter Tino: a base do próprio produto marca a conta
+   como Ativa ou Inativa, e isso só existe na tabela da aba Uso do Tino. */
+const TINO_ATIVO_POR_DOM = (()=>{ const m = {};
+  ((DATA.tino||{}).tabela||[]).forEach(t=>{ if(t.dominio) m[String(t.dominio)] = t.statusTino; });
+  return m })();
+const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
+
+const FAIXAS_GMV = [
+  ['Sem GMV',            r => !(r.valorCriado > 0)],
+  ['Até R$ 10 mil',      r => r.valorCriado > 0 && r.valorCriado < 10000],
+  ['R$ 10 a 50 mil',     r => r.valorCriado >= 10000 && r.valorCriado < 50000],
+  ['R$ 50 a 200 mil',    r => r.valorCriado >= 50000 && r.valorCriado < 200000],
+  ['R$ 200 mil a 1 mi',  r => r.valorCriado >= 200000 && r.valorCriado < 1000000],
+  ['Acima de R$ 1 mi',   r => r.valorCriado >= 1000000],
+];
+const FAIXAS_HEALTH = [
+  ['Saudável (80+)',   r => (r.health||0) >= 80],
+  ['Atenção (50-79)',  r => (r.health||0) >= 50 && (r.health||0) < 80],
+  ['Em risco (1-49)',  r => (r.health||0) > 0 && (r.health||0) < 50],
+  ['Zerado',           r => !(r.health > 0)],
+];
+
+/* Um grupo por pergunta. `opcoes` pode ser estática ou calculada do cadastro
+   (o caso do plano, que muda quando entra plano novo). */
+const GRUPOS_FILTRO = [
+  { k:'plano', l:'Plano', opcoes:()=>{
+      const vistos = new Map();
+      DATA.clientes.forEach(c=>{ const f = familiaPlano(c.plano); vistos.set(f, (vistos.get(f)||0)+1) });
+      return [...vistos.entries()].sort((a,b)=>b[1]-a[1])
+        .map(([f])=>[f, r=>familiaPlano(r.plano)===f]);
+    } },
+  { k:'estrutura', l:'Estrutura', opcoes:()=>[
+      ['Tem filial',    r => (r.lojas||1) > 1],
+      ['Loja única',    r => (r.lojas||1) <= 1],
+      ['Tem varejo',    r => !!r.temVarejo],
+      ['Só atacado',    r => !!r.temAtacado && !r.temVarejo],
+    ] },
+  { k:'produtos', l:'Produtos', opcoes:()=>[
+      ['Tem Tino',        r => !!r.temTino],
+      ['Sem Tino',        r => !r.temTino],
+      ['Tino ativo',      r => temTinoAtivo(r)],
+      ['Tino parado',     r => !!r.temTino && !temTinoAtivo(r)],
+      ['Tem Oráculo',     r => !!r.temOraculo],
+      ['Sem Oráculo',     r => !r.temOraculo],
+      ['Tem VestiPago',   r => !!r.temVestiPago],
+      ['Sem VestiPago',   r => !r.temVestiPago],
+      ['Tem integração',  r => !!r.integracao && r.integracao !== 'Sem integração'],
+      ['Sem integração',  r => !r.integracao || r.integracao === 'Sem integração'],
+    ] },
+  { k:'gmv',    l:'Faixa de GMV',    opcoes:()=>FAIXAS_GMV },
+  { k:'health', l:'Health score',    opcoes:()=>FAIXAS_HEALTH },
+];
+
+const opcoesDoGrupo = (()=>{ const cache = {};
+  return g => cache[g.k] || (cache[g.k] = g.opcoes()) })();
+
+/* Quantos filtros avançados estão marcados — o botão mostra isso. */
+function filtrosAvancadosAtivos(){
+  const f = estado.filtros.avancado || {};
+  return GRUPOS_FILTRO.reduce((n,g)=>n + ((f[g.k]||new Set()).size), 0);
+}
+
+/* Aplica os grupos: "ou" dentro do grupo, "e" entre grupos. */
+function aplicarFiltrosAvancados(rows){
+  const f = estado.filtros.avancado || {};
+  GRUPOS_FILTRO.forEach(g=>{
+    const marcadas = f[g.k];
+    if(!marcadas || !marcadas.size) return;
+    const testes = opcoesDoGrupo(g).filter(([l])=>marcadas.has(l)).map(([,t])=>t);
+    rows = rows.filter(r=>testes.some(t=>t(r)));
+  });
+  return rows;
+}
 
 /* ---- Origem de uma venda nova (05/10/2026)
    Crítica da Laura: "não dá pra ver de cara quanto vendeu de novos clientes,
@@ -4030,7 +4179,7 @@ const TABS = [
       + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
       + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
       + 'Passe o mouse no número para ver o que entrou e o que faltou, regra a regra. Acima de 80 é <b>saudável</b>, de 50 a 79 <b>atenção</b>, abaixo disso <b>em risco</b>.',
-    filtros:['cliente','cs','canal','statusCliente','periodo'],
+    filtros:['cliente','cs','canal','statusCliente','periodo','avancado'],
     tabela:'Clientes', chaveCliente:'nome',
     colunas:[
       {k:'nome', l:'Cliente', tipo:'cliente'},
@@ -5147,7 +5296,9 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
-  { periodo: periodoPadrao(), canais: new Set(), cs: new Set() });
+  { periodo: periodoPadrao(), canais: new Set(), cs: new Set(),
+    /* um Set por grupo de filtro avançado; vazio = o grupo não recorta nada */
+    avancado: {} });
 const estado = {
   aba: 'visaoGeral',
   filtros: filtrosPadrao(),
@@ -5233,6 +5384,7 @@ function filtrarLinhas(t){
   if(t.filtros.includes('statusCliente') && f.statusCliente!=='todos'){
     rows = rows.filter(r=>r.status===f.statusCliente);
   }
+  if(t.filtros.includes('avancado')) rows = aplicarFiltrosAvancados(rows);
   if(t.filtros.includes('statusDeal') && f.statusDeal!=='todos'){
     rows = rows.filter(r=>r.status===f.statusDeal);
   }
@@ -5628,6 +5780,79 @@ function renderPagina(){
   ultimoRender = { rows, colunas:t.colunas };
 }
 
+/* Painel dos filtros avançados: um botão que abre as caixinhas em colunas e
+   devolve, na barra, um chip por opção marcada. Contagem ao lado de cada opção
+   para ninguém marcar um recorte que não tem ninguém dentro. */
+function seletorAvancado(t){
+  const wrap = el('div',{class:'wk-pick btn-filtros'});
+  const n = filtrosAvancadosAtivos();
+  const btn = el('button',{class:'btn',type:'button'},
+    `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
+    + ' Mais filtros' + (n ? ` <i class="cont">${n}</i>` : ''));
+  const pop = el('div',{class:'fa-pop'});
+  btn.onclick = e => { e.stopPropagation(); pop.classList.toggle('aberto') };
+  pop.onclick = e => e.stopPropagation();
+  document.addEventListener('click', ()=>pop.classList.remove('aberto'), {once:true});
+
+  const head = el('div',{class:'fa-head'});
+  head.innerHTML = '<h4>Filtrar a carteira</h4>';
+  const limpar = el('button',{class:'btn btn-ghost',type:'button'},'Limpar tudo');
+  limpar.onclick = ()=>{ estado.filtros.avancado = {}; renderPagina() };
+  head.appendChild(limpar);
+  pop.appendChild(head);
+
+  /* As contagens saem das linhas JÁ filtradas pelo resto da barra (CS, canal,
+     período): "12" ao lado de "Tem Oráculo" é 12 dentro do que está na tela. */
+  const base = (()=>{ const f = estado.filtros.avancado;
+    estado.filtros.avancado = {};
+    const r = filtrarLinhas(t);
+    estado.filtros.avancado = f;
+    return r })();
+
+  const corpo = el('div',{class:'fa-corpo'});
+  GRUPOS_FILTRO.forEach(g=>{
+    const marcadas = (estado.filtros.avancado[g.k] ||= new Set());
+    const sec = el('div',{class:'fa-grupo'});
+    sec.innerHTML = `<span class="eyebrow">${g.l}</span>`;
+    opcoesDoGrupo(g).forEach(([rotulo, teste])=>{
+      const quantos = base.filter(teste).length;
+      const lin = el('label',{class:'fa-op'});
+      const cx = el('input',{type:'checkbox'});
+      cx.checked = marcadas.has(rotulo);
+      cx.onchange = ()=>{ cx.checked ? marcadas.add(rotulo) : marcadas.delete(rotulo);
+        renderPagina(); };
+      lin.appendChild(cx);
+      lin.appendChild(el('span',{},rotulo));
+      lin.appendChild(el('small',{},fmt.int(quantos)));
+      sec.appendChild(lin);
+    });
+    corpo.appendChild(sec);
+  });
+  pop.appendChild(corpo);
+
+  wrap.appendChild(btn);
+  wrap.appendChild(pop);
+  return wrap;
+}
+
+/* Um chip por opção marcada, abaixo da barra: o recorte fica legível sem abrir
+   o painel, e o X tira só aquela opção. */
+function chipsAvancados(){
+  const linha = el('div',{class:'fa-chips'});
+  GRUPOS_FILTRO.forEach(g=>{
+    const marcadas = estado.filtros.avancado[g.k];
+    if(!marcadas || !marcadas.size) return;
+    marcadas.forEach(rotulo=>{
+      const chip = el('div',{class:'fa-chip'}, `${g.l}: <b>${rotulo}</b>`);
+      const x = el('button',{type:'button',title:'Tirar este filtro'},'&times;');
+      x.onclick = ()=>{ marcadas.delete(rotulo); renderPagina() };
+      chip.appendChild(x);
+      linha.appendChild(chip);
+    });
+  });
+  return linha.children.length ? linha : null;
+}
+
 function renderFiltros(t){
   const box = el('div',{class:'filters'});
   const add = (label, node)=>{ const f=el('div',{class:'field'});
@@ -5656,6 +5881,8 @@ function renderFiltros(t){
       estado.filtros.pipeline, v=>estado.filtros.pipeline=v));
   }
   if(t.filtros.includes('periodo')) add('Período', seletorDePeriodo());
+  if(t.filtros.includes('avancado')) box.appendChild(seletorAvancado(t));
+  if(t.filtros.includes('avancado')){ const c = chipsAvancados(); if(c) box.appendChild(c) }
   if(t.filtros.includes('buscaCliente')){
     /* Busca com sugestão na hora: a cada letra a lista embaixo do campo mostra
        as marcas que casam, e clicar abre a ficha. `debounce` para não refazer a
