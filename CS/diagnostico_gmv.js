@@ -163,6 +163,36 @@ async function porStatus(bq) {
 
   await porStatus(bq);
 
+  /* O relatório do Power BI ("GMV - Métricas 2025") soma a medida GMV Total —
+     nome original "Total Valor Pedidos" — com um único filtro visível: fora o
+     canal Treino. Aqui a soma é repetida sobre CADA coluna de valor do pedido,
+     para achar qual delas dá o número de lá: pode não ser `summary_total`. */
+  const [cols] = await bq.query({ query: `
+    SELECT column_name FROM ${DS}.INFORMATION_SCHEMA.COLUMNS
+    WHERE table_name = 'MongoDB_Pedidos_Geral'
+      AND (LOWER(column_name) LIKE 'summary%' OR LOWER(column_name) LIKE '%total%'
+           OR LOWER(column_name) LIKE '%subtotal%')
+    ORDER BY column_name` });
+  console.log('\nCOLUNAS DE VALOR DO PEDIDO');
+  const nomes = cols.map(c => c.column_name);
+  console.log('  ' + nomes.join(', '));
+
+  const somas = nomes.map(n => `ROUND(SUM(IF(pago, SAFE_CAST(o.\`${n}\` AS FLOAT64), 0)),2) pago_${n},
+       ROUND(SUM(SAFE_CAST(o.\`${n}\` AS FLOAT64)),2) criado_${n}`).join(',\n       ');
+  const [[v]] = await bq.query({ query: `
+    WITH carteira AS (${CARTEIRA})
+    SELECT ${somas}
+    FROM (SELECT *, payment_isPaid='True' pago FROM ${DS}.MongoDB_Pedidos_Geral) o
+    JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+    WHERE o.settings_createdAt IS NOT NULL
+      AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${ini}' AND DATE '${fim}'` });
+  console.log('\n  coluna                              pago          criado   (sem teto, carteira)');
+  nomes.forEach(n => {
+    const p = v['pago_' + n], c2 = v['criado_' + n];
+    if (!p && !c2) return;
+    console.log('  ' + n.padEnd(34) + mi(p).padStart(13) + mi(c2).padStart(15));
+  });
+
   /* Mês a mês, as duas réguas principais: às vezes o número que não bate é o
      de outro mês, ou de outro ano. */
   const [serie] = await bq.query({ query: `
