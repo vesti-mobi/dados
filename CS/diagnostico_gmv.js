@@ -101,7 +101,13 @@ async function porStatus(bq) {
     ORDER BY column_name` });
   console.log('\nCOLUNAS COM CARA DE STATUS: ' + (cols.map(c => c.column_name).join(', ') || 'nenhuma'));
 
-  for (const { column_name: col } of cols.slice(0, 4)) {
+  /* As que interessam, não as quatro primeiras do alfabeto: cancelamento e o
+     status consolidado do pedido. */
+  const PRIORIDADE = ['status_canceled_isCanceled', 'status_consolidatedOrderStatus',
+                      'payment_consolidatedPaymentStatus', 'status_removed_isRemoved'];
+  const escolhidas = PRIORIDADE.filter(p => cols.some(c => c.column_name === p))
+    .map(column_name => ({ column_name }));
+  for (const { column_name: col } of escolhidas) {
     try {
       const [linhas] = await bq.query({ query: `
         WITH carteira AS (${CARTEIRA})
@@ -156,4 +162,34 @@ async function porStatus(bq) {
     + ' em ' + r.qt_acima_do_teto + ' pedidos');
 
   await porStatus(bq);
+
+  /* O número que a Laura espera fica ENTRE pago e criado. O palpite é "criado
+     menos o que foi cancelado" — aqui ele é medido, junto com as variações
+     vizinhas, para a conversa ter número em vez de teoria. */
+  const [[x]] = await bq.query({ query: `
+    WITH carteira AS (${CARTEIRA}),
+    p AS (
+      SELECT SAFE_CAST(summary_total AS FLOAT64) total,
+             payment_isPaid = 'True' pago,
+             IFNULL(CAST(status_canceled_isCanceled AS STRING), '') cancelado,
+             IFNULL(CAST(status_removed_isRemoved AS STRING), '') removido
+      FROM ${DS}.MongoDB_Pedidos_Geral o
+      JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+      WHERE o.settings_createdAt IS NOT NULL
+        AND SAFE_CAST(o.summary_total AS FLOAT64) > 0
+        AND SAFE_CAST(o.summary_total AS FLOAT64) < ${TETO}
+        AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${ini}' AND DATE '${fim}'
+    )
+    SELECT
+      ROUND(SUM(IF(cancelado NOT IN ('true','True','1'), total, 0)),2) sem_cancelado,
+      ROUND(SUM(IF(cancelado NOT IN ('true','True','1') AND removido NOT IN ('true','True','1'), total, 0)),2) sem_cancelado_nem_removido,
+      ROUND(SUM(IF(cancelado IN ('true','True','1'), total, 0)),2) so_cancelado,
+      COUNTIF(cancelado IN ('true','True','1')) qt_cancelado,
+      ROUND(SUM(IF(pago OR cancelado NOT IN ('true','True','1'), total, 0)),2) pago_ou_vivo
+    FROM p` });
+  console.log('\nCRIADO, TIRANDO O QUE MORREU (carteira, com teto):');
+  console.log('  criado menos cancelado:            ' + mi(x.sem_cancelado));
+  console.log('  criado menos cancelado e removido: ' + mi(x.sem_cancelado_nem_removido));
+  console.log('  só os cancelados:                  ' + mi(x.so_cancelado) + ' em ' + x.qt_cancelado + ' pedidos');
+  console.log('  pago + ainda vivo (não cancelado): ' + mi(x.pago_ou_vivo));
 })().catch(e => { console.error('FALHOU:', e.message); process.exit(1); });
