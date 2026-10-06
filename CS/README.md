@@ -260,6 +260,45 @@ enxerga a carteira** — domínio sem módulo de vendas não tem linha de client
 aqui. Em agosto isso responde por R$ 0,5 mi: no recorte de 03 a 30/08 o painel
 dá R$ 98,09 mi contra os R$ 98,57 mi do relatório.
 
+## Filtros avançados da Tabela geral (06/10/2026)
+
+Pedido da Laura: recortar a carteira por plano, filial, varejo, Oráculo, Tino,
+Tino ativo, integração, VestiPago e faixa de GMV e de health — **tudo em
+caixinha, podendo marcar mais de uma**.
+
+Dez perguntas não cabem como dez campos na barra. Viraram um botão **Mais
+filtros** que abre um painel em colunas:
+
+| Grupo | Opções |
+|---|---|
+| **Plano** | a família do plano — Starter, Pro, Avançado, Básico, Light, Essencial, Enterprise, Conecta, Catálogo, Portal têxtil, Assistente, Sem plano |
+| **Estrutura** | Tem filial · Loja única · Tem varejo · Só atacado |
+| **Produtos** | Tem/Sem Tino · Tino ativo · Tino parado · Tem/Sem Oráculo · Tem/Sem VestiPago · Tem/Sem integração |
+| **Faixa de GMV** | sem GMV · até 10 mil · 10 a 50 · 50 a 200 · 200 mil a 1 mi · acima de 1 mi |
+| **Health score** | Saudável (80+) · Atenção (50-79) · Em risco (1-49) · Zerado |
+
+Como combina: dentro do mesmo grupo é **ou** (Pro ou Starter), entre grupos é
+**e** (Pro **e** com filial). Cada opção mostra **quantas marcas** caem nela,
+contadas sobre as linhas já filtradas pelo resto da barra — CS, canal, período.
+O que está marcado volta como **chip** na barra, com X para tirar só aquele, e
+o botão mostra quantos filtros estão ativos. "Limpar tudo" zera só os
+avançados; "Limpar filtros" zera a barra inteira.
+
+Três coisas que precisaram de dado novo ou de tratamento:
+
+- **Plano por família.** O nome vem do item mais caro da fatura e está escrito
+  de dez jeitos ("Plano PRO", "Assinatura: Vesti Pro", "plano_profissional").
+  O filtro agrupa por família, senão seriam dez caixinhas para a mesma coisa.
+- **Varejo.** A classificação Atacado/Varejo é por EMPRESA
+  (`confeccao_tipo_empresa`); a carga agora sobe isso para a marca —
+  `temVarejo`/`temAtacado`, verdadeiro se qualquer empresa dela for daquele
+  tipo, porque as duas coisas convivem em quem abriu loja de varejo vindo do
+  atacado. Empresa que a classificação (de 30/03/2026) ainda não alcançou não
+  conta para nenhum dos dois. Hoje: 999 marcas da carteira com empresa de
+  varejo.
+- **Tino ativo ≠ ter Tino.** Ativo é o status na base do próprio produto, que
+  só existe na tabela da aba Uso do Tino: 117 ativas de 120 marcas com Tino.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |

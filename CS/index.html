@@ -281,7 +281,7 @@ button,input,select{font:inherit;color:inherit}
 }
 .fa-pop{
   display:none;position:absolute;z-index:45;top:calc(100% + 8px);right:0;
-  width:min(780px,86vw);background:var(--surface);
+  width:min(900px,88vw);background:var(--surface);
   border:1px solid var(--line);border-radius:var(--r-lg);
   box-shadow:0 18px 44px -18px rgba(17,20,24,.45);
 }
@@ -289,8 +289,11 @@ button,input,select{font:inherit;color:inherit}
 .fa-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
 .fa-head h4{margin:0;font-family:var(--f-display);font-size:14px;font-weight:600}
 .fa-head .btn{margin-left:auto}
-.fa-corpo{padding:4px 18px 18px;max-height:min(62vh,560px);overflow:auto;
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px 24px}
+.fa-corpo{padding:4px 18px 18px;max-height:min(64vh,560px);overflow:auto;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:16px 22px;
+  align-items:start}
+/* Lista longa (Plano tem treze) não pode esticar a linha inteira da grade. */
+.fa-lista{max-height:232px;overflow:auto;margin-right:-6px;padding-right:6px}
 .fa-grupo{padding-top:14px;min-width:0}
 .fa-grupo>.eyebrow{display:block;color:var(--acc);margin-bottom:9px}
 .fa-op{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:13px;color:var(--ink-2)}
@@ -5814,6 +5817,7 @@ function seletorAvancado(t){
     const marcadas = (estado.filtros.avancado[g.k] ||= new Set());
     const sec = el('div',{class:'fa-grupo'});
     sec.innerHTML = `<span class="eyebrow">${g.l}</span>`;
+    const lista = el('div',{class:'fa-lista'});
     opcoesDoGrupo(g).forEach(([rotulo, teste])=>{
       const quantos = base.filter(teste).length;
       const lin = el('label',{class:'fa-op'});
@@ -5824,8 +5828,9 @@ function seletorAvancado(t){
       lin.appendChild(cx);
       lin.appendChild(el('span',{},rotulo));
       lin.appendChild(el('small',{},fmt.int(quantos)));
-      sec.appendChild(lin);
+      lista.appendChild(lin);
     });
+    sec.appendChild(lista);
     corpo.appendChild(sec);
   });
   pop.appendChild(corpo);
