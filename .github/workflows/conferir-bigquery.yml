@@ -28,7 +28,7 @@ on:
         required: false
         default: '0'
       modo:
-        description: 'conferir (padrão) ou explorar — explorar só lista o catálogo do lake'
+        description: 'conferir (padrão), explorar (catálogo do lake) ou gmv (todas as réguas do GMV do mês em `meses`)'
         required: false
         default: 'conferir'
 
@@ -67,3 +67,12 @@ jobs:
         if: inputs.modo == 'explorar'
         working-directory: CS
         run: node explorar_carteira.js
+
+      # Mede o GMV do mês em todas as réguas possíveis (pago x criado, com teto
+      # x sem, carteira x base toda) para achar de onde sai cada número.
+      - name: Diagnóstico do GMV
+        if: inputs.modo == 'gmv'
+        working-directory: CS
+        env:
+          MES: ${{ inputs.meses }}
+        run: node diagnostico_gmv.js
