@@ -293,6 +293,16 @@ button,input,select{font:inherit;color:inherit}
    qual delas é a tabela que apareceu embaixo */
 .bq-meta.aberta{background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc-line)}
 .bq-detalhe{margin:-6px 0 16px}
+/* a faixa de comparação que abre junto com a tabela */
+.bq-comp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--r-lg) var(--r-lg) 0 0;
+  border-bottom:0;overflow:hidden}
+.bq-comp>div{background:var(--surface);padding:12px 16px}
+.bq-comp .eyebrow{display:block;margin-bottom:5px}
+.bq-comp b{font-family:var(--f-num);font-size:18px;font-weight:650;font-variant-numeric:tabular-nums}
+.bq-comp .comp-ok{color:var(--pos)}
+.bq-comp .comp-ruim{color:var(--neg)}
+.bq-detalhe .table-card{border-radius:0 0 var(--r-lg) var(--r-lg)}
 .bq-top{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
 .bq-top b{font-size:13.5px;font-weight:600}
 .bq-top span{margin-left:auto;font-family:var(--f-num);font-size:14px;font-weight:600;
@@ -3467,9 +3477,9 @@ function renderBonificacaoTri(){
         + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?SALARIO_200:SALARIO_150)*100)}` : '')
         + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '')
         + `</div>`;
-      /* Individual: o balãozinho já entrega as marcas sem precisar clicar.
-         Coletivo: o clique abre a tabela, que é onde cabe o CS responsável. */
-      if(l.cs !== 'Time (coletiva)') linha.setAttribute('data-tip', resumoDaMeta(m, rec));
+      /* Clicar abre a tabela nos dois blocos — "no individual seria melhor
+         clicar mesmo na barra" (Laura, 07/10/2026). O balãozinho saiu: duas
+         formas de ver a mesma coisa só disputavam a atenção. */
       linha.onclick = ()=>abrirDetalheMeta(m, rec);
       grade.appendChild(linha);
     });
@@ -3570,7 +3580,47 @@ function abrirDetalheMeta(m, rec){
 /* A lista por trás do quadrante. Cada meta tem a sua — não dá para ter uma
    tabela só, porque o que sustenta "9 mentorias" e o que sustenta "71 mi de
    TPV" são coisas de natureza diferente. */
+/* Quanto a mesma meta deu no MESMO recorte do ano passado. Nas metas de
+   crescimento isso já era a base; nas de contagem e valor não existia, e é a
+   primeira pergunta de quem abre a tabela — melhorou ou piorou? */
+function comparativoMeta(m, rec){
+  const ano = Number(rec.meses[0].slice(0,4)) - 1;
+  const rotuloBase = rec.custom
+    ? rec.mesesBase.map(rotuloMes).join(', ')
+    : rotuloTrimestre(ano + rec.k.slice(4));
+  let antes = null;
+  if(m.k==='gmv' || m.k==='vestipago') antes = m.base;
+  else if(m.k==='mentoria') antes = itensMentoria(rec.mesesBase, m.cs).length;
+  else if(m.k==='cross')    antes = itensCross(rec.mesesBase, m.cs).reduce((a,x)=>a+(x.valor||0),0);
+  else if(m.k==='churn')    antes = itensChurn(rec.mesesBase, m.cs).length;
+  else if(m.k==='tino'){
+    const base = itensTino(rec.mesesBase, m.cs);
+    antes = m.cs ? base.filter(x=>x.novo).length : base.length;
+  }
+  const u = v => m.meta.unidade==='R$' ? fmt.money(v) : fmt.int(Math.round(v));
+  const dif = (antes > 0) ? (m.feito - antes) / antes * 100 : null;
+  /* No churn, cair é bom: a cor do comparativo se inverte. */
+  const bom = m.meta.menorMelhor ? (dif != null && dif <= 0) : (dif != null && dif >= 0);
+  const box = el('div',{class:'bq-comp'});
+  box.innerHTML =
+      `<div><span class="eyebrow">Neste recorte</span><b>${u(m.feito)}</b></div>`
+    + `<div><span class="eyebrow">${rotuloBase}</span><b>${antes==null?'—':u(antes)}</b></div>`
+    + `<div><span class="eyebrow">Variação</span>`
+    + `<b class="${dif==null?'':(bom?'comp-ok':'comp-ruim')}">`
+    + (dif==null ? (antes===0 && m.feito>0 ? 'não havia base' : '—')
+                 : (dif>=0?'+':'') + fmt.pct1(dif)) + `</b></div>`
+    + (m.semBase ? '' : `<div><span class="eyebrow">Meta</span><b>${m.meta.menorMelhor?'até ':''}${u(m.alvo)}</b></div>`);
+  return box;
+}
+
 function detalheMeta(m, rec){
+  const caixa = el('div',{});
+  caixa.appendChild(comparativoMeta(m, rec));
+  caixa.appendChild(detalheMetaLista(m, rec));
+  return caixa;
+}
+
+function detalheMetaLista(m, rec){
   const titulo = m.meta.l + ' · ' + (m.cs || 'Time (coletiva)') + ' · ' + rec.rotulo;
   if(m.k==='gmv' || m.k==='vestipago'){
     const chave = m.k==='gmv' ? 'gmv' : 'vestipago';

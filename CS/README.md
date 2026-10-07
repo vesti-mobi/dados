@@ -358,13 +358,21 @@ tem — mostra **"sem meta"** e não vale ponto. Antes dava meta batida, porque
 qualquer número é maior ou igual a zero: um falso positivo que inflava
 out/nov/dez de 2025 em duas metas.
 
-Os dois blocos respondem de jeitos diferentes, a pedido da Laura:
+**Clicar na barra abre o detalhe**, nos dois blocos — o balãozinho de hover que
+existiu por uma rodada saiu: "no individual seria melhor clicar mesmo na barra"
+(Laura). O detalhe nasce **logo abaixo da faixa clicada**, não no fim da
+página; antes ia para o rodapé, e quem clicava no bloco do time não via nada
+acontecer.
 
-- **Coletiva:** clicar na barra abre a tabela, e nela está o **CS responsável** —
-  em GMV e VestiPago, uma linha por CS com realizado, base, meta, variação e
-  quanto falta.
-- **Individual:** **passar o mouse** na barra já mostra as marcas, com valor e
-  data, sem precisar clicar. Até 12 itens no balãozinho; o resto vem na tabela.
+Todo detalhe abre com uma **faixa de comparação**: o realizado no recorte, o
+mesmo recorte do ano passado, a variação e a meta. Nas metas de crescimento a
+base já existia; nas de contagem e valor (mentoria, cross-sell, churn, Tino)
+ela é calculada rodando a mesma apuração sobre os meses do ano anterior. No
+churn a cor se inverte, porque cair é bom.
+
+Embaixo da faixa vem a lista: no **coletivo** com o **CS responsável** em toda
+tabela (em GMV e VestiPago, uma linha por CS com base, meta, variação e quanto
+falta); no **individual**, o mês a mês da própria carteira.
 
 ### Barras no lugar da tabela
 
