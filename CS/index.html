@@ -279,17 +279,22 @@ button,input,select{font:inherit;color:inherit}
   border-radius:100px;background:var(--acc);color:#fff;
   font-family:var(--f-mono);font-size:10px;font-weight:600;
 }
+/* `fixed`, não `absolute`: marcar uma opção redesenha a barra (entra o chip),
+   a barra cresce e o painel ancorado nela descia para fora da tela — não dava
+   para marcar o segundo filtro. Preso à viewport e reposicionado a cada
+   abertura, ele fica onde está, com o corpo rolando por dentro. */
 .fa-pop{
-  display:none;position:absolute;z-index:45;top:calc(100% + 8px);right:0;
-  width:min(900px,88vw);background:var(--surface);
+  display:none;position:fixed;z-index:45;
+  background:var(--surface);
   border:1px solid var(--line);border-radius:var(--r-lg);
   box-shadow:0 18px 44px -18px rgba(17,20,24,.45);
+  flex-direction:column;overflow:hidden;
 }
-.fa-pop.aberto{display:block}
-.fa-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+.fa-pop.aberto{display:flex}
+.fa-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2);flex:none}
 .fa-head h4{margin:0;font-family:var(--f-display);font-size:14px;font-weight:600}
 .fa-head .btn{margin-left:auto}
-.fa-corpo{padding:4px 18px 18px;max-height:min(64vh,560px);overflow:auto;
+.fa-corpo{padding:4px 18px 18px;flex:1;min-height:0;overflow:auto;
   display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:16px 22px;
   align-items:start}
 /* Lista longa (Plano tem treze) não pode esticar a linha inteira da grade. */
@@ -5309,6 +5314,9 @@ const estado = {
   ordemCard: {}, // { tituloDoCard: {k, dir} } — ordenação própria de cada cardLista
   /* card aberto em cada aba que usa a grade de cards (null = só a grade) */
   cardAberto: { gerencial: null, visaoGeral: null, cliente: null },
+  /* painel "Mais filtros" aberto? sobrevive ao redesenho que marcar uma opção
+     provoca, senão só dava para marcar um filtro por vez */
+  filtroPainelAberto: false,
   clienteFoco: null,   // domínio da marca aberta na aba Visão do cliente
 };
 let ultimoRender = { rows:[], colunas:[] };
@@ -5348,7 +5356,7 @@ function renderNav(){
       const b = el('button',{class:'nav-btn',type:'button','aria-current':String(t.id===estado.aba),
         style:`--nav-c:${t.cor};--nav-soft:${tint(t.cor,.10)}`},
         `<span class="dot" style="background:${t.cor}"></span>${t.nav}`);
-      b.onclick=()=>{estado.aba=t.id;renderNav();renderPagina();window.scrollTo({top:0})};
+      b.onclick=()=>{estado.aba=t.id;estado.filtroPainelAberto=false;renderNav();renderPagina();window.scrollTo({top:0})};
       box.appendChild(b);
     });
     nav.appendChild(box);
@@ -5793,14 +5801,56 @@ function seletorAvancado(t){
     `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4h12M4.5 8h7M7 12h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`
     + ' Mais filtros' + (n ? ` <i class="cont">${n}</i>` : ''));
   const pop = el('div',{class:'fa-pop'});
-  btn.onclick = e => { e.stopPropagation(); pop.classList.toggle('aberto') };
+
+  /* O painel é `fixed`: sem isso, marcar uma opção redesenhava a barra, o chip
+     novo empurrava tudo e o painel saía da tela — não dava para marcar o
+     segundo filtro. Aqui ele é colado na posição do botão, limitado à altura
+     da janela, e `estado.filtroPainelAberto` o traz de volta aberto depois do
+     redesenho, na mesma posição. */
+  const posicionar = ()=>{
+    const r = btn.getBoundingClientRect();
+    const larg = Math.min(900, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(r.right - larg, window.innerWidth - larg - 12));
+    pop.style.width = larg + 'px';
+    pop.style.left = left + 'px';
+    pop.style.top = (r.bottom + 8) + 'px';
+    pop.style.maxHeight = Math.max(240, window.innerHeight - r.bottom - 24) + 'px';
+  };
+  const aoRolar = ()=>{ if(pop.classList.contains('aberto')) posicionar() };
+  const abrir = ()=>{ pop.classList.add('aberto'); estado.filtroPainelAberto = true; posicionar();
+    window.addEventListener('scroll', aoRolar, true); window.addEventListener('resize', aoRolar); };
+  const fechar = ()=>{ pop.classList.remove('aberto'); estado.filtroPainelAberto = false;
+    window.removeEventListener('scroll', aoRolar, true); window.removeEventListener('resize', aoRolar); };
+
+  btn.onclick = e => { e.stopPropagation(); pop.classList.contains('aberto') ? fechar() : abrir() };
   pop.onclick = e => e.stopPropagation();
-  document.addEventListener('click', ()=>pop.classList.remove('aberto'), {once:true});
+  /* Um clique fora fecha; `capture` para pegar antes de qualquer outro
+     handler, e o listener morre junto com o painel. */
+  const foraFecha = e => {
+    /* O clique que marcou a caixinha ainda está subindo quando o redesenho
+       troca o painel por um novo. Se este listener (do painel novo) o
+       recebesse, veria um alvo que não é filho dele e fecharia tudo — o alvo
+       nem está mais no documento. */
+    if(!document.contains(e.target)) return;
+    if(!pop.contains(e.target) && !btn.contains(e.target)) fechar();
+  };
+  document.addEventListener('click', foraFecha);
+  const aoTeclar = e => { if(e.key==='Escape') fechar() };
+  document.addEventListener('keydown', aoTeclar);
+  /* O painel é recriado a cada render; os listeners do anterior iriam junto se
+     ninguém os removesse. */
+  if(window._faLimpa) window._faLimpa();
+  window._faLimpa = ()=>{ document.removeEventListener('click', foraFecha);
+    document.removeEventListener('keydown', aoTeclar);
+    window.removeEventListener('scroll', aoRolar, true);
+    window.removeEventListener('resize', aoRolar); };
+
+  if(estado.filtroPainelAberto) setTimeout(abrir, 0);
 
   const head = el('div',{class:'fa-head'});
   head.innerHTML = '<h4>Filtrar a carteira</h4>';
   const limpar = el('button',{class:'btn btn-ghost',type:'button'},'Limpar tudo');
-  limpar.onclick = ()=>{ estado.filtros.avancado = {}; renderPagina() };
+  limpar.onclick = ()=>{ estado.filtros.avancado = {}; renderPagina() };   // o painel reabre sozinho
   head.appendChild(limpar);
   pop.appendChild(head);
 
