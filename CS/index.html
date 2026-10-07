@@ -3149,9 +3149,45 @@ function rotuloTrimestre(k){
   const ini = (t-1)*3;
   return MESES_CURTO[ini]+'/'+MESES_CURTO[ini+1]+'/'+MESES_CURTO[ini+2]+' de '+a;
 }
-const trimestreAtual = ()=> estado.filtros.trimestre
-  || (trimestresDisponiveis().find(t=>t.meses.some(m=>m<=String(LIMITE_DADOS.fim).slice(0,7)))||{}).k
-  || (trimestresDisponiveis()[0]||{}).k;
+/* O trimestre em que o dado mais recente cai — é nele que a aba abre, sempre,
+   mesmo depois de alguém ter olhado outro (pedido da Laura em 07/10/2026). */
+function trimestreDoAgora(){
+  const hoje = String(LIMITE_DADOS.fim).slice(0,7);
+  const [a, m] = hoje.split('-').map(Number);
+  return a + '-T' + (Math.floor((m-1)/3) + 1);
+}
+const trimestreAtual = ()=> estado.filtros.trimestre || trimestreDoAgora();
+
+/* O recorte pode ser um trimestre ou um intervalo de datas escolhido à mão.
+   Em qualquer um dos dois o grão é o MÊS: a bonificação é somada por mês na
+   carga, então um intervalo que começa no dia 5 traz o mês inteiro — a nota
+   embaixo do quadro avisa. A base de comparação é sempre o mesmo recorte do
+   ano anterior. */
+function recorteBonif(){
+  const k = trimestreAtual();
+  if(k === 'custom'){
+    const p = periodo();
+    const meses = mesesEntre(String(p.ini).slice(0,7), String(p.fim).slice(0,7));
+    return { k, custom:true, meses,
+      mesesBase: meses.map(m=>(Number(m.slice(0,4))-1) + m.slice(4)),
+      rotulo: meses.length===1 ? rotuloMes(meses[0])
+            : rotuloMes(meses[0]) + ' a ' + rotuloMes(meses[meses.length-1]) };
+  }
+  return { k, custom:false, meses: mesesDoTrimestre(k),
+    mesesBase: mesesDoTrimestre(trimestreAnterior(k)), rotulo: rotuloTrimestre(k) };
+}
+/* Todos os meses de um extremo ao outro, inclusive. */
+function mesesEntre(ini, fim){
+  const out = [];
+  let [a, m] = ini.split('-').map(Number);
+  const [af, mf] = fim.split('-').map(Number);
+  while(a < af || (a === af && m <= mf)){
+    out.push(a + '-' + String(m).padStart(2,'0'));
+    if(++m > 12){ m = 1; a++ }
+    if(out.length > 48) break;
+  }
+  return out;
+}
 const mesesDoTrimestre = k =>{
   const [a, t] = String(k||'').split('-T').map(Number);
   if(!a) return [];
@@ -3288,9 +3324,8 @@ function itensTino(meses, cs){
 const ativosDaCs = cs => DATA.clientes.filter(c=>(cs ? c.cs===cs : BONIF_CS.includes(c.cs)) && c.status==='ativo').length;
 
 /* ---- o placar de uma meta ------------------------------------------------ */
-function placarMeta(meta, tri, cs){
-  const meses = mesesDoTrimestre(tri);
-  const mesesBase = mesesDoTrimestre(trimestreAnterior(tri));
+function placarMeta(meta, rec, cs){
+  const meses = rec.meses, mesesBase = rec.mesesBase;
   const r = { k:meta.k, meta, cs };
 
   if(meta.k === 'mentoria'){
@@ -3319,10 +3354,15 @@ function placarMeta(meta, tri, cs){
   }
 
   /* Churn é o único em que menos é melhor: bateu quem ficou ABAIXO do teto. */
+  /* Sem base não há meta: o trimestre de 2025 compararia com 2024, que o lake
+     não tem. Dar por batida porque "qualquer número >= 0" seria falso
+     positivo — fica sem valer ponto, e a barra diz por quê. */
+  r.semBase = (meta.cresce != null) && !(r.base > 0);
   r.pct = meta.menorMelhor
     ? (r.alvo > 0 ? (r.feito <= r.alvo ? 1 : r.alvo / Math.max(r.feito, 1)) : (r.feito ? 0 : 1))
     : (r.alvo > 0 ? r.feito / r.alvo : 0);
-  r.bateu = meta.menorMelhor ? r.feito <= r.alvo : r.feito >= r.alvo;
+  r.bateu = r.semBase ? false
+    : meta.menorMelhor ? r.feito <= r.alvo : r.feito >= r.alvo;
 
   r.salario = !r.bateu ? 0
     : (meta.acelera && r.pct >= 2 ? SALARIO_200
@@ -3333,13 +3373,13 @@ function placarMeta(meta, tri, cs){
 }
 
 /* Uma linha por CS (individual) + a linha do time (coletiva). */
-function placarBonificacao(tri){
+function placarBonificacao(rec){
   const linhas = BONIF_CS.map(cs=>{
-    const metas = METAS_TRI.map(m=>placarMeta(m, tri, cs));
+    const metas = METAS_TRI.map(m=>placarMeta(m, rec, cs));
     return { cs, bloco:'Individual', metas,
       salario: metas.reduce((a,m)=>a+m.salario, 0) };
   });
-  const time = (()=>{ const metas = METAS_TRI.map(m=>placarMeta(m, tri, null));
+  const time = (()=>{ const metas = METAS_TRI.map(m=>placarMeta(m, rec, null));
     return { cs:'Time (coletiva)', bloco:'Coletiva', metas,
       salario: metas.reduce((a,m)=>a+m.salario, 0) } })();
   return { linhas, time };
@@ -3350,8 +3390,9 @@ function placarBonificacao(tri){
    primeiro), o quadro de metas com realizado × meta, e a lista por trás de
    cada quadrante — clicando nele. */
 function renderBonificacaoTri(){
-  const tri = trimestreAtual();
-  const { linhas, time } = placarBonificacao(tri);
+  const rec = recorteBonif();
+  const tri = rec.k;
+  const { linhas, time } = placarBonificacao(rec);
   const wrap = el('div',{});
 
   /* 1. quanto cada uma leva */
@@ -3400,16 +3441,21 @@ function renderBonificacaoTri(){
         ? (m.bateu ? 'var(--pos)' : m.meta.cor) : m.meta.cor;
       linha.innerHTML =
         `<div class="bq-top"><b style="color:${m.meta.cor}">${m.meta.l}</b>`
-        + `<span>${u(m.feito)}<em> de ${m.meta.menorMelhor ? 'até ' : ''}${u(m.alvo)}</em></span></div>`
+        + `<span>${u(m.feito)}<em> ${m.semBase ? '— sem meta' : 'de ' + (m.meta.menorMelhor ? 'até ' : '') + u(m.alvo)}</em></span></div>`
         + `<div class="bq-bar"><i style="width:${larg.toFixed(1)}%;background:${cor}"></i>${marcas}</div>`
         + `<div class="bq-sub">`
-        + (m.bateu
+        + (m.semBase
+            ? `sem base de ${Number(rec.meses[0].slice(0,4))-1} para comparar`
+            : m.bateu
             ? `<b style="color:var(--pos)">bateu · ${fmt.pct1(m.salario*100)} do salário</b>`
             : `${fmt.pct1(Math.min(m.pct,1)*100)} da meta`)
         + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?SALARIO_200:SALARIO_150)*100)}` : '')
         + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '')
         + `</div>`;
-      linha.onclick = ()=>abrirDetalheMeta(m, tri);
+      /* Individual: o balãozinho já entrega as marcas sem precisar clicar.
+         Coletivo: o clique abre a tabela, que é onde cabe o CS responsável. */
+      if(l.cs !== 'Time (coletiva)') linha.setAttribute('data-tip', resumoDaMeta(m, rec));
+      linha.onclick = ()=>abrirDetalheMeta(m, rec);
       grade.appendChild(linha);
     });
     box.appendChild(grade);
@@ -3418,27 +3464,55 @@ function renderBonificacaoTri(){
 
   const quadro = el('div',{class:'bq-wrap'});
   quadro.appendChild(el('div',{class:'section-label'},
-    `<span class="eyebrow">Metas de ${rotuloTrimestre(tri)}</span>`));
+    `<span class="eyebrow">Metas de ${rec.rotulo}</span>`));
   quadro.appendChild(faixa(time, true));
   linhas.forEach(l=>quadro.appendChild(faixa(l)));
 
-  const meses = mesesDoTrimestre(tri);
+  const meses = rec.meses;
   const ate = String(LIMITE_DADOS.fim).slice(0,7);
   const fechados = meses.filter(m=>m < ate).length;
   const correndo = meses.some(m=>m >= ate);
   quadro.appendChild(el('div',{class:'bq-nota'},
-    (correndo ? `<b>Trimestre em andamento</b> — ${fechados} ${fechados===1?'mês fechado':'meses fechados'} de 3, com dado até ${fmt.date(LIMITE_DADOS.fim)}. O realizado ainda vai crescer. ` : '')
+    (rec.custom ? `<b>Intervalo escolhido à mão</b> — o recorte é por mês cheio (${meses.map(rotuloMes).join(', ')}), porque a bonificação é somada por mês na carga. As metas continuam sendo as do trimestre. ` : '')
+    + (correndo ? `<b>${rec.custom?'Período':'Trimestre'} em andamento</b> — ${fechados} ${fechados===1?'mês fechado':'meses fechados'} de ${meses.length}, com dado até ${fmt.date(LIMITE_DADOS.fim)}. O realizado ainda vai crescer. ` : '')
     + 'Cada meta batida vale 25% de um salário; Mentoria/Setup e Cross-sell/Upsell pagam 50% a 150% da meta e 75% a 200% — as marcas na barra mostram onde ficam esses dois degraus. '
     + 'Clique em uma barra para ver o que entrou nela.'));
+  ligarTooltips(quadro);
   wrap.appendChild(quadro);
 
   if(estado.metaAberta){
     const [qCs, qK] = estado.metaAberta.split('|');
     const alvo = (qCs==='*' ? time : linhas.find(l=>l.cs===qCs));
     const m = alvo && alvo.metas.find(x=>x.k===qK);
-    if(m) wrap.appendChild(detalheMeta(m, tri));
+    if(m) wrap.appendChild(detalheMeta(m, rec));
   }
   return wrap;
+}
+
+/* O que a barra tem por trás, em uma linha de texto — é o balãozinho que
+   aparece ao passar o mouse nas barras individuais (pedido da Laura em
+   07/10/2026: "no individual quero que ao passar o mouse em cima da barra já
+   mostre a info das marcas"). No coletivo o caminho é clicar, que abre a
+   tabela com o CS responsável. */
+function resumoDaMeta(m, rec){
+  const u = v => m.meta.unidade==='R$' ? fmt.moneyCompact(v) : fmt.int(Math.round(v));
+  if(m.k==='gmv' || m.k==='vestipago'){
+    const chave = m.k==='gmv' ? 'gmv' : 'vestipago';
+    const porMes = rec.meses.map((mes,i)=>rotuloMes(mes)+': '+fmt.moneyCompact(somaBonifTri(chave,[mes],m.cs)));
+    return u(m.feito) + ' no recorte · base ' + u(m.base) + ' (' + (m.pct>=1?'+':'') + fmt.pct1((m.pct-1)*100) + ' do que precisa)'
+      + '\n' + porMes.join(' · ');
+  }
+  const itens = m.itens || [];
+  if(!itens.length) return 'Nada registrado no recorte.';
+  const linha = x => {
+    if(m.k==='cross') return x.nome + ' — ' + x.tipo + (x.valor!=null ? ' ' + fmt.money(x.valor) : ' (sem valor)');
+    if(m.k==='tino')  return x.nome + ' — ' + fmt.int(x.eventos) + ' eventos' + (x.novo ? ' (nova)' : '');
+    if(m.k==='churn') return x.nome + ' — ' + x.origem + (x.data ? ' em ' + fmt.date(x.data) : '');
+    return x.nome + ' — ' + x.tipo + (x.data ? ' em ' + fmt.date(x.data) : '');
+  };
+  const mostra = itens.slice(0, 12).map(linha);
+  const sobra = itens.length - mostra.length;
+  return mostra.join('\n') + (sobra > 0 ? '\n+ ' + sobra + ' ' + (sobra===1?'marca':'marcas') + ' — clique para ver todas' : '');
 }
 
 /* A célula: realizado em cima, meta e nível embaixo. */
@@ -3452,7 +3526,7 @@ function celulaMeta(m){
     + `<small class="bt-pct ${cls}">${m.bateu ? fmt.pct1(m.salario*100)+' do salário' : fmt.pct1(Math.min(m.pct,1)*100)+' da meta'}</small>`;
 }
 
-function abrirDetalheMeta(m, tri){
+function abrirDetalheMeta(m, rec){
   const ch = (m.cs||'*') + '|' + m.k;
   estado.metaAberta = estado.metaAberta===ch ? null : ch;
   renderPagina();
@@ -3461,19 +3535,38 @@ function abrirDetalheMeta(m, tri){
 /* A lista por trás do quadrante. Cada meta tem a sua — não dá para ter uma
    tabela só, porque o que sustenta "9 mentorias" e o que sustenta "71 mi de
    TPV" são coisas de natureza diferente. */
-function detalheMeta(m, tri){
-  const titulo = m.meta.l + ' · ' + (m.cs || 'Time (coletiva)') + ' · ' + rotuloTrimestre(tri);
+function detalheMeta(m, rec){
+  const titulo = m.meta.l + ' · ' + (m.cs || 'Time (coletiva)') + ' · ' + rec.rotulo;
   if(m.k==='gmv' || m.k==='vestipago'){
-    const meses = mesesDoTrimestre(tri), base = mesesDoTrimestre(trimestreAnterior(tri));
-    const rows = meses.map((mes,i)=>({mes:rotuloMes(mes), agora:somaBonifTri(m.k==='gmv'?'gmv':'vestipago',[mes],m.cs),
-      antes:somaBonifTri(m.k==='gmv'?'gmv':'vestipago',[base[i]],m.cs)}))
+    const chave = m.k==='gmv' ? 'gmv' : 'vestipago';
+    /* No bloco coletivo a pergunta é "quem trouxe isso": a tabela abre por CS.
+       No individual, o interessante é o mês a mês da própria carteira. */
+    if(!m.cs){
+      const rows = BONIF_CS.map(cs=>{
+        const agora = somaBonifTri(chave, rec.meses, cs);
+        const antes = somaBonifTri(chave, rec.mesesBase, cs);
+        return {cs, agora, antes, meta: antes*(1+m.meta.cresce),
+          dif: antes ? (agora-antes)/antes*100 : null,
+          falta: Math.max(0, antes*(1+m.meta.cresce) - agora)};
+      });
+      return cardLista(titulo, rows, [
+        {k:'cs', l:'CS responsável'},
+        {k:'agora', l:'No recorte', r:true, f:fmt.money},
+        {k:'antes', l:'Mesmo recorte de '+(Number(rec.meses[0].slice(0,4))-1), r:true, f:fmt.money},
+        {k:'meta', l:'Meta (+'+Math.round(m.meta.cresce*100)+'%)', r:true, f:fmt.money},
+        {k:'dif', l:'Variação', r:true, f:v=>v==null?'—':(v>=0?'+':'')+fmt.pct1(v)},
+        {k:'falta', l:'Falta', r:true, f:v=>v>0?fmt.money(v):'bateu'},
+      ], '<h4>Sem dado no recorte</h4>');
+    }
+    const rows = rec.meses.map((mes,i)=>({mes:rotuloMes(mes), agora:somaBonifTri(chave,[mes],m.cs),
+      antes:somaBonifTri(chave,[rec.mesesBase[i]],m.cs)}))
       .map(r=>Object.assign(r,{dif:r.antes?((r.agora-r.antes)/r.antes*100):null}));
     return cardLista(titulo, rows, [
       {k:'mes', l:'Mês'},
-      {k:'agora', l:'Neste trimestre', r:true, f:fmt.money},
-      {k:'antes', l:'Mesmo mês de '+(Number(tri.slice(0,4))-1), r:true, f:fmt.money},
+      {k:'agora', l:'Neste recorte', r:true, f:fmt.money},
+      {k:'antes', l:'Mesmo mês do ano anterior', r:true, f:fmt.money},
       {k:'dif', l:'Variação', r:true, f:v=>v==null?'—':(v>=0?'+':'')+fmt.pct1(v)},
-    ], '<h4>Sem dado no trimestre</h4>');
+    ], '<h4>Sem dado no recorte</h4>');
   }
   if(m.k==='tino'){
     return cardLista(titulo, m.itens, [
@@ -6413,8 +6506,11 @@ function renderFiltros(t){
   }
   if(t.filtros.includes('trimestre')){
     const tris = trimestresDisponiveis();
-    add('Trimestre', sel(tris.map(x=>[x.k, x.rotulo]), trimestreAtual(),
-      v=>estado.filtros.trimestre=v));
+    add('Recorte', sel([...tris.map(x=>[x.k, x.rotulo]), ['custom','Intervalo de datas…']],
+      trimestreAtual(), v=>estado.filtros.trimestre=v));
+    /* Só aparece quando a pessoa escolhe o intervalo livre — senão são dois
+       seletores de tempo disputando a mesma pergunta. */
+    if(trimestreAtual()==='custom') add('Período', seletorDePeriodo());
   }
   if(t.filtros.includes('periodo')) add('Período', seletorDePeriodo());
   if(t.filtros.includes('avancado')) box.appendChild(seletorAvancado(t));
@@ -6761,7 +6857,7 @@ function tituloQuem(lista){
 const tooltipHover = (()=>{
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;display:none;'
-    + 'background:var(--ink);color:#fff;font-family:"Instrument Sans",sans-serif;'
+    + 'background:var(--ink);color:#fff;font-family:"Public Sans",system-ui,sans-serif;'
     + 'font-size:12.5px;line-height:1.45;padding:8px 12px;border-radius:8px;max-width:360px;'
     + 'white-space:pre-wrap;box-shadow:0 8px 24px rgba(0,0,0,.28)';
   document.body.appendChild(d);

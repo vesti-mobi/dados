@@ -344,6 +344,28 @@ também"*. O quadrante é a soma de **quatro implantações** no trimestre —
 Oráculo, integração, varejo e Tino —, todas lidas direto da Vesti, sem depender
 do HubSpot.
 
+### Recorte, balãozinho e tabela por CS (07/10/2026)
+
+O filtro passou a aceitar **qualquer trimestre** — out/nov/dez de 2025 inclusive,
+para comparar com o ano passado — e um **intervalo de datas à mão**
+("Intervalo de datas…"). A aba sempre **abre no trimestre do dado mais recente**,
+independentemente do que alguém olhou por último. No intervalo livre o grão
+continua sendo o mês cheio (a bonificação é somada por mês na carga) e a nota
+embaixo do quadro avisa.
+
+Trimestre sem base no ano anterior — 2025 comparado com 2024, que o lake não
+tem — mostra **"sem meta"** e não vale ponto. Antes dava meta batida, porque
+qualquer número é maior ou igual a zero: um falso positivo que inflava
+out/nov/dez de 2025 em duas metas.
+
+Os dois blocos respondem de jeitos diferentes, a pedido da Laura:
+
+- **Coletiva:** clicar na barra abre a tabela, e nela está o **CS responsável** —
+  em GMV e VestiPago, uma linha por CS com realizado, base, meta, variação e
+  quanto falta.
+- **Individual:** **passar o mouse** na barra já mostra as marcas, com valor e
+  data, sem precisar clicar. Até 12 itens no balãozinho; o resto vem na tabela.
+
 ### Barras no lugar da tabela
 
 Também a pedido dela, o quadro deixou de ser tabela: cada bloco (time e cada
