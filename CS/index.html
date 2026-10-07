@@ -269,6 +269,38 @@ button,input,select{font:inherit;color:inherit}
 .wk-s.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .wk-s.hoje{box-shadow:0 0 0 2px var(--acc-soft)}
 
+/* --- bonificação trimestral: barras de progresso (07/10/2026) ----------
+   A tabela virou barra a pedido da Laura. Uma faixa por bloco (time e cada
+   CS), seis barras dentro, cor própria por meta. Nas duas que aceleram a
+   barra vai até 200% da meta e traz as marcas dos degraus de 150% e 200%. */
+.bq-wrap{margin-bottom:24px}
+.bq{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+.bq-time{border-top:2px solid var(--acc)}
+.bq-head{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+.bq-head b{font-family:var(--f-display);font-size:16px;font-weight:600}
+.bq-head small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.bq-total{margin-left:auto;text-align:right}
+.bq-total span{font-family:var(--f-num);font-size:24px;font-weight:650;color:var(--acc);
+  font-variant-numeric:tabular-nums;display:block;line-height:1}
+.bq-total small{display:block;font-size:11px;color:var(--ink-3);margin-top:3px}
+.bq-metas{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+  gap:16px 26px;padding:18px}
+.bq-meta{cursor:pointer;border-radius:var(--r-sm);transition:background .12s}
+.bq-meta:hover{background:var(--sunken)}
+.bq-top{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
+.bq-top b{font-size:13.5px;font-weight:600}
+.bq-top span{margin-left:auto;font-family:var(--f-num);font-size:14px;font-weight:600;
+  font-variant-numeric:tabular-nums;color:var(--ink)}
+.bq-top em{font-style:normal;font-weight:400;font-size:12px;color:var(--ink-3)}
+.bq-bar{position:relative;height:10px;border-radius:100px;background:var(--line-2);overflow:hidden}
+.bq-bar i{display:block;height:100%;border-radius:100px;transition:width .35s ease}
+/* marcas dos degraus de 150% e 200% dentro da própria barra */
+.bq-bar u{position:absolute;top:0;bottom:0;width:1.5px;background:var(--surface);opacity:.9}
+.bq-sub{margin-top:6px;font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.bq-nota{font-size:12px;color:var(--ink-3);line-height:1.55;padding:2px 2px 0}
+
 /* --- bonificação trimestral: o quadro de metas ------------------------- */
 .bt{width:100%}
 .bt td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
@@ -3133,17 +3165,17 @@ const trimestreAnterior = k =>{ const [a, t] = String(k||'').split('-T'); return
    fixo; quando a meta é crescimento sobre o ano passado, `cresce` diz quanto.
    `acelera` marca as duas que pagam mais quando passam da meta. */
 const METAS_TRI = [
-  { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true,
-    ajuda:'Soma 1 para cada novo Oráculo, nova integração, novo varejo e nova mentoria no trimestre.' },
-  { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true,
+  { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true, cor:'#7A4FB5',
+    ajuda:'Soma 1 para cada implantação nova no trimestre: Oráculo, integração, varejo e Tino.' },
+  { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#2E7D46',
     ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
-  { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30,
+  { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7A73',
     ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
-  { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10,
+  { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#2F6FB5',
     ajuda:'GMV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
-  { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03,
+  { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03, cor:'#C0453B',
     ajuda:'Marca bloqueada por inadimplência somada ao que o time registrou na planilha. A meta é ficar ABAIXO de 3% dos clientes ativos da carteira.' },
-  { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33,
+  { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33, cor:'#B7791F',
     ajuda:'Coletiva: marcas com 40+ eventos no último mês do trimestre. Individual: quantas delas são NOVAS, isto é, não estavam na lista do mês anterior ao trimestre.' },
 ];
 
@@ -3153,11 +3185,11 @@ const somaBonifTri = (k, meses, cs) => meses.reduce((a,m)=>{
   return a + l.reduce((s,x)=>s+(Number(x.valor)||0), 0);
 }, 0);
 
-/* Mentoria/Setup: a contagem vem da Vesti sempre que dá — Oráculo implantado,
-   integração que apareceu no retrato diário, filial nova de varejo. Mentoria
-   em si não tem registro em lugar nenhum (nem no HubSpot: zero negócios com
-   "mentoria" no nome em 06/10/2026), então ela entra zerada e o painel avisa,
-   em vez de fingir que o número está completo. */
+/* Mentoria/Setup: "mentoria e Oráculo novo, integração nova, varejo novo são
+   por hora a mesma coisa" (Laura, 07/10/2026) — e o Tino novo entra junto.
+   Então o quadrante é a soma de quatro implantações, todas lidas direto da
+   Vesti: Oráculo configurado, integração que apareceu no retrato diário,
+   filial nova de varejo e marca que entrou na base do Tino. */
 function itensMentoria(meses, cs){
   const dentro = d => d && meses.includes(String(d).slice(0,7));
   const daCs = x => cs ? x.cs===cs : BONIF_CS.includes(x.cs);
@@ -3171,6 +3203,9 @@ function itensMentoria(meses, cs){
   ((DATA.bonificacao||{}).filiais||[]).forEach(f=>{
     if(dentro(f.mes) && daCs(f) && varejoTipo(f)==='Varejo')
       out.push({tipo:'Varejo novo', nome:f.nome, cs:f.cs, data:f.criado||f.mes});
+  });
+  ((DATA.tino||{}).tabela||[]).forEach(t=>{
+    if(dentro(t.implantado) && daCs(t)) out.push({tipo:'Tino novo', nome:t.cliente, cs:t.cs, data:t.implantado});
   });
   return out.sort((a,b)=>String(a.data).localeCompare(String(b.data)));
 }
@@ -3334,52 +3369,68 @@ function renderBonificacaoTri(){
     + `<div class="kpi-sub">250% por bloco · hoje o time tem ${fmt.pct1(time.salario*100)} na coletiva</div>`));
   wrap.appendChild(resumo);
 
-  /* 2. o quadro de metas */
-  const card = el('div',{class:'table-card'});
-  const head = el('div',{class:'table-head'});
-  head.innerHTML = `<h3>Metas de ${rotuloTrimestre(tri)}</h3>`
-    + `<span class="count">25% de salário por meta · 50% e 75% onde acelera</span>`;
-  card.appendChild(head);
+  /* 2. as barras — uma por meta, uma faixa por bloco.
+     A tabela virou barra em 07/10/2026 a pedido da Laura: "ao invés de tabela,
+     fique uma barra que vai se preenchendo conforme a meta vai evoluindo,
+     utilize colorido pra cada coisa". Cada meta tem cor própria, e as duas que
+     aceleram mostram onde ficam os 150% e os 200% dentro da própria barra. */
+  const faixa = (l, destaque) => {
+    const box = el('div',{class:'bq'+(destaque?' bq-time':'')});
+    const head = el('div',{class:'bq-head'});
+    head.innerHTML = `<div><b>${l.cs}</b><small>${l.bloco}</small></div>`
+      + `<div class="bq-total"><span>${fmt.pct1(l.salario*100)}</span>`
+      + `<small>${l.metas.filter(m=>m.bateu).length} de ${METAS_TRI.length} metas</small></div>`;
+    box.appendChild(head);
 
-  const scroll = el('div',{class:'table-scroll'});
-  const tab = el('table',{class:'bt'});
-  const thead = el('thead');
-  thead.innerHTML = '<tr><th><span class="th-fixo">Quem</span></th>'
-    + METAS_TRI.map(m=>`<th class="r"><span class="th-fixo" title="${escapar(m.ajuda)}">${m.l}</span></th>`).join('')
-    + '<th class="r"><span class="th-fixo">Salários</span></th></tr>';
-  tab.appendChild(thead);
-
-  const tbody = el('tbody');
-  const linhaDe = (l, destaque) => {
-    const tr = el('tr', destaque ? {class:'bt-time'} : {});
-    tr.appendChild(el('td',{}, `<b>${l.cs}</b><small class="bt-bloco">${l.bloco}</small>`));
+    const grade = el('div',{class:'bq-metas'});
     l.metas.forEach(m=>{
-      const td = el('td',{class:'r bt-cel'});
-      td.innerHTML = celulaMeta(m);
-      td.onclick = ()=>abrirDetalheMeta(m, tri);
-      tr.appendChild(td);
+      const u = v => m.meta.unidade==='R$' ? fmt.moneyCompact(v) : fmt.int(Math.round(v));
+      /* Barra de 0 a 200% nas que aceleram, 0 a 100% nas demais — assim a
+         marca dos 150% e dos 200% tem onde ficar e o preenchimento não estoura
+         a caixa quando alguém faz o dobro da meta. */
+      const teto = m.meta.acelera ? 2 : 1;
+      const cheio = Math.min(m.pct / teto, 1) * 100;
+      const linha = el('div',{class:'bq-meta'+(m.bateu?' bateu':'')});
+      const marcas = m.meta.acelera
+        ? `<u style="left:50%"></u><u style="left:75%"></u>` : '';
+      /* No churn a barra é o teto sendo consumido: quanto mais cheia, pior. */
+      const cheioChurn = m.alvo > 0 ? Math.min(m.feito / m.alvo, 1) * 100 : (m.feito ? 100 : 0);
+      const larg = m.meta.menorMelhor ? cheioChurn : cheio;
+      const cor = m.meta.menorMelhor
+        ? (m.bateu ? 'var(--pos)' : m.meta.cor) : m.meta.cor;
+      linha.innerHTML =
+        `<div class="bq-top"><b style="color:${m.meta.cor}">${m.meta.l}</b>`
+        + `<span>${u(m.feito)}<em> de ${m.meta.menorMelhor ? 'até ' : ''}${u(m.alvo)}</em></span></div>`
+        + `<div class="bq-bar"><i style="width:${larg.toFixed(1)}%;background:${cor}"></i>${marcas}</div>`
+        + `<div class="bq-sub">`
+        + (m.bateu
+            ? `<b style="color:var(--pos)">bateu · ${fmt.pct1(m.salario*100)} do salário</b>`
+            : `${fmt.pct1(Math.min(m.pct,1)*100)} da meta`)
+        + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?SALARIO_200:SALARIO_150)*100)}` : '')
+        + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '')
+        + `</div>`;
+      linha.onclick = ()=>abrirDetalheMeta(m, tri);
+      grade.appendChild(linha);
     });
-    tr.appendChild(el('td',{class:'r'},
-      `<span class="bt-salario">${fmt.pct1(l.salario*100)}</span>`
-      + `<small class="bt-bloco">${l.metas.filter(m=>m.bateu).length} de ${METAS_TRI.length} metas</small>`));
-    return tr;
+    box.appendChild(grade);
+    return box;
   };
-  tbody.appendChild(linhaDe(time, true));
-  linhas.forEach(l=>tbody.appendChild(linhaDe(l)));
-  tab.appendChild(tbody);
-  scroll.appendChild(tab);
-  card.appendChild(scroll);
-  /* Trimestre correndo: dizer quantos meses já entraram evita ler "3% da meta"
-     como fracasso quando o que houve foi uma semana de dados. */
+
+  const quadro = el('div',{class:'bq-wrap'});
+  quadro.appendChild(el('div',{class:'section-label'},
+    `<span class="eyebrow">Metas de ${rotuloTrimestre(tri)}</span>`));
+  quadro.appendChild(faixa(time, true));
+  linhas.forEach(l=>quadro.appendChild(faixa(l)));
+
   const meses = mesesDoTrimestre(tri);
   const ate = String(LIMITE_DADOS.fim).slice(0,7);
   const fechados = meses.filter(m=>m < ate).length;
   const correndo = meses.some(m=>m >= ate);
-  card.appendChild(el('div',{class:'bt-nota'},
+  quadro.appendChild(el('div',{class:'bq-nota'},
     (correndo ? `<b>Trimestre em andamento</b> — ${fechados} ${fechados===1?'mês fechado':'meses fechados'} de 3, com dado até ${fmt.date(LIMITE_DADOS.fim)}. O realizado ainda vai crescer. ` : '')
-    + 'Clique em um quadrante para ver o que entrou nele. '
-    + 'A mentoria propriamente dita ainda não tem registro em nenhuma base — o quadrante Mentoria/Setup conta hoje só Oráculo, integração e varejo novos.'));
-  wrap.appendChild(card);
+    + 'Cada meta batida vale 25% de um salário; Mentoria/Setup e Cross-sell/Upsell pagam 50% a 150% da meta e 75% a 200% — as marcas na barra mostram onde ficam esses dois degraus. '
+    + 'Clique em uma barra para ver o que entrou nela.'));
+  wrap.appendChild(quadro);
 
   if(estado.metaAberta){
     const [qCs, qK] = estado.metaAberta.split('|');
@@ -4942,7 +4993,7 @@ const TABS = [
       + 'Cada meta batida vale <b>25% de um salário</b>. <b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram: 150% da meta valem 50% e 200% valem 75%. '
       + 'As outras quatro são bateu-ou-não-bateu. O teto é 250% por bloco, <b>500% somando os dois</b>. '
       + 'A coletiva é a soma das individuais — 3 CS × 3 mentorias = 9, 3 × R$ 7 mil = R$ 21 mil, e assim por diante. '
-      + '<b>Mentoria/Setup</b> soma 1 por novo Oráculo, nova integração e novo varejo, direto da Vesti; <b>mentoria em si não tem registro em lugar nenhum</b> (nem no HubSpot), então ainda não entra na conta — o número aparece com a ressalva. '
+      + '<b>Mentoria/Setup</b> soma 1 por implantação nova no trimestre: <b>Oráculo, integração, varejo e Tino</b> — mentoria e essas quatro são a mesma coisa por ora (Laura, 07/10/2026), e todas saem direto da Vesti. '
       + '<b>Cross-sell/Upsell</b> é valor recorrente novo: Oráculo, varejo, filial e afins pelo valor cheio e <b>upgrade só pela diferença</b>; integração e setup ficam de fora porque são cobrança única e já contam no quadrante ao lado. '
       + '<b>VestiPago</b> e <b>GMV</b> comparam com o mesmo trimestre do ano passado, na carteira de hoje. '
       + '<b>Churn</b> soma marca bloqueada por inadimplência e o que o time registrou na planilha, sem contar a mesma duas vezes, contra o teto de <b>3% dos clientes ativos</b> da carteira. '

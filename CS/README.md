@@ -335,14 +335,24 @@ traz como "usando Tino atualmente" bate **exatamente** com a do painel.
 | Churn | marca **bloqueada por inadimplência** (`bloqueadoEm` no trimestre) ∪ **planilha do time**, sem contar a mesma duas vezes, contra 3% dos **clientes ativos** |
 | Tino | marcas com 40+ eventos no último mês do trimestre **que já tem dado**; na individual, só as que não estavam no mês anterior ao trimestre |
 
-### O buraco que sobrou
+### Mentoria = as implantações (07/10/2026)
 
-**Mentoria não tem registro em lugar nenhum** — nem na Vesti nem no HubSpot
-(zero negócios com "mentoria" no nome em 06/10/2026). O quadrante conta hoje só
-Oráculo, integração e varejo novos, e a nota embaixo do quadro diz isso. Para
-fechar, ou o time passa a registrar a venda de mentoria no HubSpot (produto ou
-estágio próprio), ou entra uma marcação na mão, como a que já existe para
-varejo.
+A primeira versão deixava o quadrante incompleto porque "mentoria" não tem
+registro em base nenhuma. A Laura resolveu por definição: *"mentoria e Oráculo
+novo, integração nova, varejo novo são por hora a mesma coisa, add tino novo
+também"*. O quadrante é a soma de **quatro implantações** no trimestre —
+Oráculo, integração, varejo e Tino —, todas lidas direto da Vesti, sem depender
+do HubSpot.
+
+### Barras no lugar da tabela
+
+Também a pedido dela, o quadro deixou de ser tabela: cada bloco (time e cada
+CS) virou uma faixa com **seis barras**, uma por meta, **cor própria em cada**
+— roxo em Mentoria/Setup, verde em Cross-sell, teal no VestiPago, azul no GMV,
+vermelho no Churn, dourado no Tino. Nas duas que aceleram a barra vai até 200%
+da meta e traz as marcas dos degraus de 150% e 200%; no churn ela mostra o teto
+sendo consumido, e fica verde enquanto a marca estiver abaixo dele. Clicar em
+qualquer barra abre a lista do que entrou nela.
 
 > A aba mensal antiga continua viva, no menu como **"Números por mês"** — é
 > onde estão as projeções do mês em andamento e o editor de varejos.
