@@ -289,6 +289,10 @@ button,input,select{font:inherit;color:inherit}
   gap:16px 26px;padding:18px}
 .bq-meta{cursor:pointer;border-radius:var(--r-sm);transition:background .12s}
 .bq-meta:hover{background:var(--sunken)}
+/* a barra cujo detalhe está aberto fica marcada, senão não dá para saber de
+   qual delas é a tabela que apareceu embaixo */
+.bq-meta.aberta{background:var(--acc-soft);box-shadow:inset 0 0 0 1px var(--acc-line)}
+.bq-detalhe{margin:-6px 0 16px}
 .bq-top{display:flex;align-items:baseline;gap:10px;margin-bottom:7px}
 .bq-top b{font-size:13.5px;font-weight:600}
 .bq-top span{margin-left:auto;font-family:var(--f-num);font-size:14px;font-weight:600;
@@ -3303,9 +3307,18 @@ function itensChurn(meses, cs){
 /* Tino: a régua olha o ÚLTIMO mês do trimestre ("ao final de dezembro"), e a
    individual conta só marca nova em relação ao mês anterior ao trimestre. */
 function marcasTino(mes, cs){
+  /* `bonificacao.detalhe` guarda 1 por marca que passou do limite — é
+     contagem, não evento. Os eventos de verdade estão na série do Tino, e sem
+     buscá-los lá a tabela mostrava "1 evento" para quem fez 437. */
+  const eventos = {};
+  ((DATA.tino||{}).series||[]).forEach(x=>{
+    if(String(x.data||'').slice(0,7) !== mes) return;
+    const k = chaveNomeMarca(x.cliente);
+    eventos[k] = (eventos[k]||0) + (Number(x.eventos)||0);
+  });
   return (DATA.bonificacao.detalhe||[])
     .filter(x=>x.k==='tino60' && x.mes===mes && (cs ? x.cs===cs : BONIF_CS.includes(x.cs)))
-    .map(x=>({nome:x.cliente, cs:x.cs, eventos:x.valor}));
+    .map(x=>({nome:x.cliente, cs:x.cs, eventos: eventos[chaveNomeMarca(x.cliente)] || null}));
 }
 function itensTino(meses, cs){
   /* "ao final de dezembro" é o alvo, mas enquanto o trimestre corre o último
@@ -3431,7 +3444,9 @@ function renderBonificacaoTri(){
          a caixa quando alguém faz o dobro da meta. */
       const teto = m.meta.acelera ? 2 : 1;
       const cheio = Math.min(m.pct / teto, 1) * 100;
-      const linha = el('div',{class:'bq-meta'+(m.bateu?' bateu':'')});
+      const chaveMeta = (m.cs||'*') + '|' + m.k;
+      const linha = el('div',{class:'bq-meta'+(m.bateu?' bateu':'')
+        + (estado.metaAberta===chaveMeta?' aberta':'')});
       const marcas = m.meta.acelera
         ? `<u style="left:50%"></u><u style="left:75%"></u>` : '';
       /* No churn a barra é o teto sendo consumido: quanto mais cheia, pior. */
@@ -3465,8 +3480,27 @@ function renderBonificacaoTri(){
   const quadro = el('div',{class:'bq-wrap'});
   quadro.appendChild(el('div',{class:'section-label'},
     `<span class="eyebrow">Metas de ${rec.rotulo}</span>`));
-  quadro.appendChild(faixa(time, true));
-  linhas.forEach(l=>quadro.appendChild(faixa(l)));
+
+  /* A tabela do detalhe nasce LOGO ABAIXO da faixa em que se clicou. Antes ela
+     ia para o fim da página, depois das quatro faixas: quem clicava no bloco
+     do time não via nada acontecer e achava que o clique não funcionava
+     (Laura, 07/10/2026). */
+  const abertoDe = bloco => {
+    if(!estado.metaAberta) return null;
+    const [qCs, qK] = estado.metaAberta.split('|');
+    const ehEste = qCs==='*' ? bloco.cs==='Time (coletiva)' : bloco.cs===qCs;
+    if(!ehEste) return null;
+    return bloco.metas.find(x=>x.k===qK) || null;
+  };
+  [time, ...linhas].forEach((l, i)=>{
+    quadro.appendChild(faixa(l, i===0));
+    const m = abertoDe(l);
+    if(m){
+      const cx = el('div',{class:'bq-detalhe'});
+      cx.appendChild(detalheMeta(m, rec));
+      quadro.appendChild(cx);
+    }
+  });
 
   const meses = rec.meses;
   const ate = String(LIMITE_DADOS.fim).slice(0,7);
@@ -3480,12 +3514,6 @@ function renderBonificacaoTri(){
   ligarTooltips(quadro);
   wrap.appendChild(quadro);
 
-  if(estado.metaAberta){
-    const [qCs, qK] = estado.metaAberta.split('|');
-    const alvo = (qCs==='*' ? time : linhas.find(l=>l.cs===qCs));
-    const m = alvo && alvo.metas.find(x=>x.k===qK);
-    if(m) wrap.appendChild(detalheMeta(m, rec));
-  }
   return wrap;
 }
 
@@ -3506,7 +3534,7 @@ function resumoDaMeta(m, rec){
   if(!itens.length) return 'Nada registrado no recorte.';
   const linha = x => {
     if(m.k==='cross') return x.nome + ' — ' + x.tipo + (x.valor!=null ? ' ' + fmt.money(x.valor) : ' (sem valor)');
-    if(m.k==='tino')  return x.nome + ' — ' + fmt.int(x.eventos) + ' eventos' + (x.novo ? ' (nova)' : '');
+    if(m.k==='tino')  return x.nome + (x.eventos!=null ? ' — ' + fmt.int(x.eventos) + ' eventos' : '') + (x.novo ? ' (nova)' : '');
     if(m.k==='churn') return x.nome + ' — ' + x.origem + (x.data ? ' em ' + fmt.date(x.data) : '');
     return x.nome + ' — ' + x.tipo + (x.data ? ' em ' + fmt.date(x.data) : '');
   };
@@ -3528,8 +3556,15 @@ function celulaMeta(m){
 
 function abrirDetalheMeta(m, rec){
   const ch = (m.cs||'*') + '|' + m.k;
-  estado.metaAberta = estado.metaAberta===ch ? null : ch;
+  const abrindo = estado.metaAberta !== ch;
+  estado.metaAberta = abrindo ? ch : null;
   renderPagina();
+  /* Mesmo nascendo abaixo da faixa, a tabela pode cair fora da janela em tela
+     pequena — rolar até ela fecha a sensação de "não aconteceu nada". */
+  if(abrindo) setTimeout(()=>{
+    const d = document.querySelector('.bq-detalhe');
+    if(d && d.scrollIntoView) d.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 60);
 }
 
 /* A lista por trás do quadrante. Cada meta tem a sua — não dá para ter uma
@@ -3571,7 +3606,8 @@ function detalheMeta(m, rec){
   if(m.k==='tino'){
     return cardLista(titulo, m.itens, [
       {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
-      {k:'eventos', l:'Eventos no mês', r:true, f:fmt.int},
+      {k:'mes', l:'Mês', f:v=>rotuloMes(v)},
+      {k:'eventos', l:'Eventos no mês', r:true, f:v=>v==null?'—':fmt.int(v)},
       {k:'novo', l:'Entrou no trimestre?', f:v=>v?'sim, é nova':'já estava na lista'},
     ], '<h4>Nenhuma marca com 40+ eventos</h4>');
   }
