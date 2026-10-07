@@ -2760,7 +2760,10 @@ function montar(bqd, hsd, tinoDados) {
      quando — e um dia não fotografado é um dia que não volta. Roda pelo efeito
      colateral: grava integracoes_snapshot.json e integracoes_novas.json, que o
      workflow commita. Se a coluna voltar, o histórico estará inteiro. */
-  registrarIntegracoes(porDom);
+  /* O histórico de integrações novas passa a VIAJAR no dados.js (06/10/2026):
+     a bonificação trimestral conta "nova integração" como um dos itens de
+     Mentoria/Setup, e até aqui o arquivo só existia no repositório. */
+  const integracoesNovas = registrarIntegracoes(porDom);
   /* Tino: a régua é por MARCA — só entra quem passou de 40 eventos no mês, e o
      que se conta é quantas marcas passaram, não quantos eventos. Por isso a
      soma é feita em dois tempos. */
@@ -3008,6 +3011,7 @@ function montar(bqd, hsd, tinoDados) {
     tickets,
     onboarding: hsd.onboarding || [],
     marcosVolume,
+    integracoesNovas,
     /* Churn declarado pelo time na planilha (aba 2026), já filtrado pelas duas
        observações que contam. */
     churnPlanilha: bqd.churnPlanilha || { linhas: [] },

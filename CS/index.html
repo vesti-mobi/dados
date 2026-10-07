@@ -269,6 +269,33 @@ button,input,select{font:inherit;color:inherit}
 .wk-s.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .wk-s.hoje{box-shadow:0 0 0 2px var(--acc-soft)}
 
+/* --- bonificação trimestral: o quadro de metas ------------------------- */
+.bt{width:100%}
+.bt td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.bt tbody tr:hover{background:var(--sunken)}
+.bt-time{background:var(--acc-soft)}
+.bt-time:hover{background:var(--acc-soft)}
+.bt-bloco{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.bt-cel{cursor:pointer}
+.bt-cel:hover{background:var(--acc-soft)}
+.bt-v{font-family:var(--f-num);font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;display:block}
+.bt-v.ok,.bt-pct.ok{color:var(--pos)}
+.bt-v.ok1,.bt-pct.ok1{color:var(--brand)}
+.bt-v.ok2,.bt-pct.ok2{color:var(--gold)}
+.bt-v.nao{color:var(--ink)}
+.bt-pct.nao{color:var(--ink-3)}
+.bt-alvo{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.bt-pct{display:block;font-size:11.5px;font-weight:600;margin-top:2px}
+.bt-salario{font-family:var(--f-num);font-size:20px;font-weight:650;color:var(--acc);
+  font-variant-numeric:tabular-nums}
+.bt-nota{padding:12px 18px;border-top:1px solid var(--line-2);font-size:12px;
+  color:var(--ink-3);line-height:1.5}
+.th-fixo{display:inline-block;padding:10px 14px;font-family:var(--f-mono);font-size:10px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+thead th.r .th-fixo{width:100%;text-align:right}
+
 /* --- filtros avançados da Tabela geral (06/10/2026) ---------------------
    Dez perguntas não cabem como dez campos na barra: viram um painel que abre
    sob demanda, em colunas, e o que está marcado volta como chip na barra —
@@ -3051,6 +3078,380 @@ function kpisGerencial(){
 function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL, ctxGerencial()) }
 
 /* ============================================================================
+   BONIFICAÇÃO TRIMESTRAL — a régua de out/2026
+   ============================================================================
+   A planilha "Bonificações.xlsx" (Eduardo, 06/10/2026) trocou a bonificação
+   mensal de medidas soltas por SEIS metas trimestrais, em dois blocos que se
+   somam: a coletiva (o time) e a individual (cada CS). Cada meta batida vale
+   25% de um salário; Mentoria/Setup e Cross-sell/Upsell aceleram — 150% da
+   meta valem 50% e 200% valem 75%. Teto: 250% em cada bloco, 500% somando os
+   dois ("o máximo que pode receber é 5x", resposta do Eduardo).
+
+   A coletiva é a soma das individuais, e isso foi conferido: 3 CS × 3
+   mentorias = 9; 3 × 7k = 21k; 3 × 3 churns = 9; as 24 marcas de Tino de
+   setembro + 3 por CS = 33; GMV 2025 das três carteiras R$ 158,8 mi +10% =
+   R$ 174,7 mi (a planilha arredondou para 173); TPV R$ 55,1 mi +30% =
+   R$ 71,6 mi (arredondado para 71).
+   ========================================================================== */
+const BONIF_CS = ['Gabriella Busto', 'Thamiris Ribeiro', 'Luana Coutinho'];
+const SALARIO_META   = 0.25;   // bater a meta
+const SALARIO_150    = 0.50;   // 150% dela, só onde acelera
+const SALARIO_200    = 0.75;   // 200% dela
+
+/* Trimestres civis que existem nos dados, do mais novo para o mais velho. */
+function trimestresDisponiveis(){
+  const meses = [...new Set((DATA.bonificacao.linhas||[]).map(x=>x.mes))].sort();
+  const tris = new Map();
+  meses.forEach(m=>{
+    const [a, mm] = m.split('-').map(Number);
+    const t = Math.floor((mm-1)/3) + 1;
+    const k = a + '-T' + t;
+    (tris.get(k) || tris.set(k, []).get(k)).push(m);
+  });
+  return [...tris.entries()].map(([k, ms])=>({k, meses:ms,
+    rotulo: rotuloTrimestre(k)})).sort((a,b)=>b.k.localeCompare(a.k));
+}
+const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function rotuloTrimestre(k){
+  const [a, t] = k.split('-T').map(Number);
+  const ini = (t-1)*3;
+  return MESES_CURTO[ini]+'/'+MESES_CURTO[ini+1]+'/'+MESES_CURTO[ini+2]+' de '+a;
+}
+const trimestreAtual = ()=> estado.filtros.trimestre
+  || (trimestresDisponiveis().find(t=>t.meses.some(m=>m<=String(LIMITE_DADOS.fim).slice(0,7)))||{}).k
+  || (trimestresDisponiveis()[0]||{}).k;
+const mesesDoTrimestre = k =>{
+  const [a, t] = String(k||'').split('-T').map(Number);
+  if(!a) return [];
+  return [0,1,2].map(i=>a+'-'+String((t-1)*3+1+i).padStart(2,'0'));
+};
+/* O mesmo trimestre do ano anterior — a base de GMV e VestiPago. */
+const trimestreAnterior = k =>{ const [a, t] = String(k||'').split('-T'); return (Number(a)-1)+'-T'+t };
+
+/* ---- as seis metas.
+   `ind` e `col` são as metas individual e coletiva quando elas são número
+   fixo; quando a meta é crescimento sobre o ano passado, `cresce` diz quanto.
+   `acelera` marca as duas que pagam mais quando passam da meta. */
+const METAS_TRI = [
+  { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true,
+    ajuda:'Soma 1 para cada novo Oráculo, nova integração, novo varejo e nova mentoria no trimestre.' },
+  { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true,
+    ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
+  { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30,
+    ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
+  { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10,
+    ajuda:'GMV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
+  { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03,
+    ajuda:'Marca bloqueada por inadimplência somada ao que o time registrou na planilha. A meta é ficar ABAIXO de 3% dos clientes ativos da carteira.' },
+  { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33,
+    ajuda:'Coletiva: marcas com 40+ eventos no último mês do trimestre. Individual: quantas delas são NOVAS, isto é, não estavam na lista do mês anterior ao trimestre.' },
+];
+
+/* ---- realizados ---------------------------------------------------------- */
+const somaBonifTri = (k, meses, cs) => meses.reduce((a,m)=>{
+  const l = (DATA.bonificacao.linhas||[]).filter(x=>x.k===k && x.mes===m && (cs ? x.cs===cs : BONIF_CS.includes(x.cs)));
+  return a + l.reduce((s,x)=>s+(Number(x.valor)||0), 0);
+}, 0);
+
+/* Mentoria/Setup: a contagem vem da Vesti sempre que dá — Oráculo implantado,
+   integração que apareceu no retrato diário, filial nova de varejo. Mentoria
+   em si não tem registro em lugar nenhum (nem no HubSpot: zero negócios com
+   "mentoria" no nome em 06/10/2026), então ela entra zerada e o painel avisa,
+   em vez de fingir que o número está completo. */
+function itensMentoria(meses, cs){
+  const dentro = d => d && meses.includes(String(d).slice(0,7));
+  const daCs = x => cs ? x.cs===cs : BONIF_CS.includes(x.cs);
+  const out = [];
+  ((DATA.oraculo||{}).tabela||[]).forEach(o=>{
+    if(dentro(o.implantado) && daCs(o)) out.push({tipo:'Oráculo novo', nome:o.cliente, cs:o.cs, data:o.implantado});
+  });
+  (DATA.integracoesNovas||[]).forEach(i=>{
+    if(dentro(i.data) && daCs(i)) out.push({tipo:'Integração nova', nome:i.cliente, cs:i.cs, data:i.data, detalhe:i.integracao});
+  });
+  ((DATA.bonificacao||{}).filiais||[]).forEach(f=>{
+    if(dentro(f.mes) && daCs(f) && varejoTipo(f)==='Varejo')
+      out.push({tipo:'Varejo novo', nome:f.nome, cs:f.cs, data:f.criado||f.mes});
+  });
+  return out.sort((a,b)=>String(a.data).localeCompare(String(b.data)));
+}
+
+/* Cross-sell/Upsell: só o que é RECORRENTE novo. Integração e setup ficam de
+   fora — são cobrança única, e já contam no quadrante de Mentoria/Setup. */
+const PRODUTO_RECORRENTE = { 'Oráculo':1, 'Filial':1, 'Multiloja':1, 'Outros':1, 'Assistente do Vendedor':1, 'Tino':1 };
+function itensCross(meses, cs){
+  const out = [];
+  (DATA.negocios||[]).forEach(n=>{
+    if(n.status !== 'Ganho') return;
+    const mes = String(n.fechadoEm || n.data || '').slice(0,7);
+    if(!meses.includes(mes)) return;
+    const quem = normalizarCs(n.cs) || CS_POR_CLIENTE[n.cliente];
+    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
+    if(n.produto === 'Upgrade de plano'){
+      /* Upgrade entra pela DIFERENÇA — a resposta do Eduardo foi explícita:
+         "mensalidade atacado, somente a diferença em caso de upsell". Sem
+         mensalidade anterior no Iugu não dá para saber o ganho; a linha fica
+         com valor em branco e aparece à parte, para ninguém somar o cheio. */
+      const g = ganhoDoUpgrade(n);
+      out.push({tipo:'Upgrade (diferença)', nome:n.cliente, cs:quem, data:n.fechadoEm||n.data,
+        valor: g.ganhoMes, incompleto: g.ganhoMes==null, detalhe: g.antes!=null ? 'de '+fmt.money(g.antes)+' para '+fmt.money(n.valor||0) : 'sem mensalidade anterior no Iugu'});
+      return;
+    }
+    if(!PRODUTO_RECORRENTE[n.produto]) return;
+    out.push({tipo:n.produto, nome:n.cliente, cs:quem, data:n.fechadoEm||n.data, valor:n.valor||0});
+  });
+  return out.sort((a,b)=>(b.valor||0)-(a.valor||0));
+}
+
+/* Churn: bloqueio por inadimplência + o que o time registrou na planilha, sem
+   contar a mesma marca duas vezes. Régua do Eduardo em 07/10/2026. */
+function itensChurn(meses, cs){
+  const dentro = d => d && meses.includes(String(d).slice(0,7));
+  const vistos = new Set();
+  const out = [];
+  ((DATA.churn||{}).linhas||[]).forEach(l=>{
+    if(l.situacao === 'alerta') return;              // alerta é atraso curto, não perda
+    if(!dentro(l.bloqueadoEm)) return;
+    const quem = normalizarCs(l.cs) || CS_POR_CLIENTE[l.cliente];
+    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
+    const ch = chaveNomeMarca(l.cliente);
+    if(vistos.has(ch)) return; vistos.add(ch);
+    out.push({nome:l.cliente, cs:quem, data:l.bloqueadoEm, origem:'Plataforma bloqueada', detalhe:l.situacao});
+  });
+  ((DATA.churnPlanilha||{}).linhas||[]).forEach(l=>{
+    if(!dentro(l.data)) return;
+    const marca = (l.cnpj && CLIENTE_POR_CNPJ[String(l.cnpj)]) || CLIENTE_POR_NOME[chaveNomeMarca(l.cliente)];
+    const quem = marca ? marca.cs : null;
+    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
+    const ch = chaveNomeMarca(l.cliente);
+    if(vistos.has(ch)) return; vistos.add(ch);
+    out.push({nome:(marca&&marca.nome)||l.cliente, cs:quem, data:l.data, origem:'Planilha do time', detalhe:l.motivo});
+  });
+  return out.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+}
+
+/* Tino: a régua olha o ÚLTIMO mês do trimestre ("ao final de dezembro"), e a
+   individual conta só marca nova em relação ao mês anterior ao trimestre. */
+function marcasTino(mes, cs){
+  return (DATA.bonificacao.detalhe||[])
+    .filter(x=>x.k==='tino60' && x.mes===mes && (cs ? x.cs===cs : BONIF_CS.includes(x.cs)))
+    .map(x=>({nome:x.cliente, cs:x.cs, eventos:x.valor}));
+}
+function itensTino(meses, cs){
+  /* "ao final de dezembro" é o alvo, mas enquanto o trimestre corre o último
+     mês ainda não existe — olhar para ele daria zero de outubro a dezembro.
+     Vale o mês mais recente do trimestre que já tem dado. */
+  const comDado = new Set((DATA.bonificacao.detalhe||[]).filter(x=>x.k==='tino60').map(x=>x.mes));
+  const ultimo = meses.filter(m=>comDado.has(m)).pop() || meses[meses.length-1];
+  const anterior = (()=>{ const [a,m] = meses[0].split('-').map(Number);
+    const d = new Date(Date.UTC(a, m-2, 1)); return d.toISOString().slice(0,7) })();
+  const antes = new Set(marcasTino(anterior, cs).map(x=>chaveNomeMarca(x.nome)));
+  return marcasTino(ultimo, cs).map(x=>Object.assign({}, x,
+    {novo: !antes.has(chaveNomeMarca(x.nome)), mes:ultimo, mesBase:anterior}));
+}
+
+/* Clientes ativos da carteira — a base dos 3% do churn. */
+const ativosDaCs = cs => DATA.clientes.filter(c=>(cs ? c.cs===cs : BONIF_CS.includes(c.cs)) && c.status==='ativo').length;
+
+/* ---- o placar de uma meta ------------------------------------------------ */
+function placarMeta(meta, tri, cs){
+  const meses = mesesDoTrimestre(tri);
+  const mesesBase = mesesDoTrimestre(trimestreAnterior(tri));
+  const r = { k:meta.k, meta, cs };
+
+  if(meta.k === 'mentoria'){
+    r.itens = itensMentoria(meses, cs);
+    r.feito = r.itens.length;
+    r.alvo = cs ? meta.ind : meta.col;
+  } else if(meta.k === 'cross'){
+    r.itens = itensCross(meses, cs);
+    r.feito = r.itens.reduce((a,x)=>a+(x.valor||0),0);
+    r.alvo = cs ? meta.ind : meta.col;
+    r.semValor = r.itens.filter(x=>x.incompleto).length;
+  } else if(meta.k === 'churn'){
+    r.itens = itensChurn(meses, cs);
+    r.feito = r.itens.length;
+    r.alvo = Math.floor(ativosDaCs(cs) * meta.pctAtivos);   // 3% dos ativos
+    r.base = ativosDaCs(cs);
+  } else if(meta.k === 'tino'){
+    r.itens = itensTino(meses, cs);
+    r.feito = cs ? r.itens.filter(x=>x.novo).length : r.itens.length;
+    r.alvo = cs ? meta.ind : meta.col;
+  } else {
+    const chave = meta.k === 'gmv' ? 'gmv' : 'vestipago';
+    r.feito = somaBonifTri(chave, meses, cs);
+    r.base = somaBonifTri(chave, mesesBase, cs);
+    r.alvo = r.base * (1 + meta.cresce);
+  }
+
+  /* Churn é o único em que menos é melhor: bateu quem ficou ABAIXO do teto. */
+  r.pct = meta.menorMelhor
+    ? (r.alvo > 0 ? (r.feito <= r.alvo ? 1 : r.alvo / Math.max(r.feito, 1)) : (r.feito ? 0 : 1))
+    : (r.alvo > 0 ? r.feito / r.alvo : 0);
+  r.bateu = meta.menorMelhor ? r.feito <= r.alvo : r.feito >= r.alvo;
+
+  r.salario = !r.bateu ? 0
+    : (meta.acelera && r.pct >= 2 ? SALARIO_200
+    : meta.acelera && r.pct >= 1.5 ? SALARIO_150
+    : SALARIO_META);
+  r.nivel = !r.bateu ? 0 : (r.salario === SALARIO_200 ? 200 : r.salario === SALARIO_150 ? 150 : 100);
+  return r;
+}
+
+/* Uma linha por CS (individual) + a linha do time (coletiva). */
+function placarBonificacao(tri){
+  const linhas = BONIF_CS.map(cs=>{
+    const metas = METAS_TRI.map(m=>placarMeta(m, tri, cs));
+    return { cs, bloco:'Individual', metas,
+      salario: metas.reduce((a,m)=>a+m.salario, 0) };
+  });
+  const time = (()=>{ const metas = METAS_TRI.map(m=>placarMeta(m, tri, null));
+    return { cs:'Time (coletiva)', bloco:'Coletiva', metas,
+      salario: metas.reduce((a,m)=>a+m.salario, 0) } })();
+  return { linhas, time };
+}
+
+/* ---- o desenho da aba -----------------------------------------------------
+   Três peças, de cima para baixo: o que cada CS leva (o número que interessa
+   primeiro), o quadro de metas com realizado × meta, e a lista por trás de
+   cada quadrante — clicando nele. */
+function renderBonificacaoTri(){
+  const tri = trimestreAtual();
+  const { linhas, time } = placarBonificacao(tri);
+  const wrap = el('div',{});
+
+  /* 1. quanto cada uma leva */
+  const resumo = el('div',{class:'kpis'});
+  linhas.forEach(l=>{
+    const total = l.salario + time.salario;
+    resumo.appendChild(el('div',{class:'kpi'},
+      `<span class="eyebrow">${l.cs.split(' ')[0]}</span>`
+      + `<div class="kpi-val">${fmt.pct1(total*100)}</div>`
+      + `<div class="kpi-sub">${fmt.pct1(l.salario*100)} individual + ${fmt.pct1(time.salario*100)} coletiva<br>`
+      + `<b>${(total).toLocaleString('pt-BR',{maximumFractionDigits:2})} salário(s)</b></div>`));
+  });
+  resumo.appendChild(el('div',{class:'kpi'},
+    `<span class="eyebrow">Teto</span><div class="kpi-val">500%</div>`
+    + `<div class="kpi-sub">250% por bloco · hoje o time tem ${fmt.pct1(time.salario*100)} na coletiva</div>`));
+  wrap.appendChild(resumo);
+
+  /* 2. o quadro de metas */
+  const card = el('div',{class:'table-card'});
+  const head = el('div',{class:'table-head'});
+  head.innerHTML = `<h3>Metas de ${rotuloTrimestre(tri)}</h3>`
+    + `<span class="count">25% de salário por meta · 50% e 75% onde acelera</span>`;
+  card.appendChild(head);
+
+  const scroll = el('div',{class:'table-scroll'});
+  const tab = el('table',{class:'bt'});
+  const thead = el('thead');
+  thead.innerHTML = '<tr><th><span class="th-fixo">Quem</span></th>'
+    + METAS_TRI.map(m=>`<th class="r"><span class="th-fixo" title="${escapar(m.ajuda)}">${m.l}</span></th>`).join('')
+    + '<th class="r"><span class="th-fixo">Salários</span></th></tr>';
+  tab.appendChild(thead);
+
+  const tbody = el('tbody');
+  const linhaDe = (l, destaque) => {
+    const tr = el('tr', destaque ? {class:'bt-time'} : {});
+    tr.appendChild(el('td',{}, `<b>${l.cs}</b><small class="bt-bloco">${l.bloco}</small>`));
+    l.metas.forEach(m=>{
+      const td = el('td',{class:'r bt-cel'});
+      td.innerHTML = celulaMeta(m);
+      td.onclick = ()=>abrirDetalheMeta(m, tri);
+      tr.appendChild(td);
+    });
+    tr.appendChild(el('td',{class:'r'},
+      `<span class="bt-salario">${fmt.pct1(l.salario*100)}</span>`
+      + `<small class="bt-bloco">${l.metas.filter(m=>m.bateu).length} de ${METAS_TRI.length} metas</small>`));
+    return tr;
+  };
+  tbody.appendChild(linhaDe(time, true));
+  linhas.forEach(l=>tbody.appendChild(linhaDe(l)));
+  tab.appendChild(tbody);
+  scroll.appendChild(tab);
+  card.appendChild(scroll);
+  /* Trimestre correndo: dizer quantos meses já entraram evita ler "3% da meta"
+     como fracasso quando o que houve foi uma semana de dados. */
+  const meses = mesesDoTrimestre(tri);
+  const ate = String(LIMITE_DADOS.fim).slice(0,7);
+  const fechados = meses.filter(m=>m < ate).length;
+  const correndo = meses.some(m=>m >= ate);
+  card.appendChild(el('div',{class:'bt-nota'},
+    (correndo ? `<b>Trimestre em andamento</b> — ${fechados} ${fechados===1?'mês fechado':'meses fechados'} de 3, com dado até ${fmt.date(LIMITE_DADOS.fim)}. O realizado ainda vai crescer. ` : '')
+    + 'Clique em um quadrante para ver o que entrou nele. '
+    + 'A mentoria propriamente dita ainda não tem registro em nenhuma base — o quadrante Mentoria/Setup conta hoje só Oráculo, integração e varejo novos.'));
+  wrap.appendChild(card);
+
+  if(estado.metaAberta){
+    const [qCs, qK] = estado.metaAberta.split('|');
+    const alvo = (qCs==='*' ? time : linhas.find(l=>l.cs===qCs));
+    const m = alvo && alvo.metas.find(x=>x.k===qK);
+    if(m) wrap.appendChild(detalheMeta(m, tri));
+  }
+  return wrap;
+}
+
+/* A célula: realizado em cima, meta e nível embaixo. */
+function celulaMeta(m){
+  const u = v => m.meta.unidade==='R$' ? fmt.moneyCompact(v) : fmt.int(Math.round(v));
+  const cls = m.bateu ? (m.nivel>=200 ? 'ok2' : m.nivel>=150 ? 'ok1' : 'ok') : 'nao';
+  const alvo = m.meta.menorMelhor ? 'até ' + u(m.alvo) : u(m.alvo);
+  const extra = m.meta.menorMelhor && m.base ? ' (3% de ' + fmt.int(m.base) + ')' : '';
+  return `<span class="bt-v ${cls}">${u(m.feito)}</span>`
+    + `<small class="bt-alvo">meta ${alvo}${extra}</small>`
+    + `<small class="bt-pct ${cls}">${m.bateu ? fmt.pct1(m.salario*100)+' do salário' : fmt.pct1(Math.min(m.pct,1)*100)+' da meta'}</small>`;
+}
+
+function abrirDetalheMeta(m, tri){
+  const ch = (m.cs||'*') + '|' + m.k;
+  estado.metaAberta = estado.metaAberta===ch ? null : ch;
+  renderPagina();
+}
+
+/* A lista por trás do quadrante. Cada meta tem a sua — não dá para ter uma
+   tabela só, porque o que sustenta "9 mentorias" e o que sustenta "71 mi de
+   TPV" são coisas de natureza diferente. */
+function detalheMeta(m, tri){
+  const titulo = m.meta.l + ' · ' + (m.cs || 'Time (coletiva)') + ' · ' + rotuloTrimestre(tri);
+  if(m.k==='gmv' || m.k==='vestipago'){
+    const meses = mesesDoTrimestre(tri), base = mesesDoTrimestre(trimestreAnterior(tri));
+    const rows = meses.map((mes,i)=>({mes:rotuloMes(mes), agora:somaBonifTri(m.k==='gmv'?'gmv':'vestipago',[mes],m.cs),
+      antes:somaBonifTri(m.k==='gmv'?'gmv':'vestipago',[base[i]],m.cs)}))
+      .map(r=>Object.assign(r,{dif:r.antes?((r.agora-r.antes)/r.antes*100):null}));
+    return cardLista(titulo, rows, [
+      {k:'mes', l:'Mês'},
+      {k:'agora', l:'Neste trimestre', r:true, f:fmt.money},
+      {k:'antes', l:'Mesmo mês de '+(Number(tri.slice(0,4))-1), r:true, f:fmt.money},
+      {k:'dif', l:'Variação', r:true, f:v=>v==null?'—':(v>=0?'+':'')+fmt.pct1(v)},
+    ], '<h4>Sem dado no trimestre</h4>');
+  }
+  if(m.k==='tino'){
+    return cardLista(titulo, m.itens, [
+      {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
+      {k:'eventos', l:'Eventos no mês', r:true, f:fmt.int},
+      {k:'novo', l:'Entrou no trimestre?', f:v=>v?'sim, é nova':'já estava na lista'},
+    ], '<h4>Nenhuma marca com 40+ eventos</h4>');
+  }
+  if(m.k==='churn'){
+    return cardLista(titulo, m.itens, [
+      {k:'data', l:'Quando', f:fmt.date}, {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
+      {k:'origem', l:'De onde veio'}, {k:'detalhe', l:'Situação'},
+    ], '<h4>Nenhum churn no trimestre</h4><p>O que é bom: a meta é ficar abaixo do teto.</p>');
+  }
+  if(m.k==='cross'){
+    return cardLista(titulo, m.itens, [
+      {k:'data', l:'Fechado em', f:fmt.date}, {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
+      {k:'tipo', l:'O que foi vendido'},
+      {k:'valor', l:'Recorrente novo', r:true, f:v=>v==null?'—':fmt.money(v)},
+      {k:'detalhe', l:'Observação'},
+    ], '<h4>Nenhuma venda recorrente no trimestre</h4>');
+  }
+  return cardLista(titulo, m.itens, [
+    {k:'data', l:'Quando', f:fmt.date}, {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
+    {k:'tipo', l:'O que entrou'}, {k:'detalhe', l:'Observação'},
+  ], '<h4>Nada registrado no trimestre</h4>');
+}
+
+/* ============================================================================
    3d. CARDS DA VISÃO GERAL
    Mesmo desenho da Gerencial (pedido da Laura, 18/09/2026: "podemos fazer o
    mesmo design de cards para a aba Visão geral?"), com duas diferenças que vêm
@@ -4535,6 +4936,26 @@ const TABS = [
     }
   },
   {
+    id:'bonifTri', grupo:'Operação', nav:'Bonificação', cor:'#7A4FB5', cor2:'#2E7D46',
+    titulo:'Bonificação do trimestre',
+    desc:'A régua que passou a valer em <b>out/2026</b> (planilha do Eduardo): seis metas trimestrais em dois blocos que <b>se somam</b> — a <b>coletiva</b>, do time, e a <b>individual</b>, de cada CS. '
+      + 'Cada meta batida vale <b>25% de um salário</b>. <b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram: 150% da meta valem 50% e 200% valem 75%. '
+      + 'As outras quatro são bateu-ou-não-bateu. O teto é 250% por bloco, <b>500% somando os dois</b>. '
+      + 'A coletiva é a soma das individuais — 3 CS × 3 mentorias = 9, 3 × R$ 7 mil = R$ 21 mil, e assim por diante. '
+      + '<b>Mentoria/Setup</b> soma 1 por novo Oráculo, nova integração e novo varejo, direto da Vesti; <b>mentoria em si não tem registro em lugar nenhum</b> (nem no HubSpot), então ainda não entra na conta — o número aparece com a ressalva. '
+      + '<b>Cross-sell/Upsell</b> é valor recorrente novo: Oráculo, varejo, filial e afins pelo valor cheio e <b>upgrade só pela diferença</b>; integração e setup ficam de fora porque são cobrança única e já contam no quadrante ao lado. '
+      + '<b>VestiPago</b> e <b>GMV</b> comparam com o mesmo trimestre do ano passado, na carteira de hoje. '
+      + '<b>Churn</b> soma marca bloqueada por inadimplência e o que o time registrou na planilha, sem contar a mesma duas vezes, contra o teto de <b>3% dos clientes ativos</b> da carteira. '
+      + '<b>Tino</b> olha o último mês do trimestre; na individual conta só marca <b>nova</b>, que não estava na lista do mês anterior ao trimestre. '
+      + '<b>Atenção na comparação com o ano passado:</b> a marca é creditada ao CS que a atende <i>hoje</i> — o cadastro não guarda quem atendia antes.',
+    filtros:['trimestre'],
+    semTabela:true,
+    /* A aba não tem tabela principal — o quadro é desenhado em `extra` —, mas
+       o render pede `linhas` para montar filtros e KPIs. */
+    linhas:()=>[],
+    extra:()=>renderBonificacaoTri(),
+  },
+  {
     /* ---- Bonificação
        Sete regras que a Laura mandou em 26/08/2026, uma coluna cada, por CS e
        por MÊS-CALENDÁRIO. Não há pontuação aqui de propósito: "vamos trazer
@@ -4545,7 +4966,7 @@ const TABS = [
        Esta aba não usa o filtro de período: as regras comparam mês contra mês
        (ou contra o mesmo mês do ano passado), então o recorte é o mês inteiro,
        escolhido no seletor próprio. */
-    id:'bonificacao', grupo:'Operação', nav:'Bonificação', cor:'#7A4FB5', cor2:'#B7791F',
+    id:'bonificacao', grupo:'Operação', nav:'Números por mês', cor:'#7A4FB5', cor2:'#B7791F',
     titulo:'Bonificação — números do mês',
     desc:'Uma linha por CS, uma coluna por regra. '
       + '<b>No mês que ainda está correndo, cada número vem com uma projeção do fim do mês</b> (a linha <b>≈</b> embaixo dele), '
@@ -5300,7 +5721,9 @@ const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
-  mesBonificacao:'', mesGerencial:'', buscaCliente:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos' };
+  mesBonificacao:'', mesGerencial:'', buscaCliente:'', metricaBonificacao:'', csFoco:'Thamiris Ribeiro', estagioFoco:'todos', produtoFoco:'todos',
+  /* vazio = o trimestre mais recente com dado */
+  trimestre:'' };
 /* `canais` e `cs` vazios querem dizer "todos" — assim o filtro nasce sem nada
    marcado e marcar um item já é o recorte, sem precisar desmarcar os outros. */
 const filtrosPadrao = ()=>Object.assign({}, FILTROS_PADRAO_BASE,
@@ -5317,6 +5740,8 @@ const estado = {
   /* painel "Mais filtros" aberto? sobrevive ao redesenho que marcar uma opção
      provoca, senão só dava para marcar um filtro por vez */
   filtroPainelAberto: false,
+  /* quadrante aberto na Bonificação do trimestre: "cs|meta" ou null */
+  metaAberta: null,
   clienteFoco: null,   // domínio da marca aberta na aba Visão do cliente
 };
 let ultimoRender = { rows:[], colunas:[] };
@@ -5934,6 +6359,11 @@ function renderFiltros(t){
     const pipes = [...new Set(DATA.tickets.map(x=>x.pipeline))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
     add('Pipeline', sel([['todos','Todos os pipelines'],...pipes.map(p=>[p,p])],
       estado.filtros.pipeline, v=>estado.filtros.pipeline=v));
+  }
+  if(t.filtros.includes('trimestre')){
+    const tris = trimestresDisponiveis();
+    add('Trimestre', sel(tris.map(x=>[x.k, x.rotulo]), trimestreAtual(),
+      v=>estado.filtros.trimestre=v));
   }
   if(t.filtros.includes('periodo')) add('Período', seletorDePeriodo());
   if(t.filtros.includes('avancado')) box.appendChild(seletorAvancado(t));
