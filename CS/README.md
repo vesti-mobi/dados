@@ -299,6 +299,54 @@ Três coisas que precisaram de dado novo ou de tratamento:
 - **Tino ativo ≠ ter Tino.** Ativo é o status na base do próprio produto, que
   só existe na tabela da aba Uso do Tino: 117 ativas de 120 marcas com Tino.
 
+## A bonificação virou trimestral (07/10/2026)
+
+A planilha `Bonificações.xlsx` (Eduardo) trocou a bonificação mensal de medidas
+soltas por **seis metas trimestrais** em dois blocos que **se somam**: a
+coletiva (o time) e a individual (cada CS).
+
+| Meta | Coletiva | Individual | Acelera? |
+|---|---|---|---|
+| Mentoria/Setup | 9 | 3 | sim |
+| Cross-sell/Upsell | R$ 21 mil recorrente | R$ 7 mil | sim |
+| VestiPago | R$ 71 mi de TPV | +30% sobre a própria carteira | não |
+| GMV | R$ 173 mi | +10% sobre a própria carteira | não |
+| Churn | abaixo de 3% (9) | abaixo de 3% (3) | não |
+| Tino | 33 marcas com 40+ eventos | 3 marcas **novas** | não |
+
+Cada meta batida vale **25% de um salário**. As duas que aceleram pagam **50%**
+a 150% da meta e **75%** a 200%. Teto de 250% por bloco e **500% somando os
+dois** — "o máximo que pode receber é 5x", nas palavras do Eduardo.
+
+**A coletiva é a soma das individuais**, e isso foi conferido antes de
+programar: 3 CS × 3 mentorias = 9; 3 × 7k = 21k; 3 × 3 churns = 9; as 24 marcas
+de Tino de setembro + 3 por CS = 33; GMV out/nov/dez de 2025 das três carteiras
+R$ 158,8 mi +10% = R$ 174,7 mi (a planilha arredondou para 173) e TPV R$ 55,1 mi
++30% = R$ 71,6 mi (arredondado para 71). A lista de 24 marcas que a planilha
+traz como "usando Tino atualmente" bate **exatamente** com a do painel.
+
+### De onde sai cada número
+
+| Meta | Fonte |
+|---|---|
+| Mentoria/Setup | Oráculo implantado + integração nova (`integracoes_novas.json`, que passou a viajar no `dados.js`) + filial nova de varejo |
+| Cross-sell/Upsell | negócios ganhos do Expand, só o **recorrente**: Oráculo, filial, varejo e afins pelo valor cheio; **upgrade só pela diferença** (`ganhoDoUpgrade`). Integração e setup ficam de fora — cobrança única, e já contam no quadrante ao lado |
+| VestiPago / GMV | soma do trimestre contra o mesmo trimestre do ano passado, carteira de hoje |
+| Churn | marca **bloqueada por inadimplência** (`bloqueadoEm` no trimestre) ∪ **planilha do time**, sem contar a mesma duas vezes, contra 3% dos **clientes ativos** |
+| Tino | marcas com 40+ eventos no último mês do trimestre **que já tem dado**; na individual, só as que não estavam no mês anterior ao trimestre |
+
+### O buraco que sobrou
+
+**Mentoria não tem registro em lugar nenhum** — nem na Vesti nem no HubSpot
+(zero negócios com "mentoria" no nome em 06/10/2026). O quadrante conta hoje só
+Oráculo, integração e varejo novos, e a nota embaixo do quadro diz isso. Para
+fechar, ou o time passa a registrar a venda de mentoria no HubSpot (produto ou
+estágio próprio), ou entra uma marcação na mão, como a que já existe para
+varejo.
+
+> A aba mensal antiga continua viva, no menu como **"Números por mês"** — é
+> onde estão as projeções do mês em andamento e o editor de varejos.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |
