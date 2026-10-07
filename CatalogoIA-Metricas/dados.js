@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-06T17:37:38.506Z",
+  "gerado_em": "2026-10-07T00:15:36.684Z",
   "hoje": "2026-10-06",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 11
+      "dias": 12
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 11
+      "dias": 12
     },
     {
       "slug": "petit",
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 369,
       "primeiro": "2026-08-10T19:02:35.392Z",
       "ultimo": "2026-10-04T22:17:44.744Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "opera-kids",
@@ -487,7 +487,7 @@ window.DADOS = {
         "ativas": 2,
         "usando": 9,
         "nunca_usaram": 10,
-        "paradas": 6,
+        "paradas": 7,
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 1951,
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 11,
+          "dias": 12,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 11,
+          "dias": 12,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 344,
           "primeiro": "2026-08-11T18:28:02.542Z",
           "ultimo": "2026-10-04T22:17:44.744Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 228,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-09-09T18:45:10.199Z",
-          "dias": 26,
+          "dias": 27,
           "produtos_medidos": 7,
           "atribuido": 0
         },
@@ -1025,11 +1025,11 @@ window.DADOS = {
         "paradas": 2,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1650,
+        "produtos_total": 1655,
         "produtos_7d": 28,
         "descricoes_total": 405,
         "total_estimado": true,
-        "produtos_atribuidos": 1327
+        "produtos_atribuidos": 1332
       },
       "marcas": [
         {
@@ -1138,7 +1138,7 @@ window.DADOS = {
           "arquetipo": "inocente",
           "tem_conta": true,
           "email": "contato@operakids.com.br",
-          "produtos": 68,
+          "produtos": 73,
           "estimado": true,
           "produtos_7d": 21,
           "ativa": true,
@@ -1150,7 +1150,7 @@ window.DADOS = {
           "ultimo": "2026-10-01T01:55:51.316Z",
           "dias": 5,
           "produtos_medidos": 24,
-          "atribuido": 44
+          "atribuido": 49
         },
         {
           "slug": "andressa-vesti",
@@ -1472,13 +1472,13 @@ window.DADOS = {
         {
           "inicio": "2026-08-24",
           "fim": "2026-08-30",
-          "produtos": 33,
+          "produtos": 38,
           "ativas": 1,
           "usaram": 2,
           "cadastros": 9,
           "novos": 0,
           "produtos_medidos": 7,
-          "atribuido": 26
+          "atribuido": 31
         },
         {
           "inicio": "2026-08-31",
