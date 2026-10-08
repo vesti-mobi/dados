@@ -104,16 +104,25 @@ def run_sync():
         logging.info("Conectando ao BigQuery e removendo registros antigos...")
         client = bigquery.Client(project=PROJECT_ID)
 
-        if ID_IS_STRING:
-            ids_string = ",".join([f"'{str(i)}'" for i in extracted_ids])
-        else:
-            ids_string = ",".join([str(i) for i in extracted_ids])
-
-        delete_query = f"""
-            DELETE FROM `{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}`
-            WHERE id IN ({ids_string})
-        """
-        client.query(delete_query).result()
+        # DELETE em lotes de ids, nao numa query so -- essa tabela tem deltas
+        # diarios grandes (ja viu dia com +100 mil ids) e uma lista so' de IDs
+        # no WHERE IN (...) estourava o limite de 1MB de texto de query do
+        # BigQuery ("The query is too large"). Falhava TODO dia desde 25/09,
+        # piorando sozinho (o lote que falha nunca e' limpo, entao acumula
+        # pro dia seguinte). 5000 ids por lote fica bem abaixo do limite
+        # (~39 chars/id com aspas e virgula = ~195KB por lote).
+        DELETE_CHUNK = 5000
+        for inicio in range(0, len(extracted_ids), DELETE_CHUNK):
+            lote_ids = extracted_ids[inicio:inicio + DELETE_CHUNK]
+            if ID_IS_STRING:
+                ids_string = ",".join([f"'{str(i)}'" for i in lote_ids])
+            else:
+                ids_string = ",".join([str(i) for i in lote_ids])
+            delete_query = f"""
+                DELETE FROM `{PROJECT_ID}.{BQ_DATASET}.{BQ_TABLE}`
+                WHERE id IN ({ids_string})
+            """
+            client.query(delete_query).result()
         logging.info("Registros antigos removidos do BigQuery.")
 
         logging.info("Iniciando upload (Append) do CSV para o BigQuery...")
