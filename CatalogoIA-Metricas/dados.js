@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-07T18:11:10.139Z",
+  "gerado_em": "2026-10-08T00:34:38.452Z",
   "hoje": "2026-10-07",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 12
+      "dias": 13
     },
     {
       "slug": "kauly",
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 369,
       "primeiro": "2026-08-10T19:02:35.392Z",
       "ultimo": "2026-10-04T22:17:44.744Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "opera-kids",
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 12,
+          "dias": 13,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 344,
           "primeiro": "2026-08-11T18:28:02.542Z",
           "ultimo": "2026-10-04T22:17:44.744Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 228,
           "atribuido": 0
         },
