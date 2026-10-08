@@ -54,8 +54,8 @@ SCHEMA_FORNECIDO = [
     bigquery.SchemaField("phone", "STRING"),
     bigquery.SchemaField("cellphone", "STRING"),
     bigquery.SchemaField("document", "STRING"),
-    bigquery.SchemaField("created_at", "DATETIME"),
-    bigquery.SchemaField("updated_at", "DATETIME"),
+    bigquery.SchemaField("created_at", "TIMESTAMP"),
+    bigquery.SchemaField("updated_at", "TIMESTAMP"),
 ]
 
 # Colunas inteiras: limpamos no pandas para evitar "10.0" (NULL faz virar float),
