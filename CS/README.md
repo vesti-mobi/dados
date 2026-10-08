@@ -314,9 +314,22 @@ coletiva (o time) e a individual (cada CS).
 | Churn | abaixo de 3% (9) | abaixo de 3% (3) | não |
 | Tino | 33 marcas com 40+ eventos | 3 marcas **novas** | não |
 
-Cada meta batida vale **25% de um salário**. As duas que aceleram pagam **50%**
-a 150% da meta e **75%** a 200%. Teto de 250% por bloco e **500% somando os
-dois** — "o máximo que pode receber é 5x", nas palavras do Eduardo.
+Cada meta batida paga uma fatia do **bônus** — não de salário, e os dois blocos
+pagam valores diferentes (tabela de 08/10/2026):
+
+| | meta 100% | 150% da meta | 200% | total batendo as seis |
+|---|---|---|---|---|
+| **Coletiva** | 5,56% | 11,11% | 22,22% | **33,33%** |
+| **Individual** | 11,11% | 22,22% | 44,44% | **66,67%** |
+
+Os degraus de 150% e 200% valem só para Mentoria/Setup e Cross-sell/Upsell. As
+duas colunas somadas no 100% dão **100% do bônus**; o teto, com as duas
+aceleradas no máximo, é **200%**.
+
+> Os percentuais são dezoito avos (1/18, 2/18, 4/18 e 8/18) e no código estão
+> escritos assim, como fração: somar 5,56 + 5,56 + … em decimal fecharia em
+> 99,99%. O painel **não** mostra valor de bônus em reais — cada CS tem o seu, e
+> isso não é assunto do painel.
 
 **A coletiva é a soma das individuais**, e isso foi conferido antes de
 programar: 3 CS × 3 mentorias = 9; 3 × 7k = 21k; 3 × 3 churns = 9; as 24 marcas

@@ -3138,9 +3138,11 @@ function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL
    A planilha "Bonificações.xlsx" (Eduardo, 06/10/2026) trocou a bonificação
    mensal de medidas soltas por SEIS metas trimestrais, em dois blocos que se
    somam: a coletiva (o time) e a individual (cada CS). Cada meta batida vale
-   25% de um salário; Mentoria/Setup e Cross-sell/Upsell aceleram — 150% da
-   meta valem 50% e 200% valem 75%. Teto: 250% em cada bloco, 500% somando os
-   dois ("o máximo que pode receber é 5x", resposta do Eduardo).
+   uma fatia do BÔNUS — 5,56% na coletiva e 11,11% na individual (tabela de
+   08/10/2026; antes era fração de salário, com os dois blocos pagando igual).
+   Mentoria/Setup e Cross-sell/Upsell aceleram: dobram a 150% da meta e dobram
+   de novo a 200%. Bater as seis nos dois blocos dá 100% do bônus; o teto, com
+   as duas aceleradas no máximo, é 200%.
 
    A coletiva é a soma das individuais, e isso foi conferido: 3 CS × 3
    mentorias = 9; 3 × 7k = 21k; 3 × 3 churns = 9; as 24 marcas de Tino de
@@ -3149,9 +3151,23 @@ function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL
    R$ 71,6 mi (arredondado para 71).
    ========================================================================== */
 const BONIF_CS = ['Gabriella Busto', 'Thamiris Ribeiro', 'Luana Coutinho'];
-const SALARIO_META   = 0.25;   // bater a meta
-const SALARIO_150    = 0.50;   // 150% dela, só onde acelera
-const SALARIO_200    = 0.75;   // 200% dela
+
+/* Quanto do BÔNUS cada meta paga (tabela nova, 08/10/2026). Antes era fração
+   de um salário e os dois blocos pagavam igual; agora é fração do bônus e a
+   individual vale o dobro da coletiva. Os números da planilha — 5,56 / 11,11 /
+   22,22 e 11,11 / 22,22 / 44,44 — são dezoito avos, e é assim que ficam aqui:
+   escritos como fração, a soma fecha em 100% exato em vez de somar 99,99 por
+   arredondamento.
+     coletiva  100%: 6 × 1/18 = 33,33%
+     individual 100%: 6 × 2/18 = 66,67%
+     as duas juntas  = 18/18 = 100% do bônus; o teto, com as duas aceleradas
+     no 200%, é 4/18 + 8/18 = 66,67% + 133,33% = 200%. */
+const PAGA = {
+  Coletiva:   { meta: 1/18, n150: 2/18, n200: 4/18 },
+  Individual: { meta: 2/18, n150: 4/18, n200: 8/18 },
+};
+const TETO_BONUS = (PAGA.Coletiva.n200*2 + PAGA.Coletiva.meta*4)
+                 + (PAGA.Individual.n200*2 + PAGA.Individual.meta*4);
 
 /* Trimestres civis que existem nos dados, do mais novo para o mais velho. */
 function trimestresDisponiveis(){
@@ -3356,7 +3372,7 @@ function itensTino(meses, cs){
 const ativosDaCs = cs => DATA.clientes.filter(c=>(cs ? c.cs===cs : BONIF_CS.includes(c.cs)) && c.status==='ativo').length;
 
 /* ---- o placar de uma meta ------------------------------------------------ */
-function placarMeta(meta, rec, cs){
+function placarMeta(meta, rec, cs, bloco){
   const meses = rec.meses, mesesBase = rec.mesesBase;
   const r = { k:meta.k, meta, cs };
 
@@ -3396,22 +3412,24 @@ function placarMeta(meta, rec, cs){
   r.bateu = r.semBase ? false
     : meta.menorMelhor ? r.feito <= r.alvo : r.feito >= r.alvo;
 
-  r.salario = !r.bateu ? 0
-    : (meta.acelera && r.pct >= 2 ? SALARIO_200
-    : meta.acelera && r.pct >= 1.5 ? SALARIO_150
-    : SALARIO_META);
-  r.nivel = !r.bateu ? 0 : (r.salario === SALARIO_200 ? 200 : r.salario === SALARIO_150 ? 150 : 100);
+  const paga = PAGA[bloco || (cs ? 'Individual' : 'Coletiva')];
+  r.nivel = !r.bateu ? 0
+    : (meta.acelera && r.pct >= 2 ? 200 : meta.acelera && r.pct >= 1.5 ? 150 : 100);
+  r.salario = r.nivel === 200 ? paga.n200 : r.nivel === 150 ? paga.n150 : r.nivel === 100 ? paga.meta : 0;
+  /* Quanto a meta ainda pode render neste bloco — é o que o rodapé da barra
+     usa para dizer "150% da meta leva X". */
+  r.paga = paga;
   return r;
 }
 
 /* Uma linha por CS (individual) + a linha do time (coletiva). */
 function placarBonificacao(rec){
   const linhas = BONIF_CS.map(cs=>{
-    const metas = METAS_TRI.map(m=>placarMeta(m, rec, cs));
+    const metas = METAS_TRI.map(m=>placarMeta(m, rec, cs, 'Individual'));
     return { cs, bloco:'Individual', metas,
       salario: metas.reduce((a,m)=>a+m.salario, 0) };
   });
-  const time = (()=>{ const metas = METAS_TRI.map(m=>placarMeta(m, rec, null));
+  const time = (()=>{ const metas = METAS_TRI.map(m=>placarMeta(m, rec, null, 'Coletiva'));
     return { cs:'Time (coletiva)', bloco:'Coletiva', metas,
       salario: metas.reduce((a,m)=>a+m.salario, 0) } })();
   return { linhas, time };
@@ -3434,12 +3452,11 @@ function renderBonificacaoTri(){
     resumo.appendChild(el('div',{class:'kpi'},
       `<span class="eyebrow">${l.cs.split(' ')[0]}</span>`
       + `<div class="kpi-val">${fmt.pct1(total*100)}</div>`
-      + `<div class="kpi-sub">${fmt.pct1(l.salario*100)} individual + ${fmt.pct1(time.salario*100)} coletiva<br>`
-      + `<b>${(total).toLocaleString('pt-BR',{maximumFractionDigits:2})} salário(s)</b></div>`));
+      + `<div class="kpi-sub">do bônus · ${fmt.pct1(l.salario*100)} individual + ${fmt.pct1(time.salario*100)} coletiva</div>`));
   });
   resumo.appendChild(el('div',{class:'kpi'},
-    `<span class="eyebrow">Teto</span><div class="kpi-val">500%</div>`
-    + `<div class="kpi-sub">250% por bloco · hoje o time tem ${fmt.pct1(time.salario*100)} na coletiva</div>`));
+    `<span class="eyebrow">Teto</span><div class="kpi-val">${fmt.pct1(TETO_BONUS*100)}</div>`
+    + `<div class="kpi-sub">com tudo no 200% · bater as seis metas nos dois blocos dá 100% do bônus</div>`));
   wrap.appendChild(resumo);
 
   /* 2. as barras — uma por meta, uma faixa por bloco.
@@ -3481,9 +3498,9 @@ function renderBonificacaoTri(){
         + (m.semBase
             ? `sem base de ${Number(rec.meses[0].slice(0,4))-1} para comparar`
             : m.bateu
-            ? `<b style="color:var(--pos)">bateu · ${fmt.pct1(m.salario*100)} do salário</b>`
+            ? `<b style="color:var(--pos)">bateu · ${fmt.pct1(m.salario*100)} do bônus</b>`
             : `${fmt.pct1(Math.min(m.pct,1)*100)} da meta`)
-        + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?SALARIO_200:SALARIO_150)*100)}` : '')
+        + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?m.paga.n200:m.paga.n150)*100)}` : '')
         + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '')
         + `</div>`;
       /* Clicar abre a tabela nos dois blocos — "no individual seria melhor
@@ -3528,7 +3545,8 @@ function renderBonificacaoTri(){
   quadro.appendChild(el('div',{class:'bq-nota'},
     (rec.custom ? `<b>Intervalo escolhido à mão</b> — o recorte é por mês cheio (${meses.map(rotuloMes).join(', ')}), porque a bonificação é somada por mês na carga. As metas continuam sendo as do trimestre. ` : '')
     + (correndo ? `<b>${rec.custom?'Período':'Trimestre'} em andamento</b> — ${fechados} ${fechados===1?'mês fechado':'meses fechados'} de ${meses.length}, com dado até ${fmt.date(LIMITE_DADOS.fim)}. O realizado ainda vai crescer. ` : '')
-    + 'Cada meta batida vale 25% de um salário; Mentoria/Setup e Cross-sell/Upsell pagam 50% a 150% da meta e 75% a 200% — as marcas na barra mostram onde ficam esses dois degraus. '
+    + 'Cada meta batida paga uma fatia do bônus: 5,56% na coletiva e 11,11% na individual. Mentoria/Setup e Cross-sell/Upsell dobram a 150% da meta e dobram de novo a 200% — as marcas na barra mostram onde ficam esses dois degraus. '
+    + 'Bater as seis metas nos dois blocos dá 33,33% + 66,67% = <b>100% do bônus</b>. '
     + 'Clique em uma barra para ver o que entrou nela.'));
   ligarTooltips(quadro);
   wrap.appendChild(quadro);
@@ -3570,7 +3588,7 @@ function celulaMeta(m){
   const extra = m.meta.menorMelhor && m.base ? ' (3% de ' + fmt.int(m.base) + ')' : '';
   return `<span class="bt-v ${cls}">${u(m.feito)}</span>`
     + `<small class="bt-alvo">meta ${alvo}${extra}</small>`
-    + `<small class="bt-pct ${cls}">${m.bateu ? fmt.pct1(m.salario*100)+' do salário' : fmt.pct1(Math.min(m.pct,1)*100)+' da meta'}</small>`;
+    + `<small class="bt-pct ${cls}">${m.bateu ? fmt.pct1(m.salario*100)+' do bônus' : fmt.pct1(Math.min(m.pct,1)*100)+' da meta'}</small>`;
 }
 
 function abrirDetalheMeta(m, rec){
@@ -5178,8 +5196,9 @@ const TABS = [
     id:'bonifTri', grupo:'Operação', nav:'Bonificação', cor:'#7A4FB5', cor2:'#2E7D46',
     titulo:'Bonificação do trimestre',
     desc:'A régua que passou a valer em <b>out/2026</b> (planilha do Eduardo): seis metas trimestrais em dois blocos que <b>se somam</b> — a <b>coletiva</b>, do time, e a <b>individual</b>, de cada CS. '
-      + 'Cada meta batida vale <b>25% de um salário</b>. <b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram: 150% da meta valem 50% e 200% valem 75%. '
-      + 'As outras quatro são bateu-ou-não-bateu. O teto é 250% por bloco, <b>500% somando os dois</b>. '
+      + 'Cada meta batida paga uma fatia do <b>bônus</b>: <b>5,56%</b> na coletiva e <b>11,11%</b> na individual. '
+      + '<b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram — dobram a 150% da meta e dobram de novo a 200%; as outras quatro são bateu-ou-não-bateu. '
+      + 'Bater as seis nos dois blocos dá 33,33% + 66,67% = <b>100% do bônus</b>, e o teto, com as duas aceleradas no 200%, é <b>200%</b>. '
       + 'A coletiva é a soma das individuais — 3 CS × 3 mentorias = 9, 3 × R$ 7 mil = R$ 21 mil, e assim por diante. '
       + '<b>Mentoria/Setup</b> soma 1 por implantação nova no trimestre: <b>Oráculo, integração, varejo e Tino</b> — mentoria e essas quatro são a mesma coisa por ora (Laura, 07/10/2026), e todas saem direto da Vesti. '
       + '<b>Cross-sell/Upsell</b> é valor recorrente novo: Oráculo, varejo, filial e afins pelo valor cheio e <b>upgrade só pela diferença</b>; integração e setup ficam de fora porque são cobrança única e já contam no quadrante ao lado. '
