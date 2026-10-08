@@ -387,6 +387,23 @@ qualquer barra abre a lista do que entrou nela.
 > A aba mensal antiga continua viva, no menu como **"Números por mês"** — é
 > onde estão as projeções do mês em andamento e o editor de varejos.
 
+## A Gerencial passou a ser a empresa inteira (08/10/2026)
+
+Pedido da Laura: *"na aba gerencial coloque todos e não somente as 3 cs"*. A
+aba nasceu em 17/09/2026 restrita à carteira da Thamiris, da Luana e da
+Gabriella; agora o universo dela são **todas as CS**, inclusive as marcas sem
+CS — 13 nomes no seletor, 966 domínios. Sem nada marcado, vale todo mundo.
+
+Quem decide isso é `universoCs()`: a Gerencial lê o cadastro inteiro e as
+demais abas de card continuam com `CS_CARTEIRA`. A **Visão do cliente** segue
+nas três de carteira, que foi como ela nasceu e é como a busca de marca faz
+sentido. A **Visão geral** nunca passou por esse filtro — ela já mostrava o
+time todo desde setembro.
+
+> Número de antes e de agora não se comparam: em outubro o GMV da Gerencial
+> saltou de ~R$ 8 mi (três carteiras) para R$ 23 mi (empresa inteira). O texto
+> da aba avisa, para print antigo em conversa não virar discussão.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |

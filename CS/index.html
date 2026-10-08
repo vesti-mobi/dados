@@ -1370,9 +1370,11 @@ function normalizarCs(n){
 /* Lista de responsáveis oferecida pelo filtro: sai das linhas da própria aba,
    assim o seletor nunca oferece um nome que não devolve nada. */
 function csDaAba(t){
-  /* A aba Gerencial é a carteira das três CS (pedido da Laura, 17/09/2026):
-     o seletor só oferece elas, e nenhuma marcada quer dizer as três. */
-  if(t.id==='gerencial' || t.id==='cliente') return CS_CARTEIRA.slice();
+  /* A Visão do cliente continua restrita às três CS de carteira; a Gerencial
+     passou a mostrar a empresa inteira em 08/10/2026 e o seletor dela oferece
+     todo mundo, com nenhuma marcada querendo dizer "todas". */
+  if(t.id==='cliente') return CS_CARTEIRA.slice();
+  if(t.id==='gerencial') return universoCs();
   const fonte = ['reunioes','tickets','crossSell','upsell'].includes(t.id)
     ? t.linhas().map(r=>csDaLinha(t,r))
     : DATA.clientes.map(c=>c.cs || 'Sem CS');
@@ -1821,15 +1823,22 @@ const chaveNomeMarca = s => String(s||'').normalize('NFD').replace(/[\u0300-\u03
 const CLIENTE_POR_NOME = (()=>{ const m={};
   DATA.clientes.forEach(c=>{ const k = chaveNomeMarca(c.nome); if(k && !m[k]) m[k]=c }); return m })();
 
-/* --- o recorte das três CS ------------------------------------------------
-   Toda linha da aba passa por aqui. `CS_CARTEIRA` é a mesma lista da aba
-   Carteira por CS (Thamiris, Luana, Gabriella). O seletor de CS do topo pode
-   estreitar para uma delas; qualquer nome de fora da lista (o seletor da aba
-   só oferece as três, mas o filtro é compartilhado com as outras abas) é
-   ignorado, senão a aba mostraria carteira de quem não é do time. */
+/* --- o recorte de CS das abas de card -------------------------------------
+   Toda linha passa por aqui. O universo depende da aba: a <b>Gerencial</b>
+   mostra a empresa inteira desde 08/10/2026 ("coloque todos e não somente as
+   3 cs", Laura) e a <b>Visão do cliente</b> continua nas três CS de carteira,
+   que foi como ela nasceu. Nada marcado no seletor quer dizer o universo todo;
+   nome fora dele é ignorado, porque o filtro de CS é compartilhado com as
+   outras abas e um resto de seleção deixaria a tela vazia sem explicar. */
+function universoCs(){
+  if(estado.aba !== 'gerencial') return CS_CARTEIRA;
+  return [...new Set(DATA.clientes.map(c=>c.cs || 'Sem CS'))].filter(Boolean)
+    .sort((a,b)=>/^\(?Sem/i.test(a) ? 1 : /^\(?Sem/i.test(b) ? -1 : a.localeCompare(b,'pt-BR'));
+}
 function csDoFoco(){
-  const marcadas = [...(estado.filtros.cs||[])].filter(n=>CS_CARTEIRA.includes(n));
-  return new Set(marcadas.length ? marcadas : CS_CARTEIRA);
+  const universo = universoCs();
+  const marcadas = [...(estado.filtros.cs||[])].filter(n=>universo.includes(n));
+  return new Set(marcadas.length ? marcadas : universo);
 }
 function soDoFoco(linhas){ const cs = csDoFoco(); return linhas.filter(l=>cs.has(l.cs)) }
 /* Domínios das marcas dessas CS — usado onde a linha nasce do domínio e não
@@ -4797,7 +4806,7 @@ const TABS = [
     id:'gerencial', grupo:'Visão geral', nav:'Gerencial', cor:'#6C5CE7', cor2:'#00B894',
     titulo:'Gerencial',
     desc:'Os mesmos cards do <a href="https://vesti-mobi.github.io/dados/PainelCSGerencial/" target="_blank" rel="noopener">Painel CS Gerencial</a>, refeitos em cima do <b>BigQuery</b> que já alimenta este painel — o antigo lia Fabric e planilhas. <b>O KPI GMV da carteira, no topo, segue a régua do relatório do Power BI desde 06/10/2026</b>: todo pedido criado, sem o teto de R$ 50 mil; a linha de baixo mostra quanto daquilo foi de fato pago. Os cards abaixo e a aba Bonificação continuam no GMV pago. <b>Cada card abre os dados por trás dele</b>: clique e a tabela aparece embaixo, com os KPIs daquele número. '
-      + '<b>A aba inteira é a carteira da Thamiris, da Luana e da Gabriella</b> — marca de outra CS não entra em card nenhum. O seletor de CS no topo estreita para uma delas; sem nada marcado valem as três. '
+      + '<b>A aba mostra a empresa inteira</b> desde 08/10/2026 — todas as CS, inclusive as marcas sem CS. O seletor no topo estreita para uma ou algumas; sem nada marcado, vale todo mundo. (Até essa data a aba era só a carteira da Thamiris, da Luana e da Gabriella, então números de antes, em print ou conversa, são menores por construção.) '
       + 'Saiu o card de <b>Frete Onlog</b> e entraram <b>Reuniões</b>, <b>Novo Tino</b>, <b>Novo Oráculo</b>, <b>Cross-sell</b> e <b>Upsell</b>. Em Cross-sell e Upsell as <b>oportunidades criadas</b> e as <b>ganhas</b> aparecem separadas: criada conta pela data de criação do negócio, ganha pela de fechamento, então um negócio criado em julho e ganho em agosto entra em cada mês no seu lugar. No de Upsell o número grande é a <b>diferença</b>, não o valor do plano novo: a marca que pagava 499 e foi para 1.299 entra como 800 — valor do negócio de upgrade no HubSpot menos a última mensalidade dela no Iugu antes do upgrade. Quem não tinha mensalidade no Iugu (paga por fora, canal parceiro) fica com o ganho em branco e é contada à parte, para não inflar o total. '
       + 'Ao abrir um card vem também o <b>gráfico dos últimos 12 meses</b> daquela métrica, com o mês escolhido em cor cheia e uma linha dizendo quanto ele está acima ou abaixo do mês anterior e da média da janela. '
       + '<b>GMV aqui é só pedido PAGO</b>, com teto de R$ 50 mil por pedido e pela data de criação do pedido — a mesma régua do resto deste painel. Por isso o número é menor que o do Painel Elisa e o do painel de Sucesso do Cliente, que somam todo pedido criado, inclusive pendente e cancelado: agosto/2026 dá R$ 79 mi aqui e R$ 106 mi lá. A contagem de pedidos mostra os dois lados (total e pagos). '
