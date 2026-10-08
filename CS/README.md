@@ -331,6 +331,21 @@ aceleradas no máximo, é **200%**.
 > 99,99%. O painel **não** mostra valor de bônus em reais — cada CS tem o seu, e
 > isso não é assunto do painel.
 
+**O rodapé diz quanto a meta paga antes de ela cair** (08/10/2026). A Laura:
+*"vi que aparece só depois que consegue, mas enquanto tá em andamento… foi 21%
+da meta, se chegar em 100% ganhará X"*. Agora cada barra mostra o valor o tempo
+todo:
+
+- não batida: `21,2% da meta · bater leva 5,56% do bônus` e, nas que aceleram,
+  `150% leva 11,11% · 200% leva 22,22%`;
+- batida: `bateu · 11,11% do bônus` e, se ainda há degrau acima,
+  `150% da meta leva 22,22%`; no topo, `é o máximo`;
+- no churn, "x% da meta" não diria nada — ou está dentro do teto ou **acima do
+  teto**, e é isso que aparece.
+
+Os valores de bônus saem com **duas casas** (5,56%, não 5,6%), para bater com a
+tabela do Eduardo na conferência; percentual redondo perde as casas (200%).
+
 **A coletiva é a soma das individuais**, e isso foi conferido antes de
 programar: 3 CS × 3 mentorias = 9; 3 × 7k = 21k; 3 × 3 churns = 9; as 24 marcas
 de Tino de setembro + 3 por CS = 33; GMV out/nov/dez de 2025 das três carteiras

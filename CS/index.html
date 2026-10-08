@@ -3168,6 +3168,12 @@ const PAGA = {
 };
 const TETO_BONUS = (PAGA.Coletiva.n200*2 + PAGA.Coletiva.meta*4)
                  + (PAGA.Individual.n200*2 + PAGA.Individual.meta*4);
+/* Duas casas, como na planilha: 5,56% e não 5,6%. Com uma casa só, quem
+   confere contra a tabela do Eduardo acha que o painel arredondou errado. */
+const pctBonus = v => { const n = v*100;
+  /* 200% em vez de 200,00%: casa decimal só onde ela diz alguma coisa. */
+  return (Math.abs(n - Math.round(n)) < 0.005 ? String(Math.round(n))
+        : n.toFixed(2).replace('.', ',')) + '%'; };
 
 /* Trimestres civis que existem nos dados, do mais novo para o mais velho. */
 function trimestresDisponiveis(){
@@ -3451,11 +3457,11 @@ function renderBonificacaoTri(){
     const total = l.salario + time.salario;
     resumo.appendChild(el('div',{class:'kpi'},
       `<span class="eyebrow">${l.cs.split(' ')[0]}</span>`
-      + `<div class="kpi-val">${fmt.pct1(total*100)}</div>`
-      + `<div class="kpi-sub">do bônus · ${fmt.pct1(l.salario*100)} individual + ${fmt.pct1(time.salario*100)} coletiva</div>`));
+      + `<div class="kpi-val">${pctBonus(total)}</div>`
+      + `<div class="kpi-sub">do bônus · ${pctBonus(l.salario)} individual + ${pctBonus(time.salario)} coletiva</div>`));
   });
   resumo.appendChild(el('div',{class:'kpi'},
-    `<span class="eyebrow">Teto</span><div class="kpi-val">${fmt.pct1(TETO_BONUS*100)}</div>`
+    `<span class="eyebrow">Teto</span><div class="kpi-val">${pctBonus(TETO_BONUS)}</div>`
     + `<div class="kpi-sub">com tudo no 200% · bater as seis metas nos dois blocos dá 100% do bônus</div>`));
   wrap.appendChild(resumo);
 
@@ -3468,7 +3474,7 @@ function renderBonificacaoTri(){
     const box = el('div',{class:'bq'+(destaque?' bq-time':'')});
     const head = el('div',{class:'bq-head'});
     head.innerHTML = `<div><b>${l.cs}</b><small>${l.bloco}</small></div>`
-      + `<div class="bq-total"><span>${fmt.pct1(l.salario*100)}</span>`
+      + `<div class="bq-total"><span>${pctBonus(l.salario)}</span>`
       + `<small>${l.metas.filter(m=>m.bateu).length} de ${METAS_TRI.length} metas</small></div>`;
     box.appendChild(head);
 
@@ -3494,15 +3500,7 @@ function renderBonificacaoTri(){
         `<div class="bq-top"><b style="color:${m.meta.cor}">${m.meta.l}</b>`
         + `<span>${u(m.feito)}<em> ${m.semBase ? '— sem meta' : 'de ' + (m.meta.menorMelhor ? 'até ' : '') + u(m.alvo)}</em></span></div>`
         + `<div class="bq-bar"><i style="width:${larg.toFixed(1)}%;background:${cor}"></i>${marcas}</div>`
-        + `<div class="bq-sub">`
-        + (m.semBase
-            ? `sem base de ${Number(rec.meses[0].slice(0,4))-1} para comparar`
-            : m.bateu
-            ? `<b style="color:var(--pos)">bateu · ${fmt.pct1(m.salario*100)} do bônus</b>`
-            : `${fmt.pct1(Math.min(m.pct,1)*100)} da meta`)
-        + (m.meta.acelera && m.bateu && m.nivel<200 ? ` · ${fmt.pct1((m.nivel===150?2:1.5)*100)} da meta leva ${fmt.pct1((m.nivel===150?m.paga.n200:m.paga.n150)*100)}` : '')
-        + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '')
-        + `</div>`;
+        + `<div class="bq-sub">${rodapeDaBarra(m, rec)}</div>`;
       /* Clicar abre a tabela nos dois blocos — "no individual seria melhor
          clicar mesmo na barra" (Laura, 07/10/2026). O balãozinho saiu: duas
          formas de ver a mesma coisa só disputavam a atenção. */
@@ -3578,6 +3576,34 @@ function resumoDaMeta(m, rec){
   const mostra = itens.slice(0, 12).map(linha);
   const sobra = itens.length - mostra.length;
   return mostra.join('\n') + (sobra > 0 ? '\n+ ' + sobra + ' ' + (sobra===1?'marca':'marcas') + ' — clique para ver todas' : '');
+}
+
+/* O rodapé da barra. Enquanto a meta não cai, ele precisa dizer QUANTO ELA
+   PAGA — era a pergunta da Laura em 08/10/2026: "foi 21% da meta, se chegar em
+   100% ganhará X". Antes o valor só aparecia depois de batida, e quem estava
+   no meio do caminho não tinha como saber o que estava perseguindo. */
+function rodapeDaBarra(m, rec){
+  const p = pctBonus;
+  if(m.semBase) return `sem base de ${Number(rec.meses[0].slice(0,4))-1} para comparar`;
+
+  const degraus = m.meta.acelera
+    ? ` · 150% leva ${p(m.paga.n150)} · 200% leva ${p(m.paga.n200)}`
+    : '';
+
+  if(!m.bateu){
+    /* No churn "x% da meta" não quer dizer nada: ou está dentro do teto ou
+       estourou. */
+    const onde = m.meta.menorMelhor
+      ? `<b style="color:var(--neg)">acima do teto</b>`
+      : `${fmt.pct1(Math.min(m.pct,1)*100)} da meta`;
+    return `${onde} · bater leva <b>${p(m.paga.meta)}</b> do bônus${degraus}`;
+  }
+
+  const falta = m.meta.acelera && m.nivel < 200
+    ? ` · ${m.nivel===150 ? '200' : '150'}% da meta leva ${p(m.nivel===150 ? m.paga.n200 : m.paga.n150)}`
+    : (m.meta.acelera ? ' · é o máximo' : '');
+  return `<b style="color:var(--pos)">bateu · ${p(m.salario)} do bônus</b>${falta}`
+    + (m.meta.menorMelhor && m.base ? ` · teto de 3% de ${fmt.int(m.base)} ativos` : '');
 }
 
 /* A célula: realizado em cima, meta e nível embaixo. */
