@@ -528,6 +528,45 @@ Quatro armadilhas que apareceram montando isso, todas resolvidas no código:
 > é bom (vendas) ou ruim (churn). É a mesma convenção que o bloco de
 > comparações já usava.
 
+### A grade de cards sumiu (09/10/2026)
+
+No mesmo dia, duas mudanças a mais.
+
+**A explicação de cada card foi para um "?".** A capa e a fonte ficavam num
+parágrafo de cinco linhas entre o título e os números, o mesmo problema que o
+texto da página já tinha tido. Agora abrem no mesmo modal, com três seções: o
+que a faixa mostra, de onde sai o número e o que é cada coluna da tabela. A
+casca do modal virou `cascaDaAjuda()`, usada pelos dois botões.
+
+**E então a grade inteira saiu** — *"tire os cards, deixe todas as informações
+juntas no mesmo modelo do arquivo e igual está agora dentro dos cards, mas sem
+os cards; para ver as marcas e outras infos, deixe tudo clicável e ao clicar
+aparece a tabela"*. `renderGradeCards` virou `renderRelatorio`, e cada card da
+lista virou uma faixa empilhada:
+
+- **Cabeçalho:** título, o resumo que o card mostrava, o `?` e o link de abrir.
+- **Corpo, sempre visível:** a coluna de leitura (número grande, comparações,
+  acumulado), o gráfico mês a mês e a lista das maiores — a diagramação do
+  slide, agora sem precisar clicar em nada.
+- **No clique:** os KPIs daquele assunto, a "Leitura do mês" e a tabela.
+
+Vale para as três abas que usavam a grade — Gerencial (19 faixas), Visão geral
+(7) e Visão do cliente (12).
+
+Dois detalhes que a montagem obrigou a resolver:
+
+- **O número aparecia duas vezes**, uma no cabeçalho e outra em corpo 30 logo
+  abaixo, na mesma altura da tela. O cabeçalho só mostra o número quando a
+  faixa não tem coluna de leitura (card sem métrica, que vira só um quadro de
+  número).
+- **KPIs e leitura do mês ficam no clique**, não no corpo: treze faixas abertas
+  com quatro KPIs cada empilhariam setenta e dois números numa página só.
+
+> Custo medido com jsdom: a Gerencial inteira, 19 faixas com gráfico e lista,
+> monta em ~300 ms; abrir uma faixa custa ~40 ms. `linhasDoCard` é memoizado
+> por contexto, o que segura o preço das 24 chamadas por faixa que a série de
+> dois anos exige.
+
 > Captura de tela sem navegador: o Chrome headless (`--headless=new
 > --screenshot`) dá conta, usando uma cópia temporária da página que entra
 > sozinha, abre a aba e o card pedidos na querystring e esconde a grade para a

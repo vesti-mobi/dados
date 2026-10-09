@@ -632,40 +632,12 @@ td.strong{font-weight:600}
 .section-label .eyebrow{white-space:nowrap}
 .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
 
-/* --- cards da aba Gerencial --- */
-.gcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-bottom:22px}
-
-/* Card da grade, engrossado em 02/10/2026: "a fonte está muito pequena e fina
-   dos cards". Era rótulo de 10px, número de 26 e legenda de 11,5 em cinza
-   claro — no monitor da sala dava para ver o número e mais nada. Subiu tudo um
-   degrau, e a legenda saiu do cinza mais claro para o médio. */
-.gcard{
-  display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
-  background:var(--surface);border:1px solid var(--line);
-  border-radius:var(--r-lg);box-shadow:none;padding:17px 19px 16px;
-  font-family:inherit;color:inherit;transition:transform .13s ease,box-shadow .13s ease,background .13s ease;
-}
-.gcard:hover{transform:translateY(-2px);border-color:var(--acc-line);
-  box-shadow:0 2px 4px rgba(18,24,38,.04), 0 14px 26px -18px rgba(18,24,38,.35)}
-.gcard.on{background:var(--acc-soft);border-color:var(--acc)}
-.gc-t{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--ink-3)}
-.gc-v{font-family:var(--f-num);font-size:31px;font-weight:650;letter-spacing:-.025em;
-  font-variant-numeric:tabular-nums;line-height:1.08;margin-top:7px}
-.gc-s{font-size:13px;color:var(--ink-2);line-height:1.45;margin-top:2px}
-.gc-go{margin-top:11px;font-size:12.5px;font-weight:700;color:var(--acc)}
-
-.gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
-.gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
-.gdet-head .eyebrow{color:var(--acc)}
-.gdet-head h2{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
-.gdet-head p{margin:0;color:var(--ink-2);font-size:12.5px;max-width:78ch}
-.gdet-head .btn{margin-left:auto}
-.gdetalhe .kpis{border-top-color:var(--line)}
-.gdetalhe .kpi:first-child{background:var(--surface)}
-.gdetalhe .kpi:first-child .eyebrow{color:var(--ink-3)}
-.gdetalhe .kpi:first-child .kpi-val{color:var(--acc)}
-.gdetalhe .card{margin-bottom:16px}
+/* Os KPIs dentro de uma faixa aberta não têm o primeiro em destaque: ali eles
+   são o detalhe do número que já está grande no corpo da faixa. */
+.rel-aberto .kpi:first-child{background:var(--surface)}
+.rel-aberto .kpi:first-child .eyebrow{color:var(--ink-3)}
+.rel-aberto .kpi:first-child .kpi-val{color:var(--acc)}
+.rel-aberto .card{margin-bottom:16px}
 
 /* --- o detalhe do card na diagramação do relatório mensal -----------------
    Pedido da Laura em 09/10/2026: "quero o estilo das info no mesmo do
@@ -715,6 +687,48 @@ td.strong{font-weight:600}
   color:var(--ink);white-space:nowrap;flex:none}
 .rb-lista .rb-pe{padding:12px 16px 13px;margin-top:auto;background:var(--sunken);
   border-top:1px solid var(--line-2);border-radius:0 0 var(--r-lg) var(--r-lg);color:var(--ink-3)}
+
+/* --- a página sem grade de cards: um bloco aberto por assunto -------------
+   Pedido da Laura em 09/10/2026: "tire os cards, deixe todas as informações
+   juntas no mesmo modelo do arquivo e igual está agora dentro dos cards, mas
+   sem os cards; para ver as marcas e outras infos, deixe tudo clicável e ao
+   clicar aparece a tabela". Então cada assunto virou uma faixa: o número e o
+   resumo no cabeçalho (o que o card mostrava), e embaixo, sempre visível, a
+   leitura, o gráfico e a lista das maiores. O clique abre a tabela. */
+.rel-bloco{background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);margin-bottom:14px;overflow:hidden}
+.rel-bloco.on{border-color:var(--acc)}
+.rel-head{display:flex;align-items:center;gap:12px;padding-right:16px}
+.rel-abrir{flex:1;min-width:0;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+  background:none;border:0;cursor:pointer;text-align:left;font-family:inherit;color:inherit;
+  padding:15px 4px 14px 18px}
+.rel-abrir:hover .rel-t{color:var(--acc)}
+.rel-t{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);flex:none;min-width:166px;transition:color .12s}
+.rel-v{font-family:var(--f-num);font-size:26px;font-weight:650;letter-spacing:-.025em;
+  font-variant-numeric:tabular-nums;line-height:1;color:var(--ink);flex:none}
+.rel-s{font-size:13px;color:var(--ink-2);line-height:1.4;min-width:0}
+.rel-go{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--acc);flex:none;
+  white-space:nowrap}
+.rel-corpo{display:grid;border-top:1px solid var(--line-2);
+  grid-template-columns:minmax(176px,.42fr) minmax(0,1.28fr) minmax(248px,.88fr)}
+.rel-corpo.sem-lista{grid-template-columns:minmax(176px,.42fr) minmax(0,1fr)}
+.rel-corpo.so-lista{grid-template-columns:minmax(0,1fr)}
+.rel-chart{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line-2)}
+.rel-corpo.sem-lista .rel-chart{border-right:0}
+.rel-leg{display:flex;align-items:center;gap:12px;padding:12px 14px 0}
+.rel-leg .legend{margin-left:auto}
+.rel-corpo .rb-lista{border:0;border-radius:0;background:none;display:flex;
+  flex-direction:column;min-width:0}
+.rel-corpo .rb-lista .card-head{padding:13px 16px 0}
+.rel-corpo .rb-lista .card-head h3{font-size:13px}
+.rel-aberto{border-top:1px solid var(--line-2);padding:16px 18px 18px;background:var(--sunken)}
+.rel-aberto .kpis{margin-bottom:16px}
+.rel-aberto .rleitura{background:var(--surface)}
+@media (max-width:1180px){
+  .rel-corpo,.rel-corpo.sem-lista{grid-template-columns:minmax(0,1fr)}
+  .rel-corpo .rb-leitura,.rel-chart{border-right:0;border-bottom:1px solid var(--line-2)}
+}
 
 /* "Leitura do mês": os bullets de + e − do rodapé do slide, em duas colunas. */
 .rleitura{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-lg);
@@ -3261,15 +3275,15 @@ function leituraDoMes(c, ctx, rows){
     + `</div>`;
   return box;
 }
-function graficoDoCard(c, ctx, rows){
+/* As peças do bloco — a coluna de leitura, a legenda, a nota do gráfico e a
+   função que desenha. Quem monta o bloco decide onde cada uma entra. */
+function pecasDoCard(c, ctx, rows){
   if(!c.metricas || !c.metricas.length) return null;
   if(ctx.tipo === 'periodo' && !c.campoData) return null;
 
   const dados = ctx.tipo === 'mes' ? serieMensalDoCard(c, ctx) : seriePorBucketDoCard(c, ctx, rows);
   const corSerie = i => i ? tint(c.cor,.58) : c.cor;
   const destaque = ctx.tipo === 'mes' ? ctx.m : null;
-
-  const card = el('div',{class:'card rb-main'});
   /* ANO CONTRA ANO, como no relatório mensal: quando o card tem uma métrica
      só e o recorte é de mês, cada mês ganha duas barras — o ano anterior em
      cinza e o atual em azul. Com duas métricas o gráfico já está ocupado e a
@@ -3303,11 +3317,6 @@ function graficoDoCard(c, ctx, rows){
          <div class="rb-linhas">${l0.linhas.map(x=>`<span>${x}</span>`).join('')}${extras}</div>
          ${l0.pe ? `<div class="rb-pe">${l0.pe}</div>` : ''}</div>`
     : '';
-  card.innerHTML = `<div class="card-head"><h3>${c.titulo}</h3><span class="rb-nota">${nota}</span>
-                      <div class="legend">${leg}</div></div>
-                    <div class="rb-corpo">${leituraHtml}
-                      <div class="chart-wrap" id="gch-${c.id}"></div></div>`;
-  const host = card.querySelector('#gch-'+c.id);
   const AZUL = '#1F4FD8';
   const series = anoAano
     /* Aqui as barras do ano corrente ficam TODAS em azul cheio: apagar as que
@@ -3322,12 +3331,12 @@ function graficoDoCard(c, ctx, rows){
          é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
       corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : null};
   });
-  /* o desenho mede a largura do host, e ela só existe depois que o `extra`
+  /* o desenho mede a largura do host, e ela só existe depois que o bloco
      inteiro foi pendurado na página — por isso o desenho vai para o fim da
      fila, com setTimeout e não requestAnimationFrame: em aba de segundo plano
      o navegador segura o rAF e o gráfico nunca sairia. */
-  setTimeout(()=>desenhar(host, dados, series), 0);
-  return card;
+  return {leitura: leituraHtml, leg, nota,
+          desenhar: host => setTimeout(()=>desenhar(host, dados, series), 0)};
 }
 
 /* Gráfico de composição (barras por categoria ou pizza) — é o desenho que a
@@ -3345,71 +3354,91 @@ function graficoDeCategorias(c, ctx){
   return card;
 }
 
-/* A grade em si: um botão por card e, embaixo, o detalhe do que estiver aberto.
-   `abaId` separa o card aberto de cada aba, para ir e voltar sem perder o que
-   estava na tela. */
-function renderGradeCards(abaId, cards, ctx){
+/* A página do assunto, sem grade de cards. Cada card da lista vira uma faixa
+   com o número e o resumo no cabeçalho e, logo abaixo e sempre visível, a
+   leitura, o gráfico e a lista das maiores — a diagramação do relatório
+   mensal. O clique no cabeçalho abre os KPIs e a tabela daquele assunto.
+
+   `abaId` separa o que está aberto em cada aba, para ir e voltar sem perder
+   o lugar. */
+function renderRelatorio(abaId, cards, ctx){
   const wrap = el('div',{});
   wrap.appendChild(el('div',{class:'section-label'},
-    `<span class="eyebrow">Cards de ${ctx.rotulo} · clique para abrir os dados</span>`));
+    `<span class="eyebrow">${ctx.rotulo} · clique em qualquer faixa para abrir a tabela</span>`));
 
   const abertoId = estado.cardAberto[abaId] || null;
-  /* Uma grade só, mesmo com os 18 cards da Gerencial: chegou a sair em seções
-     por grupo em 28/09/2026 e a Laura preferiu o layout de antes ("pode voltar
-     igual estava, mesmo que ficasse 18 cards"). A ordem da lista é a ordem da
-     tela. */
-  const grid = el('div',{class:'gcards'});
   cards.forEach(c=>{
-    const r = c.resumo(linhasDoCard(c, ctx), ctx);
-    const aberto = abertoId===c.id;
-    const btn = el('button',{class:'gcard'+(aberto?' on':''), type:'button',
-      style:`--gc:${c.cor};--gc-soft:${tint(c.cor,.10)}`, 'aria-expanded':String(aberto)},
-      `<span class="gc-t">${c.titulo}</span>
-       <span class="gc-v">${r.v}</span>
-       <span class="gc-s">${r.s}</span>
-       <span class="gc-go">${aberto?'fechar':'ver os dados →'}</span>`);
-    btn.onclick=()=>{ estado.cardAberto[abaId] = aberto ? null : c.id; renderPagina();
-      if(!aberto) setTimeout(()=>{ const d=$('#gdetalhe'); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0) };
-    grid.appendChild(btn);
+    const rows = linhasDoCard(c, ctx);
+    const r = c.resumo(rows, ctx);
+    const aberto = abertoId === c.id;
+    const sec = el('section',{class:'rel-bloco'+(aberto?' on':''), id:'rel-'+c.id,
+      style:`--gc:${c.cor}`});
+
+    const pecas = pecasDoCard(c, ctx, rows);
+    const lista = listaRanqueada(c, ctx, rows);
+
+    const head = el('div',{class:'rel-head'});
+    /* O número grande só vem para o cabeçalho quando a faixa não tem a coluna
+       de leitura: senão ele apareceria duas vezes na mesma altura da tela, uma
+       no cabeçalho e outra logo abaixo, em corpo 30. */
+    const temNumero = !(pecas && pecas.leitura);
+    const btn = el('button',{class:'rel-abrir', type:'button', 'aria-expanded':String(aberto)},
+      `<span class="rel-t">${c.titulo}</span>${temNumero?`<span class="rel-v">${r.v}</span>`:''}
+       <span class="rel-s">${r.s}</span>
+       <span class="rel-go">${aberto?'fechar a tabela':'ver a tabela →'}</span>`);
+    btn.onclick = ()=>{
+      estado.cardAberto[abaId] = aberto ? null : c.id;
+      renderPagina();
+      if(!aberto) setTimeout(()=>{ const d=$('#rel-'+c.id); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0);
+    };
+    head.appendChild(btn);
+    /* A capa e a fonte do assunto moram no "?" desde 09/10/2026 — eram um
+       parágrafo de cinco linhas que empurrava o número para baixo. */
+    const aj = el('button',{class:'btn-ajuda', type:'button', title:'O que esta faixa mostra',
+      'aria-label':'Explicação de '+c.titulo}, '?');
+    aj.onclick = ()=>abrirAjudaCard(c, ctx);
+    head.appendChild(aj);
+    sec.appendChild(head);
+
+    if(pecas || lista){
+      const corpo = el('div',{class:'rel-corpo'+(pecas && lista ? '' : pecas ? ' sem-lista' : ' so-lista')});
+      if(pecas){
+        const bloco = el('div',{class:'rel-chart'});
+        bloco.innerHTML = `<div class="rel-leg"><span class="rb-nota">${pecas.nota}</span>
+                             <div class="legend">${pecas.leg}</div></div>
+                           <div class="chart-wrap"></div>`;
+        if(pecas.leitura){
+          const esq = el('div',{});
+          esq.innerHTML = pecas.leitura;
+          corpo.appendChild(esq.firstElementChild);
+        }
+        corpo.appendChild(bloco);
+        pecas.desenhar(bloco.querySelector('.chart-wrap'));
+      }
+      if(lista) corpo.appendChild(lista);
+      sec.appendChild(corpo);
+    }
+
+    /* O que abre no clique: os KPIs do assunto, a leitura do mês e a tabela.
+       Fora do clique eles ficariam repetidos treze vezes na mesma página. */
+    if(aberto){
+      const det = el('div',{class:'rel-aberto'});
+      const kpis = c.kpis(rows, ctx);
+      if(kpis.length){
+        const box = el('div',{class:'kpis'});
+        kpis.forEach(k=>box.appendChild(el('div',{class:'kpi'},
+          `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
+        det.appendChild(box);
+      }
+      if(c.categorias) det.appendChild(graficoDeCategorias(c, ctx));
+      const leitura = leituraDoMes(c, ctx, rows);
+      if(leitura) det.appendChild(leitura);
+      det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
+        `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
+      sec.appendChild(det);
+    }
+    wrap.appendChild(sec);
   });
-  wrap.appendChild(grid);
-
-  const c = cards.find(x=>x.id===abertoId);
-  if(!c) return wrap;
-  const rows = linhasDoCard(c, ctx);
-
-  const det = el('div',{class:'gdetalhe', id:'gdetalhe', style:`--gc:${c.cor}`});
-  const head = el('div',{class:'gdet-head'});
-  head.innerHTML = `<div><span class="eyebrow">${ctx.rotulo}</span><h2>${c.titulo}</h2>
-                    <p>${c.capa}. <b>Fonte:</b> ${c.fonte}</p></div>`;
-  const fechar = el('button',{class:'btn btn-ghost',type:'button'},'Fechar card');
-  fechar.onclick=()=>{ estado.cardAberto[abaId]=null; renderPagina() };
-  head.appendChild(fechar);
-  det.appendChild(head);
-
-  const kpis = c.kpis(rows, ctx);
-  if(kpis.length){
-    const box = el('div',{class:'kpis'});
-    kpis.forEach(k=>box.appendChild(el('div',{class:'kpi'},
-      `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
-    det.appendChild(box);
-  }
-  /* A linha do relatório: o bloco do número com o gráfico à esquerda e a lista
-     ranqueada à direita. Com um só dos dois, ele ocupa a largura inteira. */
-  const g = graficoDoCard(c, ctx, rows);
-  const lista = listaRanqueada(c, ctx, rows);
-  if(g || lista){
-    const linha = el('div',{class:'rbloco'+(g && lista ? '' : ' so1')});
-    if(g) linha.appendChild(g);
-    if(lista) linha.appendChild(lista);
-    det.appendChild(linha);
-  }
-  if(c.categorias) det.appendChild(graficoDeCategorias(c, ctx));
-  const leitura = leituraDoMes(c, ctx, rows);
-  if(leitura) det.appendChild(leitura);
-  det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
-    `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
-  wrap.appendChild(det);
   return wrap;
 }
 
@@ -3442,7 +3471,7 @@ function kpisGerencial(){
   ];
 }
 
-function renderGerencial(){ return renderGradeCards('gerencial', CARDS_GERENCIAL, ctxGerencial()) }
+function renderGerencial(){ return renderRelatorio('gerencial', CARDS_GERENCIAL, ctxGerencial()) }
 
 /* ============================================================================
    BONIFICAÇÃO TRIMESTRAL — a régua de out/2026
@@ -4368,7 +4397,7 @@ const CARDS_VISAO = [
   },
 ];
 function cardVisao(id){ return CARDS_VISAO.find(c=>c.id===id) }
-function renderVisaoGeral(){ return renderGradeCards('visaoGeral', CARDS_VISAO, ctxPeriodo()) }
+function renderVisaoGeral(){ return renderRelatorio('visaoGeral', CARDS_VISAO, ctxPeriodo()) }
 
 /* ============================================================================
    3e. VISÃO DO CLIENTE — a ficha de uma marca só
@@ -4872,7 +4901,7 @@ function renderVisaoCliente(){
   trocar.onclick = ()=>{ estado.clienteFoco = null; renderPagina(); window.scrollTo({top:0}) };
   topo.appendChild(trocar);
   wrap.appendChild(topo);
-  wrap.appendChild(renderGradeCards('cliente', CARDS_CLIENTE, ctxCliente(c)));
+  wrap.appendChild(renderRelatorio('cliente', CARDS_CLIENTE, ctxCliente(c)));
   return wrap;
 }
 
@@ -6675,8 +6704,10 @@ function emParagrafos(txt, classe){
   return partes.filter(p=>p.trim()).map(p=>`<p class="${classe}">${p}</p>`).join('');
 }
 
-function abrirAjuda(){
-  const t = aba();
+/* A casca do modal — fundo, caixa, cabeçalho, Esc e clique fora. Vale tanto
+   para o "?" da página quanto para o "?" de cada card. Devolve o corpo vazio
+   para quem chamou pendurar as seções. */
+function cascaDaAjuda(eyebrow, titulo){
   document.querySelectorAll('.aj-back').forEach(x=>x.remove());
   const back = el('div',{class:'aj-back'});
   const box = el('div',{class:'aj-box'});
@@ -6687,7 +6718,7 @@ function abrirAjuda(){
   back.onclick = e => { if(e.target===back) fechar() };
 
   const head = el('div',{class:'aj-head'});
-  head.innerHTML = `<div><span class="eyebrow">${t.grupo}</span><h2>${t.titulo}</h2></div>`;
+  head.innerHTML = `<div><span class="eyebrow">${eyebrow}</span><h2>${titulo}</h2></div>`;
   const x = el('button',{class:'aj-fechar','aria-label':'Fechar'},'&times;');
   x.onclick = fechar;
   head.appendChild(x);
@@ -6695,6 +6726,60 @@ function abrirAjuda(){
 
   const corpo = el('div',{class:'aj-corpo'});
   box.appendChild(corpo);
+  return {back, corpo};
+}
+
+/* O bloco fixo do rodapé do modal: de onde vêm os dados e quando foi a carga.
+   Aparece nos dois "?" — a pergunta "isso está atualizado?" vem junto com
+   qualquer dúvida sobre o número. */
+function secaoDaCarga(){
+  const sec = el('div',{class:'aj-sec'});
+  sec.innerHTML = `<span class="eyebrow">De onde vêm os dados</span>
+    <p class="aj-texto">A carga roda todo dia às 04:00 (BRT) e refaz o arquivo inteiro:
+    BigQuery (pedidos, faturas, VestiPago, Oráculo), HubSpot (reuniões, tickets, negócios)
+    e a API do Tino. Nada é digitado à mão aqui — mudança de régua vale para o histórico todo,
+    porque a carga recalcula todos os meses do zero.</p>
+    <p class="aj-texto">Última carga: <b>${quandoCarregou()}</b>.</p>`;
+  return sec;
+}
+
+/* O "?" de um card aberto: o que ele mostra, de onde sai o número e o que é
+   cada coluna da tabela dele. Mesma casca do "?" da página. */
+function abrirAjudaCard(c, ctx){
+  const {back, corpo} = cascaDaAjuda(ctx.rotulo, c.titulo);
+  if(c.capa){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">O que este card mostra</span>`
+      + emParagrafos(c.capa, 'aj-texto');
+    corpo.appendChild(sec);
+  }
+  if(c.fonte){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">De onde sai o número</span>`
+      + emParagrafos(c.fonte, 'aj-texto');
+    corpo.appendChild(sec);
+  }
+  if(c.colunas && c.colunas.length){
+    const sec = el('div',{class:'aj-sec'});
+    sec.innerHTML = `<span class="eyebrow">As colunas da tabela</span>`;
+    const dl = el('dl',{class:'aj-lista'});
+    c.colunas.forEach(col=>{
+      const texto = AJUDA_COL[col.k];
+      const item = el('div',{class:'aj-item'});
+      item.innerHTML = `<dt>${col.l || col.k}</dt>`
+        + (texto ? `<dd>${texto}</dd>` : `<dd class="vazio"></dd>`);
+      dl.appendChild(item);
+    });
+    sec.appendChild(dl);
+    corpo.appendChild(sec);
+  }
+  corpo.appendChild(secaoDaCarga());
+  document.body.appendChild(back);
+}
+
+function abrirAjuda(){
+  const t = aba();
+  const {back, corpo} = cascaDaAjuda(t.grupo, t.titulo);
 
   if(t.desc){
     const sec = el('div',{class:'aj-sec'});
@@ -6735,15 +6820,7 @@ function abrirAjuda(){
     corpo.appendChild(sec);
   }
 
-  const sec = el('div',{class:'aj-sec'});
-  sec.innerHTML = `<span class="eyebrow">De onde vêm os dados</span>
-    <p class="aj-texto">A carga roda todo dia às 04:00 (BRT) e refaz o arquivo inteiro:
-    BigQuery (pedidos, faturas, VestiPago, Oráculo), HubSpot (reuniões, tickets, negócios)
-    e a API do Tino. Nada é digitado à mão aqui — mudança de régua vale para o histórico todo,
-    porque a carga recalcula todos os meses do zero.</p>
-    <p class="aj-texto">Última carga: <b>${quandoCarregou()}</b>.</p>`;
-  corpo.appendChild(sec);
-
+  corpo.appendChild(secaoDaCarga());
   document.body.appendChild(back);
 }
 
