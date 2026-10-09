@@ -432,6 +432,47 @@ time todo desde setembro.
 > saltou de ~R$ 8 mi (três carteiras) para R$ 23 mi (empresa inteira). O texto
 > da aba avisa, para print antigo em conversa não virar discussão.
 
+## O visual virou o do relatório mensal (09/10/2026)
+
+Pedido da Laura: *"consegue mudar o visual e layout do painel para essa pegada
+do arquivo? mesmo visual para todas abas"*, junto com o
+`CS_Setembro_2026.pptx`. A paleta e a tipografia saíram do próprio arquivo —
+abri o pptx e li as cores e fontes declaradas nos slides, em vez de estimar a
+olho:
+
+| Papel | Cor | Onde o relatório usa |
+|---|---|---|
+| Texto | `#121826` | título e número grande (99 ocorrências) |
+| Texto secundário | `#4B5565` | rótulo e legenda (86) |
+| **Acento** | `#1F4FD8` | barra do ano corrente, destaque (29) |
+| Linha | `#E3E7EE` | borda dos cartões (18) |
+| Negativo | `#B4530A` | variação que caiu (15) |
+| Fundo de apoio | `#F4F6FA` | cartão de KPI |
+| Comparação | `#B8C2D6` | barra do ano anterior |
+
+Tipografia: **Montserrat** nos títulos, **Lato** no corpo e nos rótulos — as
+duas do arquivo. O IBM Plex Mono ficou só onde é número tabular ou código; os
+rótulos em maiúscula, que estavam em mono, passaram para Lato bold, como no
+relatório.
+
+**Uma cor para todas as abas.** Até aqui cada aba pintava a interface com a cor
+dela (`aplicarAcento` trocava `--acc` a cada troca de seção) — o menu, o título
+e as bordas mudavam de cor conforme a página. Agora o acento é fixo, e
+`aplicarAcento` só limpa o que tiver sobrado. A cor de cada aba continua
+existindo no objeto, mas serve para o card dentro da grade, não para a
+interface.
+
+**Cartões como no slide:** borda fina `#E3E7EE`, sem faixa colorida no topo,
+sem sombra; rótulo cinza em maiúscula, número escuro, link em azul. Os KPIs
+deixaram de ser uma faixa grudada e viraram cartões soltos com respiro entre
+eles. As barras da Bonificação mantêm cor por meta — foi pedido explícito —,
+recalibradas para conviver com a paleta nova.
+
+> Captura de tela sem navegador: o Chrome headless (`--headless=new
+> --screenshot`) dá conta, usando uma cópia temporária da página que entra
+> sozinha e abre a aba pedida na querystring. Útil quando a extensão do
+> navegador cai no meio do trabalho.
+
 ## De onde vem cada coluna
 
 | Aba | Campo | Fonte |

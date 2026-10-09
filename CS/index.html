@@ -6,38 +6,47 @@
 <title>Painel de Clientes · CS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Lato:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    TOKENS
    ============================================================ */
 :root{
+  /* Paleta do relatório mensal de CS (CS_Setembro_2026.pptx), trazida para o
+     painel em 09/10/2026 a pedido da Laura — "mesmo visual para todas as
+     abas". Os valores saíram do próprio arquivo: fundo branco, cartão de
+     apoio em #F4F6FA, texto #121826 e #4B5565, borda #E3E7EE, um acento azul
+     #1F4FD8 e o laranja #B4530A para o que vai mal. */
   --paper:#FFFFFF;
   --canvas:#FFFFFF;
   --surface:#FFFFFF;
-  --sunken:#F7F8FA;
+  --sunken:#F4F6FA;
 
-  --ink:#111418;
-  --ink-2:#4A5361;
-  --ink-3:#7B8595;
+  --ink:#121826;
+  --ink-2:#4B5565;
+  --ink-3:#8A94A6;
 
-  --line:#E3E6EC;
-  --line-2:#EEF0F4;
+  --line:#E3E7EE;
+  --line-2:#F0F2F7;
 
-  --brand:#0E7A73;
-  --brand-2:#12968D;
-  --brand-soft:#E6F4F2;
-  --gold:#B7791F;
-  --gold-soft:#FBF1DC;
-  --pos:#2E7D46;
-  --neg:#C0453B;
-  --neg-soft:#FBEAE7;
+  --brand:#1F4FD8;
+  --brand-2:#3F6BE8;
+  --brand-soft:#EEF2FE;
+  --gold:#B4530A;
+  --gold-soft:#FDF1E7;
+  --pos:#15803D;
+  --neg:#B4530A;
+  --neg-soft:#FDF1E7;
+  /* cinza das barras de comparação no relatório (o ano anterior) */
+  --comp:#B8C2D6;
 
-  /* cor da aba ativa — definida por JS a cada troca de seção */
-  --acc:#0E7A73;
-  --acc-2:#B7791F;
-  --acc-soft:#EAF5F4;
-  --acc-line:#CDE6E3;
+  /* O acento NÃO muda mais de aba para aba: o relatório tem uma cor só, e foi
+     esse o pedido. As variáveis continuam existindo porque meia centena de
+     regras de CSS as usa. */
+  --acc:#1F4FD8;
+  --acc-2:#B4530A;
+  --acc-soft:#EEF2FE;
+  --acc-line:#C9D1E0;
 
   --r-sm:4px;
   --r-md:7px;
@@ -54,11 +63,11 @@
      formulário e tabela. As duas são grotescas, mas a Plex tem terminais
      angulares que dão a diferença entre título e texto sem precisar de
      contraste de família. A família Plex já estava aqui, no mono dos rótulos. */
-  --f-display:'IBM Plex Sans','Public Sans',system-ui,-apple-system,sans-serif;
-  --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-display:'Montserrat','Lato',system-ui,-apple-system,sans-serif;
+  --f-body:'Lato',system-ui,-apple-system,'Segoe UI',sans-serif;
   /* Número grande não vai em serifada: fica em grotesca, com tabular-nums para
      as colunas baterem na vertical. */
-  --f-num:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-num:'Lato',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
 
   /* logo da Vesti embutido: o arquivo original tem o ícone verde e a palavra
@@ -83,11 +92,13 @@ button,input,select{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--brand-2);outline-offset:2px;border-radius:3px}
 
 /* eyebrow / rótulo utilitário */
+/* O relatório escreve os rótulos em Lato, não em mono: maiúscula, bold e bem
+   espaçada. O mono fica para número tabular e código. */
 .eyebrow{
-  font-family:var(--f-mono);
+  font-family:var(--f-body);
   font-size:10.5px;
-  font-weight:500;
-  letter-spacing:.13em;
+  font-weight:700;
+  letter-spacing:.11em;
   text-transform:uppercase;
   color:var(--ink-3);
 }
@@ -129,8 +140,10 @@ button,input,select{font:inherit;color:inherit}
 .nav-btn:hover{background:var(--sunken);color:var(--ink)}
 .nav-btn .dot{width:5px;height:5px;border-radius:50%;background:var(--line);flex:none;opacity:.45;transition:opacity .13s}
 .nav-btn:hover .dot,.nav-btn[aria-current="true"] .dot{opacity:1}
-.nav-btn[aria-current="true"]{background:var(--nav-soft,var(--sunken));color:var(--nav-c,var(--ink));font-weight:600}
-.nav-btn[aria-current="true"]::before{content:"";position:absolute;left:-14px;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--nav-c,var(--brand))}
+.nav-btn[aria-current="true"]{background:var(--sunken);color:var(--acc);font-weight:700}
+.nav-btn[aria-current="true"]::before{content:"";position:absolute;left:-14px;top:6px;bottom:6px;width:3px;border-radius:0 3px 3px 0;background:var(--acc)}
+.nav-btn .dot{background:var(--line)}
+.nav-btn[aria-current="true"] .dot{background:var(--acc)}
 .rail-foot{margin-top:auto;padding:0 8px;border-top:1px solid var(--line);padding-top:14px}
 .rail-foot p{margin:0;font-size:11.5px;color:var(--ink-3);line-height:1.4}
 
@@ -205,7 +218,7 @@ button,input,select{font:inherit;color:inherit}
 .aj-dd-p{margin:0}
 .aj-dd-p+.aj-dd-p{margin-top:9px}
 .aj-item dd.vazio{color:var(--ink-3);font-style:italic}
-.aj-chip{display:inline-block;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
+.aj-chip{display:inline-block;font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.09em;
   text-transform:uppercase;color:var(--ink-3);border:1px solid var(--line);border-radius:100px;
   padding:2px 9px;margin-left:8px;vertical-align:middle}
 @media (max-width:620px){
@@ -226,7 +239,7 @@ button,input,select{font:inherit;color:inherit}
   margin-bottom:18px;
 }
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
-.field label{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.field label{font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .field input,.field select{
   border:1px solid var(--line);background:var(--surface);
   border-radius:var(--r-sm);padding:7px 10px;font-size:13px;
@@ -257,7 +270,7 @@ button,input,select{font:inherit;color:inherit}
 .wk-grid{max-height:300px;overflow:auto;display:flex;flex-direction:column;gap:3px}
 .wk-mes{display:flex;align-items:center;gap:8px}
 .wk-mes-nome{width:62px;flex:none;text-align:left;border:0;background:none;cursor:pointer;
-  font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  font-family:var(--f-body);font-weight:700;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
   color:var(--ink-3);padding:5px 0;display:flex;align-items:baseline;gap:5px}
 .wk-mes-nome:hover{color:var(--ink)}
 .wk-mes-nome.on{color:var(--acc);font-weight:600}
@@ -279,7 +292,7 @@ button,input,select{font:inherit;color:inherit}
 .bq-time{border-top:2px solid var(--acc)}
 .bq-head{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
 .bq-head b{font-family:var(--f-display);font-size:16px;font-weight:600}
-.bq-head small{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
+.bq-head small{display:block;font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.09em;
   text-transform:uppercase;color:var(--ink-3);margin-top:2px}
 .bq-total{margin-left:auto;text-align:right}
 .bq-total span{font-family:var(--f-num);font-size:24px;font-weight:650;color:var(--acc);
@@ -321,7 +334,7 @@ button,input,select{font:inherit;color:inherit}
 .bt tbody tr:hover{background:var(--sunken)}
 .bt-time{background:var(--acc-soft)}
 .bt-time:hover{background:var(--acc-soft)}
-.bt-bloco{display:block;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;
+.bt-bloco{display:block;font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink-3);margin-top:3px}
 .bt-cel{cursor:pointer}
 .bt-cel:hover{background:var(--acc-soft)}
@@ -338,7 +351,7 @@ button,input,select{font:inherit;color:inherit}
   font-variant-numeric:tabular-nums}
 .bt-nota{padding:12px 18px;border-top:1px solid var(--line-2);font-size:12px;
   color:var(--ink-3);line-height:1.5}
-.th-fixo{display:inline-block;padding:10px 14px;font-family:var(--f-mono);font-size:10px;
+.th-fixo{display:inline-block;padding:10px 14px;font-family:var(--f-body);font-weight:700;font-size:10px;
   letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
 thead th.r .th-fixo{width:100%;text-align:right}
 
@@ -415,7 +428,7 @@ thead th.r .th-fixo{width:100%;text-align:right}
 .ed-op button:hover{border-color:var(--acc-line)}
 .ed-op button.on{background:var(--acc);border-color:var(--acc);color:#fff}
 .ed-vazio{font-size:12.5px;color:var(--ink-3);line-height:1.5;padding:16px 0}
-.ed-sec{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+.ed-sec{font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--ink-3);margin:18px 0 0}
 .ed-add{display:flex;gap:6px;margin-top:8px}
 .ed-add input{flex:1;border:1px solid var(--line);background:var(--surface);
@@ -431,12 +444,12 @@ thead th.r .th-fixo{width:100%;text-align:right}
 /* --- seletor de período: dois campos de data + grade de meses --- */
 .per-datas{display:flex;gap:8px;margin-bottom:12px}
 .per-campo{flex:1;display:flex;flex-direction:column;gap:4px}
-.per-campo span{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;
+.per-campo span{font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3)}
 .per-campo input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);
   padding:6px 8px;font-family:var(--f-body);font-size:12.5px;color:var(--ink);width:100%}
 .per-campo input:focus{outline:none;border-color:var(--acc)}
-.per-titulo{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+.per-titulo{font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
   color:var(--ink-3);margin-bottom:7px}
 .per-meses{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .per-mes{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);
@@ -458,10 +471,11 @@ thead th.r .th-fixo{width:100%;text-align:right}
 .btn-ghost:hover{background:var(--sunken);border-color:transparent}
 
 /* --- KPIs --- */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);
-  border:1px solid var(--line);border-top:2px solid var(--acc);border-radius:var(--r-lg);overflow:hidden;margin-bottom:22px}
-.kpi{background:var(--surface);padding:15px 17px 16px}
-.kpi:first-child{background:var(--acc-soft)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(164px,1fr));gap:12px;
+  margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:15px 17px 16px}
+.kpi:first-child{background:var(--sunken)}
 .kpi:first-child .eyebrow{color:var(--acc)}
 .kpi:first-child .kpi-val{color:var(--acc)}
 .kpi .eyebrow{display:block;margin-bottom:9px;font-size:11px;font-weight:600;letter-spacing:.1em}
@@ -481,7 +495,7 @@ thead th.r .th-fixo{width:100%;text-align:right}
 /* --- gráficos --- */
 .charts{display:grid;gap:16px;margin-bottom:22px}
 .charts.two{grid-template-columns:repeat(auto-fit,minmax(400px,1fr))}
-.card{background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--acc-line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
 .card-head{display:flex;align-items:center;gap:14px;padding:15px 18px 0;flex-wrap:wrap}
 .card-head h3{font-family:var(--f-display);font-size:15px;font-weight:600;letter-spacing:-.012em;margin:0}
 .legend{margin-left:auto;display:flex;gap:13px;flex-wrap:wrap}
@@ -499,7 +513,7 @@ thead th.r .th-fixo{width:100%;text-align:right}
 .tip .t-row b{font-family:var(--f-mono);font-weight:500}
 
 /* --- tabela --- */
-.table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .table-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
 .table-head h3{font-family:var(--f-display);font-size:15px;font-weight:600;margin:0;letter-spacing:-.012em}
 .table-head .count{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-3)}
@@ -514,7 +528,8 @@ thead th{
 thead th .th-btn{
   width:100%;background:none;border:0;cursor:pointer;
   padding:10px 14px;display:flex;align-items:center;gap:6px;
-  font-family:var(--f-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+  font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);
   transition:color .12s;
 }
 thead th .th-btn:hover{color:var(--ink)}
@@ -626,29 +641,30 @@ td.strong{font-weight:600}
    degrau, e a legenda saiu do cinza mais claro para o médio. */
 .gcard{
   display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
-  background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gc,var(--acc));
-  border-radius:var(--r-lg);box-shadow:var(--shadow);padding:17px 19px 16px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);box-shadow:none;padding:17px 19px 16px;
   font-family:inherit;color:inherit;transition:transform .13s ease,box-shadow .13s ease,background .13s ease;
 }
-.gcard:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(17,20,24,.05), 0 16px 28px -18px rgba(17,20,24,.45)}
-.gcard.on{background:var(--gc-soft,var(--acc-soft));border-color:var(--gc,var(--acc))}
-.gc-t{font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--gc,var(--ink-3))}
+.gcard:hover{transform:translateY(-2px);border-color:var(--acc-line);
+  box-shadow:0 2px 4px rgba(18,24,38,.04), 0 14px 26px -18px rgba(18,24,38,.35)}
+.gcard.on{background:var(--acc-soft);border-color:var(--acc)}
+.gc-t{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3)}
 .gc-v{font-family:var(--f-num);font-size:31px;font-weight:650;letter-spacing:-.025em;
   font-variant-numeric:tabular-nums;line-height:1.08;margin-top:7px}
 .gc-s{font-size:13px;color:var(--ink-2);line-height:1.45;margin-top:2px}
-.gc-go{margin-top:11px;font-size:12.5px;font-weight:600;color:var(--gc,var(--acc))}
+.gc-go{margin-top:11px;font-size:12.5px;font-weight:700;color:var(--acc)}
 
 .gdetalhe{border-top:1px solid var(--line);padding-top:18px;margin-top:4px}
 .gdet-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:16px}
-.gdet-head .eyebrow{color:var(--gc,var(--acc))}
+.gdet-head .eyebrow{color:var(--acc)}
 .gdet-head h2{font-family:var(--f-display);font-size:20px;font-weight:600;letter-spacing:-.02em;margin:5px 0 4px}
 .gdet-head p{margin:0;color:var(--ink-2);font-size:12.5px;max-width:78ch}
 .gdet-head .btn{margin-left:auto}
-.gdetalhe .kpis{border-top-color:var(--gc,var(--acc))}
+.gdetalhe .kpis{border-top-color:var(--line)}
 .gdetalhe .kpi:first-child{background:var(--surface)}
 .gdetalhe .kpi:first-child .eyebrow{color:var(--ink-3)}
-.gdetalhe .kpi:first-child .kpi-val{color:var(--gc,var(--acc))}
+.gdetalhe .kpi:first-child .kpi-val{color:var(--acc)}
 .gdetalhe .card{margin-bottom:16px}
 .gcomp{padding:0 18px 14px;font-size:12.5px;color:var(--ink-2);line-height:1.5}
 .gcomp b{color:var(--ink);font-weight:600}
@@ -3246,17 +3262,17 @@ const trimestreAnterior = k =>{ const [a, t] = String(k||'').split('-T'); return
    fixo; quando a meta é crescimento sobre o ano passado, `cresce` diz quanto.
    `acelera` marca as duas que pagam mais quando passam da meta. */
 const METAS_TRI = [
-  { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true, cor:'#7A4FB5',
+  { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true, cor:'#4F46E5',
     ajuda:'Soma 1 para cada implantação nova no trimestre: Oráculo, integração, varejo e Tino.' },
-  { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#2E7D46',
+  { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#15803D',
     ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
-  { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7A73',
+  { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7490',
     ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
-  { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#2F6FB5',
+  { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#1F4FD8',
     ajuda:'GMV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
-  { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03, cor:'#C0453B',
+  { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03, cor:'#B4530A',
     ajuda:'Marca bloqueada por inadimplência somada ao que o time registrou na planilha. A meta é ficar ABAIXO de 3% dos clientes ativos da carteira.' },
-  { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33, cor:'#B7791F',
+  { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33, cor:'#A16207',
     ajuda:'Coletiva: marcas com 40+ eventos no último mês do trimestre. Individual: quantas delas são NOVAS, isto é, não estavam na lista do mês anterior ao trimestre.' },
 ];
 
@@ -6044,12 +6060,14 @@ function tint(hex,f){
 const HUES=['0','1','2','3','4','5'];
 function hueDe(txt){ let h=0; for(const ch of String(txt)) h=(h*31+ch.charCodeAt(0))>>>0; return HUES[h%HUES.length] }
 function iniciais(n){ return String(n||'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() }
+/* Até 09/10/2026 cada aba pintava o painel com a sua cor. O relatório mensal
+   tem UMA cor, e o pedido foi "mesmo visual para todas as abas" — então o
+   acento é fixo e esta função só limpa o que ficou de sessões anteriores.
+   `t.cor` continua existindo nas abas: é a cor do card dentro da grade, não
+   mais a da interface. */
 function aplicarAcento(t){
-  const root=document.documentElement.style;
-  root.setProperty('--acc', t.cor);
-  root.setProperty('--acc-2', t.cor2);
-  root.setProperty('--acc-soft', tint(t.cor,.07));
-  root.setProperty('--acc-line', tint(t.cor,.30));
+  const root = document.documentElement.style;
+  ['--acc','--acc-2','--acc-soft','--acc-line'].forEach(v=>root.removeProperty(v));
 }
 const el = (tag,attrs={},html='')=>{const e=document.createElement(tag);
   for(const k in attrs){k==='class'?e.className=attrs[k]:e.setAttribute(k,attrs[k])}
@@ -6062,9 +6080,10 @@ function renderNav(){
     const box = el('div',{class:'nav-group'});
     box.appendChild(el('span',{class:'eyebrow'},g));
     TABS.filter(t=>t.grupo===g).forEach(t=>{
-      const b = el('button',{class:'nav-btn',type:'button','aria-current':String(t.id===estado.aba),
-        style:`--nav-c:${t.cor};--nav-soft:${tint(t.cor,.10)}`},
-        `<span class="dot" style="background:${t.cor}"></span>${t.nav}`);
+      /* O menu também perdeu a cor por aba (09/10/2026): bolinha e marcação
+         do item ativo agora usam o acento único do relatório. */
+      const b = el('button',{class:'nav-btn',type:'button','aria-current':String(t.id===estado.aba)},
+        `<span class="dot"></span>${t.nav}`);
       b.onclick=()=>{estado.aba=t.id;estado.filtroPainelAberto=false;renderNav();renderPagina();window.scrollTo({top:0})};
       box.appendChild(b);
     });
