@@ -468,10 +468,32 @@ deixaram de ser uma faixa grudada e viraram cartões soltos com respiro entre
 eles. As barras da Bonificação mantêm cor por meta — foi pedido explícito —,
 recalibradas para conviver com a paleta nova.
 
+### O que abre ao clicar no card (09/10/2026)
+
+Segundo pedido da Laura: *"quero o estilo das info no mesmo do arquivo, a
+distribuição dos dados e etc, mas mantendo os cards, quero igual o arquivo
+somente ao clicar no card"*. A grade continua como estava; o detalhe é que
+virou a página do relatório:
+
+- **Gráfico ano contra ano.** O slide desenha o GMV mensal com duas barras por
+  mês — 2025 em cinza `#B8C2D6`, 2026 em azul `#1F4FD8`, com a legenda dos dois
+  anos. O detalhe do card faz igual quando tem uma métrica só e o recorte é de
+  mês. O ano anterior **não** está no seletor da aba (ele só oferece o ano
+  corrente), mas está nas séries, porque a carga traz desde janeiro do ano
+  passado para a Bonificação — então o mês espelho é calculado direto. A barra
+  cinza só aparece com pelo menos **três meses** de dado real no ano anterior:
+  card de reunião e de negócio só tem o ano corrente e ganharia uma barra
+  zerada que pareceria queda.
+- **Leitura em linhas.** As comparações embaixo do gráfico eram uma frase
+  corrida separada por pontos; viraram uma linha cada, no formato do relatório
+  — `−81% do mês anterior (R$ 76.455.587)` —, com o sinal e o percentual
+  destacados em verde ou laranja e o valor de referência em cinza.
+
 > Captura de tela sem navegador: o Chrome headless (`--headless=new
 > --screenshot`) dá conta, usando uma cópia temporária da página que entra
-> sozinha e abre a aba pedida na querystring. Útil quando a extensão do
-> navegador cai no meio do trabalho.
+> sozinha, abre a aba e o card pedidos na querystring e esconde a grade para a
+> foto pegar só o detalhe. Útil quando a extensão do navegador cai no meio do
+> trabalho.
 
 ## De onde vem cada coluna
 
