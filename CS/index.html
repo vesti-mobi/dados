@@ -666,15 +666,74 @@ td.strong{font-weight:600}
 .gdetalhe .kpi:first-child .eyebrow{color:var(--ink-3)}
 .gdetalhe .kpi:first-child .kpi-val{color:var(--acc)}
 .gdetalhe .card{margin-bottom:16px}
-.gcomp{padding:2px 18px 16px;font-size:12.5px;color:var(--ink-2);line-height:1.6;
-  display:flex;flex-direction:column;gap:3px}
-/* A "leitura do mês" do relatório: cada frase é uma linha, a variação em
-   destaque, o valor de comparação entre parênteses em cinza. */
-.gcomp b{color:var(--ink);font-weight:700}
-.gcomp .sobe{color:var(--pos);font-weight:700}
-.gcomp .cai{color:var(--neg);font-weight:700}
-.gcomp .ref{color:var(--ink-3)}
-.gcomp b{color:var(--ink);font-weight:600}
+
+/* --- o detalhe do card na diagramação do relatório mensal -----------------
+   Pedido da Laura em 09/10/2026: "quero o estilo das info no mesmo do
+   arquivo, a distribuição dos dados e etc, mas mantendo os cards, quero igual
+   o arquivo somente ao clicar no card". O slide do CS_Setembro_2026 distribui
+   o mês assim: faixa de KPIs no topo; um bloco largo com o rótulo, o número
+   grande e a leitura À ESQUERDA e o gráfico mês a mês à direita; ao lado uma
+   lista ranqueada "Nome · tipo .... valor"; e no rodapé a leitura do mês em
+   bullets de + e −. É essa a ordem aqui dentro. */
+.rbloco{display:grid;grid-template-columns:minmax(0,1.95fr) minmax(256px,.92fr);
+  gap:16px;margin-bottom:16px;align-items:stretch}
+.rbloco.so1{grid-template-columns:minmax(0,1fr)}
+.rbloco .card{margin-bottom:0;display:flex;flex-direction:column;min-width:0}
+.rb-corpo{display:grid;grid-template-columns:minmax(186px,.44fr) minmax(0,1fr);
+  align-items:stretch;flex:1}
+.rb-leitura{padding:15px 16px 16px 18px;display:flex;flex-direction:column;
+  border-right:1px solid var(--line-2)}
+.rb-leitura .eyebrow{color:var(--ink-3);font-size:11px;font-weight:700;letter-spacing:.09em}
+.rb-num{font-family:var(--f-num);font-size:30px;font-weight:650;letter-spacing:-.03em;
+  line-height:1.05;margin:8px 0 10px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.rb-linhas{display:flex;flex-direction:column;gap:4px;font-size:12.5px;
+  color:var(--ink-2);line-height:1.45}
+.rb-linhas .sobe{color:var(--pos);font-weight:700}
+.rb-linhas .cai{color:var(--neg);font-weight:700}
+.rb-linhas .ref{color:var(--ink-3)}
+.rb-pe{margin-top:auto;padding-top:13px;font-size:12px;color:var(--ink-2);line-height:1.5}
+.rb-pe b{color:var(--ink);font-weight:600}
+.rb-pe .sobe{color:var(--pos);font-weight:700}
+.rb-pe .cai{color:var(--neg);font-weight:700}
+.rb-main .chart-wrap{padding:12px 14px 6px;flex:1}
+.rb-nota{font-family:var(--f-body);font-size:11px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3)}
+
+/* A lista ranqueada do slide ("Lesto · Oráculo .... R$ 1.300"): nome em
+   negrito, o tipo em cinza depois do ponto-médio, o valor à direita. */
+.rb-lista .card-head{padding:15px 16px 0}
+.rb-badge{margin-left:auto;font-family:var(--f-num);font-size:13px;font-weight:650;
+  color:var(--acc);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rb-itens{list-style:none;margin:9px 0 0;padding:0 16px}
+.rb-itens li{display:flex;align-items:baseline;gap:8px;padding:7px 0;
+  border-top:1px solid var(--line-2);font-size:12.5px}
+.rb-itens li:first-child{border-top:0}
+.rb-itens li b{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;min-width:0}
+.rb-itens li i{font-style:normal;color:var(--ink-3);white-space:nowrap;flex:none}
+.rb-itens li span{margin-left:auto;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  color:var(--ink);white-space:nowrap;flex:none}
+.rb-lista .rb-pe{padding:12px 16px 13px;margin-top:auto;background:var(--sunken);
+  border-top:1px solid var(--line-2);border-radius:0 0 var(--r-lg) var(--r-lg);color:var(--ink-3)}
+
+/* "Leitura do mês": os bullets de + e − do rodapé do slide, em duas colunas. */
+.rleitura{background:var(--sunken);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:15px 18px 17px;margin-bottom:16px}
+.rleitura h3{font-family:var(--f-display);font-size:15px;font-weight:600;margin:0 0 12px;
+  letter-spacing:-.012em}
+.rl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(276px,1fr));gap:8px 24px}
+.rl-item{font-size:12.5px;line-height:1.45;color:var(--ink-2);display:flex;gap:8px}
+.rl-item em{font-style:normal;font-weight:700;flex:none;width:9px;text-align:center}
+.rl-item.mais em{color:var(--acc)}
+.rl-item.menos em{color:var(--neg)}
+.rl-item.neutro em{color:var(--ink-3)}
+.rl-item b{color:var(--ink);font-weight:600}
+
+@media (max-width:1060px){
+  .rbloco{grid-template-columns:minmax(0,1fr)}
+  .rb-corpo{grid-template-columns:minmax(0,1fr)}
+  .rb-leitura{border-right:0;border-bottom:1px solid var(--line-2)}
+}
 /* projeção do mês em andamento, na aba Bonificação */
 .cell-proj{display:block;font-size:11px;line-height:1.3;margin-top:3px;color:var(--acc);font-variant-numeric:tabular-nums}
 .cell-proj em{font-style:normal;color:var(--ink-3)}
@@ -2987,22 +3046,220 @@ function seriePorBucketDoCard(c, ctx, rows){
     return o;
   });
 }
-/* A leitura embaixo do gráfico, no formato do relatório mensal: uma linha por
-   comparação, com o sinal e a variação em destaque e o valor de referência
-   entre parênteses — "−5% vs set/25 (R$ 104 mi)". Antes era tudo numa frase
-   corrida separada por pontos. */
-function frasesComparativas(met, atual, refs){
-  const frase = (ref, de, ao)=>{
-    if(ref==null) return '';
-    const dif = atual - ref;
-    if(dif === 0) return `<span class="ref">igual ${ao} (${met.f(ref)})</span>`;
-    const pct = ref ? Math.round(dif/ref*100) : null;
-    if(pct === 0) return `<span class="ref">praticamente igual ${ao} (${met.f(ref)})</span>`;
-    const quanto = pct==null ? met.f(Math.abs(dif)) : (pct>0?'+':'−')+Math.abs(pct)+'%';
-    return `<span class="${dif>0?'sobe':'cai'}">${quanto}</span> ${de} <span class="ref">(${met.f(ref)})</span>`;
-  };
-  return [`<b>${met.l}: ${met.f(atual)}</b>`, ...refs.map(r=>frase(r.v, r.de, r.ao))]
-    .filter(Boolean).join('\n');
+/* Uma linha de comparação no formato do relatório — "−5% vs set/25
+   (R$ 104 mi)": o sinal e a variação em destaque, a referência em cinza. */
+function linhaComparativa(f, atual, ref, de, ao){
+  if(ref==null) return '';
+  const dif = atual - ref;
+  if(dif === 0) return `<span class="ref">igual ${ao} (${f(ref)})</span>`;
+  const pct = ref ? Math.round(dif/ref*100) : null;
+  if(pct === 0) return `<span class="ref">praticamente igual ${ao} (${f(ref)})</span>`;
+  const quanto = pct==null ? f(Math.abs(dif)) : (pct>0?'+':'−')+Math.abs(pct)+'%';
+  return `<span class="${dif>0?'sobe':'cai'}">${quanto}</span> ${de} <span class="ref">(${f(ref)})</span>`;
+}
+
+/* A coluna da esquerda do bloco: rótulo pequeno, número grande e uma linha por
+   comparação — o "GMV setembro / R$ 99 mi / −5% vs set/25 / +1% vs ago/26" do
+   slide. Devolve as partes separadas porque cada uma tem seu corpo de fonte. */
+function leituraDaMetrica(c, ctx, rows, dados, met){
+  const f = met.f || fmt.int;
+  if(ctx.tipo === 'mes'){
+    const i = dados.findIndex(d=>d.bucket===ctx.m);
+    if(i < 0) return null;
+    const atual = dados[i][met.k]||0;
+    const anteriores = dados.slice(0, i).map(d=>d[met.k]||0);
+    const n = anteriores.length;
+    const media = n ? Math.round(anteriores.reduce((a,b)=>a+b,0)/n) : null;
+    const espelho = dados[i].mesAnt, vEspelho = dados[i][met.k+'Ant'];
+    const linhas = [
+      linhaComparativa(f, atual, i>0 ? (dados[i-1][met.k]||0) : null, 'do mês anterior', 'ao mês anterior'),
+      vEspelho ? linhaComparativa(f, atual, vEspelho, 'de '+fmt.mes(espelho+'-01'), 'a '+fmt.mes(espelho+'-01')) : '',
+      n > 1 ? linhaComparativa(f, atual, media, `da média dos ${n} meses anteriores`,
+                                                `à média dos ${n} meses anteriores`) : '',
+    ].filter(Boolean);
+    /* O "Acumulado jan–set" do slide: a soma do ano até o mês aberto contra a
+       mesma janela do ano anterior. Só sai quando o ano anterior tem dado nessa
+       janela — senão seria crescimento infinito contra zero. */
+    let pe = '';
+    const ate = dados.filter(d=>d.bucket <= ctx.m);
+    if(ate.length > 1){
+      const soma = ate.reduce((t,d)=>t+(d[met.k]||0),0);
+      const somaAnt = ate.reduce((t,d)=>t+(d[met.k+'Ant']||0),0);
+      const faixa = fmt.mes(ate[0].bucket+'-01').split('/')[0]+'–'+fmt.mes(ctx.m+'-01').split('/')[0];
+      pe = `Acumulado ${faixa}: <b>${f(soma)}</b>`;
+      /* A comparação com o ano anterior só sai quando TODOS os meses da janela
+         têm valor lá atrás. O churn de 2025 só existe em dois meses no arquivo,
+         e sem essa trava o acumulado anunciava "+1875% vs 2025" — crescimento
+         contra ausência de dado, não contra um ano fraco. */
+      const completo = ate.every(d=>(d[met.k+'Ant']||0) > 0);
+      if(completo && somaAnt > 0){
+        const pct = Math.round((soma-somaAnt)/somaAnt*100);
+        pe += `<br><span class="${soma>=somaAnt?'sobe':'cai'}">${pct>0?'+':pct<0?'−':''}${Math.abs(pct)}%</span>`
+            + ` vs ${Number(ctx.m.slice(0,4))-1} (${f(somaAnt)})`;
+      }
+    }
+    return {rotulo: met.l+' em '+fmt.mes(ctx.m+'-01'), valor: f(atual), linhas, pe};
+  }
+  /* Período: a comparação é contra a mesma janela deslocada para trás, em dias
+     corridos — a mesma conta que a Visão geral sempre usou. */
+  const anterior = periodoAnterior(ctx.p);
+  const ant = ctxPeriodo(anterior);
+  const atual = met.v(rows, ctx);
+  const rotulo = met.l+' no período';
+  /* Janela que cai antes do começo do arquivo não é "zero", é ausência de
+     dado — dizer "+323 acima do período anterior (0)" seria inventar uma
+     queda ou uma alta que ninguém pode conferir. */
+  if(anterior.ini <= LIMITE_DADOS.ini && anterior.fim <= LIMITE_DADOS.ini)
+    return {rotulo, valor:f(atual), pe:'',
+      linhas:[`<span class="ref">sem período anterior no arquivo (ele começa em ${fmt.date(LIMITE_DADOS.ini)})</span>`]};
+  /* Com as datas na frase: "período anterior" sozinho já fez a Laura comparar
+     o número com a semana que ela tinha acabado de olhar, que não era a mesma
+     janela (28/09/2026). O período anterior é a MESMA janela deslocada para
+     trás em dias corridos — 20 a 26 compara com 13 a 19, não com 14 a 20. */
+  const quando = fmt.date(anterior.ini)+' a '+fmt.date(anterior.fim);
+  return {rotulo, valor:f(atual), pe:'',
+    linhas:[linhaComparativa(f, atual, met.v(linhasDoCard(c, ant), ant), 'de '+quando, 'a '+quando)].filter(Boolean)};
+}
+
+/* Nome, tipo e valor de uma linha do card, para a lista ranqueada: o nome é a
+   primeira coluna de texto, o tipo é a segunda (a CS da marca, o plano, como
+   ela entrou — o que o relatório escreve depois do ponto-médio) e o valor é a
+   última coluna numérica. */
+function camposDaLista(c){
+  const ignorar = ['motivos','resumo','clienteNegocio'];
+  /* Coluna de data não serve de nome: o card de Reuniões começa por "Data" e a
+     lista saía com "2026-10-07 · Agência Hub" em vez da marca. */
+  const ehData = x => x.k==='data' || x.tipo==='date' || x.f===fmt.date;
+  const texto = (c.colunas||[]).filter(x=>x.k && !x.r && !ignorar.includes(x.tipo) && !ehData(x));
+  const nome = texto.find(x=>['nome','cliente','marca'].includes(x.k)) || texto[0] || null;
+  const valor = (c.colunas||[])
+    .find(x=>x.k && x.r && (x.tipo==='money' || x.tipo==='int' || x.f));
+  return {nome, tipo: texto.find(x=>x !== nome) || null, valor: valor || null};
+}
+function celulaTexto(r, col){
+  if(!col) return '';
+  const v = r[col.k];
+  if(Array.isArray(v)) return v.join(' · ');
+  return v==null ? '' : String(v);
+}
+
+/* A lista ranqueada do slide: as maiores linhas do card, no formato
+   "Lesto · Oráculo .......... R$ 1.300". Quando o card não tem coluna de
+   valor (churn, reuniões) a lista sai sem o número, só nome e tipo — ainda é
+   a informação que o relatório coloca ali. */
+function listaRanqueada(c, ctx, rows){
+  if(!rows.length) return null;
+  const campos = camposDaLista(c);
+  if(!campos.nome) return null;
+  /* Coluna de valor que soma zero não é valor — no card de Reuniões a lista
+     saía com "R$ 0" em todas as linhas. Ali a lista vira só nome e tipo. */
+  const somaDa = x => rows.reduce((t,r)=>t + (typeof r[x.k]==='number' ? r[x.k] : 0), 0);
+  const col = campos.valor && somaDa(campos.valor) > 0 ? campos.valor : null;
+  const fv = col ? (col.f || (col.tipo==='money' ? fmt.money : fmt.int)) : null;
+  const num = r => { const v = r[col.k]; return typeof v === 'number' ? v : null };
+  let ord = rows.slice();
+  if(col){
+    ord = ord.filter(r=>num(r) != null);
+    if(!ord.length) return null;
+    ord.sort((a,b)=>num(b)-num(a));
+  }
+  const TOPO = 8;
+  const topo = ord.slice(0, TOPO);
+  /* Somar só o que é somável: health score é um índice, e a soma dos 461
+     health scores da carteira ("44.560") não quer dizer nada. Fora do
+     dinheiro, o cabeçalho mostra quantas linhas são. */
+  const somavel = !!col && (col.tipo === 'money' || col.f === fmt.money);
+  const total = somavel ? ord.reduce((t,r)=>t+num(r),0) : 0;
+  const soma = somavel ? topo.reduce((t,r)=>t+num(r),0) : 0;
+
+  const card = el('div',{class:'card rb-lista'});
+  const qual = ctx.tipo === 'mes' ? 'mês' : 'período';
+  const titulo = col ? 'Maiores do '+qual : 'Quem aparece no '+qual;
+  const badge = somavel ? fv(total)
+    : fmt.int(ord.length)+' '+(ord.length===1?'linha':'linhas');
+  const itens = topo.map(r=>{
+    const tipo = celulaTexto(r, campos.tipo);
+    return `<li><b>${escapar(celulaTexto(r, campos.nome) || '—')}</b>`
+         + (tipo ? `<i>· ${escapar(tipo)}</i>` : '')
+         + (col ? `<span>${fv(num(r))}</span>` : '') + `</li>`;
+  }).join('');
+  /* O rodapé cinza do slide ("Potencial total de R$ 34.199, sendo R$ 30.000
+     da Mentoria Upper Concept"): aqui ele diz o que sobrou fora da lista e o
+     quanto as maiores concentram. */
+  const resto = ord.length - topo.length;
+  let pe = '';
+  if(somavel && total > 0){
+    pe = `As ${topo.length} maiores somam <b>${Math.round(soma/total*100)}%</b> do total`;
+    if(resto > 0) pe += ` · outras ${fmt.int(resto)} ${resto===1?'linha':'linhas'} na tabela abaixo`;
+  } else if(resto > 0){
+    pe = `Outras ${fmt.int(resto)} ${resto===1?'linha':'linhas'} na tabela abaixo`;
+  }
+  card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><span class="rb-badge">${badge}</span></div>
+                    <ul class="rb-itens">${itens}</ul>`
+                 + (pe ? `<div class="rb-pe">${pe}</div>` : '');
+  return card;
+}
+
+/* O rodapé "Leitura do mês" do slide: bullets de + e −. Cada frase aqui é um
+   número que já está na tela dito de outro jeito — concentração, quantidade,
+   variação —, nunca uma interpretação que o painel não possa provar. */
+function leituraDoMes(c, ctx, rows){
+  const itens = [];
+  const campos = camposDaLista(c);
+  const col = campos.valor;
+  const quando = ctx.tipo === 'mes' ? 'mês' : 'período';
+  if(col && rows.length){
+    const fv = col.f || (col.tipo==='money' ? fmt.money : fmt.int);
+    const vals = rows.map(r=>typeof r[col.k]==='number' ? r[col.k] : null).filter(v=>v!=null);
+    const total = vals.reduce((a,b)=>a+b,0);
+    /* Fatia e concentração só fazem sentido onde a soma faz: dinheiro. Para
+       health score sobra a média, que é a leitura correta de um índice. */
+    const somavel = col.tipo === 'money' || col.f === fmt.money;
+    if(vals.length && total > 0){
+      const ord = rows.filter(r=>typeof r[col.k]==='number').sort((a,b)=>b[col.k]-a[col.k]);
+      if(somavel){
+        const top1 = ord[0], fatia = Math.round(top1[col.k]/total*100);
+        itens.push({t:'neutro', txt:`<b>${escapar(celulaTexto(top1, campos.nome))}</b> é ${fatia}% do total`
+          +` (${fv(top1[col.k])} de ${fv(total)})`});
+        const tres = ord.slice(0,3).reduce((t,r)=>t+r[col.k],0);
+        /* Concentração alta é risco para quem lê, mas o painel não tem régua
+           para dizer a partir de quanto — então o bullet é neutro: informa o
+           número e deixa a leitura para a Laura. */
+        if(ord.length > 3) itens.push({t:'neutro',
+          txt:`as 3 maiores concentram <b>${Math.round(tres/total*100)}%</b> do ${col.l.toLowerCase()}`});
+      } else {
+        itens.push({t:'neutro', txt:`maior: <b>${escapar(celulaTexto(ord[0], campos.nome))}</b>`
+          +` com ${fv(ord[0][col.k])} · menor: ${escapar(celulaTexto(ord[ord.length-1], campos.nome))}`
+          +` com ${fv(ord[ord.length-1][col.k])}`});
+      }
+      const media = Math.round(total/vals.length);
+      itens.push({t:'neutro', txt: somavel
+        ? `média de <b>${fv(media)}</b> por linha, em ${fmt.int(vals.length)} com valor`
+        : `${col.l.toLowerCase()} médio de <b>${fv(media)}</b> nas ${fmt.int(vals.length)} linhas`});
+    }
+  }
+  /* Quantas linhas, contra o mês anterior — "o churn caiu de 9 para 6 marcas"
+     é a leitura que a Laura faz de cabeça ao abrir o card. */
+  if(ctx.tipo === 'mes'){
+    const antes = linhasDoCard(c, ctxGerencial(mesAnterior(ctx.m))).length;
+    const dif = rows.length - antes;
+    const rot = campos.nome && campos.nome.k === 'nome' ? 'marcas' : 'registros';
+    /* O sinal aqui é aritmético, não juízo: o painel não sabe se mais linhas é
+       bom (vendas) ou ruim (churn). É a mesma convenção do bloco de
+       comparações, que já pinta de verde o que subiu. */
+    if(antes || rows.length) itens.push({
+      t: dif === 0 ? 'neutro' : dif > 0 ? 'mais' : 'menos',
+      /* A frase começa pelo caminho ("de 565 para 461") porque com o bullet na
+         frente "−461 marcas" se lê como se fossem menos 461. */
+      txt: dif === 0 ? `<b>${fmt.int(rows.length)}</b> ${rot}, igual a ${fmt.mes(mesAnterior(ctx.m)+'-01')}`
+        : `de ${fmt.int(antes)} para <b>${fmt.int(rows.length)}</b> ${rot} (${dif>0?'+':'−'}${Math.abs(dif)} vs ${fmt.mes(mesAnterior(ctx.m)+'-01')})`});
+  }
+  if(!itens.length) return null;
+  const box = el('div',{class:'rleitura'});
+  box.innerHTML = `<h3>Leitura do ${quando}</h3><div class="rl-grid">`
+    + itens.map(i=>`<div class="rl-item ${i.t}"><em>${i.t==='mais'?'+':i.t==='menos'?'−':'·'}</em><span>${i.txt}</span></div>`).join('')
+    + `</div>`;
+  return box;
 }
 function graficoDoCard(c, ctx, rows){
   if(!c.metricas || !c.metricas.length) return null;
@@ -3012,39 +3269,7 @@ function graficoDoCard(c, ctx, rows){
   const corSerie = i => i ? tint(c.cor,.58) : c.cor;
   const destaque = ctx.tipo === 'mes' ? ctx.m : null;
 
-  const comparacoes = c.metricas.map(met=>{
-    if(ctx.tipo === 'mes'){
-      const i = dados.findIndex(d=>d.bucket===ctx.m);
-      if(i < 0) return '';
-      const anteriores = dados.slice(0, i).map(d=>d[met.k]||0);
-      const media = anteriores.length ? Math.round(anteriores.reduce((a,b)=>a+b,0)/anteriores.length) : null;
-      const n = anteriores.length;
-      return frasesComparativas(met, dados[i][met.k]||0, [
-        {v: i > 0 ? (dados[i-1][met.k]||0) : null, de:'do mês anterior', ao:'ao mês anterior'},
-        {v: media, de:`da média dos ${n} ${n===1?'mês anterior':'meses anteriores'}`,
-                   ao:`à média dos ${n} ${n===1?'mês anterior':'meses anteriores'}`},
-      ]);
-    }
-    /* Período: a comparação é contra a mesma janela deslocada para trás, em
-       dias corridos — a mesma conta que a Visão geral sempre usou. */
-    const anterior = periodoAnterior(ctx.p);
-    const ant = ctxPeriodo(anterior);
-    const atual = met.v(rows, ctx);
-    /* Janela que cai antes do começo do arquivo não é "zero", é ausência de
-       dado — dizer "+323 acima do período anterior (0)" seria inventar uma
-       queda ou uma alta que ninguém pode conferir. */
-    if(anterior.ini <= LIMITE_DADOS.ini && anterior.fim <= LIMITE_DADOS.ini)
-      return `<b>${met.l}: ${met.f(atual)}</b> · sem período anterior no arquivo (ele começa em ${fmt.date(LIMITE_DADOS.ini)})`;
-    const antes = met.v(linhasDoCard(c, ant), ant);
-    /* Com as datas na frase: "período anterior" sozinho já fez a Laura comparar
-       o número com a semana que ela tinha acabado de olhar, que não era a mesma
-       janela (28/09/2026). O período anterior é a MESMA janela deslocada para
-       trás em dias corridos — 20 a 26 compara com 13 a 19, não com 14 a 20. */
-    const quando = fmt.date(anterior.ini)+' a '+fmt.date(anterior.fim);
-    return frasesComparativas(met, atual, [{v:antes, de:'de '+quando, ao:'a '+quando}]);
-  }).filter(Boolean);
-
-  const card = el('div',{class:'card'});
+  const card = el('div',{class:'card rb-main'});
   /* ANO CONTRA ANO, como no relatório mensal: quando o card tem uma métrica
      só e o recorte é de mês, cada mês ganha duas barras — o ano anterior em
      cinza e o atual em azul. Com duas métricas o gráfico já está ocupado e a
@@ -3059,18 +3284,37 @@ function graficoDoCard(c, ctx, rows){
   const leg = anoAano
     ? `<i><b style="background:#B8C2D6"></b>${anoAntes}</i><i><b style="background:#1F4FD8"></b>${anoAtual}</i>`
     : c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
-  const titulo = ctx.tipo === 'mes'
-    ? (anoAano ? `${c.metricas[0].l} mês a mês` : `Últimos ${dados.length} meses`)
-    : 'No período, ' + ({dia:'dia a dia', semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
-  card.innerHTML = `<div class="card-head"><h3>${titulo}</h3><div class="legend">${leg}</div></div>
-                    <div class="chart-wrap" id="gch-${c.id}"></div>
-                    <div class="gcomp">${comparacoes.join('\n').split('\n').map(l=>`<span>${l}</span>`).join('')}</div>`;
+  /* O título do bloco é o nome do card — "Volume transacionado" no slide — e a
+     nota à direita diz o que o gráfico mostra. */
+  const nota = ctx.tipo === 'mes'
+    ? (anoAano ? 'mês a mês, dois anos' : `últimos ${dados.length} meses`)
+    : ({dia:'dia a dia', semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
+  /* A coluna da esquerda: só a primeira métrica ganha o número de corpo 30 —
+     com duas, o número grande roubaria a leitura da outra. A segunda entra
+     como mais uma linha embaixo. */
+  const leituras = c.metricas.map(met=>leituraDaMetrica(c, ctx, rows, dados, met)).filter(Boolean);
+  const l0 = leituras[0];
+  const extras = leituras.slice(1)
+    .map(l=>`<span><b>${l.rotulo}: ${l.valor}</b></span>` + l.linhas.map(x=>`<span>${x}</span>`).join(''))
+    .join('');
+  const leituraHtml = l0
+    ? `<div class="rb-leitura"><span class="eyebrow">${l0.rotulo}</span>
+         <div class="rb-num">${l0.valor}</div>
+         <div class="rb-linhas">${l0.linhas.map(x=>`<span>${x}</span>`).join('')}${extras}</div>
+         ${l0.pe ? `<div class="rb-pe">${l0.pe}</div>` : ''}</div>`
+    : '';
+  card.innerHTML = `<div class="card-head"><h3>${c.titulo}</h3><span class="rb-nota">${nota}</span>
+                      <div class="legend">${leg}</div></div>
+                    <div class="rb-corpo">${leituraHtml}
+                      <div class="chart-wrap" id="gch-${c.id}"></div></div>`;
   const host = card.querySelector('#gch-'+c.id);
   const AZUL = '#1F4FD8';
   const series = anoAano
+    /* Aqui as barras do ano corrente ficam TODAS em azul cheio: apagar as que
+       não são o mês escolhido, como o gráfico de uma série só faz, deixava o
+       azul claro quase igual ao cinza do ano anterior e a comparação sumia. */
     ? [{k:c.metricas[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:c.metricas[0].f},
-       {k:c.metricas[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:c.metricas[0].f,
-        corDe: destaque ? (d)=> d.bucket===destaque ? AZUL : tint(AZUL,.42) : null}]
+       {k:c.metricas[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:c.metricas[0].f}]
     : c.metricas.map((x,i)=>{
     const cor = corSerie(i);
     return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
@@ -3150,9 +3394,19 @@ function renderGradeCards(abaId, cards, ctx){
       `<span class="eyebrow">${k.l}</span><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s||''}</div>`)));
     det.appendChild(box);
   }
+  /* A linha do relatório: o bloco do número com o gráfico à esquerda e a lista
+     ranqueada à direita. Com um só dos dois, ele ocupa a largura inteira. */
   const g = graficoDoCard(c, ctx, rows);
-  if(g) det.appendChild(g);
+  const lista = listaRanqueada(c, ctx, rows);
+  if(g || lista){
+    const linha = el('div',{class:'rbloco'+(g && lista ? '' : ' so1')});
+    if(g) linha.appendChild(g);
+    if(lista) linha.appendChild(lista);
+    det.appendChild(linha);
+  }
   if(c.categorias) det.appendChild(graficoDeCategorias(c, ctx));
+  const leitura = leituraDoMes(c, ctx, rows);
+  if(leitura) det.appendChild(leitura);
   det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
     `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
   wrap.appendChild(det);

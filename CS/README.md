@@ -489,6 +489,45 @@ virou a página do relatório:
   — `−81% do mês anterior (R$ 76.455.587)` —, com o sinal e o percentual
   destacados em verde ou laranja e o valor de referência em cinza.
 
+A diagramação veio depois ("mas cliquei nos cards e está igual ainda, queria
+as info na mesma distribuição do arquivo"). O slide monta o mês em quatro
+faixas, e o detalhe do card passou a montar as mesmas:
+
+1. **Faixa de KPIs** no topo — já existia.
+2. **Bloco do número com o gráfico ao lado.** O slide põe `GMV setembro /
+   R$ 99 mi / −5% vs set/25` numa coluna estreita à **esquerda** e o gráfico à
+   direita, não embaixo. É o que o bloco faz agora: rótulo, número em corpo 30,
+   uma linha por comparação e, ancorado no rodapé da coluna, o acumulado do ano
+   contra o mesmo trecho do ano anterior.
+3. **Lista ranqueada ao lado**, no formato `Lesto · Oráculo ...... R$ 1.300`:
+   as oito maiores linhas do card. O nome é a coluna de marca, o tipo é a
+   segunda coluna de texto (a CS, o plano) e o valor é a primeira coluna
+   numérica. Embaixo, quanto as oito concentram e quantas linhas sobraram.
+4. **"Leitura do mês"** no rodapé, com os bullets de `+` e `−` do slide:
+   concentração, ticket médio e a variação da quantidade de linhas.
+
+Quatro armadilhas que apareceram montando isso, todas resolvidas no código:
+
+- **Somar o que não se soma.** A lista somava a coluna numérica para o total do
+  cabeçalho, e no card de health score isso dava "44.560" — a soma dos índices
+  das 962 marcas, um número que não quer dizer nada. Só dinheiro soma; fora
+  dele o cabeçalho mostra quantas linhas são, e a leitura troca a concentração
+  pela média, que é como se lê um índice.
+- **Crescer contra ausência de dado.** O acumulado anunciou "+1875% vs 2025" no
+  churn, porque 2025 só tem dois meses de churn no arquivo. A comparação do
+  acumulado agora exige que **todos** os meses da janela tenham valor no ano
+  anterior.
+- **Coluna de data virando nome.** O card de Reuniões começa pela coluna "Data",
+  e a lista saía com `2026-10-07 · Agência Hub`. A escolha do nome pula colunas
+  de data e prefere a coluna de marca.
+- **Coluna de valor errada.** Pegando a última coluna numérica, o card de
+  Mensalidade listava o *valor bloqueado* — nulo para quase todo mundo — e
+  mostrava `—` em todas as linhas. Agora é a primeira, que é a métrica do card.
+
+> O sinal dos bullets é aritmético, não juízo: o painel não sabe se mais linhas
+> é bom (vendas) ou ruim (churn). É a mesma convenção que o bloco de
+> comparações já usava.
+
 > Captura de tela sem navegador: o Chrome headless (`--headless=new
 > --screenshot`) dá conta, usando uma cópia temporária da página que entra
 > sozinha, abre a aba e o card pedidos na querystring e esconde a grade para a
