@@ -918,7 +918,7 @@ td.strong{font-weight:600}
     </div>
     <nav id="nav" aria-label="Seções do painel"></nav>
     <div class="rail-foot">
-      <p>Os gráficos agrupam por mês. O filtro de período continua exato: quem agrupa é só o desenho.</p>
+      <p>Os gráficos mostram sempre os últimos 12 meses — os do período escolhido em cor cheia, os de fora apagados. Os números continuam obedecendo ao filtro.</p>
     </div>
   </aside>
 
@@ -3481,22 +3481,29 @@ function bucketsDosCards(p, grao){
   }
   return out;
 }
+/* A janela é a FIXA dos 12 meses, não a do filtro (13/10/2026) — e por isso as
+   linhas vêm de uma consulta própria, não das `rows` que já chegaram
+   recortadas pelo período. `linhasDoCard` é memoizado por contexto, então
+   pedir a janela cheia custa uma vez por card. */
 function seriePorBucketDoCard(c, ctx, rows){
-  const grao = graoDosCards(ctx.p, ctx);
-  const buckets = bucketsDosCards(ctx.p, grao);
+  const janela = janelaFixaDoGrafico();
+  /* O contexto é o MESMO, só com outra janela: trocar por `ctxPeriodo` perdia
+     o `cliente` e a ficha de uma marca passaria a desenhar a carteira inteira.
+     A chave do memo muda junto, senão ele devolveria as linhas do filtro. */
+  const ctxJanela = Object.assign({}, ctx, {p: janela, chave: ctx.chave + '|g12'});
+  const todas = linhasDoCard(c, ctxJanela);
+  const buckets = bucketsDosCards(janela, 'mes');
   const listas = buckets.map(()=>[]);
-  const passo = grao === 'dia' ? 1 : 7;
-  const indice = d => grao === 'mes'
-    ? buckets.findIndex(b=>b.bucket === d.slice(0,7))
-    : Math.floor(diasEntre(ctx.p.ini, d) / passo);
-  rows.forEach(r=>{
+  todas.forEach(r=>{
     const d = String(r[c.campoData]||'').slice(0,10); if(!d) return;
-    const i = indice(d);
-    if(i >= 0 && i < listas.length) listas[i].push(r);
+    const i = buckets.findIndex(b=>b.bucket === d.slice(0,7));
+    if(i >= 0) listas[i].push(r);
   });
+  const fIni = ctx.p.ini.slice(0,7), fFim = ctx.p.fim.slice(0,7);
   return buckets.map((b, i)=>{
     const o = Object.assign({}, b);
-    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], ctx) });
+    o.noFiltro = b.bucket >= fIni && b.bucket <= fFim;
+    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], ctxJanela) });
     return o;
   });
 }
@@ -3746,7 +3753,7 @@ function pecasDoCard(c, ctx, rows){
      nota à direita diz o que o gráfico mostra. */
   const nota = ctx.tipo === 'mes'
     ? (anoAano ? 'mês a mês, dois anos' : `últimos ${dados.length} meses`)
-    : ({dia:'dia a dia', semana:'semana a semana', mes:'mês a mês'}[graoDosCards(ctx.p, ctx)]);
+    : `últimos ${dados.length} meses · o filtro acende o período`;
   /* A coluna da esquerda: só a primeira métrica ganha o número de corpo 30 —
      com duas, o número grande roubaria a leitura da outra. A segunda entra
      como mais uma linha embaixo. */
@@ -3762,6 +3769,9 @@ function pecasDoCard(c, ctx, rows){
          ${l0.pe ? `<div class="rb-pe">${l0.pe}</div>` : ''}</div>`
     : '';
   const AZUL = '#1F4FD8';
+  /* No recorte de período a janela do gráfico é fixa, e quem marca o filtro é
+     a cor: mês dentro dele em cor cheia, mês de fora apagado. */
+  const acende = cor => (d)=> d.noFiltro === false ? tint(cor, .34) : cor;
   const series = anoAano
     /* Aqui as barras do ano corrente ficam TODAS em azul cheio: apagar as que
        não são o mês escolhido, como o gráfico de uma série só faz, deixava o
@@ -3773,7 +3783,7 @@ function pecasDoCard(c, ctx, rows){
     return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
       /* no recorte de mês, o mês escolhido fica em cor cheia e o resto apagado:
          é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
-      corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : null};
+      corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : acende(cor)};
   });
   /* o desenho mede a largura do host, e ela só existe depois que o bloco
      inteiro foi pendurado na página — por isso o desenho vai para o fim da
@@ -5801,8 +5811,8 @@ const TABS = [
       ['implantado','implantadoOrigem']),
     series:()=>DATA.oraculo.series,
     graficos:[
-      {t:'Atendimentos no período', s:[{k:'atendimentos', l:'Atendimentos', tipo:'bar', cor:'var(--acc)', f:fmt.int}]},
-      {t:'GMV no período', s:[
+      {t:'Atendimentos mês a mês', s:[{k:'atendimentos', l:'Atendimentos', tipo:'bar', cor:'var(--acc)', f:fmt.int}]},
+      {t:'GMV mês a mês', s:[
         {k:'gmvIniciado', l:'Iniciado no Oráculo', tipo:'line', cor:'var(--acc)', area:true, f:fmt.money},
         {k:'gmvFinalizado', l:'Iniciado e finalizado', tipo:'line', cor:'var(--acc-2)', f:fmt.money},
       ]},
@@ -5845,7 +5855,7 @@ const TABS = [
     seriePropria:true,
     series:()=>DATA.tino.series,
     graficos:[
-      {t:'Eventos × GMV no período', s:[
+      {t:'Eventos × GMV mês a mês', s:[
         {k:'eventos', l:'Eventos', tipo:'line', cor:'var(--acc)', f:fmt.int},
         {k:'receita', l:'GMV da marca', tipo:'line', cor:'var(--acc-2)', eixo:'dir', f:fmt.money},
       ]},
@@ -5883,7 +5893,7 @@ const TABS = [
       ['implantado']),
     series:()=>DATA.vestiPago.series,
     graficos:[
-      {t:'Quantidade × valor transacionado no período', s:[
+      {t:'Quantidade × valor transacionado mês a mês', s:[
         {k:'linksGerados', l:'Links gerados', tipo:'bar', cor:'var(--acc-line)', f:fmt.int},
         {k:'linksPagos', l:'Links pagos', tipo:'bar', cor:'var(--acc)', f:fmt.int},
         {k:'valor', l:'Valor transacionado', tipo:'line', cor:'var(--acc-2)', eixo:'dir', f:fmt.money},
@@ -7030,16 +7040,46 @@ function bucketsDoPeriodo(p, grao){
   return out;
 }
 
-function agregarSerie(t){
+/* A JANELA DO GRÁFICO É FIXA (13/10/2026). "Deixe os gráficos fixos mês a mês,
+   sem mudar com o filtro de data."
+
+   Os últimos 12 meses do arquivo, sempre os mesmos — o gráfico deixou de ser
+   um recorte do filtro e virou o histórico. Assim duas abas se comparam, e
+   mudar o filtro não muda a forma do desenho.
+
+   O filtro não sumiu do gráfico: os meses dentro dele ficam em cor cheia e os
+   de fora em tom claro, que é como a aba Gerencial já marcava o mês escolhido.
+   Quem lê vê o histórico inteiro e onde está olhando dentro dele.
+
+   Cuidado ao ler: o KPI continua obedecendo ao filtro, o gráfico não. Somar as
+   barras não dá o KPI — e é por isso que o título do gráfico diz "últimos 12
+   meses". */
+function janelaFixaDoGrafico(){
+  const fim = LIMITE_DADOS.fim;
+  const mes = fim.slice(0,7);
+  let ini = mes;
+  for(let i=0;i<11;i++) ini = mesAnterior(ini);
+  return {ini: ini+'-01', fim};
+}
+
+/* `janela` vazia = o período do filtro, que é o que os KPIs somam. O gráfico
+   pede a janela fixa dos 12 meses. São dois recortes de propósito: o número
+   responde "quanto no período", o desenho responde "como vinha vindo". */
+function agregarSerie(t, janela){
   if(!t.series) return [];
-  const p = periodo();
-  const grao = grãoDoPeriodo(p);
+  const p = janela || periodo();
+  const filtro = periodo();
+  const grao = 'mes';
   const nomes = escopoClientes(t);
   const mapa = new Map();
-  bucketsDoPeriodo(p, grao).forEach(b=>mapa.set(b,{bucket:b, rotulo:rotuloBucket(b,grao), grao}));
+  bucketsDoPeriodo(p, grao).forEach(b=>mapa.set(b,{bucket:b, rotulo:rotuloBucket(b,grao), grao,
+    /* `noFiltro` acende o mês: o desenho pinta em cor cheia os que estão
+       dentro do período escolhido e apaga o resto. */
+    noFiltro: b >= filtro.ini.slice(0,7) && b <= filtro.fim.slice(0,7)}));
   const f = estado.filtros;
   t.series().forEach(x=>{
-    if(!dentroDaJanela(x.data)) return;
+    const iso = String(x.data||'').slice(0,10);
+    if(!iso || iso < p.ini || iso > p.fim) return;
     /* seriePropria: a linha traz o próprio responsável e pode ser de uma marca
        que não está na carteira (empresa do HubSpot, marca só do Tino). Aí o
        recorte é feito na própria linha, senão ela sumiria do gráfico. */
@@ -7329,7 +7369,9 @@ function renderPagina(){
   if(t.id === 'clientes'){ const av = avisoTierLocal(); if(av) page.appendChild(av) }
 
   const rows = filtrarLinhas(t);
+  /* Duas séries: a do filtro alimenta os KPIs, a fixa desenha o gráfico. */
   const serie = agregarSerie(t);
+  const serieGrafico = agregarSerie(t, janelaFixaDoGrafico());
 
   const kpis = t.kpis ? t.kpis(rows, serie) : [];
   if(kpis.length){
@@ -7343,7 +7385,7 @@ function renderPagina(){
     /* A régua só faz sentido onde o eixo é o tempo. A aba de Bonificação
        trabalha em mês fechado e tem seletor próprio. */
     if(t.filtros.includes('periodo')){
-      page.appendChild(el('div',{class:'section-label'},'<span class="eyebrow">Histórico no período</span>'));
+      page.appendChild(el('div',{class:'section-label'},'<span class="eyebrow">Histórico dos últimos 12 meses</span>'));
       page.appendChild(renderRegua(serie));
     }
     const wrap = el('div',{class:'charts'+(t.duasColunas?' two':'')});
@@ -7363,7 +7405,11 @@ function renderPagina(){
       const host = document.getElementById(`ch-${t.id}-${i}`);
       if(g.pizza) desenharPizza(host, cats[i]);
       else if(g.categorias) desenharCategorias(host, cats[i]);
-      else desenhar(host, serie, g.s);
+      else desenhar(host, serieGrafico, g.s.map(sr=>Object.assign({}, sr, {
+        /* O mês fora do filtro sai em tom claro. Sem isso o gráfico fixo
+           pareceria ignorar o filtro em vez de dar contexto a ele. */
+        corDe: d => d.noFiltro === false ? tint(sr.cor, .34) : sr.cor,
+      })));
     });
   }
 
@@ -7815,7 +7861,7 @@ function renderRegua(serie){
   const dias = diasEntre(p.ini, p.fim) + 1;
   box.innerHTML = `<div class="ruler-head">
       <span class="eyebrow">Período</span>
-      <span>${rotuloPeriodo(p)} · ${fmt.int(dias)} ${dias===1?'dia':'dias'} · gráficos por mês</span>
+      <span>${rotuloPeriodo(p)} · ${fmt.int(dias)} ${dias===1?'dia':'dias'} · os gráficos mostram 12 meses, com o período aceso</span>
     </div><div id="reguaSvg"></div>`;
   requestAnimationFrame(()=>{
     const host = box.querySelector('#reguaSvg'); if(!host) return;

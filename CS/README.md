@@ -949,6 +949,37 @@ grande ao lado dele. Em 90 dias, que é o filtro padrão, dá quatro barras.
 A régua do período e o rodapé da barra lateral, que anunciavam o agrupamento
 variável, passaram a dizer "por mês".
 
+### E então o gráfico deixou de seguir o filtro
+
+*"Na verdade deixe os gráficos fixos mês a mês, sem mudar com o filtro de
+data."* A janela do gráfico passou a ser **os últimos 12 meses do arquivo**,
+sempre os mesmos. O desenho deixou de ser um recorte do filtro e virou o
+histórico: duas abas se comparam, e mudar o filtro não muda a forma do
+gráfico.
+
+O filtro não sumiu dali — ele **acende**: os meses dentro do período ficam em
+cor cheia e os de fora em tom claro. É a mesma marcação que a Gerencial já
+usava para destacar o mês escolhido. Quem lê vê o histórico inteiro e onde está
+olhando dentro dele.
+
+**Os números continuam obedecendo ao filtro.** São dois recortes de propósito:
+o KPI responde *"quanto no período"*, o gráfico responde *"como vinha vindo"*.
+Somar as barras não dá o KPI, e por isso o título da seção virou "Histórico dos
+últimos 12 meses" e a régua diz "os gráficos mostram 12 meses, com o período
+aceso".
+
+Dois tropeços no caminho, os dois pegos no teste:
+
+- **O KPI parou de obedecer ao filtro.** `agregarSerie` alimenta os KPIs *e* o
+  gráfico; ao trocar a janela dela, o KPI do VestiPago passou a mostrar R$ 224M
+  (o ano) em vez de R$ 26M (setembro). Agora `agregarSerie(t)` devolve o
+  período e `agregarSerie(t, janela)` a janela fixa — o render monta as duas.
+- **A ficha do cliente quase virou a carteira inteira.** A série do card passou
+  a buscar as linhas da janela cheia, e eu troquei o contexto por
+  `ctxPeriodo(janela)` — que não carrega o `cliente`. O gráfico da marca
+  somaria todo mundo. O contexto agora é o mesmo, só com outra janela e outra
+  chave de memo.
+
 ### O desenho de um mês só
 
 *"Se eu quiser ver só setembro, deve aparecer os valores reais e a barra
