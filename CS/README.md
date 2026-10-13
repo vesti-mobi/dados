@@ -1066,6 +1066,45 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## O Tino saiu de Mentoria/Setup (13/10/2026)
+
+*"Tire o Tino de Mentoria/Setup, deixe só na meta de Tino mesmo."* E, logo
+depois: *"em Mentoria/Setup, deixe só integração, varejo e Oráculo"*.
+
+O Tino tinha entrado ali em 07/10 — *"mentoria e Oráculo novo, integração nova,
+varejo novo são por hora a mesma coisa, add Tino novo também"*. O problema
+apareceu quando os números foram olhados de perto: a meta de 9 vem da planilha
+do Eduardo, montada como **3 CS × 3 mentorias**, e mede esforço manual. O Tino
+é adoção de produto e entra em dezenas — 50 marcas só em julho.
+
+No trimestre jul–set o quadrante somava 96 de 9, e **73 vinham do Tino**. Sem
+ele:
+
+| | com Tino | sem Tino | meta |
+|---|---|---|---|
+| Time | 96 | **23** | 9 |
+| Gabriella | 30 | **9** | 3 |
+| Thamiris | 35 | **3** | 3 |
+| Luana | 31 | **11** | 3 |
+
+Ainda acima da meta, mas na mesma ordem de grandeza — e agora o que sobra é
+integração (20), Oráculo (2) e varejo (1), que é implantação de verdade.
+
+E havia um segundo motivo, além do tamanho: **o Tino já tem meta própria**.
+Contá-lo nos dois quadrantes fazia o mesmo trabalho pagar duas vezes.
+
+### "A barra não está completa, por quê?"
+
+*"A Gabi tem a meta de 3, ela bateu 3 e a barra não está completa no individual
+dela."* Não era bug: **a barra das metas que aceleram vai até 200%**, porque
+Mentoria/Setup e Cross-sell/Upsell pagam o dobro a 150% e o quádruplo a 200%.
+Bater a meta cheia deixa a barra exatamente pela metade, e os dois tracinhos
+que marcavam 150% e 200% não diziam o que eram.
+
+Agora os degraus são rotulados — **meta** no meio e **150%** no degrau
+seguinte. Quem vê a barra parar na marca "meta" entende que dali para a frente
+é aceleração, não que faltou.
+
 ## 496 integrações que não existiram (13/10/2026)
 
 *"Por que Mentoria/Setup está muito acima da meta? Aconteceu algo."* Aconteceu:

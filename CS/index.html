@@ -334,6 +334,15 @@ button,input,select{font:inherit;color:inherit}
 .bt tbody tr:hover{background:var(--sunken)}
 .bt-time{background:var(--acc-soft)}
 .bt-time:hover{background:var(--acc-soft)}
+/* Rótulo dos degraus da barra que acelera: "meta" aos 100% (que cai na METADE
+   da barra, porque o teto dela é 200%) e "150%" no degrau seguinte. Fica numa
+   linha própria: dentro da barra o texto seria cortado pelo overflow. */
+.bq-degraus{position:relative;height:11px;margin-top:3px}
+.bq-degraus span{
+  position:absolute;top:0;transform:translateX(-50%);
+  font-family:var(--f-body);font-size:9px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-3);white-space:nowrap;
+}
 .bt-bloco{display:block;font-family:var(--f-body);font-weight:700;font-size:10px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--ink-3);margin-top:3px}
 .bt-cel{cursor:pointer}
@@ -4047,7 +4056,7 @@ const trimestreAnterior = k =>{ const [a, t] = String(k||'').split('-T'); return
    `acelera` marca as duas que pagam mais quando passam da meta. */
 const METAS_TRI = [
   { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true, cor:'#4F46E5',
-    ajuda:'Soma 1 para cada implantação nova no trimestre: Oráculo, integração, varejo e Tino.' },
+    ajuda:'Soma 1 para cada implantação nova no trimestre: <b>Oráculo, integração e varejo</b>. O Tino saiu daqui em 13/10/2026 — ele tem meta própria, e somava dezenas (50 marcas só em julho) contra uma meta de 9 feita para esforço manual.' },
   { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#15803D',
     ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
   { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7490',
@@ -4106,9 +4115,18 @@ function itensMentoria(meses, cs){
     if(dentro(f.mes) && daCs(f) && varejoTipo(f)==='Varejo')
       out.push({tipo:'Varejo novo', nome:f.nome, cs:f.cs, data:f.criado||f.mes});
   });
-  ((DATA.tino||{}).tabela||[]).forEach(t=>{
-    if(dentro(t.implantado) && daCs(t)) out.push({tipo:'Tino novo', nome:t.cliente, cs:t.cs, data:t.implantado});
-  });
+  /* O TINO SAIU DAQUI (13/10/2026). "Tire o Tino de Mentoria/Setup, deixe só
+     na meta de Tino mesmo."
+
+     Ele entrou neste quadrante em 07/10 ("mentoria e Oráculo novo, integração
+     nova, varejo novo são por hora a mesma coisa, add Tino novo também"), mas
+     a meta de 9 vinha da planilha do Eduardo, dimensionada como 3 CS × 3
+     mentorias — esforço manual. O Tino é adoção de produto e entra em dezenas:
+     50 marcas só em julho. Resultado: o quadrante marcava 96 de 9 no trimestre
+     passado, com 73 vindos do Tino.
+
+     E o Tino já tem meta própria. Contá-lo aqui fazia o mesmo trabalho pagar
+     em dois quadrantes. */
   return out.sort((a,b)=>String(a.data).localeCompare(String(b.data)));
 }
 
@@ -4378,8 +4396,18 @@ function renderBonificacaoTri(){
       const chaveMeta = (m.cs||'*') + '|' + m.k;
       const linha = el('div',{class:'bq-meta'+(m.bateu?' bateu':'')
         + (estado.metaAberta===chaveMeta?' aberta':'')});
+      /* A barra das metas que aceleram vai até 200%, então bater a meta cheia
+         deixa ela pela METADE — e a Laura leu isso como "não completou".
+         Os degraus passaram a ser rotulados: quem vê a marca "meta" no meio
+         entende que passar dali é lucro, não que faltou. */
       const marcas = m.meta.acelera
         ? `<u style="left:50%"></u><u style="left:75%"></u>` : '';
+      /* A barra das metas que aceleram vai até 200%, então bater a meta cheia
+         deixa ela pela METADE — e a Laura leu isso como "não completou". Os
+         degraus passaram a ser rotulados: quem vê "meta" no meio entende que
+         dali para a frente é a aceleração, não que faltou. */
+      const degraus = m.meta.acelera
+        ? `<div class="bq-degraus"><span style="left:50%">meta</span><span style="left:75%">150%</span></div>` : '';
       /* No churn a barra é o teto sendo consumido: quanto mais cheia, pior. */
       const cheioChurn = m.alvo > 0 ? Math.min(m.feito / m.alvo, 1) * 100 : (m.feito ? 100 : 0);
       const larg = m.meta.menorMelhor ? cheioChurn : cheio;
@@ -4389,6 +4417,7 @@ function renderBonificacaoTri(){
         `<div class="bq-top"><b style="color:${m.meta.cor}">${m.meta.l}</b>`
         + `<span>${u(m.feito)}<em> ${m.semBase ? '— sem meta' : 'de ' + (m.meta.menorMelhor ? 'até ' : '') + u(m.alvo)}</em></span></div>`
         + `<div class="bq-bar"><i style="width:${larg.toFixed(1)}%;background:${cor}"></i>${marcas}</div>`
+        + degraus
         + `<div class="bq-sub">${rodapeDaBarra(m, rec)}</div>`;
       /* Clicar abre a tabela nos dois blocos — "no individual seria melhor
          clicar mesmo na barra" (Laura, 07/10/2026). O balãozinho saiu: duas
@@ -6094,7 +6123,7 @@ const TABS = [
       + '<b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram — dobram a 150% da meta e dobram de novo a 200%; as outras são bateu-ou-não-bateu. '
       + 'Bater tudo nos dois blocos dá 44,44% + 55,56% = <b>100% do bônus</b>, e o teto, com as duas aceleradas no 200%, é 77,78% + 122,22% = <b>200%</b>. '
       + 'A coletiva é a soma das individuais — 3 CS × 3 mentorias = 9, 3 × R$ 7 mil = R$ 21 mil, e assim por diante. '
-      + '<b>Mentoria/Setup</b> soma 1 por implantação nova no trimestre: <b>Oráculo, integração, varejo e Tino</b> — mentoria e essas quatro são a mesma coisa por ora (Laura, 07/10/2026), e todas saem direto da Vesti. '
+      + '<b>Mentoria/Setup</b> soma 1 por implantação nova no trimestre: <b>Oráculo, integração e varejo</b> — mentoria e essas três são a mesma coisa por ora (Laura, 07/10/2026), e todas saem direto da Vesti. O <b>Tino saiu deste quadrante em 13/10/2026</b>: ele tem meta própria, e contá-lo aqui fazia o mesmo trabalho pagar duas vezes — além de somar dezenas (50 marcas só em julho) contra uma meta de 9 desenhada para implantação manual. '
       + '<b>Cross-sell/Upsell</b> é valor recorrente novo: Oráculo, varejo, filial e afins pelo valor cheio e <b>upgrade só pela diferença</b>; integração e setup ficam de fora porque são cobrança única e já contam no quadrante ao lado. '
       + '<b>VestiPago</b> e <b>GMV</b> comparam com o mesmo trimestre do ano passado, na carteira de hoje. '
       + '<b>Churn</b> soma marca com a plataforma cancelada e o que o time registrou na planilha, sem contar a mesma duas vezes, contra o teto de <b>3% dos clientes ativos</b> da carteira. '
