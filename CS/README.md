@@ -1066,6 +1066,37 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+### Marca apenas bloqueada saiu da conta (13/10/2026)
+
+*"De todas as abas que têm churn, tire os que foram somente bloqueados."*
+
+As três situações do Painel Elisa são degraus do mesmo caminho, e só o último é
+perda:
+
+| | o que é | é churn? |
+|---|---|---|
+| **alerta** | fatura vencida há 1 a 10 dias | não — cobrança |
+| **bloqueada** | 11+ dias, ou módulo cortado com a fatura ainda em aberto | **não** — a marca pode voltar a pagar, e volta |
+| **cancelada** | módulo cortado **e** a última fatura com status `canceled` | sim |
+
+A régua passou a contar só a **cancelada**, do lado do Painel Elisa. A planilha
+do time entra inteira, como antes — quem está bloqueada e o time já sabe que
+foi embora continua na conta, só que pela outra ponta. A origem na tabela
+deixou de se chamar "Plataforma bloqueada" e virou **"Plataforma cancelada"**.
+
+**Os números caíram, e isso inclui a Bonificação:**
+
+| | antes | depois |
+|---|---|---|
+| Visão geral · setembro | 60 | 48 |
+| Trimestre jul–set | 161 | 150 |
+| **Bonificação · jul–set (3 CS)** | **19** | **16** |
+
+Na Bonificação os três que saíram eram justamente os de bloqueio, então as 16
+que restam vêm todas da planilha do time. Como a meta é ficar **abaixo** de 3%
+dos clientes ativos, a régua nova é mais generosa com as CS — vale conferir
+antes de fechar o trimestre.
+
 ### O que mudou de lugar
 
 - **"Em alerta" saiu do churn.** Fatura vencida há 1 a 10 dias é cobrança, não
