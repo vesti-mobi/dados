@@ -3968,8 +3968,6 @@ const PAGA = {
   Coletiva:   { meta: 1/18, n150: 2/18, n200: 4/18 },
   Individual: { meta: 2/18, n150: 4/18, n200: 8/18 },
 };
-const TETO_BONUS = (PAGA.Coletiva.n200*2 + PAGA.Coletiva.meta*4)
-                 + (PAGA.Individual.n200*2 + PAGA.Individual.meta*4);
 /* Duas casas, como na planilha: 5,56% e não 5,6%. Com uma casa só, quem
    confere contra a tabela do Eduardo acha que o painel arredondou errado. */
 const pctBonus = v => { const n = v*100;
@@ -4056,11 +4054,32 @@ const METAS_TRI = [
     ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
   { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#1F4FD8',
     ajuda:'GMV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
+  /* CHURN É SÓ COLETIVO (13/10/2026). "Vamos deixar churn então só na
+     coletiva, tira da individual. Ou seja, o churn vale 16,67% da meta:
+     11,11% + 5,5%." Os 11,11% que ele valia na individual foram somados aos
+     5,56% da coletiva — 3/18 — em vez de sumirem da conta.
+
+     A decisão veio de uma limitação do dado: a marca perde a CS no cadastro
+     quando é cancelada, então o churn por plataforma aparecia inteiro como
+     "Sem CS" e a meta individual media só o que o time registrava à mão. */
   { k:'churn', l:'Churn', unidade:'marcas', menorMelhor:true, pctAtivos:0.03, cor:'#B4530A',
-    ajuda:'Marca com a plataforma cancelada somada ao que o time registrou na planilha (bloqueio sozinho não conta). A meta é ficar ABAIXO de 3% dos clientes ativos da carteira.' },
+    soColetiva:true, pagaCol:{ meta: 3/18, n150: 3/18, n200: 3/18 },
+    ajuda:'Marca com a plataforma cancelada somada ao que o time registrou na planilha (bloqueio sozinho não conta). A meta é ficar ABAIXO de 3% dos clientes ativos da carteira. <b>Vale só na coletiva</b>, por 16,67% do bônus — os 11,11% que valia na individual vieram para cá.' },
   { k:'tino', l:'Tino', unidade:'marcas', ind:3, col:33, cor:'#A16207',
     ajuda:'Coletiva: marcas com 40+ eventos no último mês do trimestre. Individual: quantas delas são NOVAS, isto é, não estavam na lista do mês anterior ao trimestre.' },
 ];
+
+/* O teto sai das próprias metas, não de números soltos: com o churn valendo
+   diferente e só na coletiva, somar "n200×2 + meta×4" dos dois blocos daria
+   errado. Hoje fecha em 77,78% + 122,22% = 200%, como na tabela do Eduardo. */
+const TETO_BONUS = (()=>{
+  const topo = (m, bloco) => {
+    const p = (bloco === 'Coletiva' && m.pagaCol) ? m.pagaCol : PAGA[bloco];
+    return m.acelera ? p.n200 : p.meta;
+  };
+  return METAS_TRI.reduce((a,m)=>a + topo(m,'Coletiva'), 0)
+       + METAS_TRI.filter(m=>!m.soColetiva).reduce((a,m)=>a + topo(m,'Individual'), 0);
+})();
 
 /* ---- realizados ---------------------------------------------------------- */
 const somaBonifTri = (k, meses, cs) => meses.reduce((a,m)=>{
@@ -4284,7 +4303,10 @@ function placarMeta(meta, rec, cs, bloco){
   r.bateu = r.semBase ? false
     : meta.menorMelhor ? r.feito <= r.alvo : r.feito >= r.alvo;
 
-  const paga = PAGA[bloco || (cs ? 'Individual' : 'Coletiva')];
+  /* Peso próprio da meta, quando ela tem — hoje só o churn, que vale 16,67%
+     na coletiva em vez dos 5,56% das outras. */
+  const paga = (!cs && meta.pagaCol) ? meta.pagaCol
+             : PAGA[bloco || (cs ? 'Individual' : 'Coletiva')];
   r.nivel = !r.bateu ? 0
     : (meta.acelera && r.pct >= 2 ? 200 : meta.acelera && r.pct >= 1.5 ? 150 : 100);
   r.salario = r.nivel === 200 ? paga.n200 : r.nivel === 150 ? paga.n150 : r.nivel === 100 ? paga.meta : 0;
@@ -4297,7 +4319,8 @@ function placarMeta(meta, rec, cs, bloco){
 /* Uma linha por CS (individual) + a linha do time (coletiva). */
 function placarBonificacao(rec){
   const linhas = BONIF_CS.map(cs=>{
-    const metas = METAS_TRI.map(m=>placarMeta(m, rec, cs, 'Individual'));
+    const metas = METAS_TRI.filter(m=>!m.soColetiva)
+      .map(m=>placarMeta(m, rec, cs, 'Individual'));
     return { cs, bloco:'Individual', metas,
       salario: metas.reduce((a,m)=>a+m.salario, 0) };
   });
@@ -4341,7 +4364,7 @@ function renderBonificacaoTri(){
     const head = el('div',{class:'bq-head'});
     head.innerHTML = `<div><b>${l.cs}</b><small>${l.bloco}</small></div>`
       + `<div class="bq-total"><span>${pctBonus(l.salario)}</span>`
-      + `<small>${l.metas.filter(m=>m.bateu).length} de ${METAS_TRI.length} metas</small></div>`;
+      + `<small>${l.metas.filter(m=>m.bateu).length} de ${l.metas.length} metas</small></div>`;
     box.appendChild(head);
 
     const grade = el('div',{class:'bq-metas'});
@@ -6067,8 +6090,9 @@ const TABS = [
     titulo:'Bonificação do trimestre',
     desc:'A régua que passou a valer em <b>out/2026</b> (planilha do Eduardo): seis metas trimestrais em dois blocos que <b>se somam</b> — a <b>coletiva</b>, do time, e a <b>individual</b>, de cada CS. '
       + 'Cada meta batida paga uma fatia do <b>bônus</b>: <b>5,56%</b> na coletiva e <b>11,11%</b> na individual. '
-      + '<b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram — dobram a 150% da meta e dobram de novo a 200%; as outras quatro são bateu-ou-não-bateu. '
-      + 'Bater as seis nos dois blocos dá 33,33% + 66,67% = <b>100% do bônus</b>, e o teto, com as duas aceleradas no 200%, é <b>200%</b>. '
+      + '<b>O churn é a exceção, desde 13/10/2026: ele vale só na coletiva, por 16,67%</b> — os 11,11% que valia na individual vieram para cá, em vez de sumirem da conta. Saiu da individual porque a marca perde a CS no cadastro quando é cancelada, então ali a meta media só o que o time registrava à mão. '
+      + '<b>Mentoria/Setup</b> e <b>Cross-sell/Upsell</b> aceleram — dobram a 150% da meta e dobram de novo a 200%; as outras são bateu-ou-não-bateu. '
+      + 'Bater tudo nos dois blocos dá 44,44% + 55,56% = <b>100% do bônus</b>, e o teto, com as duas aceleradas no 200%, é 77,78% + 122,22% = <b>200%</b>. '
       + 'A coletiva é a soma das individuais — 3 CS × 3 mentorias = 9, 3 × R$ 7 mil = R$ 21 mil, e assim por diante. '
       + '<b>Mentoria/Setup</b> soma 1 por implantação nova no trimestre: <b>Oráculo, integração, varejo e Tino</b> — mentoria e essas quatro são a mesma coisa por ora (Laura, 07/10/2026), e todas saem direto da Vesti. '
       + '<b>Cross-sell/Upsell</b> é valor recorrente novo: Oráculo, varejo, filial e afins pelo valor cheio e <b>upgrade só pela diferença</b>; integração e setup ficam de fora porque são cobrança única e já contam no quadrante ao lado. '

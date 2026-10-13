@@ -1066,6 +1066,38 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+### Churn virou meta só coletiva (13/10/2026)
+
+*"Vamos deixar churn então só na coletiva. Tira da individual. Ou seja, o churn
+vale 16,67% da meta — 11,11% + 5,5%."*
+
+A decisão nasceu de uma limitação do dado, discutida logo antes: a marca **perde
+a CS no cadastro quando é cancelada**, então o churn por plataforma aparecia
+inteiro como "Sem CS" e a meta individual acabava medindo só o que o time
+registrava à mão na planilha.
+
+Os 11,11% que o churn valia na individual não sumiram — foram somados aos 5,56%
+da coletiva, que virou **16,67%** (3/18). A tabela agora é:
+
+| | Coletiva | Individual |
+|---|---|---|
+| Mentoria/Setup | 5,56 / 11,11 / 22,22% | 11,11 / 22,22 / 44,44% |
+| Cross-sell/Upsell | 5,56 / 11,11 / 22,22% | 11,11 / 22,22 / 44,44% |
+| VestiPago | 5,56% | 11,11% |
+| GMV | 5,56% | 11,11% |
+| **Churn** | **16,67%** | **—** |
+| Tino | 5,56% | 11,11% |
+| **100% das metas** | **44,44%** | **55,56%** |
+| **teto (aceleradas no 200%)** | **77,78%** | **122,22%** |
+
+As duas juntas continuam fechando em **100% do bônus** a 100% das metas, e em
+**200%** no teto — conferido contra a tabela do Eduardo, célula por célula.
+
+No código: a meta de churn ganhou `soColetiva` e `pagaCol`, `placarBonificacao`
+filtra as metas só-coletivas ao montar a linha de cada CS, e o `TETO_BONUS`
+deixou de ser uma conta de números soltos (`n200×2 + meta×4` nos dois blocos,
+que o churn diferente quebrava) e passa a somar as próprias metas.
+
 ### Marca apenas bloqueada saiu da conta (13/10/2026)
 
 *"De todas as abas que têm churn, tire os que foram somente bloqueados."*
