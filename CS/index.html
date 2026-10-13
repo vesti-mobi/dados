@@ -1513,30 +1513,20 @@ function agregarPorCliente(series, campos, derivar){
   return out;
 }
 
-/* Churn = a mesma leitura da aba Inadimplentes do PainelElisa (Gambiarra),
-   pedido da Laura em 10/09/2026 — "módulo vendas bloqueado" de verdade, não
-   mais a inferência por fatura vencida que essa aba usava antes. Tudo já
-   vem calculado de `DATA.churn.linhas` (fetch_dados.js — ver o comentário
-   de `carregarChurnGambiarra` lá, incluindo por que a data de bloqueio não
-   sai do BigQuery). Aqui só filtra pela Situação escolhida e ordena. */
+/* A aba Churn passou a listar o CHURN, pela régua única de `eventosDeChurn`
+   (13/10/2026). Antes ela era a foto de hoje do Painel Elisa — quem está em
+   alerta, bloqueada ou cancelada AGORA —, que é cobrança, não perda: o "em
+   alerta" (1 a 10 dias de atraso) entrava junto e a lista não tinha data de
+   evento, então não dava para comparar período com período.
+
+   A foto não se perdeu: continua inteira no card *Inadimplência hoje*, na
+   Gerencial, que nunca foi churn e diz o que é. O filtro "Situação" desta aba
+   virou "Origem", porque é essa a escolha que resta: plataforma bloqueada ou
+   planilha do time. */
 function linhasChurn(){
-  const sit = estado.filtros.situacao;
-  const out = (DATA.churn.linhas||[]).map(c=>({
-    ...c,
-    subcontasTxt: (c.subcontas||[]).join(', ')||null,
-    faturasVencidas: c._semDivida ? null : (c.qtFaturas||0),
-    valorEmAbertoV: c._semDivida ? null : (c.valorEmAberto||0),
-    diasAtrasoV: c._semDivida ? null : (c.diasAtraso||0),
-    /* Data de referência pro filtro de período: quando o módulo foi cortado
-       (bloqueadoEm), ou — quem ainda está no painel, alerta ou bloqueada por
-       atraso, nunca teve o módulo cortado — o vencimento mais antigo em
-       aberto (data em que a situação começou). */
-    data: c.bloqueadoEm || c.vencMaisAntigo || null,
-  }));
-  const filtrado = sit==='todos' ? out : out.filter(x=>x.situacao===sit);
-  const peso = {alerta:0, bloqueada:1, cancelada:2};
-  return filtrado.sort((a,b)=>
-    (peso[a.situacao]??9)-(peso[b.situacao]??9) || (b.diasAtraso||0)-(a.diasAtraso||0));
+  const org = estado.filtros.origemChurn;
+  const out = eventosDeChurn(periodo());
+  return org && org !== 'todos' ? out.filter(x=>x.origem === org) : out;
 }
 
 /* ============================================================================
@@ -2147,51 +2137,6 @@ function linhasVpChurn(m){
     .sort((a,b)=>b.valor-a.valor);
 }
 
-/* --- 6. Churn: o EVENTO do mês, e a foto de hoje --------------------------
-   Crítica do Walid em 28/09/2026: "esse número está saltando mas não são de
-   fato cancelados... e parece estranho ser só 1 no mês passado". Ele estava
-   certo nas duas coisas, e o motivo é o mesmo: o card lia `DATA.churn.linhas`,
-   que é a leitura da aba Churn — uma FOTO DE HOJE de quem está em alerta,
-   bloqueada ou cancelada agora.
-
-     · Foto não vira histórico. Marca que cancelou em maio e já saiu da lista
-       não aparece em maio nenhum, e por isso os meses passados vinham quase
-       vazios. Soma-se a isso que a data de bloqueio vem de uma planilha que só
-       começou em 07/07/2026: antes disso a única data possível é o vencimento
-       em aberto, que também é de agora.
-     · "Em alerta" é fatura vencida há 1 a 10 dias — não é cancelamento, e
-       estava sendo contado junto.
-
-   Agora são dois cards. O de churn usa `dataChurn`, que a carga calcula por
-   marca (sem fatura paga há mais de `meta.diasChurn` dias e sem fatura futura
-   em aberto): é EVENTO datado, existe desde 2025 e é comparável mês a mês. A
-   foto continua no card de inadimplência, dizendo o que é. */
-function linhasChurnMes(m){
-  const p = janelaDoMes(m);
-  /* O contexto da fatura vem junto desde 01/10/2026: a Laura viu a Kelly
-     Rodrigues Fortaleza no card e estranhou, porque a marca continua vendendo
-     todo dia. Ela está certa em estranhar, e o card tinha que explicar sozinho:
-     a régua aqui é de PAGAMENTO — a última fatura paga completou os 45 dias e a
-     de setembro foi CANCELADA no Iugu, então não existe fatura futura em
-     aberto. Marca que vende e não paga é exatamente o caso que interessa ver,
-     mas sem a data da última fatura ao lado a linha parece erro. */
-  const porDom = {};
-  (DATA.faturasCliente||[]).forEach(f=>{
-    const a = porDom[f.dominio] || (porDom[f.dominio] = {paga:null, ultima:null});
-    if(f.pago && (!a.paga || f.vencimento > a.paga.vencimento)) a.paga = f;
-    if(!a.ultima || f.vencimento > a.ultima.vencimento) a.ultima = f;
-  });
-  return soDoFoco(DATA.clientes.filter(c=>c.dataChurn && c.dataChurn>=p.ini && c.dataChurn<=p.fim)
-    .map(c=>{ const f = porDom[c.dominio] || {};
-      const dias = diasDe(c.ultimoPedido);
-      return {nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, canal:c.canal,
-        plano:c.plano, data:c.dataChurn, ultimoPedido:c.ultimoPedido,
-        diasSemPedido:c.diasSemPedido, emAberto:c.valorEmAberto||0,
-        ultimaPaga: f.paga ? f.paga.vencimento : null,
-        ultimaFatura: f.ultima ? fmt.date(f.ultima.vencimento) + ' · ' + (f.ultima.pago ? 'paga' : (f.ultima.status||'em aberto')) : null,
-        aindaVende: dias != null && dias <= 7}; }))
-    .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
-}
 /* Foto de hoje. NÃO é recortada por mês de propósito: recortar foto por mês é
    exatamente o que produzia o número estranho. */
 function linhasInadimplentes(){
@@ -2691,77 +2636,37 @@ const CARDS_GERENCIAL = [
   },
   {
     id:'churnMes', titulo:'Churn do mês', cor:'#C0453B',
-    capa:'Marcas que pararam de pagar dentro do mês',
-    fonte:'BigQuery — a marca entra no mês em que ficou <b>sem fatura paga há mais de '+((DATA.meta||{}).diasChurn||45)+' dias e sem fatura futura em aberto</b>: é evento datado, calculado por marca na carga, e por isso comparável mês a mês desde 2025. A coluna <b>Virou churn em</b> é a data em que a marca completou os 45 dias — ela é calculada (última fatura paga + 45), <b>não é a data de um pagamento</b>; o pagamento está na coluna ao lado. <b>A régua é de pagamento, não de venda</b>: marca que continua vendendo todo dia aparece aqui se a fatura dela foi cancelada no Iugu ou passou a ser paga por outro CNPJ — por isso as colunas de fatura e "ainda vende" ficam ao lado, para a linha se explicar. <b>Não é a lista da aba Churn</b>, que é uma foto de quem está em alerta ou bloqueado HOJE — essa foto está no card "Inadimplência hoje", ao lado. Trocado em 28/09/2026 depois da crítica do Walid: o card antigo recortava a foto por mês e, como marca que cancelou e saiu da lista some dela, os meses passados apareciam quase vazios.',
-    vazio:'Nenhuma marca da carteira parou de pagar neste mês.',
-    linhas:ctx=>linhasChurnMes(ctx.m),
-    resumo:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m)).length;
+    capa:'Marcas perdidas no mês: plataforma bloqueada por inadimplência, mais o que o time registrou na planilha',
+    fonte:'A régua do churn, a mesma em todo o painel desde <b>13/10/2026</b>: marca com a <b>plataforma bloqueada por inadimplência</b> (data do corte do módulo de vendas, que vem da automação lida pelo Painel Elisa) <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura em 13/10/2026 — antes deste card contava outra coisa (marca sem fatura paga há 45 dias e sem fatura futura), e por isso o número era diferente do da Bonificação e do da Visão geral. A coluna <b>Origem</b> diz por qual das duas a marca entrou. <b>"Em alerta" não entra</b>: atraso de 1 a 10 dias é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, ao lado.',
+    vazio:'Nenhuma marca da carteira em foco deu churn neste mês.',
+    linhas:ctx=>soDoFoco(eventosDeChurn(janelaDoMes(ctx.m))),
+    resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m))).length;
       return {v:fmt.int(rows.length),
         s: rows.length ? `${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
-                       : 'ninguém parou de pagar no mês'}; },
-    kpis:(rows,ctx)=>{ const ant = linhasChurnMes(mesAnterior(ctx.m));
-      const doze = MESES_GERENCIAL.slice(0,12).map(m=>linhasChurnMes(m).length);
+                       : 'nenhuma marca perdida no mês'}; },
+    kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m)));
+      const doze = MESES_GERENCIAL.slice(0,12)
+        .map(m=>linhasDoCard(cardGerencial('churnMes'), ctxGerencial(m)).length);
       const media12 = doze.length ? doze.reduce((a,b)=>a+b,0)/doze.length : 0;
-      const semPedido = rows.filter(r=>r.diasSemPedido != null && r.diasSemPedido > 60).length;
       return [
-        {l:'Marcas que pararam', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        {l:'Marcas perdidas', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        {l:'Plataforma bloqueada', v:fmt.int(rows.filter(r=>r.origem==='Plataforma bloqueada').length),
+         s:'módulo de vendas cortado por inadimplência'},
+        {l:'Planilha do time', v:fmt.int(rows.filter(r=>r.origem==='Planilha do time').length),
+         s:'cancelamento ou inadimplência registrados à mão'},
         {l:'Média dos 12 meses', v:fmt.int(Math.round(media12)), s:'na carteira em foco'},
-        {l:'Ainda vendendo', v:fmt.int(rows.filter(r=>r.aindaVende).length),
-         s:'pararam de pagar mas venderam esta semana — fatura cancelada ou trocada de CNPJ'},
         {l:'Deixaram em aberto', v:fmt.moneyCompact(soma(rows,'emAberto')), s:'fatura vencida e não paga'},
       ]; },
-    metricas:[{k:'qtd', l:'Marcas que pararam de pagar', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Virou churn em', f:fmt.date},
-      {k:'ultimaPaga', l:'Última fatura paga', f:fmt.date},
-      {k:'ultimaFatura', l:'Última fatura emitida', f:v=>v||'—'},
-      {k:'aindaVende', l:'Ainda vende?', f:v=>v?'sim, vendeu esta semana':'não'},
+    metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
+    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data do churn', f:fmt.date},
+      {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
       {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
-      {k:'ultimoPedido', l:'Último pedido', f:fmt.date},
-      {k:'emAberto', l:'Em aberto', r:true, f:fmt.money}],
-  },
-  {
-    id:'churnDeclarado', titulo:'Churn declarado (planilha)', cor:'#C0453B',
-    capa:'O que o time registrou como cancelamento na planilha do mês',
-    fonte:'Planilha do Google que o time preenche, <b>aba 2026</b> — só as linhas cuja coluna <i>observação</i> é <b>"solicitou cancelamento"</b> ou <b>"inadimplente"</b>; as outras observações são ignoradas, como o Walid pediu em 29/09/2026. <b>É a única leitura de churn do painel escrita por uma pessoa</b>: as outras duas saem de fato — "Churn do mês" é a marca que parou de pagar e "Inadimplência hoje" é quem está em atraso agora. A planilha precisa estar compartilhada com a service account da carga (ou pública) — sem isso este card fica vazio e o resto da aba não muda.',
-    vazio:'Nenhuma linha da planilha com essas observações neste mês — ou a planilha ainda não está acessível para a carga.',
-    /* A planilha não tem a CS: ela traz a VENDEDORA, que é outra coisa. O CS
-       sai do cadastro, casando por CNPJ e, na falta dele, pelo domínio ou pelo
-       nome da marca — 262 das 425 linhas têm CNPJ, que é a chave mais
-       confiável. */
-    linhas:ctx=>{ const p = janelaDoMes(ctx.m);
-      const porCnpj = {};
-      DATA.clientes.forEach(c=>{ if(c.cnpj) porCnpj[c.cnpj] = c });
-      return soDoFoco((DATA.churnPlanilha.linhas||[])
-        .filter(l=>!l.data || (l.data>=p.ini && l.data<=p.fim))
-        .map(l=>{ const c = (l.cnpj && porCnpj[l.cnpj])
-            || (l.dominio && CLIENTE_POR_DOM[l.dominio]) || null;
-          return {nome: (c && c.nome) || l.cliente,
-            cs: (c && c.cs) || CS_POR_CLIENTE[l.cliente] || 'Sem CS',
-            dominio: (c && c.dominio) || l.dominio, vendedora: l.vendedora || '—',
-            canal: (c && c.canal) || l.canal, motivo:l.motivo, observacao:l.observacao,
-            data:l.data, plano: l.plano || (c && c.plano), valor:l.valor||0,
-            naCarteira: !!c}; }))
-        .sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
-    },
-    resumo:rows=>{ const canc = rows.filter(r=>r.motivo==='Solicitou cancelamento').length;
-      return {v:fmt.int(rows.length),
-        s: rows.length ? `${canc} pediram cancelamento · ${rows.length-canc} inadimplentes`
-                       : ((DATA.churnPlanilha.linhas||[]).length ? 'nada registrado no mês' : 'planilha ainda não acessível')}; },
-    kpis:rows=>{ const canc = rows.filter(r=>r.motivo==='Solicitou cancelamento');
-      const inad = rows.filter(r=>r.motivo==='Inadimplente');
-      return [
-        {l:'Registros no mês', v:fmt.int(rows.length), s:'só "solicitou cancelamento" e "inadimplente"'},
-        {l:'Solicitaram cancelamento', v:fmt.int(canc.length), s:'pediram para sair'},
-        {l:'Inadimplentes', v:fmt.int(inad.length), s:'saíram por falta de pagamento'},
-        {l:'Mensalidade perdida', v:fmt.moneyCompact(soma(rows,'valor')),
-         s: fmt.int(rows.filter(r=>r.naCarteira).length)+' de '+fmt.int(rows.length)+' casaram com o cadastro'},
-      ]; },
-    metricas:[{k:'qtd', l:'Churn declarado', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'vendedora', l:'Vendedora (planilha)'},
-      {k:'motivo', l:'Motivo'}, {k:'data', l:'Data da perda', f:fmt.date},
-      {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
-      {k:'valor', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
-      {k:'observacao', l:'Observação na planilha'}],
+      {k:'mensalidade', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'ultimoPagamento', l:'Último pagamento', f:v=>v?fmt.date(v):'—'},
+      {k:'diasAtraso', l:'Dias em atraso', r:true, f:v=>v==null?'—':fmt.int(v)},
+      {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—', forte:true},
+      {k:'vendedora', l:'Vendedora (planilha)', f:v=>v||'—'},
+      {k:'naCarteira', l:'No cadastro?', f:v=>v||'—'}],
   },
   {
     id:'inadimplentes', titulo:'Inadimplência hoje', cor:'#E17055',
@@ -3467,7 +3372,7 @@ function kpisGerencial(){
      s: fmt.int(pedidos)+' pedidos no mês · '+fmt.moneyCompact(gmv)+' de fato pagos'},
     {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
-    {l:'Pararam de pagar', v:fmt.int(churn), s:'sem fatura paga e sem fatura futura'},
+    {l:'Churn no mês', v:fmt.int(churn), s:'plataforma bloqueada ou registrado na planilha do time'},
   ];
 }
 
@@ -3659,31 +3564,83 @@ function itensCross(meses, cs){
   return out.sort((a,b)=>(b.valor||0)-(a.valor||0));
 }
 
-/* Churn: bloqueio por inadimplência + o que o time registrou na planilha, sem
-   contar a mesma marca duas vezes. Régua do Eduardo em 07/10/2026. */
-function itensChurn(meses, cs){
-  const dentro = d => d && meses.includes(String(d).slice(0,7));
+/* ===========================================================================
+   CHURN — uma régua só, em todo o painel (13/10/2026)
+
+   A régua é a do Eduardo, de 07/10/2026, escrita para a bonificação:
+
+     marca com a PLATAFORMA BLOQUEADA por inadimplência
+       ∪  o que o time registrou na planilha de churn
+       sem contar a mesma marca duas vezes.
+
+   Até aqui ela valia só na aba Bonificação, e cada outra aba contava churn do
+   seu jeito — a Visão geral lia negócio "Perdido (Churn)" no HubSpot, a
+   Gerencial lia fatura parada no BigQuery, a aba Churn mostrava a foto de
+   quem está inadimplente hoje. Três números diferentes para a mesma palavra:
+   em jul–set/2026 davam 44, 11 e uma foto sem data. A Laura mandou unificar:
+   *"usa a mesma regra da bonificação de churn em todas as abas"*.
+
+   "Em alerta" continua fora: atraso de 1 a 10 dias é cobrança, não perda. A
+   foto de quem está devendo hoje não sumiu — é o card *Inadimplência hoje*,
+   na Gerencial, que nunca foi churn e segue dizendo o que é.
+
+   `quem(cs)` decide quais CS contam; sem ele, conta o time todo.
+   ========================================================================= */
+function eventosDeChurn(p, quem){
+  const dentro = d => d && d >= p.ini && d <= p.fim;
   const vistos = new Set();
   const out = [];
   ((DATA.churn||{}).linhas||[]).forEach(l=>{
     if(l.situacao === 'alerta') return;              // alerta é atraso curto, não perda
     if(!dentro(l.bloqueadoEm)) return;
-    const quem = normalizarCs(l.cs) || CS_POR_CLIENTE[l.cliente];
-    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
+    const cs = normalizarCs(l.cs) || CS_POR_CLIENTE[l.cliente] || 'Sem CS';
+    if(quem && !quem(cs)) return;
     const ch = chaveNomeMarca(l.cliente);
     if(vistos.has(ch)) return; vistos.add(ch);
-    out.push({nome:l.cliente, cs:quem, data:l.bloqueadoEm, origem:'Plataforma bloqueada', detalhe:l.situacao});
+    const marca = CLIENTE_POR_NOME[ch];
+    out.push({nome:l.cliente, cs, data:l.bloqueadoEm, origem:'Plataforma bloqueada',
+      detalhe: l.situacao === 'cancelada' ? 'Cancelada' : 'Bloqueada',
+      dominio: l.dominio || (marca&&marca.dominio), canal: l.canal || (marca&&marca.canal),
+      plano: marca && marca.plano,
+      diasAtraso: l._semDivida ? null : (l.diasAtraso||0),
+      emAberto: l._semDivida ? 0 : (l.valorEmAberto||0),
+      /* `valorMensal` do Painel Elisa só vem preenchido para quem ainda está
+         em cobrança; de quem já teve o módulo cortado ele não sabe o valor. */
+      mensalidade: l.valorMensal || 0,
+      ultimoPagamento: l.ultimoPagamento, vendedora: null, naCarteira: marca ? 'sim' : '—'});
   });
   ((DATA.churnPlanilha||{}).linhas||[]).forEach(l=>{
     if(!dentro(l.data)) return;
-    const marca = (l.cnpj && CLIENTE_POR_CNPJ[String(l.cnpj)]) || CLIENTE_POR_NOME[chaveNomeMarca(l.cliente)];
-    const quem = marca ? marca.cs : null;
-    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
     const ch = chaveNomeMarca(l.cliente);
+    const marca = (l.cnpj && CLIENTE_POR_CNPJ[String(l.cnpj)]) || CLIENTE_POR_NOME[ch];
+    const cs = (marca && marca.cs) || 'Sem CS';
+    if(quem && !quem(cs)) return;
     if(vistos.has(ch)) return; vistos.add(ch);
-    out.push({nome:(marca&&marca.nome)||l.cliente, cs:quem, data:l.data, origem:'Planilha do time', detalhe:l.motivo});
+    out.push({nome:(marca&&marca.nome)||l.cliente, cs, data:l.data, origem:'Planilha do time',
+      detalhe: l.motivo || '—',
+      dominio: (marca&&marca.dominio) || l.dominio, canal: (marca&&marca.canal) || l.canal,
+      plano: l.plano || (marca&&marca.plano),
+      diasAtraso: null, emAberto: 0,
+      mensalidade: l.valor || 0,          // a planilha traz a mensalidade da marca
+      ultimoPagamento: marca && marca.ultimoPagamento,
+      /* A planilha traz a VENDEDORA, que não é a CS — vinham do card
+         "Churn declarado", que saiu de cena quando a régua virou uma só. */
+      vendedora: l.vendedora || null, observacao: l.observacao || null,
+      /* texto, não booleano: a tabela principal renderiza por `tipo` e não
+         tem formatador de sim/não. */
+      naCarteira: marca ? 'sim' : 'não achou a marca'});
   });
   return out.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+}
+
+/* A bonificação pede por lista de meses e só conta as três CS do programa —
+   ou uma delas, na visão individual. O filtro por mês fica depois da janela
+   porque `meses` pode ser um trimestre e a janela, dois extremos. */
+function itensChurn(meses, cs){
+  if(!meses || !meses.length) return [];
+  const p = {ini: meses[0]+'-01', fim: janelaDoMes(meses[meses.length-1]).fim};
+  return eventosDeChurn(p, quem => cs ? quem===cs : BONIF_CS.includes(quem))
+    .filter(x => meses.includes(String(x.data).slice(0,7)));
 }
 
 /* Tino: a régua olha o ÚLTIMO mês do trimestre ("ao final de dezembro"), e a
@@ -4208,12 +4165,12 @@ const CARDS_VISAO = [
   },
   {
     id:'churnCs', titulo:'Churn', cor:'#C0453B',
-    capa:'Negócios que estão hoje no estágio "Perdido (Churn)" e foram mexidos dentro do período',
-    fonte:'HubSpot — estágio atual "Perdido (Churn)", que existe nos 4 pipelines de CS. A data é a de fechamento (<code>closedate</code>) ou, sem ela, a da última alteração: o HubSpot não guarda quando o negócio ENTROU nesse estágio sem a API de histórico de propriedades.',
-    campoData:'fechadoEm',
-    linhas:ctx=>churnsNoPeriodo(ctx.p).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
-      pipeline:o.pipeline, estagio:o.estagio, fechadoEm:o.fechadoEm, data:o.data}))
-      .sort((a,b)=>String(b.fechadoEm).localeCompare(String(a.fechadoEm))),
+    capa:'Marcas perdidas no período: plataforma bloqueada por inadimplência, mais o que o time registrou na planilha',
+    fonte:'A régua do churn, a mesma em todo o painel desde <b>13/10/2026</b>: marca com a <b>plataforma bloqueada por inadimplência</b> (data do corte do módulo, que vem da automação lida pelo Painel Elisa) <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura. A coluna <b>Origem</b> diz por qual das duas a marca entrou. <b>"Em alerta" não entra</b>: atraso de 1 a 10 dias é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, na Gerencial.',
+    campoData:'data',
+    /* Sem filtro de CS: esta aba só tem o de período, e boa parte das marcas
+       bloqueadas já perdeu a CS no cadastro — sairiam da conta se filtrasse. */
+    linhas:ctx=>eventosDeChurn(ctx.p),
     resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
       const dif = rows.length - ant.length;
       return {v:fmt.int(rows.length),
@@ -4224,13 +4181,19 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Plataforma bloqueada', v:fmt.int(rows.filter(r=>r.origem==='Plataforma bloqueada').length),
+         s:'módulo de vendas cortado por inadimplência'},
+        {l:'Planilha do time', v:fmt.int(rows.filter(r=>r.origem==='Planilha do time').length),
+         s:'cancelamento ou inadimplência registrados à mão'},
         {l:'Período anterior', v:fmt.int(ant.length), s:rotuloPeriodo(periodoAnterior(ctx.p))},
         {l:'Contra os clientes novos', v:pctTexto(rows.length, novas.length),
          s:fmt.int(novas.length)+' clientes novos no mesmo período'},
       ]; },
     metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
-    colunas:[{k:'fechadoEm', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
-      {k:'pipeline', l:'Pipeline'}, {k:'data', l:'Negócio criado em', f:fmt.date}],
+    colunas:[{k:'data', l:'Data do churn', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
+      {k:'plano', l:'Plano'}, {k:'mensalidade', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'}],
   },
   {
     id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
@@ -4959,10 +4922,6 @@ function novasVendasNoPeriodo(p){
    pipelines, sempre com esse nome). Campo de data: `fechadoEm`
    (closedate/hs_lastmodifieddate) — aproximado, não é a data exata da troca
    de estágio. */
-function churnsNoPeriodo(p){
-  return (DATA.onboarding||[]).filter(o=>/perdido\s*\(churn\)/i.test(o.estagio||'')
-    && o.fechadoEm>=p.ini && o.fechadoEm<=p.fim);
-}
 function reunioesNoPeriodo(p){
   return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && r.resultado!=='Agendada');
 }
@@ -5434,40 +5393,44 @@ const TABS = [
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
     titulo:'Churn',
-    desc:'Mesma leitura da aba <b>Inadimplentes</b> do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa (Gambiarra)</a> — pedido da Laura em 10/09/2026: "módulo vendas bloqueado" de verdade, não mais a inferência por fatura vencida que esta aba usava antes. A lista em si é uma <b>foto de hoje</b> (quem está em cada situação agora); o <b>filtro de período</b> recorta por <b>quando a situação começou</b> — "Bloqueado em" pra quem já teve o módulo cortado, "Venc. mais antigo" pra quem ainda está no painel (alerta ou bloqueada só por atraso, nunca cortada). '
-      + '<b>Em alerta</b> = módulo vendas ligado, fatura vencida há 1-10 dias. '
-      + '<b>Bloqueada</b> = módulo vendas ligado com fatura vencida há 11+ dias, OU módulo já cortado mas com a fatura ainda em aberto na Iugu (sem prova de cancelamento). '
-      + '<b>Cancelada</b> = módulo vendas cortado <i>e</i> a última fatura mapeada da marca tem status <code>canceled</code> na Iugu — a mera ausência de fatura vencida não comprova cancelamento. '
-      + 'Marca que pagou fatura mais nova DEPOIS do vencimento em aberto (só pendurou uma fatura velha) sai da lista, igual quem não paga nada há mais de 60 dias (virou caso de cancelamento, não de cobrança). '
-      + '<b>Bloqueado em</b> vem de uma planilha alimentada por automação (n8n) que corta o ambiente — não existe essa data no BigQuery (confirmado em 09/09/2026, buscando nas 3 datasets do projeto); é a mesma fonte que o Painel Elisa já lê. '
-      + 'Dados vêm dos JSONs que o Painel Elisa gera todo dia — se ele ainda não rodou hoje, esta aba reflete a última carga dele, não a da CS.',
-    filtros:['cliente','cs','canal','situacao','periodo'],
-    tabela:'Marcas', chaveCliente:'cliente',
+    desc:'<b>A régua do churn, a mesma em todo o painel desde 13/10/2026</b> — pedido da Laura: "usa a mesma regra da bonificação de churn em todas as abas". Entra a marca que teve a <b>plataforma bloqueada por inadimplência</b> (o módulo de vendas cortado, data que vem da automação n8n lida pelo <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa</a>) <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (só as observações "solicitou cancelamento" e "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. É a régua que o Eduardo escreveu em 07/10/2026 para a bonificação. '
+      + '<b>O filtro de período recorta pela data do churn</b>: a do corte do módulo, ou a que o time escreveu na planilha. '
+      + '<b>"Em alerta" não entra.</b> Fatura vencida há 1 a 10 dias é cobrança, não perda — antes desta mudança a aba listava alerta junto, e por isso o número daqui nunca batia com o da Bonificação. A foto de quem está devendo <i>hoje</i> continua inteira no card <b>Inadimplência hoje</b>, na aba Gerencial. '
+      + '<b>Origem</b> diz por qual das duas pontas a marca entrou; <b>No cadastro?</b> avisa quando a marca da planilha não foi encontrada no cadastro — nesses casos não há CS, plano nem mensalidade para mostrar. '
+      + 'Marca bloqueada costuma <b>perder a CS no cadastro junto com o módulo</b>, então boa parte das linhas aparece como "Sem CS": é assim no dado de origem, não é falha de atribuição.',
+    filtros:['cliente','cs','canal','origemChurn','periodo'],
+    tabela:'Marcas', chaveCliente:'nome',
     colunas:[
-      {k:'cliente', l:'Marca', tipo:'cliente'},
-      {k:'situacao', l:'Situação', tipo:'situacaoChurn'},
+      {k:'nome', l:'Marca', tipo:'cliente'},
+      {k:'data', l:'Data do churn', tipo:'date'},
+      {k:'origem', l:'Origem'},
+      {k:'detalhe', l:'Motivo / situação'},
       COL_CS,
       {k:'canal', l:'Canal', tipo:'tag'},
       {k:'dominio', l:'Domínio', tipo:'dominio'},
-      {k:'bloqueadoEm', l:'Bloqueado em', tipo:'date'},
-      {k:'vencMaisAntigo', l:'Venc. mais antigo', tipo:'date'},
+      {k:'plano', l:'Plano'},
+      {k:'mensalidade', l:'Mensalidade', tipo:'money0traco', r:true},
       {k:'ultimoPagamento', l:'Último pagamento', tipo:'date'},
-      {k:'diasSemPagar', l:'Dias sem pagar', tipo:'diasSemPagar', r:true},
-      {k:'diasAtrasoV', l:'Dias em atraso', tipo:'int0traco', r:true},
-      {k:'faturasVencidas', l:'Faturas vencidas', tipo:'int0traco', r:true},
-      {k:'subcontasTxt', l:'Subconta Iugu', tipo:'texto'},
-      {k:'valorEmAbertoV', l:'Valor em aberto', tipo:'money0traco', r:true, forte:true},
-      {k:'valorMensal', l:'Mensalidade', tipo:'money0traco', r:true},
+      {k:'diasAtraso', l:'Dias em atraso', tipo:'int0traco', r:true},
+      {k:'emAberto', l:'Em aberto', tipo:'money0traco', r:true, forte:true},
+      {k:'vendedora', l:'Vendedora (planilha)', tipo:'texto'},
+      {k:'naCarteira', l:'No cadastro?', tipo:'texto'},
     ],
     linhas:()=>linhasChurn(),
     kpis:(rows)=>{
-      const todas = DATA.churn.linhas||[];
-      const emAberto = todas.filter(c=>!c._semDivida).reduce((s,c)=>s+(c.valorEmAberto||0),0);
+      const bloq = rows.filter(r=>r.origem==='Plataforma bloqueada');
+      const plan = rows.filter(r=>r.origem==='Planilha do time');
       return [
-        {l:'Em alerta', v:fmt.int(todas.filter(c=>c.situacao==='alerta').length), s:'1-10 dias de atraso'},
-        {l:'Bloqueadas', v:fmt.int(todas.filter(c=>c.situacao==='bloqueada').length), s:'11+ dias, ou módulo já cortado'},
-        {l:'Canceladas', v:fmt.int(todas.filter(c=>c.situacao==='cancelada').length), s:`últimos ${DATA.meta.canceladaRecenteDias||90} dias`},
-        {l:'Valor em aberto', v:fmt.moneyCompact(emAberto), s:'alerta + bloqueada, todas as marcas'},
+        {l:'Churn no período', v:fmt.int(rows.length), s:'pela régua única, sem marca repetida'},
+        {l:'Plataforma bloqueada', v:fmt.int(bloq.length), s:'módulo de vendas cortado por inadimplência'},
+        {l:'Planilha do time', v:fmt.int(plan.length), s:'cancelamento ou inadimplência registrados à mão'},
+        /* O valor só é conhecido de quem veio da planilha: do que foi cortado
+           pela automação, o Painel Elisa não traz a mensalidade. Sem dizer
+           isso o KPI parece afirmar que o resto valia zero. */
+        {l:'Mensalidade perdida', v:fmt.moneyCompact(rows.reduce((t,r)=>t+(r.mensalidade||0),0)),
+         s:`recorrente que deixa de entrar · valor conhecido de ${fmt.int(rows.filter(r=>r.mensalidade>0).length)} das ${fmt.int(rows.length)}`},
+        {l:'Deixaram em aberto', v:fmt.moneyCompact(rows.reduce((t,r)=>t+(r.emAberto||0),0)),
+         s:'fatura vencida e não paga'},
       ];
     }
   },
@@ -5753,12 +5716,12 @@ function marcosDoCs(cs, p){
     ...eventos.map(ev=>({cliente:ev.cliente, tipo:ev.tipo, data:ev.data})),
   ].sort((a,b)=>b.data.localeCompare(a.data));
 }
-/* Situação de churn é FOTO DE HOJE (não do período) — mesma régua da aba
-   Churn. Só entram linhas com CS preenchido: a marca "fora do painel" ou
-   "cancelada" que a aba Churn também lista não tem CS (perdeu a carteira
-   junto com o módulo), então não tem como atribuir aqui. */
+/* Churn da CS no período, pela régua única (13/10/2026). Antes era a foto de
+   hoje do Painel Elisa, sem data de evento. Marca bloqueada costuma perder a
+   CS no cadastro junto com o módulo — essas ficam em "Sem CS" e não entram
+   aqui, que é uma visão por pessoa. */
 function churnDoCs(cs){
-  return (DATA.churn.linhas||[]).filter(c=>c.cs && normalizarCs(c.cs)===cs);
+  return eventosDeChurn(periodo(), quem => quem === cs);
 }
 function categoriasNegociosCs(){
   const cs = estado.filtros.csFoco;
@@ -5788,8 +5751,8 @@ function kpisCarteiraCs(){
   const reun = reunioesDoCs(cs,p);
   const fechouReuniao = reun.filter(r=>r.resultado==='Fechou negócio').length;
   const churnLinhas = churnDoCs(cs);
-  const bloqueadas = churnLinhas.filter(c=>c.situacao==='bloqueada').length;
-  const canceladas = churnLinhas.filter(c=>c.situacao==='cancelada').length;
+  const bloqueadas = churnLinhas.filter(c=>c.origem==='Plataforma bloqueada').length;
+  const canceladas = churnLinhas.filter(c=>c.origem==='Planilha do time').length;
   const riscoAlto = ativas.filter(c=>c.riscoChurn==='Alto').length;
   /* Pontuação segue o MÊS DO PERÍODO escolhido no filtro (fim do período),
      não o "mês fechado" independente da aba Bonificação — pedido da Laura,
@@ -5807,7 +5770,8 @@ function kpisCarteiraCs(){
     {l:'Negócios perdidos', v:fmt.int(perdidos.length), s:fmt.moneyCompact(soma(perdidos,'valor'))+' no período'},
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
-    {l:'Bloqueadas / canceladas', v:fmt.int(bloqueadas)+' / '+fmt.int(canceladas), s:'situação de churn hoje'},
+    {l:'Churn no período', v:fmt.int(churnLinhas.length),
+     s:fmt.int(bloqueadas)+' por bloqueio · '+fmt.int(canceladas)+' na planilha do time'},
     pontos!=null
       ? {l:'Pontuação do mês', v:fmt.int(pontos)+' pts', s:rotuloMes(mesDoPeriodo)}
       : ehPontuado(cs)
@@ -5860,13 +5824,11 @@ function extraCarteiraCs(){
   wrap.appendChild(cardLista('Marcos de volume no período', marcosDoCs(cs,p),
     [{k:'cliente', l:'Marca'}, {k:'tipo', l:'Marco'}, {k:'data', l:'Data', f:fmt.date}]));
 
-  const churnLinhas = churnDoCs(cs).sort((a,b)=>(b.diasAtraso||0)-(a.diasAtraso||0));
-  const rotSit = {alerta:'Em alerta', bloqueada:'Bloqueada', cancelada:'Cancelada'};
-  wrap.appendChild(cardLista('Situação de churn hoje', churnLinhas,
-    [{k:'cliente', l:'Marca'}, {k:'situacao', l:'Situação', f:v=>rotSit[v]||v},
-     {k:'bloqueadoEm', l:'Bloqueado em', f:v=>v?fmt.date(v):'—'},
-     {k:'vencMaisAntigo', l:'Venc. mais antigo', f:v=>v?fmt.date(v):'—'},
-     {k:'valorEmAberto', l:'Valor em aberto', r:true, f:v=>v?fmt.money(v):'—'}]));
+  wrap.appendChild(cardLista('Churn no período', churnDoCs(cs),
+    [{k:'nome', l:'Marca'}, {k:'data', l:'Data do churn', f:fmt.date},
+     {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
+     {k:'mensalidade', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
+     {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'}]));
 
   return wrap;
 }
@@ -6342,7 +6304,7 @@ function kpisDeal(rows){
 /* ============================================================================
    5. ESTADO
    ========================================================================== */
-const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos',
+const FILTROS_PADRAO_BASE = { cliente:'', statusDeal:'todos', situacao:'todos', origemChurn:'todos',
   statusCliente:'todos', resultadoReuniao:'todos', statusTicket:'todos', pipeline:'todos',
   /* vazios = "o último mês com dado" e "a primeira regra"; quem resolve é
      mesBonificacao() / o gráfico da aba */
@@ -7130,6 +7092,11 @@ function renderFiltros(t){
     add('Situação', sel([['todos','Todas'],['alerta','Em alerta'],
       ['bloqueada','Bloqueadas'],['cancelada','Canceladas']],
       estado.filtros.situacao, v=>estado.filtros.situacao=v));
+  }
+  if(t.filtros.includes('origemChurn')){
+    add('Origem', sel([['todos','As duas'],['Plataforma bloqueada','Plataforma bloqueada'],
+      ['Planilha do time','Planilha do time']],
+      estado.filtros.origemChurn, v=>estado.filtros.origemChurn=v));
   }
   if(t.filtros.includes('csFoco')){
     add('CS', sel(CS_CARTEIRA.map(n=>[n,n]), estado.filtros.csFoco, v=>estado.filtros.csFoco=v));

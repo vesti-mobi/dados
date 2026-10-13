@@ -746,6 +746,68 @@ mais uma linha de texto do tipo *"Reuniões realizadas: 14 · 56% acima do mês
 anterior (9) · 40% acima da média dos 6 meses anteriores (10)"*. Cards com duas
 métricas — Cross-sell e Upsell — desenham as duas barras lado a lado.
 
+## Churn: uma régua só, em todas as abas (13/10/2026)
+
+A Laura perguntou o que a Visão geral contava como churn, viu que não era o
+mesmo que a Bonificação e mandou unificar: *"usa a mesma regra da bonificação
+de churn em todas as abas"*.
+
+**A régua que vale agora**, em todo o painel, é a que o Eduardo escreveu em
+07/10/2026 para a bonificação:
+
+> marca com a **plataforma bloqueada por inadimplência** ∪ o que o time
+> registrou na **planilha de churn** (observação "solicitou cancelamento" ou
+> "inadimplente"), **sem contar a mesma marca duas vezes**.
+
+Mora em `eventosDeChurn(p, quem)`. O `itensChurn(meses, cs)` da bonificação
+passou a ser uma casca em volta dela — o número de lá não mudou um dígito
+(19 no trimestre jul–set, 3 por bloqueio e 16 pela planilha).
+
+**O que havia antes.** Quatro leituras para a mesma palavra:
+
+| Onde | Contava | Em set/2026 |
+|---|---|---|
+| Bonificação | bloqueio ∪ planilha | 6 (só as 3 CS) |
+| Visão geral | negócio "Perdido (Churn)" no HubSpot | 4 |
+| Gerencial | sem fatura paga há 45 dias e sem fatura futura | 4 |
+| Aba Churn | foto de hoje: em alerta, bloqueada ou cancelada | sem data, não dava para recortar |
+
+A da Visão geral era a mais enganosa: dos 41 churns do trimestre, **28 eram do
+pipeline "Varejo - Jornada"** e nenhum deles estava no cadastro de clientes.
+E havia uma assimetria — o "interesse" desse pipeline fica fora da conta de
+novas vendas, mas o churn dele entrava inteiro.
+
+**Agora**, em setembro, Visão geral e Gerencial dão **60** (o time todo, "Sem
+CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
+desenho. Mesma régua, recortes diferentes e declarados.
+
+### O que mudou de lugar
+
+- **"Em alerta" saiu do churn.** Fatura vencida há 1 a 10 dias é cobrança, não
+  perda. A foto de quem está devendo hoje não sumiu: continua inteira no card
+  *Inadimplência hoje*, na Gerencial, que nunca foi churn e diz o que é.
+- **A aba Churn virou a lista de eventos**, com data e filtro de período, em
+  vez da foto do Painel Elisa. O filtro "Situação" virou **"Origem"** (as duas,
+  plataforma bloqueada, planilha do time).
+- **O card "Churn declarado (planilha)" saiu da Gerencial.** Com a régua nova
+  ele virou metade exata do card ao lado; as colunas que só ele tinha
+  (vendedora, "no cadastro?") foram para o card unificado.
+- **`churnsNoPeriodo` e `linhasChurnMes` foram apagadas** — ninguém mais as
+  chamava.
+
+### Duas coisas que o dado não sabe
+
+- **A mensalidade de quem foi cortado pela automação.** O Painel Elisa só traz
+  `valorMensal` de quem ainda está em cobrança; de quem já teve o módulo
+  cortado, não. A planilha traz (422 das 425 linhas). Por isso o KPI diz de
+  quantas linhas o valor é conhecido — "R$ 56k · valor conhecido de 89 das
+  159" — em vez de somar e deixar parecer que o resto valia zero. Na tabela,
+  mensalidade desconhecida sai como `—`, nunca como `R$ 0`.
+- **A CS de quem foi bloqueado.** A marca costuma perder a CS no cadastro junto
+  com o módulo: 42 dos 60 churns de setembro aparecem como "Sem CS". É assim na
+  origem, não é falha de atribuição — e é por isso que a Carteira por CS mostra
+  menos: ela é uma visão por pessoa.
+
 ### Churn: evento × foto (28/09/2026)
 
 Crítica do Walid: *"esse número está saltando mas não são de fato cancelados…
