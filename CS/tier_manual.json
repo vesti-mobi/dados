@@ -1,0 +1,19 @@
+{
+  "_leia": [
+    "Tier fixado à mão. Tem prioridade sobre o cálculo automático e NUNCA muda sozinho —",
+    "é essa a razão de existir: a marca pequena dentro da Vesti mas grande fora dela fica",
+    "no tier que a pessoa decidiu, para sempre, até alguém mudar este arquivo.",
+    "",
+    "Para fixar uma marca, acrescente um item em 'marcas', assim:",
+    "  { \"dominio\": \"123456\", \"nome\": \"Sawary\", \"tier\": \"T1\",",
+    "    \"porque\": \"grande fora da Vesti\", \"quem\": \"Laura\", \"em\": \"2026-10-13\" }",
+    "",
+    "Casa por 'dominio' (o número da coluna Domínio da Tabela geral) e, na falta dele,",
+    "pelo 'nome' exato. Prefira sempre o domínio: 28 marcas da carteira dividem o nome",
+    "com outra, e pelo nome as duas seriam fixadas juntas.",
+    "",
+    "tier: T1, T2, T3 ou T4.  'quem' e 'em' são para quem ler depois; 'porque' aparece",
+    "no painel, ao lado do tier."
+  ],
+  "marcas": []
+}

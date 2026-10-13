@@ -580,6 +580,12 @@ td.strong{font-weight:600}
 .pill.open{background:#EAF3FC;color:#1C639F;border-color:#D3E6F7}
 .pill.open i{background:#1C639F}
 .tag{display:inline-block;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 7px;font-size:11.5px;color:var(--ink-2);background:var(--sunken)}
+/* Tier: uma escala, então as cores andam juntas do mais forte ao mais leve. */
+.tag.tier-T1{background:#E8EDFD;border-color:#CBD8F8;color:#1F4FD8;font-weight:700}
+.tag.tier-T2{background:#EAF3FC;border-color:#D3E6F7;color:#1C639F;font-weight:600}
+.tag.tier-T3{background:var(--sunken);border-color:var(--line);color:var(--ink-2)}
+.tag.tier-T4{background:var(--surface);border-color:var(--line);color:var(--ink-3)}
+.cell-sub.fixo{color:var(--gold);font-weight:600}
 .tag.t-Enterprise{background:#EEF0FE;border-color:#DCDFFA;color:#4048B8}
 .tag.t-Pro{background:#E6F4F2;border-color:#CFE8E4;color:#0C6B65}
 .tag.t-Essencial{background:var(--sunken);border-color:var(--line);color:var(--ink-2)}
@@ -1426,8 +1432,14 @@ function montarClientesAgregados(){
        duas coisas faria "a marca está saudável" mudar de resposta conforme a
        janela que alguém escolheu para olhar receita. */
     const h = healthDaMarca(c);
+    /* Tier não depende do período do filtro — é sempre a média dos dois
+       últimos meses fechados, como o health score é sempre a foto de 30 dias.
+       Mudar de resposta conforme a janela escolhida tiraria o sentido de
+       "esta marca é T2". */
+    const t = tierDaMarca(c);
     return Object.assign({}, c, a, {
       health: h.score, _health: h,
+      tier: t.tier, tierManual: t.manual, _tier: t,
       ticketMedio: a.pedidos ? Math.round(a.valorCriado/a.pedidos*100)/100 : 0,
       // total = tudo que a marca gerou de receita para a Vesti no período
       receitaTotal: Math.round((a.receitaInterchange + a.receitaMensalidade
@@ -1759,6 +1771,95 @@ const TINO_ATIVO_POR_DOM = (()=>{ const m = {};
   return m })();
 const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
 
+/* ===========================================================================
+   TIER — o porte da marca pelo GMV (Laura, 13/10/2026)
+
+     T1  acima de R$ 1 milhão por mês
+     T2  de R$ 200 mil a R$ 1 milhão
+     T3  de R$ 50 mil a R$ 200 mil
+     T4  abaixo de R$ 50 mil
+
+   pela MÉDIA dos dois últimos meses FECHADOS — hoje, agosto e setembro. O mês
+   corrente fica de fora de propósito: no dia 3 ele teria três dias de venda e
+   rebaixaria a carteira inteira.
+
+   O GMV é o da régua do Power BI (todo pedido criado, sem teto), a mesma da
+   coluna GMV da tabela — assim o tier e a coluna ao lado contam a mesma
+   história.
+
+   RECLASSIFICAÇÃO À MÃO. Pedido da Laura: *"tem que ter um jeito de
+   reclassificar manualmente e se fizer o manual, fixa no manual (...) a Sawary
+   na Vesti é pequena mas fora da Vesti é enorme"*. O arquivo `tier_manual.json`
+   fixa a marca num tier e o cálculo automático nunca mais a toca — é lido no
+   boot, então vale assim que o arquivo é publicado, sem esperar a carga das
+   4:00. Casa por domínio e, na falta dele, pelo nome.
+   ========================================================================= */
+const FAIXAS_TIER = [
+  {t:'T1', min:1000000, l:'acima de R$ 1 mi/mês'},
+  {t:'T2', min:200000,  l:'R$ 200 mil a R$ 1 mi/mês'},
+  {t:'T3', min:50000,   l:'R$ 50 a 200 mil/mês'},
+  {t:'T4', min:0,       l:'abaixo de R$ 50 mil/mês'},
+];
+const TIERS = FAIXAS_TIER.map(f=>f.t);
+
+/* Os dois últimos meses fechados. O mês do fim do arquivo só conta se o
+   arquivo chega ao último dia dele — senão a média pegaria um mês pela metade
+   e rebaixaria quem não fez nada de errado. */
+function mesesFechadosDoTier(){
+  const fim = String(LIMITE_DADOS.fim).slice(0,10);
+  const mes = fim.slice(0,7);
+  const ultimo = ultimoDiaDoMes(mes+'-01') === fim ? mes : mesAnterior(mes);
+  return [mesAnterior(ultimo), ultimo];
+}
+
+/* Fixados à mão. Preenchido no boot por `carregarTierManual()`; enquanto o
+   arquivo não chega, o painel roda só com o cálculo automático. */
+const TIER_MANUAL = {porDominio:{}, porNome:{}};
+
+function tierDaMarca(c){
+  const fixo = TIER_MANUAL.porDominio[String(c.dominio||'')]
+            || TIER_MANUAL.porNome[chaveNomeMarca(c.nome||'')];
+  if(fixo && TIERS.includes(fixo.tier))
+    return {tier:fixo.tier, manual:true, porque:fixo.porque||'', media:null};
+  const [m1, m2] = mesesFechadosDoTier();
+  const idx = idxMensal().carteira;
+  const doMes = m => { const a = c.dominio ? idx[c.dominio+'|'+m] : null; return a ? (a.gmvCriado||0) : 0 };
+  const media = (doMes(m1) + doMes(m2)) / 2;
+  return {tier: FAIXAS_TIER.find(f=>media >= f.min).t, manual:false, porque:'', media};
+}
+
+/* Boot: lê o arquivo de tier fixado à mão. Se ele não existir ou estiver
+   quebrado, o painel segue inteiro no cálculo automático — e avisa no console
+   em vez de sumir com a coluna. */
+function carregarTierManual(){
+  fetch('tier_manual.json', {cache:'no-store'})
+    .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
+    .then(j=>{
+      let n = 0;
+      (j && j.marcas || []).forEach(m=>{
+        if(!m || !TIERS.includes(m.tier)) return;
+        if(m.dominio) TIER_MANUAL.porDominio[String(m.dominio)] = m;
+        else if(m.nome) TIER_MANUAL.porNome[chaveNomeMarca(m.nome)] = m;
+        else return;
+        n++;
+      });
+      if(n){ _cacheAgregados = {chave:null, linhas:null}; renderPagina() }
+      /* Avisa o que não casou com ninguém: sem isso, quem edita o arquivo
+         escreve "Sawary" onde a base tem "Sawary Jeans" e fica achando que o
+         painel ignorou o pedido. O casamento é exato de propósito — nome
+         parecido pegaria a marca errada. */
+      const porDom = new Set(DATA.clientes.map(c=>String(c.dominio||'')));
+      const porNome = new Set(DATA.clientes.map(c=>chaveNomeMarca(c.nome||'')));
+      const perdidas = (j && j.marcas || []).filter(m=>m && TIERS.includes(m.tier))
+        .filter(m=> m.dominio ? !porDom.has(String(m.dominio)) : !porNome.has(chaveNomeMarca(m.nome||'')));
+      console.log('[tier] '+n+' marca(s) com tier fixado à mão'
+        + (perdidas.length ? ' · NÃO ACHEI na carteira: '
+            + perdidas.map(m=>m.nome || m.dominio).join(', ')
+            + ' — confira o domínio ou escreva o nome exatamente como está na Tabela geral' : ''));
+    })
+    .catch(e=>console.warn('[tier] sem tier_manual.json — só o cálculo automático:', e.message));
+}
+
 const FAIXAS_GMV = [
   ['Sem GMV',            r => !(r.valorCriado > 0)],
   ['Até R$ 10 mil',      r => r.valorCriado > 0 && r.valorCriado < 10000],
@@ -1801,6 +1902,8 @@ const GRUPOS_FILTRO = [
       ['Tem integração',  r => !!r.integracao && r.integracao !== 'Sem integração'],
       ['Sem integração',  r => !r.integracao || r.integracao === 'Sem integração'],
     ] },
+  { k:'tier',   l:'Tier', opcoes:()=>FAIXAS_TIER.map(f=>[f.t+' — '+f.l, r=>r.tier === f.t])
+      .concat([['Fixado à mão', r=>!!r.tierManual]]) },
   { k:'gmv',    l:'Faixa de GMV',    opcoes:()=>FAIXAS_GMV },
   { k:'health', l:'Health score',    opcoes:()=>FAIXAS_HEALTH },
 ];
@@ -3051,8 +3154,12 @@ function camposDaLista(c){
   const ehData = x => x.k==='data' || x.tipo==='date' || x.f===fmt.date;
   const texto = (c.colunas||[]).filter(x=>x.k && !x.r && !ignorar.includes(x.tipo) && !ehData(x));
   const nome = texto.find(x=>['nome','cliente','marca'].includes(x.k)) || texto[0] || null;
-  const valor = (c.colunas||[])
-    .find(x=>x.k && x.r && (x.tipo==='money' || x.tipo==='int' || x.f));
+  /* `principal` marca a coluna que vale como "o valor" do card. Sem ela, a
+     lista ranqueava pela primeira coluna numérica, que em Novas vendas era a
+     CONTAGEM de negócios e não o dinheiro. */
+  const cols = c.colunas || [];
+  const valor = cols.find(x=>x.k && x.principal)
+    || cols.find(x=>x.k && x.r && (x.tipo==='money' || x.tipo==='int' || x.f));
   return {nome, tipo: texto.find(x=>x !== nome) || null, valor: valor || null};
 }
 function celulaTexto(r, col){
@@ -4154,13 +4261,17 @@ const CARDS_VISAO = [
         l.v++; l.quem.push(r.nome); por.set(r.proprietario, l) });
       return [...por.values()].sort((a,b)=>b.v-a.v)
         .map((x,i)=>Object.assign(x, {cor:cores[i%cores.length]})); },
+    /* O valor de cada marca estava na décima coluna, fora da vista — a Laura
+       pediu para ver quanto cada cliente novo valeu. `principal` manda na
+       lista das maiores, que antes ranqueava pela CONTAGEM de negócios. */
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME,
+      {k:'valor', l:'Valor ganho', r:true, principal:true, forte:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'origem', l:'Origem'},
+      {k:'plano', l:'Plano'},
       {k:'canal', l:'Canal'},
       {k:'negocios', l:'Negócios no período', r:true, f:v=>v>1?fmt.int(v):'1'},
       {k:'cadastro', l:'Marca cadastrada em', f:v=>v?fmt.date(v):'—'},
       {k:'proprietario', l:'Proprietário do negócio'}, {k:'cs', l:'CS da marca'},
-      {k:'plano', l:'Plano'}, {k:'valor', l:'Valor', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'pipeline', l:'Pipeline'}, {k:'estagio', l:'Estágio atual'}],
   },
   {
@@ -4242,6 +4353,7 @@ const CARDS_VISAO = [
           produto:n.produto||'—', negocio:n.negocio, status:n.status, estagio:n.estagio,
           temperatura:n.temperatura||'', valor:n.valor||0, antes:g.antes, mesAntes:g.mesAntes,
           ganhoMes:g.ganhoMes, efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
+          emNegociacao: n.status==='Em aberto' ? (n.valor||0) : 0,
           semBase: n.categoriaTxt==='Upgrade' && n.status==='Ganho' && g.ganhoMes==null};
       })
       .sort((a,b)=> b.efetivo-a.efetivo || b.valor-a.valor),
@@ -4270,38 +4382,20 @@ const CARDS_VISAO = [
     ],
     tituloCategorias:'Em negociação por temperatura',
     categorias:ctx=>categoriasTemperatura(linhasDoCard(cardVisao('negociosVg'), ctx).filter(r=>r.status==='Em aberto')),
+    /* "Nos negócios só a diferença na lista, não o valor bruto" (Laura,
+       13/10/2026). O valor cheio do plano novo saiu da tabela: no upgrade ele
+       dá a impressão de um ganho que não existe, porque a marca já pagava a
+       mensalidade anterior. Fica o `efetivo` — valor do negócio no cross-sell,
+       a diferença no upgrade — e a mensalidade anterior ao lado, para a conta
+       se explicar. O que ainda está em negociação vai na coluna própria. */
     colunas:[{k:'data', l:'Criado em', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'categoriaTxt', l:'Categoria'},
+      {k:'efetivo', l:'Ganho por mês', r:true, principal:true, forte:true,
+       f:v=>v ? fmt.money(v) : '—'},
+      {k:'emNegociacao', l:'Em negociação', r:true, f:v=>v ? fmt.money(v) : '—'},
+      {k:'antes', l:'Mensalidade anterior', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'produto', l:'Produto'}, {k:'negocio', l:'Negócio'}, {k:'status', l:'Status'},
       {k:'estagio', l:'Estágio'}, {k:'temperatura', l:'Temperatura', f:v=>v||'—'},
-      {k:'valor', l:'Valor do negócio', r:true, f:fmt.money},
-      {k:'antes', l:'Mensalidade anterior', r:true, f:v=>v==null?'—':fmt.money(v)},
-      {k:'ganhoMes', l:'Ganho por mês (upgrade)', r:true, f:v=>v==null?'—':fmt.money(v)},
       {k:'fechadoEm', l:'Fechado em', f:fmt.date}],
-  },
-  {
-    id:'funil', titulo:'Funil de onboarding', cor:'#1E74C8',
-    capa:'Foto do momento: negócios em andamento nos pipelines de CS, por fase',
-    fonte:'HubSpot — campo <code>estagio</code> cru do negócio, agrupado em 5 fases. <b>Não depende do período</b>: é a contagem de quem está parado em cada fase agora, não um fluxo.',
-    vazio:'Nenhum negócio em andamento nas cinco fases do funil.',
-    linhas:()=>(DATA.onboarding||[]).map(o=>({nome:o.cliente, cs:normalizarCs(o.cs)||CS_POR_CLIENTE[o.cliente]||'Sem CS',
-        fase:bucketOnboarding(o.estagio), estagio:o.estagio, pipeline:o.pipeline, data:o.data}))
-      .filter(o=>o.fase)
-      .sort((a,b)=>String(a.data).localeCompare(String(b.data))),
-    resumo:rows=>({v:fmt.int(rows.length),
-      s: rows.length ? `${rows.filter(r=>r.fase==='Implantado').length} já implantados · foto de hoje` : 'funil vazio'}),
-    kpis:rows=>{ const por = f=>rows.filter(r=>r.fase===f).length;
-      const maisVelho = rows[0];
-      return [
-        {l:'Em andamento', v:fmt.int(rows.length), s:'negócios parados nas 5 fases'},
-        {l:'Em treinamento', v:fmt.int(por('Treinamento')), s:'fase anterior à implantação'},
-        {l:'Implantados', v:fmt.int(por('Implantado')), s:pctTexto(por('Implantado'), rows.length)+' do funil'},
-        {l:'Mais antigo no funil', v: maisVelho ? fmt.date(maisVelho.data) : '—',
-         s: maisVelho ? maisVelho.nome : 'nada em andamento'},
-      ]; },
-    tituloCategorias:'Negócios por fase (foto do momento)',
-    categorias:()=>funilIntegracoes(),
-    colunas:[COL_NOME, COL_CS_CARD, {k:'fase', l:'Fase'}, {k:'estagio', l:'Estágio no HubSpot'},
-      {k:'pipeline', l:'Pipeline'}, {k:'data', l:'Negócio criado em', f:fmt.date}],
   },
   {
     id:'implantados', titulo:'Produtos implantados', cor:'#B7791F',
@@ -4333,30 +4427,6 @@ const CARDS_VISAO = [
     tituloCategorias:'Produtos implantados no período',
     categorias:()=>categoriasImplantados(), pizza:true,
     colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'produto', l:'Produto'}],
-  },
-  {
-    id:'marcos', titulo:'Marcos de volume', cor:'#0E7A73',
-    capa:'Marcas que cruzaram um marco de volume dentro do período',
-    fonte:'BigQuery — <b>Novas marcas criadas</b> é a data de criação do domínio; <b>5 e 25 pedidos pagos</b> e <b>100k de GMV</b> são o dia em que o acumulado da marca cruzou o limiar <b>pela primeira vez na vida</b>, então nenhuma marca repete o mesmo marco em período seguinte.',
-    campoData:'data',
-    linhas:ctx=>{ const p = ctx.p; const dentro = d => d && d>=p.ini && d<=p.fim;
-      const out = (DATA.clientes||[]).filter(c=>dentro(c.dataCadastro))
-        .map(c=>({nome:c.nome, cs:c.cs||'Sem CS', dominio:c.dominio, marco:'Novas marcas criadas', data:c.dataCadastro}));
-      (DATA.marcosVolume||[]).forEach(ev=>{ if(!dentro(ev.data)) return;
-        out.push({nome:ev.cliente, cs:CS_POR_DOM[ev.dominio]||CS_POR_CLIENTE[ev.cliente]||'Sem CS',
-          dominio:ev.dominio, marco:ev.tipo, data:ev.data}); });
-      return out.sort((a,b)=>String(b.data).localeCompare(String(a.data))); },
-    resumo:rows=>({v:fmt.int(rows.length),
-      s: rows.length ? `${rows.filter(r=>r.marco==='Novas marcas criadas').length} marcas novas · ${rows.filter(r=>r.marco!=='Novas marcas criadas').length} marcos de volume`
-                     : 'nenhum marco no período'}),
-    kpis:rows=>{ const por = t=>rows.filter(r=>r.marco===t).length;
-      return ORDEM_MARCOS.map(t=>({l:t, v:fmt.int(por(t)),
-        s: t==='Novas marcas criadas' ? 'domínio criado no período' : 'primeira vez na vida da marca'})); },
-    metricas:[{k:'qtd', l:'Marcos batidos', f:fmt.int, v:rows=>rows.length}],
-    tituloCategorias:'Marcos de volume no período',
-    categorias:()=>categoriasMarcos(),
-    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
-      {k:'dominio', l:'Domínio'}, {k:'marco', l:'Marco'}],
   },
 ];
 function cardVisao(id){ return CARDS_VISAO.find(c=>c.id===id) }
@@ -4948,17 +5018,6 @@ function bucketOnboarding(estagio){
   const b = BUCKET_ONBOARDING.find(x=>x.re.test(estagio||''));
   return b ? b.l : null;
 }
-function funilIntegracoes(){
-  const ORDEM = BUCKET_ONBOARDING.map(b=>b.l);
-  const porEstagio = {}, quemPorEstagio = {};
-  (DATA.onboarding||[]).forEach(o=>{
-    const b = bucketOnboarding(o.estagio); if(!b) return;
-    porEstagio[b]=(porEstagio[b]||0)+1;
-    (quemPorEstagio[b] || (quemPorEstagio[b]=[])).push(o.cliente);
-  });
-  const cores = ['var(--acc)','var(--acc-2)','var(--gold)','var(--pos)','var(--ink-3)'];
-  return ORDEM.map((l,i)=>({l, v:porEstagio[l]||0, cor:cores[i%cores.length], quem:quemPorEstagio[l]||[]}));
-}
 function categoriasNovasVendas(){
   const p = periodo(), ant = periodoAnterior(p);
   const atual = novasVendasNoPeriodo(p), anterior = novasVendasNoPeriodo(ant);
@@ -5136,8 +5195,8 @@ const TABS = [
     titulo:'Visão geral',
     desc:'O retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. '
       + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número, a evolução <b>semana a semana</b> dentro do período (janela longa agrupa por mês) e a lista das marcas — que antes só existia no hover do gráfico. A fonte de cada número está escrita no próprio card. '
-      + '<b>Experimento de 08/09/2026: parte daqui vem do HubSpot</b> (Novas vendas, Churn, Funil de onboarding, e Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram), pra comparar contra a leitura via BigQuery/Iugu/pedidos pagos que valia antes; os números podem não bater com o resto do painel de propósito. Tino e VestiPago em Produtos implantados continuam na fonte antiga: esse dado ainda não existe no HubSpot. <b>Marcos de volume</b> é 100% BigQuery. '
-      + '<b>Funil de onboarding</b> é o único card que não obedece ao período: é uma <b>foto do momento</b>, a contagem de quem está parado em cada fase agora.',
+      + '<b>Parte daqui vem do HubSpot</b> (Novas vendas, Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram); Tino e VestiPago em Produtos implantados continuam vindo da base do próprio produto, porque esse dado não existe no HubSpot. <b>Churn</b> passou a seguir a régua única do painel em 13/10/2026 — plataforma bloqueada mais a planilha do time —, a mesma da Bonificação e da Gerencial. '
+      + '<b>Funil de onboarding</b> e <b>Marcos de volume</b> saíram em 13/10/2026, a pedido da Laura: não estavam agregando.',
     filtros:['periodo'],
     semTabela:true,
     linhas:()=>[],
@@ -5167,6 +5226,7 @@ const TABS = [
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
     titulo:'Tabela geral dos clientes',
     desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>GMV (pedidos feitos)</b> segue a régua do relatório <i>GMV - Métricas</i> do Power BI desde 06/10/2026: conta <b>todo pedido criado</b>, pago ou não, e <b>sem o teto de R$ 50 mil</b> por pedido que o painel usava para descartar outlier. A coluna <b>Do qual pago</b> ao lado mostra quanto virou dinheiro — em agosto/2026 foram R$ 105,6 mi feitos contra R$ 79,6 mi pagos na carteira inteira. A aba <b>Bonificação continua no pago</b>, que é o que vale meta. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
+      + '<b>Tier</b> (13/10/2026) é o <b>porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. Também <b>não depende do período do filtro</b>: "esta marca é T2" não pode mudar de resposta conforme a janela escolhida. <b>Uma marca pode ser fixada num tier à mão</b> — para o caso da que é pequena dentro da Vesti e grande fora dela —, e aí o cálculo automático nunca mais mexe nela: a linha mostra "fixado à mão" com o motivo, e o filtro <b>Tier</b> tem a opção <b>Fixado à mão</b> para listar todas. '
       + '<b>Health score</b> (régua da Laura, 22/09/2026) é uma nota de 0 a 100 da saúde da marca, <b>independente do período do filtro</b>: ela olha sempre os <b>últimos 30 dias corridos</b>. '
       + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
       + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
@@ -5178,6 +5238,7 @@ const TABS = [
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       COL_CS,
       {k:'health', l:'Health score', tipo:'health', r:true},
+      {k:'tier', l:'Tier', tipo:'tier'},
       {k:'status', l:'Status', tipo:'status'},
       {k:'canal', l:'Canal', tipo:'tag'},
       {k:'integracao', l:'Integração', tipo:'tag'},
@@ -6551,6 +6612,7 @@ function agregarSerie(t){
    não está aqui aparece com o rótulo e sem linha de explicação — melhor do que
    inventar descrição para "CEP". */
 const AJUDA_COL = {
+  tier:'<b>Porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — o mês corrente fica de fora, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 milhão por mês, <b>T2</b> de R$ 200 mil a R$ 1 milhão, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o mesmo da coluna ao lado (todo pedido criado, sem teto — a régua do relatório do Power BI). <b>Dá para fixar uma marca num tier à mão</b>, e aí o cálculo automático nunca mais mexe nela: é o caso da marca que é pequena dentro da Vesti e grande fora. A linha fixada mostra "fixado à mão" embaixo do chip, com o motivo; o filtro <b>Tier → Fixado à mão</b> lista todas elas.',
   cliente:'Nome da marca como está no cadastro da plataforma.',
   nome:'Nome da marca como está no cadastro da plataforma.',
   status:'Ativa é quem teve pedido nos últimos 45 dias; o resto fica inativa.',
@@ -7890,6 +7952,23 @@ function celula(r,c){
         : (x.ok?'✓ +':'✗  ')+(x.ok?x.pts:0)+'  '+x.l+' — '+x.detalhe).join('\n')
         + (h.possiveis !== 100 ? '\n\nscore sobre '+h.possiveis+' pontos possíveis, normalizado para 100' : '');
       break }
+    /* Tier: o rótulo em chip e, embaixo, a média que o classificou — ou
+       "fixado à mão" com o motivo, para ninguém procurar o erro no cálculo. */
+    case 'tier': {
+      if(!v){ td.textContent = '—'; break }
+      const t = r._tier || {};
+      td.innerHTML = `<span class="tag tier-${v}">${v}</span>`
+        + (t.manual
+            ? `<span class="cell-sub fixo">fixado à mão${t.porque ? ' · '+escapar(t.porque) : ''}</span>`
+            : `<span class="cell-sub">${fmt.moneyCompact(t.media||0)}/mês</span>`);
+      const [m1, m2] = mesesFechadosDoTier();
+      td.title = t.manual
+        ? 'Tier fixado à mão em tier_manual.json — o cálculo automático não mexe nesta marca.'
+          + (t.porque ? '\nMotivo: '+t.porque : '')
+        : `Média do GMV de ${fmt.mes(m1+'-01')} e ${fmt.mes(m2+'-01')} (os dois últimos meses fechados): `
+          + fmt.money(t.media||0)
+          + '\n\nT1 acima de R$ 1 mi · T2 de R$ 200 mil a 1 mi · T3 de R$ 50 a 200 mil · T4 abaixo de R$ 50 mil';
+      break }
     case 'implantado': {
       if(!v){ td.textContent = '—'; break }
       const novo = dentroDaJanela(v);
@@ -8434,6 +8513,7 @@ window.__cs_boot = function(){
   /* Depois de desenhar, e não antes: a marcação de varejo vem de outra origem e
      não pode segurar o painel se a API estiver lenta ou fora. */
   carregarMarcacaoVarejo();
+  carregarTierManual();
 };
 if(document.getElementById('app').style.display !== 'none') window.__cs_boot();
 

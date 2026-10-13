@@ -746,6 +746,84 @@ mais uma linha de texto do tipo *"Reuniões realizadas: 14 · 56% acima do mês
 anterior (9) · 40% acima da média dos 6 meses anteriores (10)"*. Cards com duas
 métricas — Cross-sell e Upsell — desenham as duas barras lado a lado.
 
+## Tier: o porte da marca pelo GMV (13/10/2026)
+
+Pedido da Laura, com a régua pronta:
+
+| Tier | GMV mensal |
+|---|---|
+| T1 | acima de R$ 1 milhão |
+| T2 | de R$ 200 mil a R$ 1 milhão |
+| T3 | de R$ 50 mil a R$ 200 mil |
+| T4 | abaixo de R$ 50 mil |
+
+Pela **média dos dois últimos meses fechados** — *"hoje seria média de agosto e
+setembro"*. O mês corrente fica de fora de propósito: no dia 3 ele teria três
+dias de venda e rebaixaria a carteira inteira. O GMV é o da régua do Power BI
+(todo pedido criado, sem teto), o mesmo da coluna ao lado, para o tier e o GMV
+contarem a mesma história.
+
+Como o health score, **o tier não obedece ao filtro de período**: "esta marca é
+T2" não pode mudar de resposta conforme a janela escolhida.
+
+Na carteira de hoje: **15 marcas T1, 121 T2, 198 T3 e 616 T4**. A coluna fica ao
+lado do health score, com a média que classificou embaixo do chip, e o grupo
+**Tier** entrou no painel de filtros avançados.
+
+### Fixar uma marca à mão
+
+> *"Tem que ter um jeito de reclassificar manualmente e se fizer o manual, fixa
+> no manual. (...) Hipoteticamente a Sawary na Vesti é pequena mas fora da Vesti
+> é enorme. Quero fazer um tier manual porque sei que ela é bem maior do que
+> isso e se eu fiz manual, deve permanecer assim para sempre. É possível?"*
+
+É. O arquivo **`CS/tier_manual.json`** fixa a marca num tier, e o cálculo
+automático nunca mais a toca:
+
+```json
+{ "marcas": [
+  { "dominio": "107077", "nome": "Sawary Jeans", "tier": "T1",
+    "porque": "grande fora da Vesti", "quem": "Laura", "em": "2026-10-13" }
+] }
+```
+
+O painel lê o arquivo **no boot**, não na carga: publicou, vale na hora — não
+precisa esperar as 4:00. A linha passa a mostrar *"fixado à mão"* com o motivo
+embaixo do chip, e o filtro **Tier → Fixado à mão** lista todas as fixadas.
+
+Três decisões dentro disso:
+
+- **Casa por domínio, e só pelo nome na falta dele.** 28 marcas da carteira
+  dividem o nome com outra; pelo nome, as duas seriam fixadas juntas.
+- **O casamento do nome é exato.** Escrever "Sawary" onde a base tem "Sawary
+  Jeans" não pega — nome parecido pegaria a marca errada. Para isso não virar
+  silêncio, o console avisa: `[tier] 1 marca(s) fixada(s) · NÃO ACHEI na
+  carteira: Sawary — confira o domínio`.
+- **Sem o arquivo, o painel roda inteiro** no cálculo automático e avisa no
+  console. A coluna nunca some.
+
+> Pendente de decisão sua: hoje fixar uma marca é editar o JSON (no GitHub, ou
+> me mandando a lista). Dá para virar um botão no próprio painel, como a
+> marcação de varejo já é — mas isso mora no projeto `vesti-contas`, fora deste
+> repositório.
+
+## Visão geral: três ajustes (13/10/2026)
+
+- **"No cliente novo eu queria ver o valor de cada um."** A coluna existia, mas
+  era a décima da tabela, fora da vista. Foi para a terceira posição, em
+  negrito, e ganhou `principal: true` — a marca que diz qual coluna vale como *o
+  valor* do card. A lista das maiores ranqueava pela **contagem de negócios**;
+  agora ranqueia pelo dinheiro.
+- **"E nos negócios só a diferença na lista, não o valor bruto."** A coluna
+  "Valor do negócio" saiu da tabela: no upgrade ela mostra o plano novo inteiro
+  e dá a impressão de um ganho que não existe, porque a marca já pagava a
+  mensalidade anterior. Ficou **"Ganho por mês"** — valor cheio no cross-sell, a
+  diferença no upgrade — com a mensalidade anterior ao lado para a conta se
+  explicar, e **"Em negociação"** em coluna própria para o que ainda não fechou.
+- **"Funil de onboarding e marcos de volume acho que podemos tirar, não está
+  agregando."** Saíram, junto com a `funilIntegracoes()`, que ficou sem
+  chamador. Os marcos continuam na Carteira por CS, que não foi tocada.
+
 ## Churn: uma régua só, em todas as abas (13/10/2026)
 
 A Laura perguntou o que a Visão geral contava como churn, viu que não era o
