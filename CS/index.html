@@ -580,6 +580,46 @@ td.strong{font-weight:600}
 .pill.open{background:#EAF3FC;color:#1C639F;border-color:#D3E6F7}
 .pill.open i{background:#1C639F}
 .tag{display:inline-block;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 7px;font-size:11.5px;color:var(--ink-2);background:var(--sunken)}
+/* Arrastar o tier: o chip vira alça, e a régua de alvos aparece no rodapé
+   enquanto dura o arrasto. */
+.tier-arrasta{cursor:grab}
+.tier-arrasta:active{cursor:grabbing}
+.tier-regua{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%,10px);z-index:90;
+  display:flex;align-items:stretch;gap:8px;padding:12px 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  box-shadow:0 18px 44px -16px rgba(18,24,38,.45);
+  opacity:0;transition:opacity .12s ease, transform .12s ease;pointer-events:auto;
+}
+.tier-regua.on{opacity:1;transform:translate(-50%,0)}
+.tier-regua .tr-quem{
+  align-self:center;flex:none;max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:12.5px;font-weight:600;color:var(--ink);padding-right:8px;
+  border-right:1px solid var(--line-2);margin-right:4px;
+}
+.tr-alvo{
+  min-width:118px;padding:9px 13px;border-radius:var(--r-md,8px);
+  border:1px dashed var(--acc-line);background:var(--acc-soft);
+  display:flex;flex-direction:column;gap:2px;transition:background .1s,border-color .1s,transform .1s;
+}
+.tr-alvo b{font-family:var(--f-num);font-size:15px;font-weight:650;color:var(--acc)}
+.tr-alvo span{font-size:11px;color:var(--ink-2);line-height:1.3}
+.tr-alvo.auto{background:var(--sunken);border-color:var(--line)}
+.tr-alvo.auto b{color:var(--ink-2);font-size:13px}
+.tr-alvo.atual{opacity:.45}
+.tr-alvo.sobre{background:var(--acc);border-color:var(--acc);border-style:solid;transform:translateY(-2px)}
+.tr-alvo.sobre b,.tr-alvo.sobre span{color:#fff}
+
+.tier-aviso{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;
+  padding:11px 16px;border-radius:var(--r-lg);
+  background:var(--gold-soft,#FBF1DC);border:1px solid #EADCBB;
+  font-size:12.5px;color:#7A5406;
+}
+.tier-aviso b{font-weight:700}
+.tier-aviso .btn{margin-left:0}
+.tier-aviso .btn:first-of-type{margin-left:auto}
+
 /* Tier: uma escala, então as cores andam juntas do mais forte ao mais leve. */
 .tag.tier-T1{background:#E8EDFD;border-color:#CBD8F8;color:#1F4FD8;font-weight:700}
 .tag.tier-T2{background:#EAF3FC;border-color:#D3E6F7;color:#1C639F;font-weight:600}
@@ -1816,11 +1856,79 @@ function mesesFechadosDoTier(){
    arquivo não chega, o painel roda só com o cálculo automático. */
 const TIER_MANUAL = {porDominio:{}, porNome:{}};
 
+/* ---- Arrastar para mudar de tier (13/10/2026) ---------------------------
+   "Pro tier dá para arrastar do T2 para o T1, por exemplo?"
+
+   Dá: o chip da coluna Tier é arrastável e, no instante em que começa a
+   arrastar, aparece uma régua com os quatro tiers como alvo. Soltar fixa a
+   marca ali.
+
+   ONDE ISSO FICA GUARDADO. O painel é estático — HTML e um dados.js que a
+   carga reescreve —, então não existe banco para onde mandar. O arrasto vale
+   NA HORA e sobrevive ao recarregamento, porque fica no `localStorage` deste
+   navegador; mas só neste. Para valer para o time e para sempre, as mudanças
+   precisam entrar no `tier_manual.json` do repositório — e é isso que o botão
+   "Baixar o tier_manual.json" monta, já com o que estava no arquivo mais o que
+   foi arrastado aqui.
+
+   É a mesma escada da marcação de varejo (`varejoLocal`), com uma diferença:
+   lá existe uma API que recebe o delta; aqui ainda não, porque ela mora em
+   outro projeto. Quando existir, o botão vira um POST e esta nota sai. */
+const TIER_LS = 'cs.tier.local.v1';
+let _tierLocalCache = null;
+function tierLocal(){
+  if(_tierLocalCache) return _tierLocalCache;
+  let j = null;
+  try{ j = JSON.parse(localStorage.getItem(TIER_LS)) }catch(e){ j = null }
+  _tierLocalCache = (j && typeof j === 'object' && j.marcas) ? j : {marcas:{}};
+  return _tierLocalCache;
+}
+function tierLocalSalvar(v){
+  _tierLocalCache = v;
+  try{ localStorage.setItem(TIER_LS, JSON.stringify(v)) }
+  catch(e){ alert('Não consegui guardar neste navegador: '+e.message) }
+}
+/* A chave é o domínio quando existe — é o que o arquivo publicado também
+   prefere, e o que não confunde marcas de mesmo nome. */
+function chaveTier(c){ return c.dominio ? 'd:'+c.dominio : 'n:'+chaveNomeMarca(c.nome||'') }
+
+function moverTier(c, tier){
+  const loc = tierLocal();
+  const k = chaveTier(c);
+  const publicado = TIER_MANUAL.porDominio[String(c.dominio||'')]
+                 || TIER_MANUAL.porNome[chaveNomeMarca(c.nome||'')];
+  if(tier === null || (publicado && publicado.tier === tier && !loc.marcas[k])){
+    /* "voltar ao automático" com um tier publicado atrás precisa virar uma
+       marcação local explícita, senão o arquivo o traria de volta na hora. */
+    if(tier === null && publicado) loc.marcas[k] = {dominio:c.dominio||'', nome:c.nome, tier:null, em:hojeIso()};
+    else delete loc.marcas[k];
+  } else if(publicado && publicado.tier === tier){
+    delete loc.marcas[k];                       // já está assim no arquivo
+  } else {
+    loc.marcas[k] = {dominio:c.dominio||'', nome:c.nome, tier, em:hojeIso()};
+  }
+  tierLocalSalvar(loc);
+  _cacheAgregados = {chave:null, linhas:null};
+  renderPagina();
+}
+
 function tierDaMarca(c){
+  /* O arrasto deste navegador tem a última palavra: é o mais recente, e quem
+     arrastou precisa ver o resultado na hora. `tier: null` é o "voltar ao
+     automático" de quem desfez um fixo publicado. */
+  const loc = tierLocal().marcas[chaveTier(c)];
+  if(loc){
+    if(loc.tier === null) return {tier: tierAutomatico(c).tier, manual:false, porque:'', media:tierAutomatico(c).media, local:true};
+    if(TIERS.includes(loc.tier))
+      return {tier:loc.tier, manual:true, local:true, porque:'arrastado aqui, ainda não publicado', media:null};
+  }
   const fixo = TIER_MANUAL.porDominio[String(c.dominio||'')]
             || TIER_MANUAL.porNome[chaveNomeMarca(c.nome||'')];
   if(fixo && TIERS.includes(fixo.tier))
     return {tier:fixo.tier, manual:true, porque:fixo.porque||'', media:null};
+  return tierAutomatico(c);
+}
+function tierAutomatico(c){
   const [m1, m2] = mesesFechadosDoTier();
   const idx = idxMensal().carteira;
   const doMes = m => { const a = c.dominio ? idx[c.dominio+'|'+m] : null; return a ? (a.gmvCriado||0) : 0 };
@@ -1831,6 +1939,86 @@ function tierDaMarca(c){
 /* Boot: lê o arquivo de tier fixado à mão. Se ele não existir ou estiver
    quebrado, o painel segue inteiro no cálculo automático — e avisa no console
    em vez de sumir com a coluna. */
+/* A régua que aparece enquanto se arrasta: os quatro tiers como alvo, mais o
+   "voltar ao automático". Fica em `fixed` no rodapé, para alcançar qualquer
+   linha sem depender de onde a tabela está rolada. */
+let arrastandoTier = null;
+function abrirReguaTier(r){
+  fecharReguaTier();
+  const box = el('div',{class:'tier-regua', id:'tierRegua'});
+  box.innerHTML = `<span class="tr-quem">${escapar(r.nome)}</span>`;
+  const alvos = FAIXAS_TIER.map(f=>({t:f.t, l:f.l}))
+    .concat([{t:null, l:'volta a seguir o GMV'}]);
+  alvos.forEach(a=>{
+    const el2 = el('div',{class:'tr-alvo'+(a.t===r.tier?' atual':'')+(a.t===null?' auto':'')},
+      `<b>${a.t || 'Automático'}</b><span>${a.l}</span>`);
+    el2.addEventListener('dragover', e=>{ e.preventDefault(); el2.classList.add('sobre') });
+    el2.addEventListener('dragleave', ()=>el2.classList.remove('sobre'));
+    el2.addEventListener('drop', e=>{
+      e.preventDefault();
+      const alvo = arrastandoTier;
+      fecharReguaTier();
+      if(alvo) moverTier(alvo, a.t);
+    });
+    box.appendChild(el2);
+  });
+  document.body.appendChild(box);
+  requestAnimationFrame(()=>box.classList.add('on'));
+}
+function fecharReguaTier(){
+  const b = document.getElementById('tierRegua');
+  if(b) b.remove();
+  arrastandoTier = null;
+}
+
+/* O aviso de que existe arrasto só neste navegador, com o botão que monta o
+   arquivo para publicar. Aparece no topo da Tabela geral. */
+function avisoTierLocal(){
+  const marcas = Object.values(tierLocal().marcas || {});
+  if(!marcas.length) return null;
+  const n = marcas.length;
+  const box = el('div',{class:'tier-aviso'});
+  box.innerHTML = `<span><b>${fmt.int(n)}</b> ${n===1?'marca movida':'marcas movidas'} de tier `
+    + `neste navegador — ${n===1?'ela vale':'elas valem'} só aqui até o arquivo ser publicado.</span>`;
+  const baixar = el('button',{class:'btn btn-ghost', type:'button'}, 'Baixar o tier_manual.json');
+  baixar.onclick = baixarTierManual;
+  const desfazer = el('button',{class:'btn btn-ghost', type:'button'}, 'Desfazer tudo');
+  desfazer.onclick = ()=>{
+    if(!confirm('Desfazer as '+n+' mudanças de tier feitas neste navegador?')) return;
+    tierLocalSalvar({marcas:{}});
+    _cacheAgregados = {chave:null, linhas:null};
+    renderPagina();
+  };
+  box.appendChild(baixar); box.appendChild(desfazer);
+  return box;
+}
+
+/* Monta o arquivo inteiro: o que já estava publicado mais o que foi arrastado
+   aqui. Quem arrastou "volta ao automático" some da lista, que é o que
+   desfazer um fixo quer dizer. */
+function baixarTierManual(){
+  const porChave = {};
+  Object.entries(TIER_MANUAL.porDominio).forEach(([d,m])=>{ porChave['d:'+d] = m });
+  Object.entries(TIER_MANUAL.porNome).forEach(([nm,m])=>{ porChave['n:'+nm] = m });
+  Object.entries(tierLocal().marcas || {}).forEach(([k,m])=>{
+    if(m.tier === null) delete porChave[k];
+    else porChave[k] = {dominio:m.dominio||'', nome:m.nome, tier:m.tier,
+                        porque:m.porque||'', quem:m.quem||'', em:m.em||hojeIso()};
+  });
+  const saida = {
+    _leia: ['Tier fixado à mão. Tem prioridade sobre o cálculo automático e nunca muda sozinho.',
+            'Gerado pelo próprio painel: substitua CS/tier_manual.json por este arquivo.'],
+    marcas: Object.values(porChave).sort((a,b)=>
+      a.tier.localeCompare(b.tier) || String(a.nome).localeCompare(String(b.nome),'pt-BR')),
+  };
+  const blob = new Blob([JSON.stringify(saida, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tier_manual.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+
 function carregarTierManual(){
   fetch('tier_manual.json', {cache:'no-store'})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
@@ -1843,7 +2031,19 @@ function carregarTierManual(){
         else return;
         n++;
       });
-      if(n){ _cacheAgregados = {chave:null, linhas:null}; renderPagina() }
+      /* O que o arquivo publicado já diz não precisa continuar guardado neste
+         navegador — senão o aviso de "movida só aqui" ficaria para sempre
+         depois que a mudança entrou no repositório. */
+      const loc = tierLocal();
+      let limpou = false;
+      Object.entries(loc.marcas || {}).forEach(([k, m])=>{
+        const pub = k.startsWith('d:') ? TIER_MANUAL.porDominio[k.slice(2)]
+                                       : TIER_MANUAL.porNome[k.slice(2)];
+        const igual = m.tier === null ? !pub : (pub && pub.tier === m.tier);
+        if(igual){ delete loc.marcas[k]; limpou = true }
+      });
+      if(limpou) tierLocalSalvar(loc);
+      if(n || limpou){ _cacheAgregados = {chave:null, linhas:null}; renderPagina() }
       /* Avisa o que não casou com ninguém: sem isso, quem edita o arquivo
          escreve "Sawary" onde a base tem "Sawary Jeans" e fica achando que o
          painel ignorou o pedido. O casamento é exato de propósito — nome
@@ -6866,6 +7066,9 @@ function renderPagina(){
   page.appendChild(head);
 
   page.appendChild(renderFiltros(t));
+  /* O aviso de tier arrastado só neste navegador mora na aba onde a coluna
+     existe — fora dela não teria o que explicar. */
+  if(t.id === 'clientes'){ const av = avisoTierLocal(); if(av) page.appendChild(av) }
 
   const rows = filtrarLinhas(t);
   const serie = agregarSerie(t);
@@ -7957,17 +8160,28 @@ function celula(r,c){
     case 'tier': {
       if(!v){ td.textContent = '—'; break }
       const t = r._tier || {};
-      td.innerHTML = `<span class="tag tier-${v}">${v}</span>`
+      td.innerHTML = `<span class="tag tier-${v} tier-arrasta" draggable="true" title="arraste para outro tier">${v}</span>`
         + (t.manual
-            ? `<span class="cell-sub fixo">fixado à mão${t.porque ? ' · '+escapar(t.porque) : ''}</span>`
+            ? `<span class="cell-sub fixo">${t.local ? 'arrastado aqui' : 'fixado à mão'}${t.porque && !t.local ? ' · '+escapar(t.porque) : ''}</span>`
             : `<span class="cell-sub">${fmt.moneyCompact(t.media||0)}/mês</span>`);
       const [m1, m2] = mesesFechadosDoTier();
       td.title = t.manual
-        ? 'Tier fixado à mão em tier_manual.json — o cálculo automático não mexe nesta marca.'
-          + (t.porque ? '\nMotivo: '+t.porque : '')
+        ? (t.local
+            ? 'Arrastado neste navegador e ainda não publicado — use "Baixar o tier_manual.json" para valer para o time.'
+            : 'Tier fixado à mão em tier_manual.json — o cálculo automático não mexe nesta marca.'
+              + (t.porque ? '\nMotivo: '+t.porque : ''))
         : `Média do GMV de ${fmt.mes(m1+'-01')} e ${fmt.mes(m2+'-01')} (os dois últimos meses fechados): `
           + fmt.money(t.media||0)
-          + '\n\nT1 acima de R$ 1 mi · T2 de R$ 200 mil a 1 mi · T3 de R$ 50 a 200 mil · T4 abaixo de R$ 50 mil';
+          + '\n\nT1 acima de R$ 1 mi · T2 de R$ 200 mil a 1 mi · T3 de R$ 50 a 200 mil · T4 abaixo de R$ 50 mil'
+          + '\n\nArraste o chip para fixar a marca em outro tier.';
+      const chip = td.querySelector('.tier-arrasta');
+      chip.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', chaveTier(r));
+        e.dataTransfer.effectAllowed = 'move';
+        arrastandoTier = r;
+        abrirReguaTier(r);
+      });
+      chip.addEventListener('dragend', fecharReguaTier);
       break }
     case 'implantado': {
       if(!v){ td.textContent = '—'; break }

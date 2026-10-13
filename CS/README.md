@@ -802,10 +802,38 @@ Três decisões dentro disso:
 - **Sem o arquivo, o painel roda inteiro** no cálculo automático e avisa no
   console. A coluna nunca some.
 
-> Pendente de decisão sua: hoje fixar uma marca é editar o JSON (no GitHub, ou
-> me mandando a lista). Dá para virar um botão no próprio painel, como a
-> marcação de varejo já é — mas isso mora no projeto `vesti-contas`, fora deste
-> repositório.
+### Arrastar para mudar de tier
+
+*"Pro tier dá para arrastar do T2 para o T1, por exemplo?"* — dá.
+
+O chip da coluna Tier é a alça. Ao começar a arrastar, uma régua aparece no
+rodapé com os quatro tiers como alvo, mais um **Automático** que desfaz a
+fixação e devolve a marca ao cálculo pelo GMV. Soltar aplica na hora.
+
+**Onde isso fica guardado, e por que importa.** O painel é estático — HTML mais
+um `dados.js` que a carga reescreve —, então não existe banco para onde mandar
+o arrasto. Ele vale imediatamente e sobrevive a recarregar a página, porque
+fica no `localStorage`; mas **só no navegador de quem arrastou**. Para valer
+para o time e para sempre, a mudança precisa entrar no `tier_manual.json` do
+repositório.
+
+Por isso a Tabela geral mostra um aviso enquanto houver arrasto não publicado —
+*"3 marcas movidas de tier neste navegador"* — com dois botões:
+
+- **Baixar o tier_manual.json** monta o arquivo inteiro: o que já estava
+  publicado, mais o que foi arrastado aqui, menos o que foi devolvido ao
+  automático. É só substituir `CS/tier_manual.json` por ele.
+- **Desfazer tudo** limpa o que este navegador acumulou.
+
+Quando o arquivo publicado passa a dizer a mesma coisa que o arrasto local, a
+cópia local é apagada no boot — senão o aviso de "movida só aqui" ficaria para
+sempre depois que a mudança já entrou no repositório. É a mesma escada que a
+marcação de varejo usa.
+
+> O passo que falta é o botão mandar isso para um servidor, em vez de baixar um
+> arquivo. A marcação de varejo já faz assim, mas o endpoint dela mora no
+> projeto `vesti-contas`, fora deste repositório — quando houver um `/api/tier`
+> lá, o botão vira um POST e este parágrafo sai.
 
 ## Visão geral: três ajustes (13/10/2026)
 
