@@ -1863,17 +1863,22 @@ const TIER_MANUAL = {porDominio:{}, porNome:{}};
    arrastar, aparece uma régua com os quatro tiers como alvo. Soltar fixa a
    marca ali.
 
-   ONDE ISSO FICA GUARDADO. O painel é estático — HTML e um dados.js que a
-   carga reescreve —, então não existe banco para onde mandar. O arrasto vale
-   NA HORA e sobrevive ao recarregamento, porque fica no `localStorage` deste
-   navegador; mas só neste. Para valer para o time e para sempre, as mudanças
-   precisam entrar no `tier_manual.json` do repositório — e é isso que o botão
-   "Baixar o tier_manual.json" monta, já com o que estava no arquivo mais o que
-   foi arrastado aqui.
+   ONDE ISSO FICA GUARDADO. Em `API_TIER` — uma função na Vercel com um
+   arquivo atrás, criada em 13/10/2026 porque a Laura precisava que o arrasto
+   valesse para o time inteiro, não só para quem arrastou. Arrastar manda o
+   DELTA (só o que mudou) e adota a resposta; o painel lê o estado inteiro no
+   boot. Mandar delta é o que evita duas pessoas arrastando ao mesmo tempo uma
+   apagar o trabalho da outra — a mesma escada da marcação de varejo.
 
-   É a mesma escada da marcação de varejo (`varejoLocal`), com uma diferença:
-   lá existe uma API que recebe o delta; aqui ainda não, porque ela mora em
-   outro projeto. Quando existir, o botão vira um POST e esta nota sai. */
+   O `localStorage` continua aqui, mas só como rede de segurança: segura o
+   arrasto que não conseguiu subir (servidor fora, internet caiu) para ele não
+   se perder, e a Tabela geral mostra um aviso com o botão de tentar de novo.
+   Quando o servidor confirma, a cópia local é apagada.
+
+   E o `tier_manual.json` do repositório continua valendo como fonte de
+   reserva: se a API estiver fora no boot, o painel lê o arquivo e a coluna
+   não fica sem tier fixado nenhum. */
+const API_TIER = 'https://vesti-cs-tier.vercel.app/api/tier';
 const TIER_LS = 'cs.tier.local.v1';
 let _tierLocalCache = null;
 function tierLocal(){
@@ -1892,24 +1897,76 @@ function tierLocalSalvar(v){
    prefere, e o que não confunde marcas de mesmo nome. */
 function chaveTier(c){ return c.dominio ? 'd:'+c.dominio : 'n:'+chaveNomeMarca(c.nome||'') }
 
+/* Arrastar: aplica na tela no mesmo instante e manda o delta para o servidor.
+   A tela não espera a rede — quem arrastou precisa ver o chip mudar —, e o que
+   o servidor confirmar some da cópia local. O que ele recusar fica lá, com o
+   aviso, para não evaporar. */
 function moverTier(c, tier){
-  const loc = tierLocal();
   const k = chaveTier(c);
-  const publicado = TIER_MANUAL.porDominio[String(c.dominio||'')]
-                 || TIER_MANUAL.porNome[chaveNomeMarca(c.nome||'')];
-  if(tier === null || (publicado && publicado.tier === tier && !loc.marcas[k])){
-    /* "voltar ao automático" com um tier publicado atrás precisa virar uma
-       marcação local explícita, senão o arquivo o traria de volta na hora. */
-    if(tier === null && publicado) loc.marcas[k] = {dominio:c.dominio||'', nome:c.nome, tier:null, em:hojeIso()};
-    else delete loc.marcas[k];
-  } else if(publicado && publicado.tier === tier){
-    delete loc.marcas[k];                       // já está assim no arquivo
-  } else {
-    loc.marcas[k] = {dominio:c.dominio||'', nome:c.nome, tier, em:hojeIso()};
-  }
+  const entrada = {dominio:c.dominio||'', nome:c.nome||'', tier,
+                   porque:'', quem:'', em:hojeIso()};
+  const loc = tierLocal();
+  loc.marcas[k] = entrada;
   tierLocalSalvar(loc);
   _cacheAgregados = {chave:null, linhas:null};
   renderPagina();
+  /* O `catch` vazio é de propósito: `publicarTier` já tratou o erro — guardou
+     a mudança e pôs o aviso na tela. Sem ele a rejeição subiria sem dono e o
+     console mostraria um "uncaught in promise" que não quer dizer nada para
+     quem está usando. Quem precisa saber do erro é o botão "Tentar de novo",
+     que chama `publicarTier` direto. */
+  publicarTier({[k]: entrada}).catch(()=>{});
+}
+
+/* Manda o delta e adota a resposta do servidor como verdade. */
+function publicarTier(delta){
+  return fetch(API_TIER, {
+    method:'POST',
+    headers:{'Content-Type':'application/json', Authorization:'Bearer '+SENHA_PAINEL},
+    body: JSON.stringify({marcas: delta}),
+  })
+    .then(r=>r.json().catch(()=>({ok:false, erro:'o servidor respondeu algo que não é JSON'}))
+      .then(j=>{ if(!r.ok || !j.ok) throw new Error(j.erro || ('erro '+r.status)); return j }))
+    .then(j=>{
+      aplicarTierDoServidor(j.marcas || {});
+      /* Só sai da cópia local o que o servidor confirmou com o mesmo valor —
+         se outra pessoa mexeu na mesma marca no meio do caminho, o que vale é
+         o que voltou de lá. */
+      const loc = tierLocal();
+      let limpou = false;
+      Object.keys(delta).forEach(k=>{
+        const meu = delta[k], dele = (j.marcas||{})[k];
+        const bateu = meu.tier === null ? !dele : (dele && dele.tier === meu.tier);
+        if(bateu && loc.marcas[k]){ delete loc.marcas[k]; limpou = true }
+      });
+      if(loc.erro){ delete loc.erro; limpou = true }
+      if(limpou) tierLocalSalvar(loc);
+      _cacheAgregados = {chave:null, linhas:null};
+      renderPagina();
+      return j;
+    })
+    .catch(e=>{
+      console.warn('[tier] não consegui salvar no servidor —', e.message);
+      const loc = tierLocal(); loc.erro = e.message; tierLocalSalvar(loc);
+      renderPagina();
+      throw e;
+    });
+}
+
+/* O estado que veio do servidor (ou do arquivo de reserva) vira os dois
+   índices que `tierDaMarca` consulta. */
+function aplicarTierDoServidor(marcas){
+  Object.keys(TIER_MANUAL.porDominio).forEach(k=>delete TIER_MANUAL.porDominio[k]);
+  Object.keys(TIER_MANUAL.porNome).forEach(k=>delete TIER_MANUAL.porNome[k]);
+  let n = 0;
+  Object.values(marcas || {}).forEach(m=>{
+    if(!m || !TIERS.includes(m.tier)) return;
+    if(m.dominio) TIER_MANUAL.porDominio[String(m.dominio)] = m;
+    else if(m.nome) TIER_MANUAL.porNome[chaveNomeMarca(m.nome)] = m;
+    else return;
+    n++;
+  });
+  return n;
 }
 
 function tierDaMarca(c){
@@ -1971,25 +2028,34 @@ function fecharReguaTier(){
   arrastandoTier = null;
 }
 
-/* O aviso de que existe arrasto só neste navegador, com o botão que monta o
-   arquivo para publicar. Aparece no topo da Tabela geral. */
+/* O aviso só aparece quando um arrasto NÃO conseguiu subir. No caminho feliz
+   não há aviso nenhum: arrastou, salvou, acabou. */
 function avisoTierLocal(){
-  const marcas = Object.values(tierLocal().marcas || {});
+  const loc = tierLocal();
+  const marcas = Object.entries(loc.marcas || {});
   if(!marcas.length) return null;
   const n = marcas.length;
   const box = el('div',{class:'tier-aviso'});
-  box.innerHTML = `<span><b>${fmt.int(n)}</b> ${n===1?'marca movida':'marcas movidas'} de tier `
-    + `neste navegador — ${n===1?'ela vale':'elas valem'} só aqui até o arquivo ser publicado.</span>`;
+  box.innerHTML = `<span><b>${fmt.int(n)}</b> ${n===1?'mudança de tier não subiu':'mudanças de tier não subiram'}`
+    + ` para o servidor${loc.erro ? ' ('+escapar(loc.erro)+')' : ''} — ${n===1?'ela vale':'elas valem'} só neste navegador por enquanto.</span>`;
+  const tentar = el('button',{class:'btn btn-ghost', type:'button'}, 'Tentar de novo');
+  tentar.onclick = ()=>{
+    const delta = {};
+    marcas.forEach(([k, m])=>{ delta[k] = m });
+    tentar.disabled = true; tentar.textContent = 'Enviando…';
+    publicarTier(delta)
+      .catch(()=>{ tentar.disabled = false; tentar.textContent = 'Tentar de novo' });
+  };
   const baixar = el('button',{class:'btn btn-ghost', type:'button'}, 'Baixar o tier_manual.json');
   baixar.onclick = baixarTierManual;
-  const desfazer = el('button',{class:'btn btn-ghost', type:'button'}, 'Desfazer tudo');
+  const desfazer = el('button',{class:'btn btn-ghost', type:'button'}, 'Descartar');
   desfazer.onclick = ()=>{
-    if(!confirm('Desfazer as '+n+' mudanças de tier feitas neste navegador?')) return;
+    if(!confirm('Descartar as '+n+' mudanças que não subiram?')) return;
     tierLocalSalvar({marcas:{}});
     _cacheAgregados = {chave:null, linhas:null};
     renderPagina();
   };
-  box.appendChild(baixar); box.appendChild(desfazer);
+  box.appendChild(tentar); box.appendChild(baixar); box.appendChild(desfazer);
   return box;
 }
 
@@ -2020,44 +2086,50 @@ function baixarTierManual(){
 }
 
 function carregarTierManual(){
-  fetch('tier_manual.json', {cache:'no-store'})
+  const doArquivo = ()=>fetch('tier_manual.json', {cache:'no-store'})
     .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
     .then(j=>{
-      let n = 0;
-      (j && j.marcas || []).forEach(m=>{
-        if(!m || !TIERS.includes(m.tier)) return;
-        if(m.dominio) TIER_MANUAL.porDominio[String(m.dominio)] = m;
-        else if(m.nome) TIER_MANUAL.porNome[chaveNomeMarca(m.nome)] = m;
-        else return;
-        n++;
+      /* O arquivo do repositório é uma LISTA; o servidor guarda um objeto
+         chaveado. Aqui vira o mesmo formato dos dois lados. */
+      const m = {};
+      (j && j.marcas || []).forEach(x=>{
+        if(!x || !TIERS.includes(x.tier)) return;
+        m[x.dominio ? 'd:'+x.dominio : 'n:'+chaveNomeMarca(x.nome||'')] = x;
       });
-      /* O que o arquivo publicado já diz não precisa continuar guardado neste
-         navegador — senão o aviso de "movida só aqui" ficaria para sempre
-         depois que a mudança entrou no repositório. */
+      return {marcas:m, de:'arquivo do repositório'};
+    });
+
+  fetch(API_TIER, {cache:'no-store'})
+    .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
+    .then(j=>{ if(!j || !j.ok) throw new Error(j && j.erro || 'resposta sem ok'); return {marcas:j.marcas||{}, de:'servidor'} })
+    .catch(e=>{
+      console.warn('[tier] servidor indisponível ('+e.message+') — caindo no arquivo do repositório');
+      return doArquivo();
+    })
+    .then(({marcas, de})=>{
+      const n = aplicarTierDoServidor(marcas);
+      /* O que o servidor já confirma não precisa continuar guardado neste
+         navegador — senão o aviso de "não subiu" ficaria para sempre. */
       const loc = tierLocal();
       let limpou = false;
       Object.entries(loc.marcas || {}).forEach(([k, m])=>{
-        const pub = k.startsWith('d:') ? TIER_MANUAL.porDominio[k.slice(2)]
-                                       : TIER_MANUAL.porNome[k.slice(2)];
-        const igual = m.tier === null ? !pub : (pub && pub.tier === m.tier);
+        const dele = marcas[k];
+        const igual = m.tier === null ? !dele : (dele && dele.tier === m.tier);
         if(igual){ delete loc.marcas[k]; limpou = true }
       });
       if(limpou) tierLocalSalvar(loc);
-      if(n || limpou){ _cacheAgregados = {chave:null, linhas:null}; renderPagina() }
-      /* Avisa o que não casou com ninguém: sem isso, quem edita o arquivo
-         escreve "Sawary" onde a base tem "Sawary Jeans" e fica achando que o
-         painel ignorou o pedido. O casamento é exato de propósito — nome
-         parecido pegaria a marca errada. */
+      /* Marca fixada que não existe na carteira: avisa, senão quem escreveu
+         "Sawary" onde a base tem "Sawary Jeans" acha que foi ignorado. */
       const porDom = new Set(DATA.clientes.map(c=>String(c.dominio||'')));
       const porNome = new Set(DATA.clientes.map(c=>chaveNomeMarca(c.nome||'')));
-      const perdidas = (j && j.marcas || []).filter(m=>m && TIERS.includes(m.tier))
+      const perdidas = Object.values(marcas).filter(m=>m && TIERS.includes(m.tier))
         .filter(m=> m.dominio ? !porDom.has(String(m.dominio)) : !porNome.has(chaveNomeMarca(m.nome||'')));
-      console.log('[tier] '+n+' marca(s) com tier fixado à mão'
+      console.log('[tier] '+n+' marca(s) com tier fixado à mão, do '+de
         + (perdidas.length ? ' · NÃO ACHEI na carteira: '
-            + perdidas.map(m=>m.nome || m.dominio).join(', ')
-            + ' — confira o domínio ou escreva o nome exatamente como está na Tabela geral' : ''));
+            + perdidas.map(m=>m.nome || m.dominio).join(', ') : ''));
+      if(n || limpou){ _cacheAgregados = {chave:null, linhas:null}; renderPagina() }
     })
-    .catch(e=>console.warn('[tier] sem tier_manual.json — só o cálculo automático:', e.message));
+    .catch(e=>console.warn('[tier] sem tier fixado à mão — só o cálculo automático:', e.message));
 }
 
 const FAIXAS_GMV = [

@@ -830,10 +830,61 @@ cópia local é apagada no boot — senão o aviso de "movida só aqui" ficaria 
 sempre depois que a mudança já entrou no repositório. É a mesma escada que a
 marcação de varejo usa.
 
-> O passo que falta é o botão mandar isso para um servidor, em vez de baixar um
-> arquivo. A marcação de varejo já faz assim, mas o endpoint dela mora no
-> projeto `vesti-contas`, fora deste repositório — quando houver um `/api/tier`
-> lá, o botão vira um POST e este parágrafo sai.
+### O arrasto salva para todos (13/10/2026)
+
+*"Mas eu preciso que fique salvo para todos, somente no painel nosso mesmo."*
+
+Então o arrasto passou a gravar num servidor. O endpoint é
+
+```
+https://vesti-cs-tier.vercel.app/api/tier
+```
+
+— um projeto novo na conta Vercel da Vesti (`vesti-cs-tier`), com um
+armazenamento de arquivos atrás. Não deu para usar o `vesti-contas`, que é onde
+a marcação de varejo grava: o código dele não está em lugar nenhum que este
+repositório alcance.
+
+Como funciona: **GET** no boot traz o estado inteiro; **POST** manda o *delta* —
+só a marca que mudou — e devolve o resultado. Mandar delta, e não o estado todo,
+é o que impede duas pessoas arrastando ao mesmo tempo de uma apagar o trabalho
+da outra. A escrita pede a senha do painel no header `Authorization`.
+
+O `localStorage` continuou, mas mudou de papel: antes era o lugar onde o arrasto
+morava; agora é só rede de segurança para o que não conseguiu subir. No caminho
+feliz não aparece aviso nenhum — arrastou, salvou, acabou. Quando o servidor
+está fora, o aviso volta com **Tentar de novo**, e o arrasto não se perde.
+
+E o `tier_manual.json` do repositório continua como **fonte de reserva**: se a
+API estiver fora no boot, o painel lê o arquivo e a coluna não fica sem nenhum
+tier fixado.
+
+#### Dois bugs que só apareceram rodando
+
+- **Cada escrita apagava a anterior.** A primeira versão gravava sempre no mesmo
+  arquivo, com `allowOverwrite`. Os *metadados* atualizavam na hora, mas o
+  *conteúdo* continuava vindo da versão anterior pelo CDN — nem
+  `cacheControlMaxAge: 0` nem um carimbo na query resolveram. Então cada POST
+  lia um estado velho e gravava por cima: dois arrastos seguidos e o primeiro
+  sumia. Agora cada escrita cria `tier-<timestamp>.json`, e uma URL que nunca
+  existiu não tem o que vir de cache. O `list()` ordena por nome e o mais
+  recente é o estado; cinco versões ficam de histórico.
+- **O arquivo legado sequestrava a leitura.** Com o prefixo `tier-`, o
+  `tier-manual.json` da primeira tentativa entrava na lista — e como `"m"` vem
+  depois de qualquer dígito, ele ordenava na frente de todas as versões novas.
+  O GET lia para sempre aquele estado congelado. O filtro passou a exigir
+  dígitos: `/^tier-\d+\.json$/`.
+
+> Conferido ponta a ponta: um navegador arrasta a Sawary Jeans para T1, e outro
+> navegador, com perfil limpo e nada guardado, abre o painel e vê T1 "fixado à
+> mão". A Sawary ficou fixada de verdade — era o exemplo que a Laura deu, e
+> desfazer é arrastar de volta para **Automático**.
+
+> **Sobre a tranca.** A escrita é protegida pela senha do painel, que viaja no
+> HTML de um repositório público — é a mesma situação do `/api/varejo`. Segura a
+> porta, não é um cofre. O que está em jogo é a classificação de porte de uma
+> carteira, não dado de cliente; se um dia precisar ser mais do que isso, o
+> caminho é autenticação de verdade, não esconder melhor a senha.
 
 ## Visão geral: três ajustes (13/10/2026)
 
