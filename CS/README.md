@@ -949,23 +949,33 @@ grande ao lado dele. Em 90 dias, que é o filtro padrão, dá quatro barras.
 A régua do período e o rodapé da barra lateral, que anunciavam o agrupamento
 variável, passaram a dizer "por mês".
 
-#### As colunas na ordem do GMV
+### O desenho de um mês só
 
-*"Deixe as colunas de tiers por ordem do GMV mais alto ao mais baixo."* As
-colunas saíam na escala T1→T4; passaram a sair pelo **GMV somado de cada
-tier**. Não é a mesma coisa: hoje fica
+*"Se eu quiser ver só setembro, deve aparecer os valores reais e a barra
+corretamente."* Os valores já estavam certos — filtrando setembro, a série dava
+R$ 26.376.356, o mesmo do KPI. O que estava errado era o **desenho**, e eram
+três coisas:
 
-| | | |
-|---|---|---|
-| **T2** | R$ 49M | 121 marcas |
-| **T1** | R$ 33M | 15 marcas |
-| **T3** | R$ 21M | 198 marcas |
-| **T4** | R$ 6,1M | 614 marcas |
+- **A barra tinha teto fixo de 26 pixels.** Num gráfico de mil pixels com uma
+  barra só, ela ficava perdida no meio e parecia defeito. O teto passou a
+  acompanhar quantas barras existem: 96px com uma ou duas, 64 com até quatro,
+  40 com até oito, 26 daí em diante.
+- **A escala do eixo saltava demais.** Os degraus eram 1, 2, 2,5, 5 e 10, então
+  R$ 26,4 milhões caía no degrau 50 e a barra ocupava metade da altura — dando
+  a impressão de meio resultado. Com os degraus intermediários (1,2 · 1,5 · 3 ·
+  4 · 6 · 8) o mesmo valor sobe para 30 e a barra ocupa 88%.
+- **A linha com um ponto só não desenhava traço nenhum** — a série de valor
+  transacionado virava um pontinho solto no alto. Agora ela vira um traço
+  horizontal da largura do grupo de barras, e as bolinhas das pontas somem (com
+  um mês só, duas bolinhas pareceriam dois meses).
 
-— o T2 na frente do T1, porque 121 marcas de porte médio somam mais que as 15
-maiores. A ordem responde "onde está o dinheiro", que é outra pergunta que
-"quem é maior". Os cartões **dentro** de cada coluna já saíam do maior para o
-menor e continuam assim.
+### A ordem das colunas: T1, T2, T3, T4
+
+Cheguei a ordenar as colunas do quadro pelo GMV somado, e o T2 foi para a
+frente do T1 — 121 marcas médias somam mais que as 15 maiores. Não era isso:
+*"os tiers estão fora de ordem no GMV, deve ser essa a ordem T1 … T2 … T3 …
+T4"*. A ordem é a da régua, que já é do GMV mais alto para o mais baixo **por
+faixa**. Os cartões dentro de cada coluna continuam do maior para o menor.
 
 > **Sobre a tranca.** A escrita é protegida pela senha do painel, que viaja no
 > HTML de um repositório público — é a mesma situação do `/api/varejo`. Segura a

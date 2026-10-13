@@ -2086,16 +2086,15 @@ function renderQuadroTiers(){
     const rows = clientesAgregados();
     const termo = chaveNomeMarca(_buscaQuadro || '');
     colunas.innerHTML = '';
-    /* As colunas saem do GMV mais alto para o mais baixo, não na escala T1→T4
-       — pedido da Laura em 13/10/2026. Não é a mesma coisa: T2 tem 120 marcas
-       de porte médio e soma mais que as 16 do T1, então ele vem primeiro.
-       A ordem responde "onde está o dinheiro", que é outra pergunta que
-       "quem é maior". */
+    /* T1, T2, T3, T4 — a ordem é a da RÉGUA, do GMV mais alto para o mais
+       baixo por faixa. Cheguei a ordenar pelo GMV somado de cada coluna e o T2
+       foi para a frente do T1 (121 marcas médias somam mais que as 15
+       maiores): não era isso. A escala é a leitura. */
     const porTier = FAIXAS_TIER.map(f=>{
       const todas = rows.filter(r=>r.tier === f.t)
         .sort((a,b)=>(b._tier.media||0) - (a._tier.media||0));
       return {f, todas, gmv: todas.reduce((t,r)=>t + (r._tier.media||0), 0)};
-    }).sort((a,b)=>b.gmv - a.gmv);
+    });
 
     porTier.forEach(({f, todas, gmv})=>{
       /* A busca filtra os cartões mas NÃO o cabeçalho: a contagem e o GMV
@@ -8036,7 +8035,12 @@ function desenhar(host, dados, series){
     const maxDe = (ss)=>nice(Math.max(1,...ss.flatMap(s=>dados.map(d=>d[s.k]||0))));
     const maxE = maxDe(esq), maxD = dir.length?maxDe(dir):0;
     const barras = series.filter(x=>x.tipo==='bar');
-    const larguraGrupo = Math.max(3, Math.min(26, iw/n*0.62));
+    /* O teto da largura acompanha quantas barras existem. Era fixo em 26px, e
+       com o gráfico filtrado em um mês só a barra ficava com 26 pixels perdida
+       num desenho de mil — parecia defeito. Poucas barras podem ser largas;
+       muitas precisam do teto para não virar um bloco só. */
+    const teto = n <= 2 ? 96 : n <= 4 ? 64 : n <= 8 ? 40 : 26;
+    const larguraGrupo = Math.max(3, Math.min(teto, iw/n*0.62));
     const bw = larguraGrupo/Math.max(1,barras.length);
     const cx = i=>P.l + (i+0.5)*(iw/n);
     const cy = (v,max)=>P.t + ih - (v/max)*ih;
@@ -8068,13 +8072,22 @@ function desenhar(host, dados, series){
     // linhas
     series.filter(x=>x.tipo==='line').forEach(sr=>{
       const max = sr.eixo==='dir'?maxD:maxE;
-      const pts = dados.map((d,i)=>[cx(i), cy(d[sr.k]||0, max)]);
+      /* Uma linha com um ponto só não desenha traço nenhum, e o gráfico de um
+         mês filtrado ficava com a série virando um pontinho solto no alto.
+         Nesse caso ela vira um traço horizontal da largura do grupo de barras,
+         que é o mesmo valor dito de um jeito visível. */
+      const pts = dados.length === 1
+        ? [[cx(0) - larguraGrupo/2, cy(dados[0][sr.k]||0, max)],
+           [cx(0) + larguraGrupo/2, cy(dados[0][sr.k]||0, max)]]
+        : dados.map((d,i)=>[cx(i), cy(d[sr.k]||0, max)]);
       const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
       if(sr.area && pts.length){
         s += `<path d="${path} L${pts[pts.length-1][0].toFixed(1)} ${P.t+ih} L${pts[0][0].toFixed(1)} ${P.t+ih} Z" fill="${sr.cor}" opacity=".10"/>`;
       }
       s += `<path d="${path}" fill="none" stroke="${sr.cor}" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>`;
-      if(pts.length<=14) pts.forEach(p=>{s+=`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--surface)" stroke="${sr.cor}" stroke-width="1.7"/>`});
+      /* Com um ponto só o traço já diz tudo; duas bolinhas nas pontas dele
+         pareceriam dois meses. */
+      if(pts.length<=14 && dados.length>1) pts.forEach(p=>{s+=`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--surface)" stroke="${sr.cor}" stroke-width="1.7"/>`});
     });
     // eixo x
     const passo = Math.ceil(n/12);
@@ -8104,8 +8117,16 @@ function desenhar(host, dados, series){
   draw();
   host._redraw = draw;
 }
-function nice(v){ const p=Math.pow(10,Math.floor(Math.log10(v))); const n=v/p;
-  return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p }
+/* Teto do eixo. Os degraus eram 1, 2, 2,5, 5 e 10 — grossos demais: R$ 26,4
+   milhões caía no degrau 50 e a barra ocupava metade da altura, dando a
+   impressão de meio resultado. Com os degraus intermediários o mesmo valor
+   sobe para 30 e a barra ocupa 88%, que é o que ela é. */
+const DEGRAUS = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+function nice(v){
+  if(!(v > 0)) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v))), n = v/p;
+  return (DEGRAUS.find(d => n <= d + 1e-9) || 10) * p;
+}
 function rotulo(v, sr){
   if(!sr) return fmt.compact(v);
   return /receita|valor|gmv/i.test(sr.k) ? fmt.moneyCompact(v) : fmt.compact(v);
