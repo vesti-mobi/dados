@@ -1548,6 +1548,12 @@ function registrarIntegracoes(porDom) {
     Object.keys(agora).forEach(dom => {
       const antes = anterior.doms[dom];
       if (antes === agora[dom]) return;
+      /* TROCAR de integração não é GANHAR uma. Em 09/10/2026 a fonte passou a
+         devolver "SIMPLE" onde antes vinha vazio, e oito marcas apareceram
+         indo de COMPLETE/API para SIMPLE — um downgrade aparente que a régua
+         contava como conquista. A meta se chama "integração nova": conta
+         quando a marca não tinha e passou a ter. */
+      if (antes) return;
       if (jaNoHistorico.has(dom + '|' + agora[dom])) return;
       const m = porDom.get(dom);
       novas.push({
@@ -1555,6 +1561,22 @@ function registrarIntegracoes(porDom) {
         cliente: m ? m.nome : dom, cs: m ? m.cs : 'Sem CS',
       });
     });
+  }
+
+  /* TRAVA DE SANIDADE (13/10/2026). Integração nova é coisa de uma a três por
+     dia. Em 09/10/2026 a carga registrou 496 de uma vez — não foram 496
+     implantações: o campo `integracao` do lake passou a devolver "SIMPLE" para
+     485 marcas que antes vinham vazias, e o retrato do dia seguinte leu tudo
+     como novo. O número foi direto para a meta de Mentoria/Setup da
+     Bonificação, que mostrou 102 de 9.
+     Acima do limite a carga NÃO registra nada: grava o retrato novo (para o
+     dia seguinte comparar com a realidade nova) e avisa no log. Perder um dia
+     real de detecção custa pouco; inflar a meta de um trimestre custa caro. */
+  const LIMITE_DIA = 20;
+  let descartadas = 0;
+  if (novas.length > LIMITE_DIA) {
+    descartadas = novas.length;
+    novas.length = 0;
   }
 
   const historicoNovo = historico.concat(novas);
@@ -1567,6 +1589,12 @@ function registrarIntegracoes(porDom) {
   console.log('  integrações: marcas com integração'.padEnd(44) + String(Object.keys(agora).length).padStart(8));
   console.log('    detectadas como novas nesta carga'.padEnd(44)
     + String(novas.length).padStart(8) + (anterior ? '' : '   (primeira carga: só fotografou)'));
+  if (descartadas) {
+    console.log('    [!] ' + descartadas + ' mudanças de integração num dia só — acima do limite de '
+      + LIMITE_DIA + '.');
+    console.log('        Isso é mudança na fonte, não implantação. Nada foi registrado; o retrato');
+    console.log('        novo foi gravado e amanhã a comparação parte dele.');
+  }
   return historicoNovo;
 }
 

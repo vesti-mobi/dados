@@ -1066,6 +1066,52 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## 496 integrações que não existiram (13/10/2026)
+
+*"Por que Mentoria/Setup está muito acima da meta? Aconteceu algo."* Aconteceu:
+o quadrante mostrava **102 de 9** em treze dias de trimestre. Não foram 102
+implantações.
+
+A origem está nos retratos diários de integração que a carga guarda:
+
+| retrato | marcas com integração | das quais SIMPLE |
+|---|---|---|
+| 07/10 | 462 | 30 |
+| 08/10 | 463 | 29 |
+| **09/10** | **945** | **519** |
+
+Comparando domínio a domínio entre 08 e 09 de outubro: **485 marcas apareceram
+com integração** (480 delas como `SIMPLE`) e **11 mudaram de valor** — oito
+indo de `COMPLETE`/`API` **para** `SIMPLE`. O campo `integracao` do lake passou
+a devolver `SIMPLE` onde antes vinha vazio, e o detector leu tudo como novo no
+dia seguinte. Dessas, 98 caíram na carteira das três CS e foram direto para a
+meta.
+
+### As três correções
+
+- **Trava de sanidade na carga.** Integração nova é coisa de uma a três por
+  dia. Acima de **20 num dia só**, `registrarIntegracoes` não registra nada:
+  grava o retrato novo (para o dia seguinte comparar com a realidade nova) e
+  avisa no log. Perder um dia real de detecção custa pouco; inflar a meta de um
+  trimestre custa caro.
+- **Trocar de integração deixou de contar.** A meta se chama "integração
+  nova": conta quando a marca não tinha e passou a ter. Ir de `COMPLETE` para
+  `SIMPLE` não é conquista — e nesse caso nem era troca de verdade.
+- **O histórico foi limpo**: `integracoes_novas.json` caiu de **546 para 45**
+  linhas (496 do lote de 09/10 e 5 trocas entre tipos). Sobraram 2 em agosto,
+  36 em setembro e 7 em outubro — o ritmo real. O `dados.js` publicado foi
+  corrigido junto, para o painel não esperar a carga das 4:00.
+
+Mentoria/Setup no trimestre voltou para **5 de 9**: 4 Tino novo e 1 integração.
+
+> **Uma observação que não é bug.** No trimestre anterior o quadrante soma 96, e
+> 73 vêm de "Tino novo" — mas ali a distribuição é saudável: 33 dias distintos,
+> picos de 13 e 8, e a entrada mensal no Tino vinha crescendo (8 em março, 13
+> em junho, 50 em julho). É adoção real do produto. O ponto é outro: a meta de
+> 9 foi desenhada como "3 CS × 3 mentorias", antes de o Tino novo entrar no
+> mesmo quadrante (decisão da Laura em 07/10). Com o Tino dentro, 9 é um teto
+> que o produto sozinho ultrapassa. Vale rever o número, não o cálculo.
+
 ### Churn virou meta só coletiva (13/10/2026)
 
 *"Vamos deixar churn então só na coletiva. Tira da individual. Ou seja, o churn
