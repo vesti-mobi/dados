@@ -932,6 +932,24 @@ tier o GMV a colocaria — que é a informação que faz alguém querer desfazer
 O card também desceu para a **terceira posição** da Visão geral, abaixo de
 Novas vendas e Churn, a pedido da Laura.
 
+#### As colunas na ordem do GMV
+
+*"Deixe as colunas de tiers por ordem do GMV mais alto ao mais baixo."* As
+colunas saíam na escala T1→T4; passaram a sair pelo **GMV somado de cada
+tier**. Não é a mesma coisa: hoje fica
+
+| | | |
+|---|---|---|
+| **T2** | R$ 49M | 121 marcas |
+| **T1** | R$ 33M | 15 marcas |
+| **T3** | R$ 21M | 198 marcas |
+| **T4** | R$ 6,1M | 614 marcas |
+
+— o T2 na frente do T1, porque 121 marcas de porte médio somam mais que as 15
+maiores. A ordem responde "onde está o dinheiro", que é outra pergunta que
+"quem é maior". Os cartões **dentro** de cada coluna já saíam do maior para o
+menor e continuam assim.
+
 > **Sobre a tranca.** A escrita é protegida pela senha do painel, que viaja no
 > HTML de um repositório público — é a mesma situação do `/api/varejo`. Segura a
 > porta, não é um cofre. O que está em jogo é a classificação de porte de uma

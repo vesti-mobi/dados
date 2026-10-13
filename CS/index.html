@@ -2086,14 +2086,22 @@ function renderQuadroTiers(){
     const rows = clientesAgregados();
     const termo = chaveNomeMarca(_buscaQuadro || '');
     colunas.innerHTML = '';
-    FAIXAS_TIER.forEach(f=>{
+    /* As colunas saem do GMV mais alto para o mais baixo, não na escala T1→T4
+       — pedido da Laura em 13/10/2026. Não é a mesma coisa: T2 tem 120 marcas
+       de porte médio e soma mais que as 16 do T1, então ele vem primeiro.
+       A ordem responde "onde está o dinheiro", que é outra pergunta que
+       "quem é maior". */
+    const porTier = FAIXAS_TIER.map(f=>{
       const todas = rows.filter(r=>r.tier === f.t)
         .sort((a,b)=>(b._tier.media||0) - (a._tier.media||0));
+      return {f, todas, gmv: todas.reduce((t,r)=>t + (r._tier.media||0), 0)};
+    }).sort((a,b)=>b.gmv - a.gmv);
+
+    porTier.forEach(({f, todas, gmv})=>{
       /* A busca filtra os cartões mas NÃO o cabeçalho: a contagem e o GMV
          continuam sendo os do tier inteiro, senão a legenda viraria o
          resultado da busca e deixaria de ser a leitura da carteira. */
       const vistas = termo ? todas.filter(r=>chaveNomeMarca(r.nome||'').includes(termo)) : todas;
-      const gmv = todas.reduce((t,r)=>t + (r._tier.media||0), 0);
 
       const col = el('div',{class:'qt-col', 'data-tier':f.t});
       col.innerHTML = `<div class="qt-cab">
