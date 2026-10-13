@@ -580,6 +580,53 @@ td.strong{font-weight:600}
 .pill.open{background:#EAF3FC;color:#1C639F;border-color:#D3E6F7}
 .pill.open i{background:#1C639F}
 .tag{display:inline-block;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 7px;font-size:11.5px;color:var(--ink-2);background:var(--sunken)}
+/* --- o quadro dos tiers: quatro colunas, uma por porte -------------------- */
+.qt-wrap{padding:14px 16px 16px}
+.qt-topo{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.qt-busca{
+  flex:none;width:min(320px,100%);padding:8px 12px;font-family:inherit;font-size:13px;
+  border:1px solid var(--line);border-radius:var(--r-md,8px);background:var(--surface);color:var(--ink);
+}
+.qt-busca:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+.qt-dica{font-size:12px;color:var(--ink-3);line-height:1.4;max-width:62ch}
+.qt-colunas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start}
+.qt-col{
+  display:flex;flex-direction:column;min-width:0;
+  border:1px solid var(--line);border-radius:var(--r-lg);background:var(--sunken);
+  transition:background .12s,border-color .12s,box-shadow .12s;
+}
+.qt-col.sobre{background:var(--acc-soft);border-color:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-soft)}
+.qt-cab{padding:12px 14px 11px;border-bottom:1px solid var(--line)}
+.qt-cab-l{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.qt-faixa{font-size:11px;color:var(--ink-3);line-height:1.25;min-width:0}
+.qt-num{font-family:var(--f-num);font-size:21px;font-weight:650;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--ink);line-height:1}
+.qt-sub{margin-top:4px;font-size:11.5px;color:var(--ink-2)}
+.qt-sub b{color:var(--acc);font-weight:700}
+.qt-lista{
+  /* Altura fixa com rolagem própria: T4 tem mais de seiscentas marcas e, solta,
+     a coluna empurraria o resto da página para muito longe. */
+  max-height:430px;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:6px;
+}
+.qt-marca{
+  display:flex;align-items:baseline;gap:8px;cursor:grab;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm,6px);
+  padding:7px 10px;font-size:12.5px;transition:border-color .1s,transform .1s,box-shadow .1s;
+}
+.qt-marca:hover{border-color:var(--acc-line);transform:translateY(-1px);
+  box-shadow:0 6px 14px -10px rgba(18,24,38,.5)}
+.qt-marca:active{cursor:grabbing}
+.qt-marca.arrastando{opacity:.4}
+.qt-marca.fixo{border-left:3px solid var(--gold)}
+.qt-nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--ink);font-weight:500}
+.qt-gmv{flex:none;font-family:var(--f-num);font-variant-numeric:tabular-nums;
+  font-size:11.5px;color:var(--ink-3)}
+.qt-vazio{padding:16px 10px;text-align:center;font-size:12px;color:var(--ink-3)}
+@media (max-width:1100px){ .qt-colunas{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:620px){ .qt-colunas{grid-template-columns:minmax(0,1fr)} }
+
 /* Arrastar o tier: o chip vira alça, e a régua de alvos aparece no rodapé
    enquanto dura o arrasto. */
 .tier-arrasta{cursor:grab}
@@ -1991,6 +2038,110 @@ function tierAutomatico(c){
   const doMes = m => { const a = c.dominio ? idx[c.dominio+'|'+m] : null; return a ? (a.gmvCriado||0) : 0 };
   const media = (doMes(m1) + doMes(m2)) / 2;
   return {tier: FAIXAS_TIER.find(f=>media >= f.min).t, manual:false, porque:'', media};
+}
+
+/* ---- O quadro dos tiers (13/10/2026) -----------------------------------
+   "Queria colocar um card na visão geral com as tabelas dos tiers separadas e
+   aí arrastar de uma tabela pra outra; uma tabela de T1, outra de T2 e etc, e
+   na legenda da tabela o valor de GMV de cada tier."
+
+   Quatro colunas lado a lado, uma por tier, cada marca um cartão que se
+   arrasta entre elas. O cabeçalho de cada coluna traz quantas marcas e o GMV
+   somado do tier.
+
+   O GMV do cabeçalho é a soma das MÉDIAS dos dois meses fechados — a mesma
+   conta que classifica a marca. Não é o GMV do período do filtro de cima: o
+   tier não obedece ao período, e misturar as duas coisas faria a legenda
+   discordar da classificação que ela está explicando.
+
+   A busca existe porque T4 tem 616 marcas. Sem ela, arrastar uma marca
+   específica significaria rolar uma coluna de seiscentos cartões. */
+let _buscaQuadro = '';
+function renderQuadroTiers(){
+  const wrap = el('div',{class:'qt-wrap'});
+
+  const topo = el('div',{class:'qt-topo'});
+  const busca = el('input',{type:'search', placeholder:'Buscar marca em qualquer tier…',
+    value:_buscaQuadro, class:'qt-busca'});
+  /* Redesenha só o quadro, não a página: redesenhar a página inteira a cada
+     tecla tiraria o foco do campo no meio da digitação. */
+  busca.oninput = ()=>{ _buscaQuadro = busca.value; pintarQuadro(); setTimeout(()=>{
+    const b = wrap.querySelector('.qt-busca'); if(b){ b.focus(); b.setSelectionRange(b.value.length, b.value.length) } }, 0) };
+  topo.appendChild(busca);
+  topo.appendChild(el('span',{class:'qt-dica'},
+    'Arraste uma marca de uma coluna para a outra para fixar o tier dela. '
+    + 'O que você soltar aqui vale para o time inteiro.'));
+  wrap.appendChild(topo);
+
+  const colunas = el('div',{class:'qt-colunas'});
+  wrap.appendChild(colunas);
+
+  function pintarQuadro(){
+    const rows = clientesAgregados();
+    const termo = chaveNomeMarca(_buscaQuadro || '');
+    colunas.innerHTML = '';
+    FAIXAS_TIER.forEach(f=>{
+      const todas = rows.filter(r=>r.tier === f.t)
+        .sort((a,b)=>(b._tier.media||0) - (a._tier.media||0));
+      /* A busca filtra os cartões mas NÃO o cabeçalho: a contagem e o GMV
+         continuam sendo os do tier inteiro, senão a legenda viraria o
+         resultado da busca e deixaria de ser a leitura da carteira. */
+      const vistas = termo ? todas.filter(r=>chaveNomeMarca(r.nome||'').includes(termo)) : todas;
+      const gmv = todas.reduce((t,r)=>t + (r._tier.media||0), 0);
+
+      const col = el('div',{class:'qt-col', 'data-tier':f.t});
+      col.innerHTML = `<div class="qt-cab">
+          <div class="qt-cab-l"><b class="tag tier-${f.t}">${f.t}</b>
+            <span class="qt-faixa">${f.l}</span></div>
+          <div class="qt-num">${fmt.moneyCompact(gmv)}</div>
+          <div class="qt-sub">${fmt.int(todas.length)} ${todas.length===1?'marca':'marcas'}`
+        + (termo ? ` · <b>${fmt.int(vistas.length)}</b> na busca` : '') + `</div>
+        </div>`;
+      const lista = el('div',{class:'qt-lista'});
+      if(!vistas.length){
+        lista.appendChild(el('div',{class:'qt-vazio'}, termo ? 'nenhuma marca da busca aqui' : 'nenhuma marca neste tier'));
+      }
+      vistas.forEach(r=>{
+        const cartao = el('div',{class:'qt-marca'+(r.tierManual?' fixo':''), draggable:'true',
+          title: r.tierManual ? 'Fixado à mão — o cálculo pelo GMV não mexe nesta marca'
+                              : 'Classificado pelo GMV: '+fmt.money(r._tier.media||0)+'/mês'},
+          `<span class="qt-nome">${escapar(r.nome)}</span>
+           <span class="qt-gmv">${fmt.moneyCompact(r._tier.media||0)}</span>`);
+        cartao.addEventListener('dragstart', e=>{
+          e.dataTransfer.setData('text/plain', chaveTier(r));
+          e.dataTransfer.effectAllowed = 'move';
+          arrastandoTier = r;
+          cartao.classList.add('arrastando');
+        });
+        cartao.addEventListener('dragend', ()=>{ cartao.classList.remove('arrastando'); arrastandoTier = null });
+        lista.appendChild(cartao);
+      });
+      col.appendChild(lista);
+
+      col.addEventListener('dragover', e=>{
+        if(!arrastandoTier) return;
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        col.classList.add('sobre');
+      });
+      col.addEventListener('dragleave', e=>{
+        if(!col.contains(e.relatedTarget)) col.classList.remove('sobre');
+      });
+      col.addEventListener('drop', e=>{
+        e.preventDefault();
+        col.classList.remove('sobre');
+        const quem = arrastandoTier;
+        arrastandoTier = null;
+        /* Soltar na coluna onde a marca já está só faz sentido como "deixa de
+           ser fixa": o automático já a colocaria ali. */
+        if(!quem) return;
+        if(quem.tier === f.t && !quem.tierManual) return;
+        moverTier(quem, quem.tier === f.t && quem.tierManual ? null : f.t);
+      });
+      colunas.appendChild(col);
+    });
+  }
+  pintarQuadro();
+  return wrap;
 }
 
 /* Boot: lê o arquivo de tier fixado à mão. Se ele não existir ou estiver
@@ -3658,8 +3809,10 @@ function renderRelatorio(abaId, cards, ctx){
     const sec = el('section',{class:'rel-bloco'+(aberto?' on':''), id:'rel-'+c.id,
       style:`--gc:${c.cor}`});
 
-    const pecas = pecasDoCard(c, ctx, rows);
-    const lista = listaRanqueada(c, ctx, rows);
+    /* Card com corpo próprio (o quadro de tiers) desenha ele mesmo: não tem
+       leitura, nem gráfico, nem lista das maiores para montar. */
+    const pecas = c.corpo ? null : pecasDoCard(c, ctx, rows);
+    const lista = c.corpo ? null : listaRanqueada(c, ctx, rows);
 
     const head = el('div',{class:'rel-head'});
     /* O número grande só vem para o cabeçalho quando a faixa não tem a coluna
@@ -3669,8 +3822,10 @@ function renderRelatorio(abaId, cards, ctx){
     const btn = el('button',{class:'rel-abrir', type:'button', 'aria-expanded':String(aberto)},
       `<span class="rel-t">${c.titulo}</span>${temNumero?`<span class="rel-v">${r.v}</span>`:''}
        <span class="rel-s">${r.s}</span>
-       <span class="rel-go">${aberto?'fechar a tabela':'ver a tabela →'}</span>`);
+       ${c.semTabela ? '' : `<span class="rel-go">${aberto?'fechar a tabela':'ver a tabela →'}</span>`}`);
+    if(c.semTabela) btn.style.cursor = 'default';
     btn.onclick = ()=>{
+      if(c.semTabela) return;
       estado.cardAberto[abaId] = aberto ? null : c.id;
       renderPagina();
       if(!aberto) setTimeout(()=>{ const d=$('#rel-'+c.id); if(d) d.scrollIntoView({behavior:'smooth',block:'start'}) }, 0);
@@ -3684,7 +3839,8 @@ function renderRelatorio(abaId, cards, ctx){
     head.appendChild(aj);
     sec.appendChild(head);
 
-    if(pecas || lista){
+    if(c.corpo){ sec.appendChild(c.corpo(ctx)) }
+    else if(pecas || lista){
       const corpo = el('div',{class:'rel-corpo'+(pecas && lista ? '' : pecas ? ' sem-lista' : ' so-lista')});
       if(pecas){
         const bloco = el('div',{class:'rel-chart'});
@@ -3715,10 +3871,12 @@ function renderRelatorio(abaId, cards, ctx){
         det.appendChild(box);
       }
       if(c.categorias) det.appendChild(graficoDeCategorias(c, ctx));
-      const leitura = leituraDoMes(c, ctx, rows);
-      if(leitura) det.appendChild(leitura);
-      det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
-        `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
+      if(!c.semTabela){
+        const leitura = leituraDoMes(c, ctx, rows);
+        if(leitura) det.appendChild(leitura);
+        det.appendChild(cardLista(c.titulo+' · '+ctx.rotulo, rows, c.colunas,
+          `<h4>Nenhum registro em ${ctx.rotulo}</h4><p>${c.vazio || 'Mude o recorte no filtro acima.'}</p>`));
+      }
       sec.appendChild(det);
     }
     wrap.appendChild(sec);
@@ -4424,6 +4582,24 @@ function detalheMetaLista(m, rec){
    marcas por trás do número, que antes só existia no hover.
    ========================================================================== */
 const CARDS_VISAO = [
+  {
+    id:'quadroTiers', titulo:'Tiers da carteira', cor:'#1F4FD8',
+    capa:'As marcas separadas por porte, para arrastar de um tier para outro',
+    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
+      + '<b>Este card não obedece ao filtro de período</b> da aba: o tier é sempre a média dos dois meses fechados, senão "esta marca é T2" mudaria de resposta conforme a janela escolhida. O <b>GMV no cabeçalho de cada coluna</b> é a soma dessas médias — é a mesma conta que classifica, não o GMV do período de cima. '
+      + '<b>Arrastar uma marca para outra coluna fixa o tier dela</b>, e a partir daí o cálculo automático não mexe mais nessa marca: é o caso da que é pequena dentro da Vesti e grande fora. A marca fixada fica com uma marca dourada; arrastá-la de volta para a coluna onde ela já está desfaz a fixação. <b>O que você arrasta vale para o time inteiro</b> — é salvo no servidor na hora, não só neste navegador.',
+    semTabela:true,
+    corpo:()=>renderQuadroTiers(),
+    linhas:()=>[],
+    resumo:()=>{ const rows = clientesAgregados();
+      const fix = rows.filter(r=>r.tierManual).length;
+      const t1 = rows.filter(r=>r.tier==='T1').length, t2 = rows.filter(r=>r.tier==='T2').length;
+      return {v:fmt.int(rows.length),
+        s:`${fmt.int(t1)} T1 · ${fmt.int(t2)} T2 · ${fmt.int(rows.length-t1-t2)} T3 e T4`
+          + (fix ? ` · ${fmt.int(fix)} ${fix===1?'fixada':'fixadas'} à mão` : '')}; },
+    kpis:()=>[],
+    colunas:[],
+  },
   {
     id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
     capa:'Quanto a Vesti ganhou com marca que entrou ou voltou no período',

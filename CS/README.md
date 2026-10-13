@@ -880,6 +880,43 @@ tier fixado.
 > mão". A Sawary ficou fixada de verdade — era o exemplo que a Laura deu, e
 > desfazer é arrastar de volta para **Automático**.
 
+### O quadro dos tiers, na Visão geral (13/10/2026)
+
+*"Queria colocar um card na visão geral com as tabelas dos tiers separadas e aí
+arrastar de uma tabela pra outra; uma tabela de T1, outra de T2 e etc, e na
+legenda da tabela o valor de GMV de cada tier."*
+
+É a primeira faixa da **Visão geral**: quatro colunas, uma por tier, cada marca
+um cartão que se arrasta entre elas. Soltar numa coluna fixa o tier da marca —
+e, como o arrasto da Tabela geral, salva no servidor para o time inteiro.
+
+No cabeçalho de cada coluna: a faixa de GMV que define o tier, o **GMV somado**
+e quantas marcas. Hoje: **T1 R$ 33M / 16 marcas · T2 R$ 48M / 120 · T3 R$ 21M /
+198 · T4 R$ 6,1M / 614**.
+
+Quatro decisões que o quadro obrigou:
+
+- **O GMV do cabeçalho é a soma das médias dos dois meses fechados**, não o GMV
+  do período escolhido no filtro de cima. É a mesma conta que classifica a
+  marca: se a legenda usasse o período, ela discordaria da classificação que
+  está explicando. O card inteiro não obedece ao filtro de período, e o "?" diz
+  isso.
+- **Cada coluna rola por dentro, com altura fixa.** T4 tem 614 marcas; solta, a
+  coluna empurraria o resto da página para longe demais.
+- **A busca filtra os cartões, não o cabeçalho.** A contagem e o GMV continuam
+  sendo os do tier inteiro — senão a legenda viraria o resultado da busca. Sem
+  a busca, arrastar uma marca específica de T4 significaria rolar seiscentos
+  cartões.
+- **Arrastar uma marca fixada para a coluna onde ela já está desfaz a fixação.**
+  É o único gesto que sobra ali, e é o que alguém quer dizer com ele.
+
+A marca fixada à mão leva uma barra dourada na lateral do cartão. Para o card
+poder desenhar isso, `renderRelatorio` ganhou `corpo` (o card monta a si mesmo,
+sem leitura/gráfico/lista) e `semTabela` (não há tabela para abrir no clique).
+
+> Custo medido com jsdom: a Visão geral inteira, com as 948 marcas em cartão,
+> monta em ~80 ms.
+
 > **Sobre a tranca.** A escrita é protegida pela senha do painel, que viaja no
 > HTML de um repositório público — é a mesma situação do `/api/varejo`. Segura a
 > porta, não é um cofre. O que está em jogo é a classificação de porte de uma
