@@ -918,7 +918,7 @@ td.strong{font-weight:600}
     </div>
     <nav id="nav" aria-label="Seções do painel"></nav>
     <div class="rail-foot">
-      <p>Os gráficos agrupam por dia, semana ou mês conforme o tamanho do período.</p>
+      <p>Os gráficos agrupam por mês. O filtro de período continua exato: quem agrupa é só o desenho.</p>
     </div>
   </aside>
 
@@ -3439,20 +3439,16 @@ function serieMensalDoCard(c, ctx){
     return o;
   });
 }
-/* Grão do gráfico dos cards: SEMANA é o passo mínimo, mesmo em período curto
-   (pedido da Laura, 18/09/2026: "se puder nos gráficos ser semana a semana e
-   não dia a dia acho melhor"). Uma reunião ou um negócio por dia vira uma
-   floresta de barras de 1 — por semana dá para ver a tendência. Períodos longos
-   seguem a régua do resto do painel e agrupam por mês. */
-function graoDosCards(p, ctx){
-  if(ctx && ctx.grao) return ctx.grao;   // a ficha do cliente pede mês a mês
-  /* Semana é o passo padrão (pedido da Laura em 18/09/2026: dia a dia virava
-     uma floresta de barras de 1). Mas período de até duas semanas em semana
-     vira UMA barra, que não mostra evolução nenhuma — aí volta a ser dia. */
-  const dias = diasEntre(p.ini, p.fim) + 1;
-  if(dias <= 14) return 'dia';
-  const g = grãoDoPeriodo(p); return g === 'dia' ? 'semana' : g;
-}
+/* MÊS, SEMPRE (13/10/2026). "Os gráficos deixe todos por mês e não por dia."
+
+   Antes o passo saía do tamanho do período — dia até 45 dias, semana até 400,
+   mês acima disso —, e o mesmo card mudava de forma conforme o filtro. Agora é
+   mês em todo lugar, e comparar dois gráficos vale sempre.
+
+   O preço: período curto vira uma ou duas barras. Num filtro de sete dias o
+   desenho não mostra evolução nenhuma — a leitura ali é o número grande ao
+   lado dele. */
+function graoDosCards(p, ctx){ return (ctx && ctx.grao) || 'mes' }
 /* Barras do gráfico de um card, recortadas ao período escolhido.
    Por que não usa `bucketsDoPeriodo` (a semana ISO do resto do painel): a
    Laura escolheu 20/09 a 26/09 — e 20/09/2026 é um DOMINGO. Na semana ISO esse
@@ -5656,7 +5652,7 @@ const TABS = [
     id:'visaoGeral', grupo:'Visão geral', nav:'Visão geral', cor:'#2E7D46', cor2:'#1E74C8',
     titulo:'Visão geral',
     desc:'O retrato do período escolhido no filtro, contra um <b>período anterior de mesmo tamanho</b> em dias corridos. '
-      + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número, a evolução <b>semana a semana</b> dentro do período (janela longa agrupa por mês) e a lista das marcas — que antes só existia no hover do gráfico. A fonte de cada número está escrita no próprio card. '
+      + '<b>Cada card abre os dados por trás dele</b>: clique e vêm os KPIs daquele número e a lista das marcas. A evolução no gráfico é sempre <b>mês a mês</b> desde 13/10/2026 — antes o passo saía do tamanho do período, e o mesmo card mudava de forma conforme o filtro. A fonte de cada número está escrita no próprio card. '
       + '<b>Parte daqui vem do HubSpot</b> (Novas vendas, Oráculo dentro de Produtos implantados — Reuniões e Negócios já eram); Tino e VestiPago em Produtos implantados continuam vindo da base do próprio produto, porque esse dado não existe no HubSpot. <b>Churn</b> passou a seguir a régua única do painel em 13/10/2026 — plataforma bloqueada mais a planilha do time —, a mesma da Bonificação e da Gerencial. '
       + '<b>Funil de onboarding</b> e <b>Marcos de volume</b> saíram em 13/10/2026, a pedido da Laura: não estavam agregando.',
     filtros:['periodo'],
@@ -6994,10 +6990,11 @@ function escopoClientes(t){
    sai do tamanho do período: até 45 dias mostra dia a dia, até 400 agrupa por
    semana, acima disso por mês. O filtro continua exato: quem agrupa é só o
    desenho. */
-function grãoDoPeriodo(p){
-  const dias = diasEntre(p.ini, p.fim) + 1;
-  return dias <= 45 ? 'dia' : dias <= 400 ? 'semana' : 'mes';
-}
+/* Desde 13/10/2026 é MÊS em todo lugar, a pedido da Laura. Antes saía do
+   tamanho do período (dia até 45 dias, semana até 400, mês acima disso) e o
+   mesmo gráfico mudava de forma conforme o filtro. O filtro continua exato:
+   quem agrupa é só o desenho. */
+function grãoDoPeriodo(p){ return 'mes' }
 /* Data -> chave do bucket a que ela pertence. Na semana, a chave é a
    segunda-feira: assim a barra "semana de 10/ago" é sempre a mesma, independente
    de onde o período começa. */
@@ -7817,11 +7814,9 @@ function renderRegua(serie){
   const p = periodo();
   const ano = LIMITE_DADOS.fim.slice(0,4);
   const dias = diasEntre(p.ini, p.fim) + 1;
-  const grao = grãoDoPeriodo(p);
-  const comoAgrupa = grao==='dia' ? 'dia a dia' : grao==='semana' ? 'por semana' : 'por mês';
   box.innerHTML = `<div class="ruler-head">
       <span class="eyebrow">Período</span>
-      <span>${rotuloPeriodo(p)} · ${fmt.int(dias)} ${dias===1?'dia':'dias'} · gráficos ${comoAgrupa}</span>
+      <span>${rotuloPeriodo(p)} · ${fmt.int(dias)} ${dias===1?'dia':'dias'} · gráficos por mês</span>
     </div><div id="reguaSvg"></div>`;
   requestAnimationFrame(()=>{
     const host = box.querySelector('#reguaSvg'); if(!host) return;

@@ -932,6 +932,23 @@ tier o GMV a colocaria — que é a informação que faz alguém querer desfazer
 O card também desceu para a **terceira posição** da Visão geral, abaixo de
 Novas vendas e Churn, a pedido da Laura.
 
+## Os gráficos, todos por mês (13/10/2026)
+
+*"Os gráficos deixe todos por mês e não por dia."*
+
+O passo saía do tamanho do período — dia até 45 dias, semana até 400, mês acima
+disso. Era uma régua defensável sozinha, mas fazia o mesmo card mudar de forma
+conforme o filtro, e dois gráficos lado a lado não se comparavam. Agora
+`grãoDoPeriodo` e `graoDosCards` devolvem `mes` em todo lugar; o filtro de
+período continua exato, quem agrupa é só o desenho.
+
+O que isso custa, e que vale saber: **período curto vira uma ou duas barras**.
+Em sete dias o gráfico não mostra evolução nenhuma — ali a leitura é o número
+grande ao lado dele. Em 90 dias, que é o filtro padrão, dá quatro barras.
+
+A régua do período e o rodapé da barra lateral, que anunciavam o agrupamento
+variável, passaram a dizer "por mês".
+
 #### As colunas na ordem do GMV
 
 *"Deixe as colunas de tiers por ordem do GMV mais alto ao mais baixo."* As
