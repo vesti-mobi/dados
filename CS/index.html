@@ -2017,20 +2017,26 @@ function aplicarTierDoServidor(marcas){
 }
 
 function tierDaMarca(c){
+  /* A MÉDIA É SEMPRE A MESMA, fixada à mão ou não: ela é o GMV da marca, um
+     fato, e o tier é só onde a pessoa decidiu colocá-la. Antes a média vinha
+     nula para quem estava fixado, e o cartão do quadro mostrava "R$ 0" assim
+     que a marca era arrastada — além de somar zero no GMV da coluna nova. */
+  const auto = tierAutomatico(c);
   /* O arrasto deste navegador tem a última palavra: é o mais recente, e quem
      arrastou precisa ver o resultado na hora. `tier: null` é o "voltar ao
      automático" de quem desfez um fixo publicado. */
   const loc = tierLocal().marcas[chaveTier(c)];
   if(loc){
-    if(loc.tier === null) return {tier: tierAutomatico(c).tier, manual:false, porque:'', media:tierAutomatico(c).media, local:true};
+    if(loc.tier === null) return {...auto, local:true};
     if(TIERS.includes(loc.tier))
-      return {tier:loc.tier, manual:true, local:true, porque:'arrastado aqui, ainda não publicado', media:null};
+      return {tier:loc.tier, manual:true, local:true,
+              porque:'arrastado aqui, ainda não publicado', media:auto.media};
   }
   const fixo = TIER_MANUAL.porDominio[String(c.dominio||'')]
             || TIER_MANUAL.porNome[chaveNomeMarca(c.nome||'')];
   if(fixo && TIERS.includes(fixo.tier))
-    return {tier:fixo.tier, manual:true, porque:fixo.porque||'', media:null};
-  return tierAutomatico(c);
+    return {tier:fixo.tier, manual:true, porque:fixo.porque||'', media:auto.media};
+  return auto;
 }
 function tierAutomatico(c){
   const [m1, m2] = mesesFechadosDoTier();
@@ -4583,24 +4589,6 @@ function detalheMetaLista(m, rec){
    ========================================================================== */
 const CARDS_VISAO = [
   {
-    id:'quadroTiers', titulo:'Tiers da carteira', cor:'#1F4FD8',
-    capa:'As marcas separadas por porte, para arrastar de um tier para outro',
-    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
-      + '<b>Este card não obedece ao filtro de período</b> da aba: o tier é sempre a média dos dois meses fechados, senão "esta marca é T2" mudaria de resposta conforme a janela escolhida. O <b>GMV no cabeçalho de cada coluna</b> é a soma dessas médias — é a mesma conta que classifica, não o GMV do período de cima. '
-      + '<b>Arrastar uma marca para outra coluna fixa o tier dela</b>, e a partir daí o cálculo automático não mexe mais nessa marca: é o caso da que é pequena dentro da Vesti e grande fora. A marca fixada fica com uma marca dourada; arrastá-la de volta para a coluna onde ela já está desfaz a fixação. <b>O que você arrasta vale para o time inteiro</b> — é salvo no servidor na hora, não só neste navegador.',
-    semTabela:true,
-    corpo:()=>renderQuadroTiers(),
-    linhas:()=>[],
-    resumo:()=>{ const rows = clientesAgregados();
-      const fix = rows.filter(r=>r.tierManual).length;
-      const t1 = rows.filter(r=>r.tier==='T1').length, t2 = rows.filter(r=>r.tier==='T2').length;
-      return {v:fmt.int(rows.length),
-        s:`${fmt.int(t1)} T1 · ${fmt.int(t2)} T2 · ${fmt.int(rows.length-t1-t2)} T3 e T4`
-          + (fix ? ` · ${fmt.int(fix)} ${fix===1?'fixada':'fixadas'} à mão` : '')}; },
-    kpis:()=>[],
-    colunas:[],
-  },
-  {
     id:'novasVendas', titulo:'Novas vendas', cor:'#2E7D46',
     capa:'Quanto a Vesti ganhou com marca que entrou ou voltou no período',
     fonte:'HubSpot — <code>createdate</code> do negócio, em <b>todo pipeline que tem o estágio "Novo cliente"</b>: Sucesso do Cliente, Integração, Plataforma, CS - Starter e <b>Varejo - Jornada</b>. <b>Conta a marca que entrou ou que VOLTOU</b>, na coluna Origem: <b>Cliente novo</b> é marca que não estava no cadastro ou entrou há menos de 90 dias; <b>Reativação</b> é marca de cadastro antigo que pagou <b>Ativação de Assinatura</b> até 45 dias do negócio — foi o caso da Callisaya Modas, cliente desde 2024, que deu churn em janeiro de 2025 e voltou em 09/09/2026 pagando R$ 499. Fica de fora a <b>expansão</b> em quem já era da casa (a Biotipo comprou Setup de Integração, que não é contrato novo) e o <b>interesse</b> do Varejo - Jornada; o KPI <b>Fora da conta</b> diz quantos foram. <b>Uma linha por marca</b>: a mesma marca abre negócio em dois pipelines (a Calu Acessórios, três vezes em setembro/2026) e fica valendo o de maior valor, nunca a soma. O número grande é o <b>valor ganho</b> (<code>amount</code> do negócio no HubSpot); o gráfico desenha esse valor pelo período escolhido no filtro. <b>Canal</b> é o parceiro dono da conta no cadastro: Attasoft, Uemtel e afins contam como venda de parceiro; Vesti, Varejo Vesti, Starter, Trial e Treino contam como direto. A marca é achada pelo <b>CNPJ da empresa associada</b> no HubSpot e, na falta dele, pelo nome sem acento. <b>Proprietário do negócio</b> é o dono dele no HubSpot, que nem sempre é a CS da marca.',
@@ -4753,6 +4741,24 @@ const CARDS_VISAO = [
       {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
       {k:'plano', l:'Plano'}, {k:'mensalidade', l:'Mensalidade', r:true, f:v=>v?fmt.money(v):'—'},
       {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'}],
+  },
+  {
+    id:'quadroTiers', titulo:'Tiers da carteira', cor:'#1F4FD8',
+    capa:'As marcas separadas por porte, para arrastar de um tier para outro',
+    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
+      + '<b>Este card não obedece ao filtro de período</b> da aba: o tier é sempre a média dos dois meses fechados, senão "esta marca é T2" mudaria de resposta conforme a janela escolhida. O <b>GMV no cabeçalho de cada coluna</b> é a soma dessas médias — é a mesma conta que classifica, não o GMV do período de cima. '
+      + '<b>Arrastar uma marca para outra coluna fixa o tier dela</b>, e a partir daí o cálculo automático não mexe mais nessa marca: é o caso da que é pequena dentro da Vesti e grande fora. A marca fixada fica com uma marca dourada; arrastá-la de volta para a coluna onde ela já está desfaz a fixação. <b>O que você arrasta vale para o time inteiro</b> — é salvo no servidor na hora, não só neste navegador.',
+    semTabela:true,
+    corpo:()=>renderQuadroTiers(),
+    linhas:()=>[],
+    resumo:()=>{ const rows = clientesAgregados();
+      const fix = rows.filter(r=>r.tierManual).length;
+      const t1 = rows.filter(r=>r.tier==='T1').length, t2 = rows.filter(r=>r.tier==='T2').length;
+      return {v:fmt.int(rows.length),
+        s:`${fmt.int(t1)} T1 · ${fmt.int(t2)} T2 · ${fmt.int(rows.length-t1-t2)} T3 e T4`
+          + (fix ? ` · ${fmt.int(fix)} ${fix===1?'fixada':'fixadas'} à mão` : '')}; },
+    kpis:()=>[],
+    colunas:[],
   },
   {
     id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
@@ -8408,16 +8414,22 @@ function celula(r,c){
     case 'tier': {
       if(!v){ td.textContent = '—'; break }
       const t = r._tier || {};
+      /* A média aparece sempre, fixada ou não: é o GMV da marca. No fixado ela
+         vem depois do aviso, porque ali o número explica de onde a marca saiu,
+         não onde ela está. */
       td.innerHTML = `<span class="tag tier-${v} tier-arrasta" draggable="true" title="arraste para outro tier">${v}</span>`
         + (t.manual
-            ? `<span class="cell-sub fixo">${t.local ? 'arrastado aqui' : 'fixado à mão'}${t.porque && !t.local ? ' · '+escapar(t.porque) : ''}</span>`
+            ? `<span class="cell-sub fixo">${t.local ? 'arrastado aqui' : 'fixado à mão'} · ${fmt.moneyCompact(t.media||0)}/mês</span>`
             : `<span class="cell-sub">${fmt.moneyCompact(t.media||0)}/mês</span>`);
       const [m1, m2] = mesesFechadosDoTier();
       td.title = t.manual
-        ? (t.local
-            ? 'Arrastado neste navegador e ainda não publicado — use "Baixar o tier_manual.json" para valer para o time.'
-            : 'Tier fixado à mão em tier_manual.json — o cálculo automático não mexe nesta marca.'
+        ? ((t.local
+            ? 'Arrastado neste navegador e ainda não salvo no servidor.'
+            : 'Tier fixado à mão — o cálculo pelo GMV não mexe nesta marca.'
               + (t.porque ? '\nMotivo: '+t.porque : ''))
+           + `\n\nPelo GMV ela seria ${tierAutomatico(r).t || tierAutomatico(r).tier}: `
+           + fmt.money(t.media||0) + ' por mês, média de '
+           + fmt.mes(mesesFechadosDoTier()[0]+'-01') + ' e ' + fmt.mes(mesesFechadosDoTier()[1]+'-01'))
         : `Média do GMV de ${fmt.mes(m1+'-01')} e ${fmt.mes(m2+'-01')} (os dois últimos meses fechados): `
           + fmt.money(t.media||0)
           + '\n\nT1 acima de R$ 1 mi · T2 de R$ 200 mil a 1 mi · T3 de R$ 50 a 200 mil · T4 abaixo de R$ 50 mil'

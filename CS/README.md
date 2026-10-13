@@ -917,6 +917,21 @@ sem leitura/gráfico/lista) e `semTabela` (não há tabela para abrir no clique)
 > Custo medido com jsdom: a Visão geral inteira, com as 948 marcas em cartão,
 > monta em ~80 ms.
 
+#### A marca arrastada ficava valendo R$ 0
+
+*"Quando mudo de lugar o tier ele fica 0, quero que mantenha o valor."* Bug meu:
+`tierDaMarca` devolvia `media: null` para quem estava fixado à mão. O cartão
+então mostrava "R$ 0" assim que a marca era arrastada, e — pior — ela somava
+zero no GMV da coluna nova, então a legenda do tier de destino não subia.
+
+A média passou a ser calculada **sempre**, fixada ou não: ela é o GMV da marca,
+um fato, e o tier é só onde a pessoa decidiu colocá-la. Na Tabela geral a
+célula do fixado ficou `fixado à mão · R$ 121k/mês`, e o balãozinho diz em qual
+tier o GMV a colocaria — que é a informação que faz alguém querer desfazer.
+
+O card também desceu para a **terceira posição** da Visão geral, abaixo de
+Novas vendas e Churn, a pedido da Laura.
+
 > **Sobre a tranca.** A escrita é protegida pela senha do painel, que viaja no
 > HTML de um repositório público — é a mesma situação do `/api/varejo`. Segura a
 > porta, não é um cofre. O que está em jogo é a classificação de porte de uma
