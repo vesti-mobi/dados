@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Inadimplentes · Uemtel</title>
+<!--
+  Link dedicado do canal Uemtel. Nao duplica painel nenhum: aponta pro Gambiarra
+  publicado no GitHub Pages com o modo travado ligado (?only=inadimplentes&canal=Uemtel),
+  entao os dados seguem os mesmos, atualizados todo dia pelo workflow painel-elisa.yml.
+  Inclui a coluna "Fatura" com o link de checkout da Iugu da fatura mais antiga
+  em aberto (feature de 23/09/2026), igual ao Gambiarra completo.
+
+  ATENCAO: o travamento e' de VISTA, nao de dado. O dashboard_data.js carregado la'
+  dentro traz todas as marcas do painel -- quem abrir o devtools ve tudo. Antes de
+  mandar este link pra fora da Vesti, e' preciso gerar um dashboard_data so' com o
+  canal Uemtel. Ver o README desta pasta.
+-->
+<style>
+  html,body{margin:0;height:100%;background:#f4f4f7}
+  iframe{border:0;width:100%;height:100%;display:block}
+  .fallback{font:15px/1.6 system-ui,sans-serif;padding:32px;color:#333}
+  .fallback a{color:#6C5CE7}
+</style>
+<iframe
+  src="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel"
+  title="Marcas inadimplentes do canal Uemtel"
+  loading="eager"
+  referrerpolicy="no-referrer">
+  <div class="fallback">
+    Seu navegador não abriu o painel embutido.
+    <a href="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel">Abrir direto</a>.
+  </div>
+</iframe>
