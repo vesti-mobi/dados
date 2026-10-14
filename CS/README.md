@@ -1066,6 +1066,39 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## Quanto se perdeu com cada churn (14/10/2026)
+
+*"Coloque em churn o valor perdido, tem como? Que seria o valor que a marca
+pagava total todo mês."*
+
+O campo que existia era pobre e enganava: do Painel Elisa o `valorMensal` só
+vem de quem **ainda está em cobrança**, e da planilha do time vem só o **plano**.
+A Skenn aparecia com R$ 382 quando pagava **R$ 2.949** — o resto era Oráculo,
+filial e o que mais estivesse na fatura.
+
+A coluna **Valor perdido por mês** monta o número de três fontes, nesta ordem:
+
+| ordem | fonte | o que é | cobriu |
+|---|---|---|---|
+| 1 | série da carteira | `receitaMensalidade` + `receitaOutrosIugu` no último mês cheio até o churn — o total de verdade | 26 |
+| 2 | faturas do Iugu | a última paga, para quem já saiu da série | 1 |
+| 3 | planilha do time | só o plano, mas melhor que nada | 74 |
+| — | nada | a marca saiu da carteira e levou série e faturas junto | 49 |
+
+No trimestre jul–set: **R$ 79 mil por mês** deixando de entrar, conhecidos de
+**101 dos 150** churns. A coluna *De onde sai o valor* diz qual fonte foi usada
+em cada linha, porque "planilha (só o plano)" vale menos que "série da
+carteira" e quem lê precisa saber a diferença.
+
+Os 49 sem valor são exatamente os de **plataforma cancelada** — e é o mesmo
+problema da CS: a marca sai do cadastro e some das duas fontes boas. Onde não
+sabemos, a coluna mostra **travessão, não zero**: zero diria que a marca não
+pagava nada, que é outra coisa.
+
+> O índice de receita por domínio e mês é montado uma vez e reaproveitado
+> (`idxReceitaMensal`) — sem isso, varrer as 160 mil linhas da série a cada
+> cálculo de churn travaria a aba. Medido: 1 ms.
+
 ## O Tino saiu de Mentoria/Setup (13/10/2026)
 
 *"Tire o Tino de Mentoria/Setup, deixe só na meta de Tino mesmo."* E, logo
