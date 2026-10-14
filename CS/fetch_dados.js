@@ -1598,6 +1598,54 @@ function registrarIntegracoes(porDom) {
   return historicoNovo;
 }
 
+/* ---- A carteira de ontem (CS/carteira_historica.json).
+
+   A marca que dá churn some do cadastro e leva junto a CS e a receita — e o
+   lake não guarda histórico nenhum disso (varrido em 02/10/2026). O painel
+   guardava sem saber: o `dados.js` é commitado a cada carga, e o repositório
+   tem uma foto da carteira por dia desde 13/08/2026. O arquivo nasceu da
+   destilação dessas 62 fotos e daqui para a frente se mantém sozinho.
+
+   Por domínio: nome, última CS e última receita mensal conhecida (mensalidade
+   + outros do Iugu). Quem está na carteira hoje tem o registro atualizado;
+   quem saiu fica congelado com o que tinha no último dia — que é exatamente o
+   que o painel precisa para dizer "esta marca era da Thamiris e pagava R$ 780".
+
+   Só avança: a receita de um mês mais novo substitui a de um mais velho, nunca
+   o contrário. */
+function registrarCarteiraHistorica(porDom, receitaPorDomMes) {
+  const arq = path.join(__dirname, 'carteira_historica.json');
+  let antes = { marcas: {} };
+  try { antes = JSON.parse(fs.readFileSync(arq, 'utf8')); } catch { /* nasce vazio */ }
+  const m = antes.marcas || {};
+
+  porDom.forEach((c, dom) => {
+    const r = m[dom] || (m[dom] = {});
+    if (c.nome) r.n = c.nome;
+    if (c.cs && c.cs !== 'Sem CS') r.cs = c.cs;
+    r.em = HOJE_ISO;
+  });
+  Object.entries(receitaPorDomMes || {}).forEach(([dom, meses]) => {
+    const ms = Object.keys(meses).sort();
+    if (!ms.length) return;
+    const ultimo = ms[ms.length - 1];
+    const r = m[dom] || (m[dom] = {});
+    if (!r.rm || ultimo >= r.rm) { r.r = Math.round(meses[ultimo]); r.rm = ultimo; }
+  });
+
+  const saida = { geradoEm: HOJE_ISO, cargas: (antes.cargas || 0) + 1, marcas: m };
+  try {
+    fs.writeFileSync(arq, JSON.stringify(saida) + '\n', 'utf8');
+  } catch (e) {
+    console.log('  não consegui gravar a carteira histórica: ' + e.message);
+    return;
+  }
+  const vals = Object.values(m);
+  console.log('  carteira de ontem: marcas no histórico'.padEnd(44) + String(vals.length).padStart(8));
+  console.log('    com CS / com receita'.padEnd(44)
+    + (vals.filter(x => x.cs).length + ' / ' + vals.filter(x => x.r).length).padStart(8));
+}
+
 /* ---- Marcação manual Atacado × Varejo (CS/varejo_manual.json).
 
    A classificação automática vem do Relatório Confecções (Fabric) e está
@@ -2792,6 +2840,20 @@ function montar(bqd, hsd, tinoDados) {
      a bonificação trimestral conta "nova integração" como um dos itens de
      Mentoria/Setup, e até aqui o arquivo só existia no repositório. */
   const integracoesNovas = registrarIntegracoes(porDom);
+
+  /* A carteira de ontem, atualizada com a receita de cada marca neste ano.
+     Monta o índice domínio -> mês -> (mensalidade + outros) a partir da série
+     que acabou de ser construída, e deixa gravado para quando a marca sair. */
+  const receitaPorDomMes = {};
+  clientesSeries.forEach(x => {
+    const d = x.dominio || x.cliente; if (!d) return;
+    const v = (x.receitaMensalidade || 0) + (x.receitaOutrosIugu || 0);
+    if (!(v > 0)) return;
+    const mes = String(x.data).slice(0, 7);
+    (receitaPorDomMes[d] || (receitaPorDomMes[d] = {}))[mes] =
+      (receitaPorDomMes[d][mes] || 0) + v;
+  });
+  registrarCarteiraHistorica(porDom, receitaPorDomMes);
   /* Tino: a régua é por MARCA — só entra quem passou de 40 eventos no mês, e o
      que se conta é quantas marcas passaram, não quantos eventos. Por isso a
      soma é feita em dois tempos. */

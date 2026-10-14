@@ -4199,6 +4199,35 @@ function itensCross(meses, cs){
    "plataforma cancelada": a marca sai da carteira e leva junto a série e as
    faturas. Por isso o KPI diz de quantas linhas ele sabe o valor — somar e
    calar faria o resto parecer zero. */
+/* ---- A CARTEIRA DE ONTEM (14/10/2026) ------------------------------------
+   "Coloca dos que achar no histórico também."
+
+   A marca que dá churn some do cadastro e leva junto a CS e a receita: 124 dos
+   150 churns do trimestre apareciam como "Sem CS" e 49 sem valor nenhum. O
+   lake não guarda esse histórico — isso foi varrido em 02/10 e não existe.
+
+   Mas o PAINEL guarda. O `dados.js` é commitado a cada carga, e o repositório
+   tem uma foto da carteira por dia desde 13/08/2026. `carteira_historica.json`
+   é a destilação dessas fotos: por domínio, o nome, a última CS e a última
+   receita mensal conhecida. 1.898 marcas, 120 KB.
+
+   Vale como ÚLTIMA fonte, depois de tudo que é dado vivo — é memória, não
+   verdade de hoje. E envelhece bem: a carga reescreve o arquivo todo dia, e
+   quem sai fica congelado com o que tinha. */
+const CARTEIRA_ONTEM = {marcas:{}};
+function carregarCarteiraHistorica(){
+  fetch('carteira_historica.json', {cache:'no-store'})
+    .then(r=>r.ok ? r.json() : Promise.reject(new Error('HTTP '+r.status)))
+    .then(j=>{
+      CARTEIRA_ONTEM.marcas = (j && j.marcas) || {};
+      const n = Object.keys(CARTEIRA_ONTEM.marcas).length;
+      console.log('[histórico] '+n+' marcas da carteira de ontem, de '+((j&&j.cargas)||'?')+' cargas');
+      if(n) renderPagina();
+    })
+    .catch(e=>console.warn('[histórico] sem carteira_historica.json:', e.message));
+}
+const daCarteiraDeOntem = dom => CARTEIRA_ONTEM.marcas[String(dom||'')] || null;
+
 const idxReceitaMensal = (()=>{
   let cache = null;
   return ()=>{
@@ -4234,6 +4263,10 @@ function valorPerdidoDaMarca(dominio, ateMes, daPlanilha){
   const f = ultimo(idx.fatura);
   if(f) return {valor:f, de:'última fatura paga'};
   if(daPlanilha > 0) return {valor: Math.round(daPlanilha), de:'planilha (só o plano)'};
+  /* Última parada: o que a marca pagava quando ainda estava na carteira. */
+  const h = daCarteiraDeOntem(dominio);
+  if(h && h.r > 0 && (!h.rm || h.rm <= ateMes))
+    return {valor: Math.round(h.r), de:'carteira de ' + fmt.mes((h.rm||'')+'-01')};
   /* `null`, não zero: a marca saiu da carteira e levou junto a série e as
      faturas — não sabemos quanto ela pagava. Zero diria que ela não pagava
      nada, que é outra coisa. A coluna mostra travessão. */
@@ -4259,7 +4292,11 @@ function eventosDeChurn(p, quem){
        pela planilha logo abaixo: a lista não é esta ∪ aquela por acaso. */
     if(l.situacao !== 'cancelada') return;
     if(!dentro(l.bloqueadoEm)) return;
-    const cs = normalizarCs(l.cs) || CS_POR_CLIENTE[l.cliente] || 'Sem CS';
+    /* A CS também sai do histórico quando o cadastro já não tem: a marca
+       cancelada perde o responsável junto com o módulo. */
+    const hist = daCarteiraDeOntem(l.dominio);
+    const cs = normalizarCs(l.cs) || CS_POR_CLIENTE[l.cliente]
+             || (hist && hist.cs) || 'Sem CS';
     if(quem && !quem(cs)) return;
     const ch = chaveNomeMarca(l.cliente);
     if(vistos.has(ch)) return; vistos.add(ch);
@@ -4282,7 +4319,8 @@ function eventosDeChurn(p, quem){
     if(!dentro(l.data)) return;
     const ch = chaveNomeMarca(l.cliente);
     const marca = (l.cnpj && CLIENTE_POR_CNPJ[String(l.cnpj)]) || CLIENTE_POR_NOME[ch];
-    const cs = (marca && marca.cs) || 'Sem CS';
+    const hist = daCarteiraDeOntem((marca && marca.dominio) || l.dominio);
+    const cs = (marca && marca.cs) || (hist && hist.cs) || 'Sem CS';
     if(quem && !quem(cs)) return;
     if(vistos.has(ch)) return; vistos.add(ch);
     out.push({nome:(marca&&marca.nome)||l.cliente, cs, data:l.data, origem:'Planilha do time',
@@ -9199,6 +9237,7 @@ window.__cs_boot = function(){
      não pode segurar o painel se a API estiver lenta ou fora. */
   carregarMarcacaoVarejo();
   carregarTierManual();
+  carregarCarteiraHistorica();
 };
 if(document.getElementById('app').style.display !== 'none') window.__cs_boot();
 

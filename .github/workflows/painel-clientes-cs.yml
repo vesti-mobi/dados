@@ -3,7 +3,9 @@
 #
 # Roda todo dia às 04:00 BRT (07:00 UTC), refaz o CS/dados.js inteiro
 # (BigQuery + HubSpot) e commita, junto com o retrato de integrações
-# (CS/integracoes_snapshot.json + CS/integracoes_novas.json). Esses dois
+# (CS/integracoes_snapshot.json + CS/integracoes_novas.json) e a carteira de
+# ontem (CS/carteira_historica.json), que guarda a CS e a receita de cada marca
+# para quando ela sair do cadastro. Esses
 # precisam voltar para o repositório: é a comparação com o retrato da carga
 # anterior que detecta integração nova, e sem commitar o retrato nasceria vazio
 # toda vez. Todas as abas, tabelas e gráficos do painel
@@ -123,7 +125,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           MSG="Painel de Clientes CS: dados de $(TZ=America/Sao_Paulo date +'%d/%m/%Y %H:%M')"
-          ARQS="dados.js integracoes_snapshot.json integracoes_novas.json"
+          ARQS="dados.js integracoes_snapshot.json integracoes_novas.json carteira_historica.json"
           for a in $ARQS; do if [ -f "CS/$a" ]; then cp "CS/$a" "$RUNNER_TEMP/$a"; fi; done
           for i in 1 2 3 4 5; do
             git fetch -q origin main

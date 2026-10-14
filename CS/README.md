@@ -1066,6 +1066,46 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## A carteira de ontem (14/10/2026)
+
+*"Coloca dos que achar no histórico também."*
+
+A marca que dá churn some do cadastro e leva junto a CS e a receita. Em 02/10 eu
+varri o BigQuery e provei que o lake não guarda esse histórico — e parei por
+ali. **O que eu não tinha considerado é que o próprio painel guarda**: o
+`dados.js` é commitado a cada carga, e o repositório tem uma foto da carteira
+por dia desde 13/08/2026.
+
+`carteira_historica.json` é a destilação dessas 62 fotos: por domínio, o nome, a
+última CS e a última receita mensal conhecida. **1.088 marcas, 88 KB.** Vale
+como *última* fonte, depois de tudo que é dado vivo — é memória, não verdade de
+hoje.
+
+O ganho no trimestre jul–set:
+
+| | antes | depois |
+|---|---|---|
+| churns sem CS | 124 | **102** |
+| churns com valor conhecido | 101 | **120** |
+| valor perdido por mês | R$ 79.010 | **R$ 88.034** |
+| churn da Bonificação (3 CS) | 16 | **18** |
+
+A Záfira, que aparecia como "Sem CS" e sem valor, virou **Thamiris Ribeiro ·
+R$ 780 · carteira de set/26**.
+
+**E se mantém sozinho**: `registrarCarteiraHistorica` roda em toda carga,
+atualiza quem está na carteira e deixa congelado quem saiu. O workflow commita
+o arquivo junto do `dados.js`. Daqui para a frente a cobertura só cresce — o
+que falta hoje são marcas que saíram antes de 13/08, de que não existe foto.
+
+> **Um bug que custou uma rodada.** O extrator montava a receita por mês com
+> `String(s.data).slice(0,7)`, e as cargas antigas vinham no formato de SEMANA,
+> sem o campo `data`. O resultado era a chave `"undefin"` — que ordena depois de
+> qualquer `"2026-xx"` e virava o "último mês" de todo mundo, com o valor sendo
+> a soma de tudo. O arquivo saiu com 1.898 marcas e valores inflados (a Záfira
+> com R$ 6.240 em vez de R$ 780). Com a data validada, 1.088 marcas e os valores
+> certos.
+
 ## Quanto se perdeu com cada churn (14/10/2026)
 
 *"Coloque em churn o valor perdido, tem como? Que seria o valor que a marca
