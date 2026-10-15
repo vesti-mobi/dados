@@ -267,16 +267,31 @@ async function puxarBQ() {
      Decisão dela: a Tabela geral e o card GMV da Gerencial passam a usar essa
      régua. Esta consulta traz o GMV criado sem teto; o recorte de tempo
      continua sendo o filtro do painel (o pago, com teto, segue na coluna
-     `valor` porque a Bonificação mede dinheiro que entrou). */
+     `valor` porque a Bonificação mede dinheiro que entrou).
+
+     OS FILTROS DA CONSULTA DO .PBIX (15/10/2026). "Todo pedido criado" não
+     era a régua inteira: setembro/2026 dava R$ 109,6 mi aqui contra R$ 99,7 mi
+     no relatório. A consulta MongoPedidos do .pbix tem três filtros que esta
+     não tinha, e agora tem os mesmos:
+       · status_canceled_isCanceled = 'False' — pedido cancelado fica fora;
+       · isClosed = 'True' — pedido não fechado fica fora;
+       · settings_source <> 'Link de cobrança' (passo "Linhas Filtradas" da
+         MergedPedidos; origem nula continua dentro, como no Power Query);
+     e um pedido por `_id` (o .pbix faz Table.Distinct no _id). O valor também
+     deixa de exigir > 0, porque o relatório soma o que vier. */
   const pedidosCriados = await q('GMV criado por marca × dia (régua Power BI)', `
-    SELECT CAST(domainId AS STRING) dom,
-      ${DIA('settings_createdAt')} d,
-      COUNT(*) criados,
-      ROUND(SUM(CAST(summary_total AS FLOAT64)),2) valor_criado
-    FROM ${DS}.MongoDB_Pedidos_Geral
-    WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
-      AND SAFE_CAST(summary_total AS FLOAT64) > 0
-      AND ${FILTRO_PERIODO('settings_createdAt')}
+    SELECT dom, d, COUNT(*) criados, ROUND(SUM(v),2) valor_criado
+    FROM (
+      SELECT _id,
+        ANY_VALUE(CAST(domainId AS STRING)) dom,
+        ANY_VALUE(${DIA('settings_createdAt')}) d,
+        ANY_VALUE(IFNULL(SAFE_CAST(summary_total AS FLOAT64), 0)) v
+      FROM ${DS}.MongoDB_Pedidos_Geral
+      WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
+        AND status_canceled_isCanceled = 'False' AND isClosed = 'True'
+        AND IFNULL(settings_source, '') != 'Link de cobrança'
+        AND ${FILTRO_PERIODO('settings_createdAt')}
+      GROUP BY _id)
     GROUP BY 1,2`);
 
   const pedidos = await q('pedidos por marca × dia', `
