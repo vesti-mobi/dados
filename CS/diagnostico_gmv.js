@@ -193,9 +193,46 @@ async function porStatus(bq) {
     console.log('  ' + n.padEnd(34) + mi(p).padStart(13) + mi(c2).padStart(15));
   });
 
+  /* O "GMV Total" do Power BI é `Valor Total v1 + Valor Total v2` sobre a
+     tabela MergedPedidos (Laura, 15/10/2026). Duas parcelas somadas sugerem
+     DUAS ORIGENS de pedido — e se existe uma terceira que não entra em
+     nenhuma das duas, ela some do relatório. Aqui o script procura a coluna
+     que separa essas versões e quebra o GMV por ela. */
+  {
+    const [cols] = await bq.query({ query: `
+      SELECT column_name FROM ${DS}.INFORMATION_SCHEMA.COLUMNS
+      WHERE table_name = 'MongoDB_Pedidos_Geral'
+        AND (LOWER(column_name) LIKE '%source%' OR LOWER(column_name) LIKE '%version%'
+          OR LOWER(column_name) LIKE '%origin%' OR LOWER(column_name) LIKE '%channel%'
+          OR LOWER(column_name) LIKE '%plataform%' OR LOWER(column_name) LIKE '%platform%')
+      ORDER BY column_name` });
+    console.log('\nCOLUNAS COM CARA DE ORIGEM/VERSÃO: '
+      + (cols.map(c => c.column_name).join(', ') || 'nenhuma'));
+    for (const col of cols.map(c => c.column_name).slice(0, 6)) {
+      try {
+        const [linhas] = await bq.query({ query: `
+          WITH carteira AS (${CARTEIRA})
+          SELECT IFNULL(CAST(o.\`${col}\` AS STRING),'(vazio)') valor,
+                 COUNT(*) qt,
+                 ROUND(SUM(SAFE_CAST(o.summary_total AS FLOAT64)),2) criado
+          FROM ${DS}.MongoDB_Pedidos_Geral o
+          JOIN carteira c ON c.id = CAST(o.domainId AS STRING)
+          WHERE o.settings_createdAt IS NOT NULL
+            AND SAFE_CAST(o.summary_total AS FLOAT64) > 0
+            AND DATE(CAST(o.settings_createdAt AS TIMESTAMP)) BETWEEN DATE '${ini}' AND DATE '${fim}'
+          GROUP BY 1 ORDER BY criado DESC LIMIT 12` });
+        if (!linhas.length) continue;
+        console.log('\n  ' + col + ':');
+        linhas.forEach(l => console.log('    ' + String(l.valor).slice(0,30).padEnd(32)
+          + String(l.qt).padStart(8) + ' pedidos' + mi(l.criado).padStart(14)));
+      } catch (e) {
+        console.log('\n  ' + col + ': não deu para agrupar (' + String(e.message).slice(0,70) + ')');
+      }
+    }
+  }
+
   /* `settings.source` está entre os campos do relatório do Power BI: se ele
-     exclui alguma origem de pedido, o total cai — é o último lugar onde os
-     98 milhões poderiam estar escondidos. */
+     exclui alguma origem de pedido, o total cai. */
   const [fontes] = await bq.query({ query: `
     WITH carteira AS (${CARTEIRA})
     SELECT IFNULL(o.settings_source,'(vazio)') origem,
