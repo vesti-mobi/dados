@@ -329,6 +329,23 @@ async function puxarBQ() {
       AND SAFE_CAST(summary_total AS FLOAT64) < ${TETO_PEDIDO}
     GROUP BY 1,2`);
 
+  /* O marco "100k de GMV" usa o GMV ÚNICO do painel (15/10/2026) — a mesma
+     régua de `pedidosCriados`, só que sem recorte de período, pelo mesmo
+     motivo da consulta acima: o acumulado precisa da vida inteira da marca. */
+  const gmvTudo = await q('GMV por marca × dia (histórico completo p/ marco 100k)', `
+    SELECT dom, d, ROUND(SUM(v),2) valor
+    FROM (
+      SELECT _id,
+        ANY_VALUE(CAST(domainId AS STRING)) dom,
+        ANY_VALUE(${DIA('settings_createdAt')}) d,
+        ANY_VALUE(IFNULL(SAFE_CAST(summary_total AS FLOAT64), 0)) v
+      FROM ${DS}.MongoDB_Pedidos_Geral
+      WHERE settings_createdAt IS NOT NULL AND SAFE_CAST(domainId AS INT64) IS NOT NULL
+        AND status_canceled_isCanceled = 'False' AND isClosed = 'True'
+        AND IFNULL(settings_source, '') != 'Link de cobrança'
+      GROUP BY _id)
+    GROUP BY 1,2`);
+
   const ultimoPedido = await q('último pedido por marca', `
     SELECT CAST(domainId AS STRING) dom,
            SUBSTR(CAST(MAX(CAST(settings_createdAt AS TIMESTAMP)) AS STRING),1,10) ultimo
@@ -849,7 +866,7 @@ async function puxarBQ() {
            COUNT(*) empresas, COUNTIF(tipo = 'Varejo') varejo
     FROM ${DS}.confeccao_tipo_empresa`);
 
-  return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
+  return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, gmvTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
            primeiraVP, mensalidadeBonif, pedidosCriados, tipoPorMarca,
@@ -2177,10 +2194,10 @@ function montar(bqd, hsd, tinoDados) {
          GMV pago por pedido pago. */
       pedidos: v.pedidos || 0, pedidosPagos: v.pedidosPagos || 0,
       valorPedidos: v.valorPedidos || 0,
-      /* GMV na régua do relatório do Power BI (06/10/2026): TODO pedido
-         criado, sem o teto de R$ 50 mil. A Tabela geral e o card GMV da
-         Gerencial mostram este; a Bonificação continua no `valorPedidos`,
-         que é dinheiro que entrou. */
+      /* GMV na régua do relatório do Power BI (06/10/2026; filtros do .pbix
+         em 15/10/2026). É o GMV ÚNICO do painel: todas as abas, a
+         Bonificação inclusive, leem este. `valorPedidos` (pago, com teto)
+         segue na série só como informação de apoio ("Do qual pago"). */
       valorCriado: gmvCriadoSao(v, m, dia),
       pedidosCriados: v.pedidosCriados || 0,
 
@@ -2464,8 +2481,9 @@ function montar(bqd, hsd, tinoDados) {
      do Tino é casada com o cadastro por nome (ver casarMarcaTino); marca que não
      casa continua na tabela, só sem CS — sumir com cliente por causa de cadastro
      seria pior que mostrá-lo sem CS. */
-  const gmvDia = new Map();        // dom|data -> valor pago, para a linha de GMV do Tino
-  bqd.pedidos.forEach(r => { if (dataOk(r.d)) gmvDia.set(r.dom + '|' + r.d, num(r.valor)); });
+  // dom|data -> GMV (o único do painel, 15/10/2026), para a linha de GMV do Tino
+  const gmvDia = new Map();
+  clientesSeries.forEach(x => { if (dataOk(x.data)) gmvDia.set(x.dominio + '|' + x.data, num(x.valorCriado)); });
 
   const tinoSeries = [], tinoTab = [];
   let tinoKpis = {}, tinoTipos = [], domComTino = new Set();
@@ -2621,12 +2639,29 @@ function montar(bqd, hsd, tinoDados) {
      inflava um mês normal pra 777 contra as ~15-19 dos outros marcos — bem
      longe de "marco". A própria Laura escolheu voltar pro padrão de
      primeira-vez-na-vida depois de ver esse número. */
-  const diasPorDom = new Map();
+  /* Os marcos de pedidos contam PEDIDOS PAGOS (é o nome do marco); o de
+     "100k de GMV" soma o GMV ÚNICO do painel (15/10/2026), que vem de outra
+     consulta (`gmvTudo`). Os dois se juntam por marca × dia. Dia com GMV
+     acima da trava de sanidade (R$ 10 mi numa marca num dia) vale o pago,
+     como na série diária. */
+  const porDomDia = new Map();     // dom -> Map(dia -> {pagos, pago, gmv})
+  const diaDe = (dom, d) => {
+    if (!porDomDia.has(dom)) porDomDia.set(dom, new Map());
+    const m = porDomDia.get(dom);
+    if (!m.has(d)) m.set(d, { d, pagos: 0, pago: 0, gmv: 0 });
+    return m.get(d);
+  };
   bqd.pedidosPagosTudo.forEach(r => {
     if (!porDom.has(r.dom) || !dataOk(r.d)) return;
-    if (!diasPorDom.has(r.dom)) diasPorDom.set(r.dom, []);
-    diasPorDom.get(r.dom).push({ d: r.d, pagos: num(r.pagos), valor: num(r.valor) });
+    const o = diaDe(r.dom, r.d); o.pagos += num(r.pagos); o.pago += num(r.valor);
   });
+  (bqd.gmvTudo || []).forEach(r => {
+    if (!porDom.has(r.dom) || !dataOk(r.d)) return;
+    diaDe(r.dom, r.d).gmv += num(r.valor);
+  });
+  const diasPorDom = new Map();
+  porDomDia.forEach((m, dom) => diasPorDom.set(dom, [...m.values()].map(o => ({
+    d: o.d, pagos: o.pagos, valor: o.gmv > TETO_GMV_DIA ? o.pago : o.gmv }))));
   const marcosVolume = [];
   diasPorDom.forEach((dias, dom) => {
     if (!ativos.has(porDom.get(dom).nome)) return;
@@ -2738,7 +2773,9 @@ function montar(bqd, hsd, tinoDados) {
            + 'O comparativo é a MARCA D\'ÁGUA do CS: o maior número que ele já teve em um mês.' },
     { k: 'gmv', titulo: 'GMV da carteira', unidade: 'R$',
       comparacao: 'anoAnterior',
-      regra: 'Valor dos pedidos pagos das marcas do CS no mês, comparado com o mesmo mês do ano anterior.' },
+      regra: 'GMV das marcas do CS no mês — o mesmo GMV de todas as abas, na régua do relatório Power BI '
+           + '"GMV - Métricas 2025": pedidos feitos, pagos ou não, sem cancelados, não fechados e Link de cobrança, '
+           + 'sem teto por pedido —, comparado com o mesmo mês do ano anterior.' },
     { k: 'filiais', titulo: 'Varejos novos (filiais)', unidade: 'filiais',
       comparacao: 'nenhuma',
       regra: 'Filial nova de marca que já existia — a 2ª empresa em diante do mesmo domínio, criada no mês — '
@@ -2780,10 +2817,16 @@ function montar(bqd, hsd, tinoDados) {
     }
   };
 
-  // GMV e VestiPago: direto das séries diárias já filtradas pela carteira
-  bqd.pedidos.forEach(r => {
-    const m = porDom.get(r.dom); if (!m || !dataOk(r.d)) return;
-    somaBon(mesDe(r.d), m.cs, 'gmv', num(r.valor), m.nome);
+  /* GMV e VestiPago: direto das séries diárias já filtradas pela carteira.
+     O GMV é o ÚNICO do painel (15/10/2026, "todas as abas devem considerar os
+     mesmos filtros de GMV"): o `valorCriado` da série, régua do relatório
+     Power BI e já passado pela trava de sanidade. Antes era o pago com teto
+     (`bqd.pedidos.valor`) e a Bonificação mostrava R$ 77 mi em setembro/2026
+     onde a Gerencial mostrava R$ 99 mi. O ano anterior da comparação sai da
+     mesma série, então base e mês atual seguem a mesma régua. */
+  clientesSeries.forEach(x => {
+    const m = porDom.get(x.dominio); if (!m || !dataOk(x.data)) return;
+    somaBon(mesDe(x.data), m.cs, 'gmv', num(x.valorCriado), m.nome);
   });
   bqd.vestipago.forEach(r => {
     const m = porDom.get(r.dom); if (!m || !dataOk(r.d)) return;
