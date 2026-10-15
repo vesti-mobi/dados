@@ -5,10 +5,13 @@
 <title>Inadimplentes · Uemtel</title>
 <!--
   Link dedicado do canal Uemtel. Nao duplica painel nenhum: aponta pro Gambiarra
-  publicado no GitHub Pages com o modo travado ligado (?only=inadimplentes&canal=Uemtel),
-  entao os dados seguem os mesmos, atualizados todo dia pelo workflow painel-elisa.yml.
+  publicado no GitHub Pages com o modo travado ligado
+  (?only=inadimplentes&canal=Uemtel&so_tabela=1), entao os dados seguem os
+  mesmos, atualizados todo dia pelo workflow painel-elisa.yml.
   Inclui a coluna "Fatura" com o link de checkout da Iugu da fatura mais antiga
   em aberto (feature de 23/09/2026), igual ao Gambiarra completo.
+  so_tabela=1: esconde os graficos da aba, deixa so' a tabela (pedido da Laura,
+  14/10/2026, so' pra esse link -- a Atta continua com os graficos).
 
   ATENCAO: o travamento e' de VISTA, nao de dado. O dashboard_data.js carregado la'
   dentro traz todas as marcas do painel -- quem abrir o devtools ve tudo. Antes de
@@ -22,12 +25,12 @@
   .fallback a{color:#6C5CE7}
 </style>
 <iframe
-  src="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel"
+  src="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel&so_tabela=1"
   title="Marcas inadimplentes do canal Uemtel"
   loading="eager"
   referrerpolicy="no-referrer">
   <div class="fallback">
     Seu navegador não abriu o painel embutido.
-    <a href="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel">Abrir direto</a>.
+    <a href="https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel&so_tabela=1">Abrir direto</a>.
   </div>
 </iframe>

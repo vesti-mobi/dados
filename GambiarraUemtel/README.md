@@ -7,7 +7,7 @@ Mesmo padrão do link da Atta (ver `../GambiarraAtta/README.md`).
 
 Uma página só, com um iframe para o Gambiarra publicado no GitHub Pages:
 
-    https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel
+    https://vesti-mobi.github.io/dados/Gambiarra/?only=inadimplentes&canal=Uemtel&so_tabela=1
 
 Não há cópia de código nem de dados. O modo travado (`aplicaModoTravado` em
 `../Gambiarra/app.js`) faz o resto:
@@ -16,6 +16,7 @@ Não há cópia de código nem de dados. O modo travado (`aplicaModoTravado` em
 |---|---|
 | `only=inadimplentes` | abre só essa aba e esconde a navegação |
 | `canal=Uemtel` | trava o canal, troca as caixas por um rótulo fixo e esconde o seletor de empresa |
+| `so_tabela=1` | esconde os gráficos da aba, deixa só a tabela (pedido específico deste link, 14/10/2026 — a Atta continua com os gráficos) |
 
 O filtro de **Situação** (Em alerta / Bloqueada / Cancelada), o de **CS** e o de
 **Atraso mínimo** continuam funcionando. A coluna **Fatura** (botão "🔗 Copiar

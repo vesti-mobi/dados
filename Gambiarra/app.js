@@ -1800,6 +1800,9 @@ function bind() {
 // ?only=inadimplentes&canal=Atta  -> abre so' aquela aba, com o canal fixo e sem
 // os controles que quebrariam o recorte. Usado pelo link separado da Atta.
 // O filtro de Situacao continua livre -- e' o unico que a Laura pediu pra manter.
+// ?so_tabela=1 -> some com os graficos da aba, deixa so' a tabela. Pedido da
+// Laura so' pro link da Uemtel (14/10/2026); independente do canal de proposito,
+// pra nao acoplar esconder grafico a um nome de canal especifico.
 //
 // ATENCAO: isto TRAVA A VISTA, nao esconde o dado. dashboard_data.js vem inteiro
 // pro navegador; quem abrir o devtools ve todas as marcas. Para link externo de
@@ -1808,7 +1811,8 @@ function aplicaModoTravado() {
   const q = new URLSearchParams(location.search);
   const canal = q.get("canal");
   const only = q.get("only");
-  if (!canal && !only) return;
+  const soTabela = q.get("so_tabela");
+  if (!canal && !only && !soTabela) return;
 
   if (canal) {
     const alvo = CANAIS.find(c => c.toLowerCase() === canal.toLowerCase());
@@ -1834,6 +1838,10 @@ function aplicaModoTravado() {
     // sem home pra voltar: a barra de navegacao perde a funcao
     const back = $("backNav");
     if (back) back.classList.add("hidden");
+  }
+
+  if (soTabela) {
+    document.querySelectorAll(".tab-panel .chart-row").forEach(el => el.style.display = "none");
   }
 }
 
