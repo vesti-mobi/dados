@@ -28,7 +28,7 @@ on:
         required: false
         default: '0'
       modo:
-        description: 'conferir (padrão), explorar (catálogo do lake) ou gmv (todas as réguas do GMV do mês em `meses`)'
+        description: 'conferir (padrão), explorar, gmv (todas as réguas) ou pbi (reproduz a medida do Power BI)'
         required: false
         default: 'conferir'
 
@@ -67,6 +67,15 @@ jobs:
         if: inputs.modo == 'explorar'
         working-directory: CS
         run: node explorar_carteira.js
+
+      # Reproduz a medida "GMV Total" do relatório do Power BI (v1 + v2) para
+      # achar qual coluna é o "Status = 1" dele e quanto a soma duplica.
+      - name: Conferir a medida do Power BI
+        if: inputs.modo == 'pbi'
+        working-directory: CS
+        env:
+          MES: ${{ inputs.meses }}
+        run: node conferir_pbi.js
 
       # Mede o GMV do mês em todas as réguas possíveis (pago x criado, com teto
       # x sem, carteira x base toda) para achar de onde sai cada número.
