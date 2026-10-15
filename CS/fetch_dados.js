@@ -1598,6 +1598,32 @@ function registrarIntegracoes(porDom) {
   return historicoNovo;
 }
 
+/* GMV CRIADO, COM TRAVA DE SANIDADE (15/10/2026).
+
+   A régua do Power BI, adotada em 06/10 a pedido da Laura, conta TODO pedido
+   criado e sem o teto de R$ 50 mil que o painel usava antes. Foi o certo para
+   bater com o relatório — e abriu a porta para o lixo que o teto escondia.
+
+   Em 22/06/2026 a Bauarte apareceu com um pedido criado de
+   R$ 123.740.028.866, cento e vinte e três BILHÕES, contra R$ 23.304 de fato
+   pagos naquele dia. Junho inteiro foi de R$ 108,7 milhões para R$ 123.849
+   milhões — mil cento e trinta e nove vezes o valor real.
+
+   A trava: acima de R$ 10 milhões de GMV criado por marca num único dia, vale
+   o que foi PAGO. Dez milhões é o triplo da maior linha legítima do ano (a
+   PIT BULL JEANS, R$ 3,55 milhões em 14/04), então nenhuma venda de verdade
+   encosta nisso. */
+const TETO_GMV_DIA = 10e6;
+function gmvCriadoSao(v, marca, dia) {
+  const criado = r2(v.valorCriado || 0);
+  if (criado <= TETO_GMV_DIA) return criado;
+  const pago = r2(v.valorPedidos || 0);
+  console.log('  [!] GMV criado absurdo: ' + (marca && marca.nome ? marca.nome : '?')
+    + ' em ' + dia + ' — R$ ' + Math.round(criado).toLocaleString('pt-BR')
+    + '. Usando o pago, R$ ' + Math.round(pago).toLocaleString('pt-BR') + '.');
+  return pago;
+}
+
 /* ---- A carteira de ontem (CS/carteira_historica.json).
 
    A marca que dá churn some do cadastro e leva junto a CS e a receita — e o
@@ -2100,7 +2126,7 @@ function montar(bqd, hsd, tinoDados) {
          criado, sem o teto de R$ 50 mil. A Tabela geral e o card GMV da
          Gerencial mostram este; a Bonificação continua no `valorPedidos`,
          que é dinheiro que entrou. */
-      valorCriado: r2(v.valorCriado || 0),
+      valorCriado: gmvCriadoSao(v, m, dia),
       pedidosCriados: v.pedidosCriados || 0,
 
       receitaInterchange: v.receitaInterchange || 0,

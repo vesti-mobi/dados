@@ -1066,6 +1066,36 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## Um pedido de R$ 123 bilhões (15/10/2026)
+
+Achado procurando outra coisa — se o painel contava marcas de teste. O GMV do
+ano somava **R$ 124,7 bilhões**, cem vezes o que deveria. A causa era uma linha
+só:
+
+> **Bauarte, 22/06/2026** — 17 pedidos criados, `valorCriado` de
+> **R$ 123.740.028.866**, contra **R$ 23.304** de fato pagos no mesmo dia.
+
+Junho inteiro ia de R$ 108,7 milhões para R$ 123.849 milhões: **1.139 vezes** o
+valor real. A Bauarte é marca ativa da Gabriella, então o lixo estava dentro da
+carteira das três CS e contaminava a meta de GMV de qualquer trimestre que
+inclua junho.
+
+**Por que só agora.** Até 06/10 o painel usava GMV pago com teto de R$ 50 mil
+por pedido, e o teto escondia isso. A régua do Power BI — todo pedido criado,
+sem teto — foi a escolha certa para bater com o relatório, e abriu a porta para
+o que o teto filtrava.
+
+**A trava:** acima de **R$ 10 milhões de GMV criado por marca num único dia**,
+vale o que foi pago. Dez milhões é o triplo da maior linha legítima do ano (PIT
+BULL JEANS, R$ 3,55 milhões em 14/04), então nenhuma venda real encosta. A
+carga avisa no log quando acontece, e o `dados.js` publicado foi corrigido na
+mão para o painel não esperar as 4:00.
+
+| | antes | depois |
+|---|---|---|
+| GMV de junho | R$ 123.849 mi | **R$ 109,1 mi** |
+| GMV do ano | R$ 124,7 bi | **R$ 1,08 bi** |
+
 ## A carteira de ontem (14/10/2026)
 
 *"Coloca dos que achar no histórico também."*
@@ -1106,7 +1136,14 @@ que falta hoje são marcas que saíram antes de 13/08, de que não existe foto.
 > com R$ 6.240 em vez de R$ 780). Com a data validada, 1.088 marcas e os valores
 > certos.
 
-## Quanto se perdeu com cada churn (14/10/2026)
+## Quanto se perdeu com cada churn (14/10/2026 — removido em 15/10)
+
+> **Saiu a pedido da Laura em 15/10/2026**: *"tire o valor perdido no churn"*.
+> A coluna e os KPIs foram removidos das quatro abas. O que ficou é a
+> `carteira_historica.json` da seção acima, que continua devolvendo a **CS** de
+> quem saiu — essa parte não dependia do valor. O registro abaixo fica porque a
+> apuração pode ser pedida de volta, e as fontes e suas limitações já estão
+> levantadas.
 
 *"Coloque em churn o valor perdido, tem como? Que seria o valor que a marca
 pagava total todo mês."*

@@ -3202,17 +3202,13 @@ const CARDS_GERENCIAL = [
          s:'módulo cortado e a última fatura cancelada na Iugu'},
         {l:'Planilha do time', v:fmt.int(rows.filter(r=>r.origem==='Planilha do time').length),
          s:'cancelamento ou inadimplência registrados à mão'},
-        {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
-         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Média dos 12 meses', v:fmt.int(Math.round(media12)), s:'na carteira em foco'},
         {l:'Deixaram em aberto', v:fmt.moneyCompact(soma(rows,'emAberto')), s:'fatura vencida e não paga'},
       ]; },
     metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
     colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data do churn', f:fmt.date},
-      {k:'perdido', l:'Valor perdido por mês', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
       {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
       {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
-      {k:'perdidoDe', l:'De onde sai o valor', f:v=>v||'—'},
       {k:'ultimoPagamento', l:'Último pagamento', f:v=>v?fmt.date(v):'—'},
       {k:'diasAtraso', l:'Dias em atraso', r:true, f:v=>v==null?'—':fmt.int(v)},
       {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—', forte:true},
@@ -4182,23 +4178,6 @@ function itensCross(meses, cs){
 
    `quem(cs)` decide quais CS contam; sem ele, conta o time todo.
    ========================================================================= */
-/* QUANTO A MARCA PAGAVA POR MÊS (14/10/2026). "Coloque em churn o valor
-   perdido, que seria o valor que a marca pagava total todo mês."
-
-   O campo que existia era pobre: do Painel Elisa o `valorMensal` só vem de
-   quem ainda está em cobrança, e da planilha vem só o PLANO. A Skenn aparecia
-   com R$ 382 quando pagava R$ 2.949 — o resto era Oráculo, filial e afins.
-
-   Agora são três fontes, nesta ordem de qualidade:
-     1. a série da carteira — soma de `receitaMensalidade` e `receitaOutrosIugu`
-        no último mês cheio até o churn. É o total de verdade;
-     2. as faturas do Iugu — a última paga, para quem já saiu da série;
-     3. o valor da planilha, que é só o plano, mas é melhor que nada.
-
-   Cobre 67% dos churns do trimestre. Os 49 que faltam são justamente os de
-   "plataforma cancelada": a marca sai da carteira e leva junto a série e as
-   faturas. Por isso o KPI diz de quantas linhas ele sabe o valor — somar e
-   calar faria o resto parecer zero. */
 /* ---- A CARTEIRA DE ONTEM (14/10/2026) ------------------------------------
    "Coloca dos que achar no histórico também."
 
@@ -4227,52 +4206,6 @@ function carregarCarteiraHistorica(){
     .catch(e=>console.warn('[histórico] sem carteira_historica.json:', e.message));
 }
 const daCarteiraDeOntem = dom => CARTEIRA_ONTEM.marcas[String(dom||'')] || null;
-
-const idxReceitaMensal = (()=>{
-  let cache = null;
-  return ()=>{
-    if(cache) return cache;
-    const serie = {}, fatura = {};
-    (DATA.clientesSeries||[]).forEach(s=>{
-      const d = s.dominio || s.cliente; if(!d) return;
-      const v = (s.receitaMensalidade||0) + (s.receitaOutrosIugu||0);
-      if(!(v > 0)) return;
-      const m = String(s.data).slice(0,7);
-      (serie[d] || (serie[d] = {}))[m] = (serie[d][m]||0) + v;
-    });
-    (DATA.faturasCliente||[]).forEach(f=>{
-      if(!f.pago || !f.dominio || !f.vencimento) return;
-      const m = String(f.vencimento).slice(0,7);
-      (fatura[f.dominio] || (fatura[f.dominio] = {}))[m] = (fatura[f.dominio][m]||0) + (f.valor||0);
-    });
-    cache = {serie, fatura};
-    return cache;
-  };
-})();
-/* O último mês com receita até o mês do churn — não a média: o que interessa é
-   quanto deixou de entrar a partir dali. */
-function valorPerdidoDaMarca(dominio, ateMes, daPlanilha){
-  const idx = idxReceitaMensal();
-  const ultimo = tabela => {
-    const m = dominio ? tabela[String(dominio)] : null; if(!m) return null;
-    const meses = Object.keys(m).filter(x=>x <= ateMes).sort();
-    return meses.length ? Math.round(m[meses[meses.length-1]]) : null;
-  };
-  const v = ultimo(idx.serie);
-  if(v) return {valor:v, de:'série da carteira'};
-  const f = ultimo(idx.fatura);
-  if(f) return {valor:f, de:'última fatura paga'};
-  if(daPlanilha > 0) return {valor: Math.round(daPlanilha), de:'planilha (só o plano)'};
-  /* Última parada: o que a marca pagava quando ainda estava na carteira. */
-  const h = daCarteiraDeOntem(dominio);
-  if(h && h.r > 0 && (!h.rm || h.rm <= ateMes))
-    return {valor: Math.round(h.r), de:'carteira de ' + fmt.mes((h.rm||'')+'-01')};
-  /* `null`, não zero: a marca saiu da carteira e levou junto a série e as
-     faturas — não sabemos quanto ela pagava. Zero diria que ela não pagava
-     nada, que é outra coisa. A coluna mostra travessão. */
-  return {valor:null, de:null};
-}
-
 function eventosDeChurn(p, quem){
   const dentro = d => d && d >= p.ini && d <= p.fim;
   const vistos = new Set();
@@ -4310,9 +4243,6 @@ function eventosDeChurn(p, quem){
       /* `valorMensal` do Painel Elisa só vem preenchido para quem ainda está
          em cobrança; de quem já teve o módulo cortado ele não sabe o valor. */
       mensalidade: l.valorMensal || 0,
-      ...(()=>{ const v = valorPerdidoDaMarca(l.dominio || (marca&&marca.dominio),
-            String(l.bloqueadoEm).slice(0,7), l.valorMensal);
-          return {perdido: v.valor, perdidoDe: v.de}; })(),
       ultimoPagamento: l.ultimoPagamento, vendedora: null, naCarteira: marca ? 'sim' : '—'});
   });
   ((DATA.churnPlanilha||{}).linhas||[]).forEach(l=>{
@@ -4329,9 +4259,6 @@ function eventosDeChurn(p, quem){
       plano: l.plano || (marca&&marca.plano),
       diasAtraso: null, emAberto: 0,
       mensalidade: l.valor || 0,          // a planilha traz a mensalidade da marca
-      ...(()=>{ const v = valorPerdidoDaMarca((marca&&marca.dominio) || l.dominio,
-            String(l.data).slice(0,7), l.valor);
-          return {perdido: v.valor, perdidoDe: v.de}; })(),
       ultimoPagamento: marca && marca.ultimoPagamento,
       /* A planilha traz a VENDEDORA, que não é a CS — vinham do card
          "Churn declarado", que saiu de cena quando a régua virou uma só. */
@@ -4910,8 +4837,6 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
-        {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
-         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Plataforma cancelada', v:fmt.int(rows.filter(r=>r.origem==='Plataforma cancelada').length),
          s:'módulo cortado e a última fatura cancelada na Iugu'},
         {l:'Planilha do time', v:fmt.int(rows.filter(r=>r.origem==='Planilha do time').length),
@@ -4922,9 +4847,8 @@ const CARDS_VISAO = [
       ]; },
     metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
     colunas:[{k:'data', l:'Data do churn', f:fmt.date}, COL_NOME, COL_CS_CARD,
-      {k:'perdido', l:'Valor perdido por mês', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
       {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
-      {k:'plano', l:'Plano'}, {k:'perdidoDe', l:'De onde sai o valor', f:v=>v||'—'},
+      {k:'plano', l:'Plano'},
       {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'}],
   },
   {
@@ -6103,16 +6027,12 @@ const TABS = [
     colunas:[
       {k:'nome', l:'Marca', tipo:'cliente'},
       {k:'data', l:'Data do churn', tipo:'date'},
-      /* O valor perdido sobe para a terceira coluna: no fim da tabela ele
-         ficava fora da tela e só aparecia rolando para o lado. */
-      {k:'perdido', l:'Valor perdido por mês', tipo:'money0traco', r:true, forte:true},
       {k:'origem', l:'Origem'},
       {k:'detalhe', l:'Motivo / situação'},
       COL_CS,
       {k:'canal', l:'Canal', tipo:'tag'},
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       {k:'plano', l:'Plano'},
-      {k:'perdidoDe', l:'De onde sai o valor', tipo:'texto'},
       {k:'ultimoPagamento', l:'Último pagamento', tipo:'date'},
       {k:'diasAtraso', l:'Dias em atraso', tipo:'int0traco', r:true},
       {k:'emAberto', l:'Em aberto', tipo:'money0traco', r:true, forte:true},
@@ -6130,11 +6050,6 @@ const TABS = [
         /* O valor só é conhecido de quem veio da planilha: do que foi cortado
            pela automação, o Painel Elisa não traz a mensalidade. Sem dizer
            isso o KPI parece afirmar que o resto valia zero. */
-        /* O valor é o que a marca pagava POR MÊS — plano mais Oráculo, filial
-           e o que mais estivesse na fatura. Dizer de quantas linhas ele é
-           conhecido evita que o resto pareça zero. */
-        {l:'Valor perdido por mês', v:fmt.moneyCompact(rows.reduce((t,r)=>t+(r.perdido||0),0)),
-         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Deixaram em aberto', v:fmt.moneyCompact(rows.reduce((t,r)=>t+(r.emAberto||0),0)),
          s:'fatura vencida e não paga'},
       ];
@@ -6533,7 +6448,6 @@ function extraCarteiraCs(){
 
   wrap.appendChild(cardLista('Churn no período', churnDoCs(cs),
     [{k:'nome', l:'Marca'}, {k:'data', l:'Data do churn', f:fmt.date},
-     {k:'perdido', l:'Valor perdido por mês', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
      {k:'origem', l:'Origem'}, {k:'detalhe', l:'Motivo / situação'},
      {k:'emAberto', l:'Em aberto', r:true, f:v=>v?fmt.money(v):'—'}]));
 
