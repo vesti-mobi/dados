@@ -1803,6 +1803,9 @@ function bind() {
 // ?so_tabela=1 -> some com os graficos da aba, deixa so' a tabela. Pedido da
 // Laura so' pro link da Uemtel (14/10/2026); independente do canal de proposito,
 // pra nao acoplar esconder grafico a um nome de canal especifico.
+// ?titulo=Texto -> troca o nome "Gambiarra" (logo grande + aba do navegador)
+// pelo texto informado. Pedido da Laura so' pro link da Uemtel (15/10/2026),
+// generico pelo mesmo motivo do so_tabela.
 //
 // ATENCAO: isto TRAVA A VISTA, nao esconde o dado. dashboard_data.js vem inteiro
 // pro navegador; quem abrir o devtools ve todas as marcas. Para link externo de
@@ -1812,7 +1815,8 @@ function aplicaModoTravado() {
   const canal = q.get("canal");
   const only = q.get("only");
   const soTabela = q.get("so_tabela");
-  if (!canal && !only && !soTabela) return;
+  const titulo = q.get("titulo");
+  if (!canal && !only && !soTabela && !titulo) return;
 
   if (canal) {
     const alvo = CANAIS.find(c => c.toLowerCase() === canal.toLowerCase());
@@ -1831,6 +1835,13 @@ function aplicaModoTravado() {
       const sub = document.querySelector(".logo-wrap .sub");
       if (sub) sub.textContent = `Painel Customer Success · canal ${alvo}`;
     }
+  }
+
+  // depois do bloco de canal pra vencer o document.title default dele
+  if (titulo) {
+    document.title = titulo;
+    const logo = document.querySelector(".logo-wrap .logo");
+    if (logo) logo.textContent = titulo;
   }
 
   if (only) {
