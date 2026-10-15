@@ -1,0 +1,35 @@
+{
+  "_leia": [
+    "Marcas que NÃO são cliente: ambiente de homologação de integração, demo, treinamento,",
+    "conta de suporte e a própria Vesti. A carga as remove do cadastro antes de montar",
+    "qualquer aba, então elas somem do painel inteiro — tabela, GMV, Tino, health, churn.",
+    "",
+    "A lista é por DOMÍNIO de propósito. Filtrar pelo nome seria um desastre: 'vesti'",
+    "aparece em Arte DVestir (233 pedidos), VESTIDOTECA, CHARISMA - SOMENTE VESTIPAGO e",
+    "Just Denim Confecções Ltda VESTIPAGO, que são clientes de verdade.",
+    "",
+    "Para tirar uma marca do painel, acrescente aqui. Para devolver, apague a linha.",
+    "O painel avisa no console quantas removeu."
+  ],
+  "marcas": [
+    { "dominio": "1576678", "nome": "Usuário de suporte Vesti", "porque": "conta de suporte da Vesti" },
+    { "dominio": "214563",  "nome": "Vesti Treinamentos",       "porque": "ambiente de treinamento da Vesti" },
+    { "dominio": "1329031", "nome": "Vesti Light",              "porque": "ambiente da própria Vesti" },
+    { "dominio": "208695",  "nome": "VESTI",                    "porque": "a própria Vesti" },
+    { "dominio": "243",     "nome": "Sua marca",                "porque": "demonstração da plataforma" },
+    { "dominio": "986839",  "nome": "Demo Blunt",               "porque": "demonstração" },
+    { "dominio": "1159091", "nome": "Autenticada",              "porque": "teste de autenticação" },
+    { "dominio": "38164",   "nome": "Desativado",               "porque": "registro de teste, sem pedido nenhum" },
+    { "dominio": "2135539", "nome": "Produto por Variação",     "porque": "teste de funcionalidade" },
+    { "dominio": "651895",  "nome": "Webpic-Integracao",        "porque": "ambiente de integração" },
+    { "dominio": "2158105", "nome": "Retentio CRM - Ambiente Homologacao", "porque": "homologação de integração" },
+    { "dominio": "1963402", "nome": "Rosa Fina Presence Homologacao",      "porque": "homologação de integração" },
+    { "dominio": "2049461", "nome": "Gitaa - Homol Sisplan",               "porque": "homologação de integração" },
+    { "dominio": "2166431", "nome": "Melhor Envio (Homologação)",          "porque": "homologação de integração" },
+    { "dominio": "2093743", "nome": "Braga Camisaria ambiente de homol tiny", "porque": "homologação de integração" },
+    { "dominio": "2174509", "nome": "casualli - millenium homol",          "porque": "homologação de integração" },
+    { "dominio": "1982729", "nome": "BE EIGHT - Homol Totvs",              "porque": "homologação de integração" },
+    { "dominio": "1409936", "nome": "Ana Gonçalves Homologação Bling",     "porque": "homologação de integração" },
+    { "dominio": "1345745", "nome": "Tendenza Millenium Homol",            "porque": "homologação de integração" }
+  ]
+}

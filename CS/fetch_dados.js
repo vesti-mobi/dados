@@ -1906,10 +1906,40 @@ function montar(bqd, hsd, tinoDados) {
      só que agora em dia. */
   const dataOk = d => typeof d === 'string' && d.length === 10 && d >= INICIO && d <= HOJE_ISO;
 
+  /* MARCAS QUE NÃO SÃO CLIENTE (15/10/2026). "Tire todas que são de teste,
+     incluindo essas que têm Vesti no nome."
+
+     Ambiente de homologação de integração, demo, treinamento, conta de suporte
+     e a própria Vesti. Saem aqui, antes de tudo: o painel inteiro é montado a
+     partir deste índice, então basta não entrarem para sumirem de todas as
+     abas — tabela, GMV, Tino, health score, churn, bonificação.
+
+     A lista é por DOMÍNIO. Filtrar pelo nome seria um desastre: "vesti"
+     aparece em Arte DVestir (233 pedidos no ano), VESTIDOTECA, CHARISMA -
+     SOMENTE VESTIPAGO e Just Denim Confecções Ltda VESTIPAGO, todas clientes
+     de verdade. */
+  const marcasTeste = (() => {
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(__dirname, 'marcas_teste.json'), 'utf8'));
+      return new Map((j.marcas || []).filter(m => m && m.dominio)
+        .map(m => [String(m.dominio), m.nome || m.dominio]));
+    } catch (e) {
+      console.log('  sem marcas_teste.json — nenhuma marca removida');
+      return new Map();
+    }
+  })();
+
   // ---- índice de marcas
   const porDom = new Map();
+  let removidas = 0;
+  const removidasNomes = [];
   bqd.cadastro.forEach(c => {
     if (porDom.has(c.id)) return;
+    if (marcasTeste.has(String(c.id))) {
+      removidas++;
+      removidasNomes.push((c.nome || c.social_name || c.id).trim());
+      return;
+    }
     porDom.set(c.id, {
       dom: c.id,
       nome: (c.nome || c.social_name || 'Domínio ' + c.id).trim(),
@@ -1932,6 +1962,16 @@ function montar(bqd, hsd, tinoDados) {
     });
   });
   console.log('  marcas no cadastro'.padEnd(44) + String(porDom.size).padStart(8));
+  console.log('    de teste, fora do painel'.padEnd(44) + String(removidas).padStart(8)
+    + (removidas ? '   ' + removidasNomes.slice(0, 4).join(', ')
+        + (removidasNomes.length > 4 ? ' e mais ' + (removidasNomes.length - 4) : '') : ''));
+  /* Marca na lista que não existe mais no cadastro: avisa, senão a linha fica
+     ali para sempre sem ninguém saber que não faz nada. */
+  {
+    const noCadastro = new Set(bqd.cadastro.map(c => String(c.id)));
+    const orfas = [...marcasTeste.keys()].filter(d => !noCadastro.has(d));
+    if (orfas.length) console.log('    [!] na lista mas fora do cadastro: ' + orfas.join(', '));
+  }
   /* O valor 'VESTI' é o que define integração ATIVA. Se o cadastro mudar a
      grafia, a coluna zera em silêncio — por isso a carga imprime o que achou. */
   {

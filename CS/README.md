@@ -1066,6 +1066,49 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## Marcas que não são cliente (15/10/2026)
+
+*"Estamos considerando as marcas teste em alguma aba do painel?"* Estávamos, em
+todas. *"Tire todas que são de teste, incluindo essas que têm Vesti no nome."*
+
+Eram **19 de 951** — ambiente de homologação de integração, demo, treinamento,
+conta de suporte e a própria Vesti. Nenhuma marcada como teste em lugar nenhum:
+entravam na carteira como qualquer cliente, com GMV, health score, Tino e CS.
+
+As de maior peso: **Usuário de suporte Vesti** (R$ 403 mil de GMV no ano),
+**Sua marca** (R$ 140 mil, 54 pedidos) e **Demo Blunt** (1.186 eventos no
+Tino). Quatro tinham CS atribuída — Autenticada → Bruna, Demo Blunt → Elisa,
+Usuário de suporte Vesti → Jennyfer, Ana Gonçalves Homologação Bling →
+Gabriella.
+
+### A lista é por domínio, e isso não é detalhe
+
+Filtrar pelo nome teria sido um desastre. "Vesti" aparece em:
+
+| marca | é cliente? |
+|---|---|
+| **Arte DVestir** | sim — 233 pedidos, R$ 306 mil no ano |
+| **CHARISMA - SOMENTE VESTIPAGO** | sim — 130 pedidos, R$ 297 mil |
+| **Just Denim Confecções Ltda VESTIPAGO** | sim |
+| **VESTIDOTECA** | sim |
+| Usuário de suporte Vesti · Vesti Treinamentos · Vesti Light · VESTI | não |
+
+O mesmo vale para "Ana Gonçalves Tricot" (cliente) contra "Ana Gonçalves
+Homologação Bling" (o ambiente de teste dela). Por isso `marcas_teste.json`
+lista **domínios**, não padrões.
+
+### Onde o corte acontece
+
+Na carga, no índice de marcas — antes de tudo. O painel inteiro é montado a
+partir dele, então basta não entrarem para sumirem de todas as abas: tabela,
+GMV, Tino, health, churn, bonificação. A carga imprime quantas removeu e avisa
+se alguma linha da lista não existe mais no cadastro, para a lista não
+acumular entradas mortas.
+
+O `dados.js` publicado foi limpo na mão também, para o painel não esperar as
+4:00 — 16 listas afetadas, de `clientes` (951 → 932) a `faturasCliente`
+(15.012 → 14.976).
+
 ## Um pedido de R$ 123 bilhões (15/10/2026)
 
 Achado procurando outra coisa — se o painel contava marcas de teste. O GMV do
