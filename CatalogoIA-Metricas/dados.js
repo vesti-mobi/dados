@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-10-17T22:47:35.303Z",
-  "hoje": "2026-10-17",
+  "gerado_em": "2026-10-18T15:07:14.837Z",
+  "hoje": "2026-10-18",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -19,7 +19,7 @@ window.DADOS = {
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2363,
-    "produtos_7d": 25,
+    "produtos_7d": 23,
     "descricoes_total": 2728,
     "total_estimado": true
   },
@@ -86,7 +86,7 @@ window.DADOS = {
       "email": "nicoboco.shop@nicoboco.com.br",
       "produtos": 235,
       "estimado": false,
-      "produtos_7d": 5,
+      "produtos_7d": 3,
       "ativa": true,
       "acessos": 76,
       "buscas": 348,
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 20,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-10-09T09:19:21.110Z",
-      "dias": 8
+      "dias": 9
     },
     {
       "slug": "trimix",
@@ -166,7 +166,7 @@ window.DADOS = {
       "envios": 13,
       "primeiro": "2026-08-04T14:28:52.117Z",
       "ultimo": "2026-10-16T14:19:46.599Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "andressa-vesti",
@@ -202,7 +202,7 @@ window.DADOS = {
       "envios": 5,
       "primeiro": "2026-08-07T13:23:05.929Z",
       "ultimo": "2026-08-07T14:55:31.596Z",
-      "dias": 71
+      "dias": 72
     },
     {
       "slug": "optimist-feirinha",
@@ -220,7 +220,7 @@ window.DADOS = {
       "envios": 2,
       "primeiro": "2026-08-07T13:33:14.591Z",
       "ultimo": "2026-08-07T14:33:01.598Z",
-      "dias": 71
+      "dias": 72
     },
     {
       "slug": "anne-blanc",
@@ -491,7 +491,7 @@ window.DADOS = {
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 1987,
-        "produtos_7d": 18,
+        "produtos_7d": 16,
         "descricoes_total": 2173,
         "total_estimado": false,
         "produtos_atribuidos": 0
@@ -545,7 +545,7 @@ window.DADOS = {
           "email": "nicoboco.shop@nicoboco.com.br",
           "produtos": 233,
           "estimado": false,
-          "produtos_7d": 5,
+          "produtos_7d": 3,
           "ativa": true,
           "acessos": 67,
           "buscas": 308,
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 19,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-10-09T09:19:21.110Z",
-          "dias": 8,
+          "dias": 9,
           "produtos_medidos": 19,
           "atribuido": 0
         },
@@ -1088,7 +1088,7 @@ window.DADOS = {
           "envios": 264,
           "primeiro": "2026-09-09T17:33:37.235Z",
           "ultimo": "2026-09-14T13:57:08.943Z",
-          "dias": 33,
+          "dias": 34,
           "produtos_medidos": 241,
           "atribuido": 0
         },
@@ -1128,7 +1128,7 @@ window.DADOS = {
           "envios": 79,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-10-15T12:49:49.396Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 74,
           "atribuido": 33
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 58,
+          "dias": 59,
           "produtos_medidos": 0,
           "atribuido": 8
         },
@@ -1248,7 +1248,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T11:49:43.332Z",
           "ultimo": "2026-10-16T14:19:46.599Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 0,
           "atribuido": 1
         },
