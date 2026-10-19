@@ -3208,8 +3208,9 @@ const CARDS_GERENCIAL = [
     linhas:ctx=>soDoFoco(eventosDeChurn(janelaDoMes(ctx.m))),
     resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m))).length;
       return {v:fmt.int(rows.length),
-        s: rows.length ? `${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
-                       : 'nenhuma marca perdida no mês'}; },
+        s: rows.length
+          ? `${fmt.moneyCompact(soma(rows,'perdido'))}/mês perdidos · ${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
+          : 'nenhuma marca perdida no mês'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m)));
       const doze = MESES_GERENCIAL.slice(0,12)
         .map(m=>linhasDoCard(cardGerencial('churnMes'), ctxGerencial(m)).length);
@@ -3228,7 +3229,7 @@ const CARDS_GERENCIAL = [
       ]; },
     metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
     colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data da perda', f:fmt.date},
-      {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
+      {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
       {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
       {k:'ultimoPagamento', l:'Último pagamento', f:v=>v?fmt.date(v):'—'},
@@ -3663,7 +3664,10 @@ function listaRanqueada(c, ctx, rows){
   /* Somar só o que é somável: health score é um índice, e a soma dos 461
      health scores da carteira ("44.560") não quer dizer nada. Fora do
      dinheiro, o cabeçalho mostra quantas linhas são. */
-  const somavel = !!col && (col.tipo === 'money' || col.f === fmt.money);
+  /* `dinheiro` marca a coluna cujo formatador é um lambda em volta de
+     fmt.money — sem isso a lista mostrava "127 linhas" no lugar do total. */
+  const somavel = !!col && (col.tipo === 'money' || col.tipo === 'money0traco'
+    || col.f === fmt.money || col.dinheiro === true);
   const total = somavel ? ord.reduce((t,r)=>t+num(r),0) : 0;
   const soma = somavel ? topo.reduce((t,r)=>t+num(r),0) : 0;
 
@@ -3709,7 +3713,8 @@ function leituraDoMes(c, ctx, rows){
     const total = vals.reduce((a,b)=>a+b,0);
     /* Fatia e concentração só fazem sentido onde a soma faz: dinheiro. Para
        health score sobra a média, que é a leitura correta de um índice. */
-    const somavel = col.tipo === 'money' || col.f === fmt.money;
+    const somavel = col.tipo === 'money' || col.tipo === 'money0traco'
+      || col.f === fmt.money || col.dinheiro === true;
     if(vals.length && total > 0){
       const ord = rows.filter(r=>typeof r[col.k]==='number').sort((a,b)=>b[col.k]-a[col.k]);
       if(somavel){
@@ -4653,7 +4658,7 @@ function detalheMetaLista(m, rec){
   if(m.k==='churn'){
     return cardLista(titulo, m.itens, [
       {k:'data', l:'Data da perda', f:fmt.date}, {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
-      {k:'perdido', l:'Valor perdido', r:true, f:v=>v?fmt.money(v):'—'},
+      {k:'perdido', l:'Valor perdido', r:true, dinheiro:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'}, {k:'vendedora', l:'Vendedora (planilha)', f:v=>v||'—'},
     ], '<h4>Nenhum churn no trimestre</h4><p>O que é bom: a meta é ficar abaixo do teto.</p>');
   }
@@ -4815,9 +4820,14 @@ const CARDS_VISAO = [
     linhas:ctx=>eventosDeChurn(ctx.p),
     resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
       const dif = rows.length - ant.length;
+      /* O valor perdido vem no resumo, não só nos KPIs: é a pergunta que vem
+         logo depois de "quantas marcas", e sem abrir o card ela não aparecia. */
+      const perdido = soma(rows, 'perdido');
       return {v:fmt.int(rows.length),
-        s: rows.length ? (dif===0 ? 'igual ao período anterior' : (dif>0?'+':'')+fmt.int(dif)+' vs período anterior')
-                       : 'nenhum churn no período'}; },
+        s: rows.length
+          ? fmt.moneyCompact(perdido)+'/mês perdidos · '
+            + (dif===0 ? 'igual ao período anterior' : (dif>0?'+':'')+fmt.int(dif)+' vs período anterior')
+          : 'nenhum churn no período'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
       const novas = linhasDoCard(cardVisao('novasVendas'), ctx);
       const dif = rows.length - ant.length;
@@ -4835,7 +4845,7 @@ const CARDS_VISAO = [
       ]; },
     metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
     colunas:[{k:'data', l:'Data da perda', f:fmt.date}, COL_NOME, COL_CS_CARD,
-      {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
+      {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
       {k:'plano', l:'Plano'},
       {k:'observacao', l:'Observação na planilha', f:v=>v||'—'}],
@@ -6438,7 +6448,7 @@ function extraCarteiraCs(){
 
   wrap.appendChild(cardLista('Churn no período', churnDoCs(cs),
     [{k:'nome', l:'Marca'}, {k:'data', l:'Data da perda', f:fmt.date},
-     {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
+     {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
      {k:'detalhe', l:'Motivo'},
      {k:'vendedora', l:'Vendedora (planilha)', f:v=>v||'—'}]));
 

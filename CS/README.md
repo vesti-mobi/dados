@@ -1138,6 +1138,21 @@ contra 382).
 No trimestre jul–set: **R$ 75 mil por mês** deixando de entrar, conhecidos de
 **127 dos 127**. Em setembro, R$ 24 mil.
 
+O valor aparece em quatro lugares, do mais raso ao mais fundo:
+
+- **No cabeçalho da faixa**, junto do número de marcas — *"R$ 75k/mês perdidos
+  · +17 vs período anterior"*. É a pergunta que vem logo depois de "quantas
+  marcas", e antes ela só existia abrindo o card.
+- **Na lista das maiores**, com o total no cabeçalho e o valor de cada marca.
+- **Nos KPIs** do card aberto.
+- **Na tabela**, uma coluna por marca.
+
+> Para o total aparecer na lista foi preciso ensinar `listaRanqueada` a
+> reconhecer a coluna: ela só somava quando o formatador era `fmt.money`
+> direto, e a de valor perdido usa um lambda em volta dele para mostrar
+> travessão no zero. Sem isso o cabeçalho dizia "127 linhas" em vez de
+> R$ 74.730. Agora vale também `tipo: 'money0traco'` e a marca `dinheiro`.
+
 > **Um bug que estava escondido ali.** O motivo era decidido por
 > `alvo == "solicitou cancelamento" ? "Solicitou cancelamento" : "Inadimplente"`,
 > e a variante "solicitou **o** cancelamento" — 7 linhas de 2025 — caía no
