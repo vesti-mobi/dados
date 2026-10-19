@@ -1066,6 +1066,62 @@ novas vendas, mas o churn dele entrava inteiro.
 CS" incluído) e a Bonificação dá **6**, que é o recorte das três CS por
 desenho. Mesma régua, recortes diferentes e declarados.
 
+## A planilha do time, e só ela (19/10/2026)
+
+*"Vamos usar somente essa planilha como referência para todas as abas que
+tenham churn, olhe para a coluna Data da Perda."*
+
+O churn era a soma de duas pontas — a plataforma cancelada, lida do Painel
+Elisa, e a planilha que o time preenche. A plataforma saiu: a planilha passou a
+ser a **fonte única**, e a data é a **Data da Perda** escrita por uma pessoa.
+
+### O filtro de observação continua, e aqui está o porquê
+
+A planilha preenche a Data da Perda **toda vez que uma linha morre**, inclusive
+quando a marca continua cliente. Só na aba de 2026:
+
+| observação | linhas | é perda? |
+|---|---|---|
+| solicitou cancelamento | 245 | sim |
+| inadimplente | 192 | sim |
+| **upsell para o plano pro** | **33** | **não** |
+| **upsell para plano avançado** | **15** | **não** |
+| **troca de canal para Vesti** | **10** | **não** |
+| **downgrade de plano** | **6** | **não** |
+
+Tomar a Data da Perda sozinha como churn colocaria 64 upsells e trocas de
+canal na conta de marcas perdidas. O filtro do Walid (29/09/2026) continua
+valendo — entram só "solicitou cancelamento" e "inadimplente" —, e ganhou a
+variante "solicitou **o** cancelamento", que aparece em 2025 e antes ficava de
+fora.
+
+### O ano anterior passou a vir junto
+
+Sendo a planilha a fonte única, a comparação "contra o mesmo trimestre do ano
+passado" ficaria sem base lendo só a aba de 2026. O leitor passou a trazer
+**2026 e 2025** (`CHURN_SHEET_ABA` agora aceita uma lista). São 1.033 linhas
+aceitas de 1.289, e agora existe base: jul–set de **2025 teve 172 churns**
+contra **127 em 2026**.
+
+### O que mudou nos números
+
+| | antes (plataforma + planilha) | depois (só a planilha) |
+|---|---|---|
+| setembro | 48 | **44** |
+| trimestre jul–set | 150 | **127** |
+| Bonificação (3 CS) | 18 | **16** |
+
+Saíram da tela as colunas e KPIs que vinham do Painel Elisa e agora ficariam
+sempre vazios — "em aberto", "dias em atraso", "último pagamento" e o filtro de
+Origem. No lugar entraram a **Observação na planilha** e a **Vendedora**, que
+são o que a fonte nova tem a dizer. A foto de quem está devendo hoje continua
+no card *Inadimplência hoje*, na Gerencial, que lê o Painel Elisa e nunca foi
+churn.
+
+> A CS continua não vindo da planilha: ela traz a **vendedora**, que é outra
+> coisa. Sai do cadastro e, para a marca que já saiu, da carteira de ontem —
+> 101 dos 127 ficam "Sem CS", porque a marca perde o responsável quando sai.
+
 ## Marcas que não são cliente (15/10/2026)
 
 *"Estamos considerando as marcas teste em alguma aba do painel?"* Estávamos, em

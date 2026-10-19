@@ -42,11 +42,24 @@ OUT = ROOT / "churn_planilha.json"
 SA_JSON = Path(os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or (ROOT / "google_sa.json"))
 
 SHEET_ID = os.environ.get("CHURN_SHEET_ID") or "19gGUPtmDT9xacgfkTWcLM_MN_iWhUGJQOjFaD9LXasQ"
-ABA = os.environ.get("CHURN_SHEET_ABA") or "2026"
+# As abas por ano. Desde 19/10/2026 a planilha é a ÚNICA fonte de churn do
+# painel ("vamos usar somente essa planilha como referência para todas as abas
+# que tenham churn" — Laura), então o ano anterior também precisa vir: sem ele
+# a comparação "contra o mesmo trimestre do ano passado" não teria base.
+ABAS = [a.strip() for a in (os.environ.get("CHURN_SHEET_ABA") or "2026,2025").split(",") if a.strip()]
 
 # Só estas observações contam como churn. O resto da planilha é ignorado —
 # regra explícita do Walid, não invenção nossa.
-OBSERVACOES = ["solicitou cancelamento", "inadimplente"]
+#
+# Isso NÃO é redundante com a Data da Perda: a planilha preenche a data toda
+# vez que uma linha morre, inclusive quando a marca continua cliente. Na aba
+# de 2026 são 33 "upsell para o plano pro", 15 "upsell para plano avançado",
+# 10 "troca de canal para Vesti" e 6 "downgrade de plano" — todas com data,
+# nenhuma é perda de cliente.
+#
+# "solicitou cancelamento e inadimplente" entra pelo startswith; "solicitou O
+# cancelamento", que aparece em 2025, precisa da terceira entrada.
+OBSERVACOES = ["solicitou cancelamento", "solicitou o cancelamento", "inadimplente"]
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
@@ -103,19 +116,31 @@ def baixar_xlsx() -> bytes:
 
 
 def ler_aba(xlsx: bytes) -> list[dict]:
+    """Junta as linhas de todas as abas de ABAS, na ordem."""
     import openpyxl
 
     wb = openpyxl.load_workbook(io.BytesIO(xlsx), data_only=True, read_only=True)
-    nome = next((n for n in wb.sheetnames if chave(n) == chave(ABA)), None)
-    if not nome:
-        raise RuntimeError(f'aba "{ABA}" não existe. Abas: {", ".join(wb.sheetnames)}')
-    ws = wb[nome]
-    linhas = list(ws.values)
-    if not linhas:
-        return []
-    cabec = [chave(c) for c in linhas[0]]
-    print(f'[churn] aba "{nome}": {len(linhas)-1} linhas · colunas: {", ".join(c for c in cabec if c)}')
-    return [dict(zip(cabec, linha)) for linha in linhas[1:]]
+    todas: list[dict] = []
+    achadas: list[str] = []
+    for pedida in ABAS:
+        nome = next((n for n in wb.sheetnames if chave(n) == chave(pedida)), None)
+        if not nome:
+            print(f'[churn] aba "{pedida}" não existe — pulei. Abas: {", ".join(wb.sheetnames)}')
+            continue
+        ws = wb[nome]
+        linhas = list(ws.values)
+        if not linhas:
+            continue
+        cabec = [chave(c) for c in linhas[0]]
+        print(f'[churn] aba "{nome}": {len(linhas)-1} linhas')
+        for linha in linhas[1:]:
+            d = dict(zip(cabec, linha))
+            d["_aba"] = nome
+            todas.append(d)
+        achadas.append(nome)
+    if not achadas:
+        raise RuntimeError(f'nenhuma das abas {ABAS} existe. Abas: {", ".join(wb.sheetnames)}')
+    return todas
 
 
 # Fórmula quebrada na planilha chega como texto ("#REF!", "#N/D"); vale o mesmo
@@ -214,7 +239,7 @@ def main() -> None:
         print("[churn] observações ignoradas: " + ", ".join(f"{k} ({n})" for k, n in top))
 
     OUT.write_text(json.dumps({
-        "aba": ABA,
+        "aba": ", ".join(ABAS),
         "observacoesAceitas": OBSERVACOES,
         "geradoEm": datetime.now().isoformat(timespec="seconds"),
         "linhas": aceitos,
