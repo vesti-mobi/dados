@@ -218,7 +218,11 @@ def main() -> None:
         dom = re.sub(r"\D", "", str(pegar(l, "dominio", "domain") or ""))
         # `mensalidade` antes de `valor`: existe uma coluna "valor reajuste" que
         # o prefixo "valor" pegaria primeiro, e ela não é o que a marca pagava.
-        valor = numero(pegar(l, "mensalidade", "total cobrado", "mrr", "valor"))
+        # TOTAL COBRADO primeiro: é o que a marca pagava POR INTEIRO — plano
+        # mais integração, assistente e filial. A coluna MENSALIDADE é só o
+        # plano, e some R$ 60 mil de 2026 (R$ 196,8 mil contra R$ 256,4 mil);
+        # além disso vem preenchida em 382 linhas contra 450 do total.
+        valor = numero(pegar(l, "total cobrado", "mensalidade", "mrr", "valor"))
         aceitos.append({
             "cliente": str(nome).strip(),
             "dominio": dom or None,
@@ -226,7 +230,10 @@ def main() -> None:
             "vendedora": (str(pegar(l, "vendedora", "vendedor", "cs", "anjo") or "")).strip() or None,
             "canal": (str(pegar(l, "canal") or "")).strip() or None,
             "subconta": (str(pegar(l, "subconta") or "")).strip() or None,
-            "motivo": "Solicitou cancelamento" if alvo == "solicitou cancelamento" else "Inadimplente",
+            # `alvo` é a entrada de OBSERVACOES que casou. "solicitou o
+            # cancelamento" é uma delas e também é cancelamento — comparar com
+            # a string exata fazia essas 7 linhas de 2025 virarem "Inadimplente".
+            "motivo": "Inadimplente" if alvo == "inadimplente" else "Solicitou cancelamento",
             "observacao": str(obs).strip(),
             "data": iso(pegar(l, "data da perda", "data", "data do churn", "mes", "cancelamento")),
             "plano": (str(pegar(l, "plano") or "")).strip() or None,

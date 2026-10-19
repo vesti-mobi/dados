@@ -3221,11 +3221,14 @@ const CARDS_GERENCIAL = [
         {l:'Inadimplentes', v:fmt.int(rows.filter(r=>/inadimpl/i.test(r.detalhe||'')).length),
          s:'saíram por falta de pagamento'},
         {l:'Média dos 12 meses', v:fmt.int(Math.round(media12)), s:'na carteira em foco'},
+        {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
+         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Sem CS no cadastro', v:fmt.int(rows.filter(r=>r.cs==='Sem CS').length),
          s:'a marca saiu e levou o responsável junto'},
       ]; },
     metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
-    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data do churn', f:fmt.date},
+    colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data da perda', f:fmt.date},
+      {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
       {k:'plano', l:'Plano'}, {k:'canal', l:'Canal'},
       {k:'ultimoPagamento', l:'Último pagamento', f:v=>v?fmt.date(v):'—'},
@@ -4245,7 +4248,9 @@ function eventosDeChurn(p, quem){
       dominio: (marca&&marca.dominio) || l.dominio,
       canal: (marca&&marca.canal) || l.canal,
       plano: l.plano || (marca&&marca.plano),
-      mensalidade: l.valor || 0,
+      /* O TOTAL COBRADO da planilha: o que a marca pagava por inteiro, plano
+         mais integração, assistente e filial. */
+      perdido: l.valor || 0,
       vendedora: l.vendedora || null,
       naCarteira: marca ? 'sim' : 'não achou no cadastro'});
   });
@@ -4648,6 +4653,7 @@ function detalheMetaLista(m, rec){
   if(m.k==='churn'){
     return cardLista(titulo, m.itens, [
       {k:'data', l:'Data da perda', f:fmt.date}, {k:'nome', l:'Marca'}, {k:'cs', l:'CS'},
+      {k:'perdido', l:'Valor perdido', r:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'}, {k:'vendedora', l:'Vendedora (planilha)', f:v=>v||'—'},
     ], '<h4>Nenhum churn no trimestre</h4><p>O que é bom: a meta é ficar abaixo do teto.</p>');
   }
@@ -4817,6 +4823,8 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
+         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Solicitaram cancelamento', v:fmt.int(rows.filter(r=>/solicitou/i.test(r.detalhe||'')).length),
          s:'pediram para sair'},
         {l:'Inadimplentes', v:fmt.int(rows.filter(r=>/inadimpl/i.test(r.detalhe||'')).length),
@@ -4826,7 +4834,8 @@ const CARDS_VISAO = [
          s:fmt.int(novas.length)+' clientes novos no mesmo período'},
       ]; },
     metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
-    colunas:[{k:'data', l:'Data do churn', f:fmt.date}, COL_NOME, COL_CS_CARD,
+    colunas:[{k:'data', l:'Data da perda', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
       {k:'plano', l:'Plano'},
       {k:'observacao', l:'Observação na planilha', f:v=>v||'—'}],
@@ -6006,7 +6015,8 @@ const TABS = [
     tabela:'Marcas', chaveCliente:'nome',
     colunas:[
       {k:'nome', l:'Marca', tipo:'cliente'},
-      {k:'data', l:'Data do churn', tipo:'date'},
+      {k:'data', l:'Data da perda', tipo:'date'},
+      {k:'perdido', l:'Valor perdido', tipo:'money0traco', r:true, forte:true},
       {k:'detalhe', l:'Motivo'},
       COL_CS,
       {k:'canal', l:'Canal', tipo:'tag'},
@@ -6022,13 +6032,15 @@ const TABS = [
       const inad = rows.filter(r=>/inadimpl/i.test(r.detalhe||''));
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:'pela Data da Perda, sem marca repetida'},
+        /* O valor é o TOTAL COBRADO da planilha — plano mais integração,
+           assistente e filial. Dizer de quantas linhas ele é conhecido evita
+           que o resto pareça zero. */
+        {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
+         s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Solicitaram cancelamento', v:fmt.int(canc.length), s:'pediram para sair'},
         {l:'Inadimplentes', v:fmt.int(inad.length), s:'saíram por falta de pagamento'},
-        /* O valor só é conhecido de quem veio da planilha: do que foi cortado
-           pela automação, o Painel Elisa não traz a mensalidade. Sem dizer
-           isso o KPI parece afirmar que o resto valia zero. */
-        {l:'Deixaram em aberto', v:fmt.moneyCompact(rows.reduce((t,r)=>t+(r.emAberto||0),0)),
-         s:'fatura vencida e não paga'},
+        {l:'Sem CS no cadastro', v:fmt.int(rows.filter(r=>r.cs==='Sem CS').length),
+         s:'a marca saiu e levou o responsável junto'},
       ];
     }
   },
@@ -6370,7 +6382,8 @@ function kpisCarteiraCs(){
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
     {l:'Churn no período', v:fmt.int(churnLinhas.length),
-     s:fmt.int(bloqueadas)+' pediram para sair · '+fmt.int(canceladas)+' inadimplentes'},
+     s:fmt.int(bloqueadas)+' pediram para sair · '+fmt.int(canceladas)+' inadimplentes · '
+       +fmt.moneyCompact(churnLinhas.reduce((t,c)=>t+(c.perdido||0),0))+' por mês'},
     pontos!=null
       ? {l:'Pontuação do mês', v:fmt.int(pontos)+' pts', s:rotuloMes(mesDoPeriodo)}
       : ehPontuado(cs)
@@ -6424,7 +6437,8 @@ function extraCarteiraCs(){
     [{k:'cliente', l:'Marca'}, {k:'tipo', l:'Marco'}, {k:'data', l:'Data', f:fmt.date}]));
 
   wrap.appendChild(cardLista('Churn no período', churnDoCs(cs),
-    [{k:'nome', l:'Marca'}, {k:'data', l:'Data do churn', f:fmt.date},
+    [{k:'nome', l:'Marca'}, {k:'data', l:'Data da perda', f:fmt.date},
+     {k:'perdido', l:'Valor perdido', r:true, forte:true, f:v=>v?fmt.money(v):'—'},
      {k:'detalhe', l:'Motivo'},
      {k:'vendedora', l:'Vendedora (planilha)', f:v=>v||'—'}]));
 

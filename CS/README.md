@@ -1122,6 +1122,28 @@ churn.
 > coisa. Sai do cadastro e, para a marca que já saiu, da carteira de ontem —
 > 101 dos 127 ficam "Sem CS", porque a marca perde o responsável quando sai.
 
+### O valor perdido voltou, agora da planilha
+
+*"Coloque o valor total perdido também, que vem da planilha."* Em 14/10 isso
+tinha sido montado de três fontes do lake e cobria 67% dos churns; a Laura
+mandou tirar no dia seguinte. Com a planilha como fonte única, o valor vem de
+lá — e **cobre 100%**.
+
+A coluna certa é a **TOTAL COBRADO**, não a MENSALIDADE: a primeira é o que a
+marca pagava por inteiro (plano mais integração, assistente e filial), a
+segunda é só o plano. A diferença não é pequena — em 2026, R$ 256,4 mil contra
+R$ 196,8 mil — e o TOTAL COBRADO ainda vem preenchido em mais linhas (450
+contra 382).
+
+No trimestre jul–set: **R$ 75 mil por mês** deixando de entrar, conhecidos de
+**127 dos 127**. Em setembro, R$ 24 mil.
+
+> **Um bug que estava escondido ali.** O motivo era decidido por
+> `alvo == "solicitou cancelamento" ? "Solicitou cancelamento" : "Inadimplente"`,
+> e a variante "solicitou **o** cancelamento" — 7 linhas de 2025 — caía no
+> `else` e virava "Inadimplente". Agora o teste é pelo lado do inadimplente,
+> que é o caso sem variantes.
+
 ## Marcas que não são cliente (15/10/2026)
 
 *"Estamos considerando as marcas teste em alguma aba do painel?"* Estávamos, em
