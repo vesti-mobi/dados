@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-10-20T00:04:11.916Z",
-  "hoje": "2026-10-19",
+  "gerado_em": "2026-10-20T16:04:13.536Z",
+  "hoje": "2026-10-20",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -12,14 +12,14 @@ window.DADOS = {
   },
   "kpis": {
     "liberadas": 19,
-    "ativas": 2,
+    "ativas": 1,
     "usando": 11,
     "nunca_usaram": 8,
     "paradas": 7,
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2363,
-    "produtos_7d": 23,
+    "produtos_7d": 20,
     "descricoes_total": 2734,
     "total_estimado": true
   },
@@ -86,8 +86,8 @@ window.DADOS = {
       "email": "nicoboco.shop@nicoboco.com.br",
       "produtos": 235,
       "estimado": false,
-      "produtos_7d": 3,
-      "ativa": true,
+      "produtos_7d": 0,
+      "ativa": false,
       "acessos": 76,
       "buscas": 348,
       "descricoes": 348,
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 212,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-10-10T15:09:11.873Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "amiska",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 20,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-10-09T09:19:21.110Z",
-      "dias": 10
+      "dias": 11
     },
     {
       "slug": "trimix",
@@ -202,7 +202,7 @@ window.DADOS = {
       "envios": 5,
       "primeiro": "2026-08-07T13:23:05.929Z",
       "ultimo": "2026-08-07T14:55:31.596Z",
-      "dias": 73
+      "dias": 74
     },
     {
       "slug": "optimist-feirinha",
@@ -220,7 +220,7 @@ window.DADOS = {
       "envios": 2,
       "primeiro": "2026-08-07T13:33:14.591Z",
       "ultimo": "2026-08-07T14:33:01.598Z",
-      "dias": 73
+      "dias": 74
     },
     {
       "slug": "anne-blanc",
@@ -484,14 +484,14 @@ window.DADOS = {
       "prefixo": "app:auto:",
       "kpis": {
         "liberadas": 19,
-        "ativas": 2,
+        "ativas": 1,
         "usando": 9,
         "nunca_usaram": 10,
         "paradas": 6,
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 1987,
-        "produtos_7d": 16,
+        "produtos_7d": 13,
         "descricoes_total": 2173,
         "total_estimado": false,
         "produtos_atribuidos": 0
@@ -545,8 +545,8 @@ window.DADOS = {
           "email": "nicoboco.shop@nicoboco.com.br",
           "produtos": 233,
           "estimado": false,
-          "produtos_7d": 3,
-          "ativa": true,
+          "produtos_7d": 0,
+          "ativa": false,
           "acessos": 67,
           "buscas": 308,
           "descricoes": 345,
@@ -573,7 +573,7 @@ window.DADOS = {
           "envios": 166,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-10-10T15:09:10.473Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 139,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 19,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-10-09T09:19:21.110Z",
-          "dias": 10,
+          "dias": 11,
           "produtos_medidos": 19,
           "atribuido": 0
         },
@@ -1088,7 +1088,7 @@ window.DADOS = {
           "envios": 264,
           "primeiro": "2026-09-09T17:33:37.235Z",
           "ultimo": "2026-09-14T13:57:08.943Z",
-          "dias": 35,
+          "dias": 36,
           "produtos_medidos": 241,
           "atribuido": 0
         },
@@ -1128,7 +1128,7 @@ window.DADOS = {
           "envios": 79,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-10-15T12:49:49.396Z",
-          "dias": 4,
+          "dias": 5,
           "produtos_medidos": 74,
           "atribuido": 33
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 60,
+          "dias": 61,
           "produtos_medidos": 0,
           "atribuido": 8
         },
