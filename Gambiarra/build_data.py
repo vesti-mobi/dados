@@ -305,6 +305,9 @@ def main():
     inad      = _load(inad_p) if inad_p.exists() else {"reguaDias": 15, "dominios": {}}
     inad_dom  = inad.get("dominios") or {}
     inad_regua = int(inad.get("reguaDias") or 15)
+    fat_av_p  = ROOT / "faturas_abertas_elisa.json"
+    fat_av    = _load(fat_av_p) if fat_av_p.exists() else {"dominios": {}}
+    fat_av_dom = fat_av.get("dominios") or {}
     status_faturas_p = ROOT / "status_faturas_elisa.json"
     status_faturas_dados = (_load(status_faturas_p) if status_faturas_p.exists()
                             else {"dominios": {}})
@@ -432,6 +435,15 @@ def main():
             "faturasAbertas": (inad_dom.get(dom) or {}).get("faturas", []),
             # subcontas da Iugu de onde vem a divida (sao 15 contas no espelho)
             "subcontasIugu": (inad_dom.get(dom) or {}).get("subcontas", []),
+            # Aba Faturas: proxima fatura AINDA NAO vencida (pode coexistir com
+            # faturasVencidas acima -- quem ja deve tambem pode ter a proxima
+            # aberta; o front decide excluir da aba quem ja e' inadimplente).
+            # Ver build_faturas_abertas em fetch_elisa_bq.py. Pedido da Laura,
+            # 20/10/2026.
+            "proximaFaturaVencimento": (fat_av_dom.get(dom) or {}).get("proximoVencimento", ""),
+            "linkProximaFatura": (fat_av_dom.get(dom) or {}).get("linkProximaFatura", ""),
+            "proximaFaturaValor": (fat_av_dom.get(dom) or {}).get("proximoValor", 0.0),
+            "faturasAVencer": (fat_av_dom.get(dom) or {}).get("faturas", []),
             "linksCompartilhados": (links.get(dom) or {}).get("linksCompartilhados", 0),
             "cliquesTotal": (links.get(dom) or {}).get("cliquesTotal", 0),
             "cliquesPorMes": (links.get(dom) or {}).get("cliquesPorMes", {}),

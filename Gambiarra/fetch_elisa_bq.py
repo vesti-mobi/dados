@@ -36,6 +36,7 @@ OUT_LINKS     = ROOT / "links_elisa.json"
 OUT_PAGTOS    = ROOT / "pagamentos_elisa.json"
 OUT_INADIMP   = ROOT / "inadimplentes_elisa.json"
 OUT_STATUS_FATURAS = ROOT / "status_faturas_elisa.json"
+OUT_FATURAS_ABERTAS = ROOT / "faturas_abertas_elisa.json"
 
 PROJECT = "vesti-data-499015"
 DATASET = "vestilake_BI"
@@ -341,6 +342,63 @@ LEFT JOIN `{PROJECT}.{DATASET}.odbc_angels` ang ON ang.id = d.angel_id
 LEFT JOIN (SELECT id, name FROM (
     SELECT id, name, ROW_NUMBER() OVER(PARTITION BY id ORDER BY updated_at DESC) rn
     FROM `{PROJECT}.{DATASET}.odbc_partners`) WHERE rn = 1) prt ON prt.id = d.partner_id
+"""
+
+# -----------------------------------------------------------------------------
+# 7b) FATURAS A VENCER = marca SEM fatura vencida, com a proxima fatura em
+#     aberto (pending/partially_paid, vencimento hoje ou no futuro). Aba
+#     "Faturas" do painel: "todas as marcas, menos as inadimplentes" --
+#     quando a fatura vence, ela sai daqui (due_dt < hoje) e passa a aparecer
+#     em SQL_INADIMPLENTES/Inadimplentes, sem precisar de nenhuma migracao
+#     manual -- e' so o mesmo pipeline rodando 2x/dia. Pedido da Laura,
+#     20/10/2026.
+#
+#     Mesma estrutura/CTEs de SQL_INADIMPLENTES (so troca `due_dt < hoje` por
+#     `due_dt >= hoje`): mesmo mapa customer->dominio, mesmo desempate por
+#     `prio` feito em build_faturas_abertas.
+# -----------------------------------------------------------------------------
+SQL_FATURAS_ABERTAS = f"""
+WITH abertas AS (
+  SELECT DISTINCT id, account_name, customer_id, payer_cpf_cnpj, status,
+    SAFE.PARSE_DATE('%Y-%m-%d', due_date) due_dt,
+    SAFE_CAST(total_cents AS INT64) total_cents,
+    secure_url
+  FROM `{PROJECT}.{DATASET}.iugu_invoices`
+  WHERE status IN ('pending', 'expired', 'partially_paid', 'in_protest')
+    AND due_date IS NOT NULL AND due_date NOT IN ('None', '')),
+a_vencer AS (
+  SELECT * FROM abertas WHERE due_dt >= CURRENT_DATE('America/Sao_Paulo')),
+direto AS (
+  SELECT DISTINCT SAFE_CAST(custom_variables_value AS INT64) domain_id, id customer_id, 1 prio
+  FROM `{PROJECT}.{DATASET}.iugu_customers`
+  WHERE LOWER(custom_variables_name) LIKE '%domain%'
+    AND SAFE_CAST(custom_variables_value AS INT64) IS NOT NULL),
+por_cnpj AS (
+  SELECT DISTINCT co.domain_id, cu.id customer_id, 2 prio
+  FROM `{PROJECT}.{DATASET}.odbc_companies` co
+  JOIN `{PROJECT}.{DATASET}.iugu_customers` cu
+    ON REGEXP_REPLACE(co.tax_document, r'[^0-9]', '') = REGEXP_REPLACE(cu.cpf_cnpj, r'[^0-9]', '')
+  WHERE co.tax_document IS NOT NULL AND co.tax_document <> ''
+    AND LENGTH(REGEXP_REPLACE(co.tax_document, r'[^0-9]', '')) >= 11),
+mapa AS (
+  SELECT customer_id, domain_id, MIN(prio) prio
+  FROM (SELECT * FROM direto UNION ALL SELECT * FROM por_cnpj) GROUP BY 1, 2),
+cands AS (
+  SELECT v.id fatura_id, CAST(m.domain_id AS STRING) domain_id, m.prio, v.customer_id,
+    v.account_name, v.status, v.due_dt, v.total_cents, v.secure_url
+  FROM a_vencer v JOIN mapa m ON m.customer_id = v.customer_id
+  UNION ALL
+  SELECT v.id, CAST(co.domain_id AS STRING), 3, v.customer_id,
+    v.account_name, v.status, v.due_dt, v.total_cents, v.secure_url
+  FROM a_vencer v JOIN `{PROJECT}.{DATASET}.odbc_companies` co
+    ON REGEXP_REPLACE(co.tax_document, r'[^0-9]', '') = REGEXP_REPLACE(IFNULL(v.payer_cpf_cnpj, ''), r'[^0-9]', '')
+  WHERE LENGTH(REGEXP_REPLACE(IFNULL(v.payer_cpf_cnpj, ''), r'[^0-9]', '')) >= 11)
+SELECT c.fatura_id, c.domain_id, c.prio, c.customer_id, c.account_name, c.status,
+  c.due_dt, c.total_cents, c.secure_url,
+  DATE_DIFF(c.due_dt, CURRENT_DATE('America/Sao_Paulo'), DAY) dias_para_vencer,
+  d.created_at dom_created
+FROM cands c
+LEFT JOIN `{PROJECT}.{DATASET}.odbc_domains` d ON CAST(d.ID AS STRING) = c.domain_id
 """
 
 # -----------------------------------------------------------------------------
@@ -764,6 +822,63 @@ def build_inadimplencia(rows: list[dict], empresas_by_dom: dict[str, dict]) -> d
             "foraDoPainel": fora_lista, "dominios": out}
 
 
+def build_faturas_abertas(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
+    """Uma entrada por dominio do painel com a(s) fatura(s) ainda NAO vencida(s).
+
+    Mesmo molde de build_inadimplencia (dedup por fatura_id, escolha do melhor
+    dominio candidato por `prio` + dominio mais recente), so' que o "destaque"
+    da marca e' a fatura com vencimento MAIS PROXIMO (a menor data), nao a mais
+    atrasada -- aqui nao ha atraso, so' prazo.
+
+    Marca com fatura vencida (inadimplente) tambem pode ter uma proxima fatura
+    aqui (ex: deve a de setembro e ja tem a de outubro aberta) -- quem decide
+    excluir da aba "Faturas" e' o FRONT (ver renderTabFaturas em app.js),
+    olhando `faturasVencidas` da marca. Aqui so' sai o dado cru.
+    """
+    def _iso(v):
+        return v.isoformat()[:10] if hasattr(v, "isoformat") else (str(v)[:10] if v else "")
+
+    candidatos: dict[str, list[dict]] = {}
+    for r in rows:
+        candidatos.setdefault(str(r.get("fatura_id") or ""), []).append(r)
+
+    def _novo_slot() -> dict:
+        return {"qtFaturas": 0, "valorTotal": 0.0,
+                "proximoVencimento": "", "linkProximaFatura": "",
+                "proximoValor": 0.0, "faturas": []}
+
+    def _acumula(slot: dict, escolha: dict) -> None:
+        venc = _iso(escolha.get("due_dt"))
+        valor = round(int(escolha.get("total_cents") or 0) / 100.0, 2)
+        link = (escolha.get("secure_url") or "").strip()
+        slot["qtFaturas"] += 1
+        slot["valorTotal"] = round(slot["valorTotal"] + valor, 2)
+        slot["faturas"].append({"venc": venc, "valor": valor,
+                                "status": escolha.get("status") or "", "link": link})
+        # destaque da marca = vencimento MAIS PROXIMO (menor data) -- primeira
+        # fatura que vai vencer, a que a CS deve ficar de olho
+        if not slot["proximoVencimento"] or venc < slot["proximoVencimento"]:
+            slot["proximoVencimento"] = venc
+            slot["linkProximaFatura"] = link
+            slot["proximoValor"] = valor
+
+    out: dict[str, dict] = {}
+    for cands in candidatos.values():
+        no_painel = [c for c in cands if str(c.get("domain_id") or "") in empresas_by_dom]
+        if not no_painel:
+            continue  # mesmo recorte de build_inadimplencia, so' sem o agregado "fora do painel"
+        escolha = sorted(
+            no_painel,
+            key=lambda c: (int(c.get("prio") or 9),
+                           -(c["dom_created"].toordinal() if c.get("dom_created") else 0)),
+        )[0]
+        dom = str(escolha.get("domain_id") or "")
+        _acumula(out.setdefault(dom, _novo_slot()), escolha)
+    for slot in out.values():
+        slot["faturas"].sort(key=lambda f: f["venc"])
+    return {"geradoEm": datetime.now(timezone.utc).isoformat(), "dominios": out}
+
+
 def build_status_faturas(rows: list[dict]) -> dict:
     """Ultima fatura da Iugu por dominio, com uma fatura atribuida uma unica vez."""
     def _iso(v):
@@ -867,6 +982,7 @@ def coletar_do_bq(client: bigquery.Client):
     pag_rows    = run_query(client, SQL_PAGAMENTOS, "datas de pagamento por dominio")
     piso_rows   = run_query(client, SQL_PISO_PAGAMENTOS, "piso do espelho de faturas")
     inad_rows   = run_query(client, SQL_INADIMPLENTES, "faturas vencidas em aberto")
+    fat_av_rows = run_query(client, SQL_FATURAS_ABERTAS, "faturas ainda nao vencidas")
     status_faturas_rows = run_query(client, SQL_STATUS_FATURAS, "status da ultima fatura por dominio")
 
     # Produtos: so se `odbc_products` estiver ingerido (odbc_product_details NAO serve).
@@ -879,7 +995,7 @@ def coletar_do_bq(client: bigquery.Client):
               "Ver _MIGRACAO_BQ_STATUS.md.", file=sys.stderr, flush=True)
 
     return (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-            pag_rows, piso_rows, inad_rows, status_faturas_rows)
+            pag_rows, piso_rows, inad_rows, fat_av_rows, status_faturas_rows)
 
 
 def main() -> None:
@@ -889,7 +1005,7 @@ def main() -> None:
 
     prod_disponivel = _table_exists(client, "odbc_products")
     (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-     pag_rows, piso_rows, inad_rows, status_faturas_rows) = coletar_do_bq(client)
+     pag_rows, piso_rows, inad_rows, fat_av_rows, status_faturas_rows) = coletar_do_bq(client)
 
     empresas = build_empresas(emp_rows)
     OUT_COMPANIES.write_text(json.dumps(empresas, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -941,6 +1057,11 @@ def main() -> None:
           f"fora do painel = R$ {inad['semDominio']['valor']:,.2f}; "
           f"{len(fora_lista)} marcas identificadas fora do painel, "
           f"{len(bloqueadas)} bloqueadas)")
+
+    fat_av = build_faturas_abertas(fat_av_rows, empresas_by_dom)
+    OUT_FATURAS_ABERTAS.write_text(json.dumps(fat_av, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[write] {OUT_FATURAS_ABERTAS.name} "
+          f"({len(fat_av['dominios'])} dominios com fatura a vencer)")
 
     status_faturas = build_status_faturas(status_faturas_rows)
     OUT_STATUS_FATURAS.write_text(
