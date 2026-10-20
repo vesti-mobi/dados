@@ -3203,13 +3203,14 @@ const CARDS_GERENCIAL = [
   {
     id:'churnMes', titulo:'Churn do mês', cor:'#C0453B',
     capa:'Marcas perdidas no mês, pela Data da Perda da planilha do time',
-    fonte:'marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura. <b>Marca apenas bloqueada não entra</b> (13/10/2026): bloqueio é fatura vencida há 11+ dias, ou módulo cortado com a fatura ainda em aberto — a marca pode voltar a pagar, e volta. Quem está bloqueada e o time já sabe que foi embora entra pela planilha. <b>"Em alerta" também fica de fora</b>: 1 a 10 dias de atraso é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, na Gerencial. A coluna <b>Origem</b> diz por qual das duas pontas a marca entrou.',
+    fonte:'o que o time registrou na <b>planilha de churn</b>, pela <b>Data da Perda</b> — só as observações &quot;solicitou cancelamento&quot; e &quot;inadimplente&quot;, sem contar a mesma marca duas vezes. A planilha é a <b>única fonte</b> do churn em todo o painel desde 15/10/2026, a pedido da Laura. As abas de <b>2026, 2025 e 2024</b> entram juntas; linha sem Data da Perda fica de fora, porque não teria lugar no tempo. <b>A taxa</b> divide as marcas perdidas pela base ativa no começo do recorte. Essa base é <b>reconstruída</b>: o cadastro só guarda quem existe hoje, então cada marca vira uma vida com data de entrada (o cadastro, ou a coluna ANIVERSÁRIO da planilha) e data de saída (a Data da Perda, o churn do cadastro ou, em último caso, o último pedido). Estava ativa em março quem entrou antes e ainda não tinha saído. A conta dá 707 marcas no fim de setembro contra 695 ativas hoje — o erro é pequeno perto de hoje e cresce para trás, porque marca que entrou e saiu sem deixar registro não aparece. <b>A taxa some quando se filtra por carteira</b>: a marca perde a CS no cadastro quando sai, então o churn dela cai em &quot;Sem CS&quot; enquanto o denominador da carteira fica só com quem ficou.',
     vazio:'Nenhuma marca da carteira em foco deu churn neste mês.',
     linhas:ctx=>soDoFoco(eventosDeChurn(janelaDoMes(ctx.m))),
     resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m))).length;
+      const taxa = taxaChurn(rows.length, ctx.m);
       return {v:fmt.int(rows.length),
         s: rows.length
-          ? `${fmt.moneyCompact(soma(rows,'perdido'))}/mês perdidos · ${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
+          ? `${taxa==null?'':fmt.pct1(taxa)+' da base ativa · '}${fmt.moneyCompact(soma(rows,'perdido'))}/mês perdidos · ${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
           : 'nenhuma marca perdida no mês'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m)));
       const doze = MESES_GERENCIAL.slice(0,12)
@@ -3217,6 +3218,14 @@ const CARDS_GERENCIAL = [
       const media12 = doze.length ? doze.reduce((a,b)=>a+b,0)/doze.length : 0;
       return [
         {l:'Marcas perdidas', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        /* A mesma perda em duas réguas: quantas marcas e quanto da base elas
+           eram. 45 marcas em setembro de 2026 é mais do que 45 em 2025,
+           porque a base encolheu no meio do caminho. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, ctx.m)),
+         s: recorteEhABaseInteira() ? 'das marcas ativas no começo do mês' : SEM_TAXA_POR_CS},
+        {l:'Base ativa no começo do mês',
+         v: recorteEhABaseInteira() ? fmt.int(baseAtivaNoFim(mesAnterior(ctx.m))) : '—',
+         s: recorteEhABaseInteira() ? 'reconstruída pela entrada e pela saída de cada marca' : SEM_TAXA_POR_CS},
         {l:'Solicitaram cancelamento', v:fmt.int(rows.filter(r=>/solicitou/i.test(r.detalhe||'')).length),
          s:'pediram para sair'},
         {l:'Inadimplentes', v:fmt.int(rows.filter(r=>/inadimpl/i.test(r.detalhe||'')).length),
@@ -3227,7 +3236,16 @@ const CARDS_GERENCIAL = [
         {l:'Sem CS no cadastro', v:fmt.int(rows.filter(r=>r.cs==='Sem CS').length),
          s:'a marca saiu e levou o responsável junto'},
       ]; },
-    metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
+    metricas:[
+      {k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length},
+      /* A taxa, e não só a contagem — pedido da Laura em 20/10/2026: "em
+         março tinha 540 clientes ativos, o churn foi 54 clientes, ou seja,
+         10%". A base é a do início do mês, reconstruída em `VIDAS`. */
+      /* Eixo próprio e linha: a taxa vive entre 2% e 8% e, dividindo a escala
+         com uma contagem que chega a 80, virava um risco no chão do gráfico. */
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, tipo:'line', eixo:'dir',
+       v:(rows,m)=>taxaChurn(rows.length, m)},
+    ],
     colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data da perda', f:fmt.date},
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
@@ -3534,7 +3552,10 @@ function seriePorBucketDoCard(c, ctx, rows){
   return buckets.map((b, i)=>{
     const o = Object.assign({}, b);
     o.noFiltro = b.bucket >= fIni && b.bucket <= fFim;
-    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], ctxJanela) });
+    /* O 2º argumento é o MÊS do balde, não o contexto: é o que a série
+       gerencial já passa, e é o que uma métrica como a taxa de churn precisa
+       para saber contra qual base dividir. */
+    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], b.bucket) });
     return o;
   });
 }
@@ -3776,13 +3797,19 @@ function pecasDoCard(c, ctx, rows){
      comparação sairia ilegível, então ali continua como era. */
   /* Três meses com valor no ano anterior é o mínimo para a barra cinza dizer
      alguma coisa; abaixo disso é ausência de dado, não queda. */
-  const anoAano = ctx.tipo === 'mes' && c.metricas.length === 1
-    && dados.filter(d=>(d[c.metricas[0].k+'Ant']||0) > 0).length >= 3;
+  /* Métrica em eixo PRÓPRIO não disputa as barras — é uma linha por cima —,
+     então ela não impede a comparação com o ano anterior. O card do churn tem
+     as duas coisas: barras de 2025 e 2026 e a taxa correndo por cima. */
+  const metricasDeBarra = c.metricas.filter(x=>x.eixo !== 'dir');
+  const metricasDeEixoProprio = c.metricas.filter(x=>x.eixo === 'dir');
+  const anoAano = ctx.tipo === 'mes' && metricasDeBarra.length === 1
+    && dados.filter(d=>(d[metricasDeBarra[0].k+'Ant']||0) > 0).length >= 3;
   const anoAtual = dados.length ? dados[dados.length-1].bucket.slice(0,4) : '';
   const anoAntes = String(Number(anoAtual) - 1);
 
   const leg = anoAano
     ? `<i><b style="background:#B8C2D6"></b>${anoAntes}</i><i><b style="background:#1F4FD8"></b>${anoAtual}</i>`
+      + metricasDeEixoProprio.map((x,i)=>`<i><b style="background:${corSerie(c.metricas.indexOf(x))}"></b>${x.l}</i>`).join('')
     : c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
   /* O título do bloco é o nome do card — "Volume transacionado" no slide — e a
      nota à direita diz o que o gráfico mostra. */
@@ -3811,8 +3838,10 @@ function pecasDoCard(c, ctx, rows){
     /* Aqui as barras do ano corrente ficam TODAS em azul cheio: apagar as que
        não são o mês escolhido, como o gráfico de uma série só faz, deixava o
        azul claro quase igual ao cinza do ano anterior e a comparação sumia. */
-    ? [{k:c.metricas[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:c.metricas[0].f},
-       {k:c.metricas[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:c.metricas[0].f}]
+    ? [{k:metricasDeBarra[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:metricasDeBarra[0].f},
+       {k:metricasDeBarra[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:metricasDeBarra[0].f}]
+      .concat(metricasDeEixoProprio.map(x=>({k:x.k, l:x.l, tipo:x.tipo||'line', eixo:'dir',
+        cor:corSerie(c.metricas.indexOf(x)), f:x.f})))
     : c.metricas.map((x,i)=>{
     const cor = corSerie(i);
     return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
@@ -3963,7 +3992,9 @@ function kpisGerencial(){
      s: fmt.int(pedidos)+' pedidos no mês · '+fmt.moneyCompact(gmv)+' de fato pagos'},
     {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
-    {l:'Churn no mês', v:fmt.int(churn), s:'pela Data da Perda da planilha do time'},
+    {l:'Churn no mês', v:fmt.int(churn),
+     s:(()=>{ const t = taxaChurn(churn, m); return (t==null?'':fmt.pct1(t)+' da base ativa · ')
+       +'pela Data da Perda da planilha do time' })()},
   ];
 }
 
@@ -4260,6 +4291,123 @@ function eventosDeChurn(p, quem){
       naCarteira: marca ? 'sim' : 'não achou no cadastro'});
   });
   return out.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+}
+/* --- a base ativa de um mês do passado ------------------------------------
+   Pedido da Laura em 20/10/2026: "Hoje a gente tá vendo churn em número (ex:
+   5 churns). É possível ver em % e olhar para o passado? Por ex: em março
+   tinha 540 clientes ativos, o churn foi 54 clientes, ou seja, 10%".
+
+   O cadastro só guarda quem existe HOJE. Para dizer quantas marcas estavam
+   ativas em março é preciso reconstruir a base: cada marca vira uma VIDA com
+   data de entrada e, quando já saiu, data de saída. Estava ativa no fim do
+   mês M quem entrou até lá e ainda não tinha saído.
+
+   De onde vem cada ponta:
+     entrada — `dataCadastro` do cadastro; para quem já nem está no cadastro,
+               a coluna ANIVERSÁRIO da planilha de churn;
+     saída   — `dataChurn` do cadastro, a Data da Perda da planilha ou, em
+               último caso, o último pedido de uma marca que hoje está
+               inativa e não foi registrada em lugar nenhum.
+
+   O que a conta NÃO alcança, e por isso a base fica um pouco baixa (e a taxa
+   um pouco alta) quanto mais para trás se olha: as marcas inativas hoje sem
+   nenhuma data de saída, que ficam de fora de todos os meses, e as que
+   entraram e saíram sem deixar registro. O erro encolhe ao se aproximar de
+   hoje — no fim de setembro a conta dá 707 contra as 695 ativas de agora.
+
+   A CS é sempre a de HOJE aplicada ao passado: o cadastro não guarda troca de
+   carteira, então a taxa por carteira é uma aproximação. A da empresa toda,
+   não: ela não depende de quem atendia. */
+const VIDAS = (()=>{
+  const daPlanilha = new Map();
+  ((DATA.churnPlanilha||{}).linhas||[]).forEach(l=>{
+    const k = chaveNomeMarca(l.cliente); if(!k) return;
+    const e = daPlanilha.get(k) || {entrada:null, saida:null, dominio:null, casou:false};
+    if(l.entrada && (!e.entrada || l.entrada < e.entrada)) e.entrada = l.entrada;
+    if(l.data    && (!e.saida   || l.data    > e.saida  )) e.saida   = l.data;
+    if(l.dominio) e.dominio = String(l.dominio);
+    daPlanilha.set(k, e);
+  });
+  const porDominio = new Map();
+  daPlanilha.forEach(v=>{ if(v.dominio) porDominio.set(v.dominio, v) });
+
+  const vidas = [];
+  DATA.clientes.forEach(c=>{
+    const p = daPlanilha.get(chaveNomeMarca(c.nome)) || porDominio.get(String(c.dominio));
+    if(p) p.casou = true;
+    const viva = c.status === 'ativo';
+    const entrada = c.dataCadastro || (p && p.entrada) || null;
+    const saida = viva ? null : (c.dataChurn || (p && p.saida) || c.ultimoPedido || null);
+    /* Sem entrada não dá para saber desde quando contar; inativa sem nenhuma
+       data de saída ficaria viva para sempre. Inventar data seria pior do que
+       admitir o buraco, então essas marcas ficam fora da conta. */
+    if(!entrada || (!viva && !saida)) return;
+    vidas.push({cs: c.cs || 'Sem CS', entrada, saida, viva});
+  });
+  daPlanilha.forEach(p=>{
+    if(p.casou || !p.entrada || !p.saida) return;
+    /* Marca que saiu e já não está no cadastro: a CS vem da carteira de
+       ontem, a mesma fonte que o card do churn usa para não dizer "Sem CS"
+       em quem levou o responsável junto ao sair. */
+    const hist = daCarteiraDeOntem(p.dominio);
+    vidas.push({cs: (hist && hist.cs) || 'Sem CS', entrada: p.entrada, saida: p.saida, viva:false});
+  });
+  return vidas;
+})();
+
+/* Quantas marcas estavam ativas no ÚLTIMO DIA do mês `m` ('2026-03'). Sem
+   `quem`, é a EMPRESA INTEIRA — não `csDoFoco()`. O universo de CS muda de
+   aba (a Visão geral só conhece as CS da carteira) e o denominador encolhia
+   junto enquanto o numerador seguia inteiro: a banda de churn chegou a
+   mostrar 43,6% porque dividia 129 marcas perdidas por 296. A taxa por
+   carteira não existe de qualquer forma — veja `recorteEhABaseInteira`. */
+function baseAtivaNoFim(m, quem){
+  if(!m) return 0;
+  const f = ultimoDiaDoMes(m + '-01');
+  let n = 0;
+  for(const v of VIDAS){
+    if(v.entrada > f) continue;
+    if(!v.viva && v.saida <= f) continue;
+    if(quem && !quem(v.cs)) continue;
+    n++;
+  }
+  return n;
+}
+/* A taxa olha a base no INÍCIO do recorte — a do fim do mês anterior ao
+   primeiro —, que é como o time lê: "em março tinha 540 ativos, saíram 54,
+   ou seja 10%". `quando` chega como mês ('2026-03') nos gráficos mês a mês e
+   como contexto ou período nas leituras do filtro de data. */
+function mesInicialDe(quando){
+  if(!quando) return null;
+  if(typeof quando === 'string') return quando.slice(0,7);
+  const p = quando.p || quando;
+  return p && p.ini ? String(p.ini).slice(0,7) : null;
+}
+/* A TAXA SÓ VALE NA BASE INTEIRA, e é por isso que ela some quando alguém
+   filtra por carteira. A marca que sai costuma perder a CS no cadastro junto
+   com o módulo: em setembro de 2026, 37 dos 44 churns estão como "Sem CS". O
+   denominador, porém, fica com quem ficou. A conta por carteira daria 1% para
+   a Gabriella, 2,9% para a Thamiris e 16,7% para "Sem CS" — três números
+   errados. Tentei corrigir pela carteira histórica e ela só alcança 2 das 243
+   marcas sem CS, porque só existe desde 13/08/2026. Enquanto o cadastro não
+   guardar de quem era a marca quando ela saiu, taxa por CS é invenção. */
+function recorteEhABaseInteira(){
+  const u = universoCs(), f = estado.filtros.cs;
+  return !f || !f.size || [...f].filter(n=>u.includes(n)).length === u.length;
+}
+const SEM_TAXA_POR_CS = 'sem taxa por carteira: quem sai perde a CS no cadastro';
+/* Quantos meses o recorte cobre. "15,6% da base" lido sozinho parece taxa
+   mensal; num trimestre ele é a soma dos três meses, e precisa dizer isso. */
+function mesesDoRecorte(p){
+  if(!p || !p.ini) return 1;
+  const a = p.ini.slice(0,7), z = String(p.fim||p.ini).slice(0,7);
+  return (Number(z.slice(0,4))-Number(a.slice(0,4)))*12 + (Number(z.slice(5,7))-Number(a.slice(5,7))) + 1;
+}
+function taxaChurn(qtd, quando, quem){
+  const m = mesInicialDe(quando); if(!m) return null;
+  if(!quem && !recorteEhABaseInteira()) return null;
+  const base = baseAtivaNoFim(mesAnterior(m), quem);
+  return base ? qtd / base * 100 : null;
 }
 /* A bonificação pede por lista de meses e só conta as três CS do programa —
    ou uma delas, na visão individual. O filtro por mês fica depois da janela
@@ -4813,7 +4961,7 @@ const CARDS_VISAO = [
   {
     id:'churnCs', titulo:'Churn', cor:'#C0453B',
     capa:'Marcas perdidas no período, pela Data da Perda da planilha do time',
-    fonte:'marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura. <b>Marca apenas bloqueada não entra</b> (13/10/2026): bloqueio é fatura vencida há 11+ dias, ou módulo cortado com a fatura ainda em aberto — a marca pode voltar a pagar, e volta. Quem está bloqueada e o time já sabe que foi embora entra pela planilha. <b>"Em alerta" também fica de fora</b>: 1 a 10 dias de atraso é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, na Gerencial. A coluna <b>Origem</b> diz por qual das duas pontas a marca entrou.',
+    fonte:'o que o time registrou na <b>planilha de churn</b>, pela <b>Data da Perda</b> — só as observações &quot;solicitou cancelamento&quot; e &quot;inadimplente&quot;, sem contar a mesma marca duas vezes. A planilha é a <b>única fonte</b> do churn em todo o painel desde 15/10/2026, a pedido da Laura. As abas de <b>2026, 2025 e 2024</b> entram juntas; linha sem Data da Perda fica de fora, porque não teria lugar no tempo. <b>A taxa</b> divide as marcas perdidas pela base ativa no começo do recorte. Essa base é <b>reconstruída</b>: o cadastro só guarda quem existe hoje, então cada marca vira uma vida com data de entrada (o cadastro, ou a coluna ANIVERSÁRIO da planilha) e data de saída (a Data da Perda, o churn do cadastro ou, em último caso, o último pedido). Estava ativa em março quem entrou antes e ainda não tinha saído. A conta dá 707 marcas no fim de setembro contra 695 ativas hoje — o erro é pequeno perto de hoje e cresce para trás, porque marca que entrou e saiu sem deixar registro não aparece. <b>A taxa some quando se filtra por carteira</b>: a marca perde a CS no cadastro quando sai, então o churn dela cai em &quot;Sem CS&quot; enquanto o denominador da carteira fica só com quem ficou.',
     campoData:'data',
     /* Sem filtro de CS: esta aba só tem o de período, e boa parte das marcas
        bloqueadas já perdeu a CS no cadastro — sairiam da conta se filtrasse. */
@@ -4823,9 +4971,12 @@ const CARDS_VISAO = [
       /* O valor perdido vem no resumo, não só nos KPIs: é a pergunta que vem
          logo depois de "quantas marcas", e sem abrir o card ela não aparecia. */
       const perdido = soma(rows, 'perdido');
+      const taxa = taxaChurn(rows.length, ctx);
+      const nm = mesesDoRecorte(ctx.p);
       return {v:fmt.int(rows.length),
         s: rows.length
-          ? fmt.moneyCompact(perdido)+'/mês perdidos · '
+          ? (taxa==null ? '' : fmt.pct1(taxa)+' da base ativa'+(nm>1 ? ' em '+nm+' meses' : '')+' · ')
+            + fmt.moneyCompact(perdido)+'/mês perdidos · '
             + (dif===0 ? 'igual ao período anterior' : (dif>0?'+':'')+fmt.int(dif)+' vs período anterior')
           : 'nenhum churn no período'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
@@ -4833,6 +4984,14 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        /* Número e taxa lado a lado: a base encolheu de ~900 para ~700 em
+           dois anos, então a mesma contagem pesa diferente em cada ponto. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, ctx)),
+         s: !recorteEhABaseInteira() ? SEM_TAXA_POR_CS
+            : 'das ativas no começo'+(mesesDoRecorte(ctx.p)>1 ? ', somando os '+mesesDoRecorte(ctx.p)+' meses' : ' do período')},
+        {l:'Base ativa no começo',
+         v: recorteEhABaseInteira() ? fmt.int(baseAtivaNoFim(mesAnterior(String(ctx.p.ini).slice(0,7)))) : '—',
+         s: recorteEhABaseInteira() ? 'reconstruída pela entrada e pela saída de cada marca' : SEM_TAXA_POR_CS},
         {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
          s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Solicitaram cancelamento', v:fmt.int(rows.filter(r=>/solicitou/i.test(r.detalhe||'')).length),
@@ -4843,7 +5002,11 @@ const CARDS_VISAO = [
         {l:'Contra os clientes novos', v:pctTexto(rows.length, novas.length),
          s:fmt.int(novas.length)+' clientes novos no mesmo período'},
       ]; },
-    metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
+    metricas:[
+      {k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length},
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, tipo:'line', eixo:'dir',
+       v:(rows,m)=>taxaChurn(rows.length, m)},
+    ],
     colunas:[{k:'data', l:'Data da perda', f:fmt.date}, COL_NOME, COL_CS_CARD,
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
@@ -6016,11 +6179,11 @@ const TABS = [
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
     titulo:'Churn',
-    desc:'<b>A régua do churn, a mesma em todo o painel desde 13/10/2026</b> — pedido da Laura: "usa a mesma regra da bonificação de churn em todas as abas". Entra a marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu, lido do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa</a> — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (só as observações "solicitou cancelamento" e "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. É a régua que o Eduardo escreveu em 07/10/2026 para a bonificação. '
-      + '<b>O filtro de período recorta pela data do churn</b>: a do corte do módulo, ou a que o time escreveu na planilha. '
-      + '<b>Marca apenas bloqueada não entra</b>, desde 13/10/2026. As três situações do Painel Elisa são degraus do mesmo caminho e só o último é perda: <b>alerta</b> é fatura vencida há 1 a 10 dias, cobrança; <b>bloqueada</b> é 11+ dias ou módulo cortado com a fatura ainda em aberto, e a marca pode voltar a pagar — e volta; <b>cancelada</b> é módulo cortado <i>com</i> a fatura cancelada, e aí acabou. Quem está bloqueada e o time já sabe que foi embora entra assim mesmo, pela planilha. A foto de quem está devendo <i>hoje</i>, em qualquer situação, continua inteira no card <b>Inadimplência hoje</b>, na aba Gerencial. '
-      + '<b>Origem</b> diz por qual das duas pontas a marca entrou; <b>No cadastro?</b> avisa quando a marca da planilha não foi encontrada no cadastro — nesses casos não há CS, plano nem mensalidade para mostrar. '
-      + 'Marca bloqueada costuma <b>perder a CS no cadastro junto com o módulo</b>, então boa parte das linhas aparece como "Sem CS": é assim no dado de origem, não é falha de atribuição.',
+    desc:'<b>A planilha de churn é a única régua do painel desde 15/10/2026</b> — pedido da Laura: "vamos usar somente essa planilha como referência para todas as abas que tenham churn, olhe para a coluna Data da Perda". Entra a marca que o time registrou lá com observação <b>"solicitou cancelamento"</b> ou <b>"inadimplente"</b>, sem contar a mesma marca duas vezes. As abas de <b>2026, 2025 e 2024</b> são lidas juntas. '
+      + '<b>O filtro de período recorta pela Data da Perda</b> — a data que o time escreveu. Linha sem essa data fica de fora: não teria lugar no tempo, e ainda contaria como marca viva na reconstrução da base. '
+      + '<b>A taxa de churn</b> divide as marcas perdidas pela base ativa no começo do recorte. A base é reconstruída marca a marca, porque o cadastro só guarda quem existe hoje: a entrada vem do cadastro ou da coluna ANIVERSÁRIO da planilha, e a saída, da Data da Perda, do churn do cadastro ou — em último caso — do último pedido. Quem entrou antes e ainda não tinha saído estava ativo. No fim de setembro a conta dá 707 marcas contra 695 ativas hoje; para trás o erro cresce, porque marca que entrou e saiu sem registro não aparece em lugar nenhum. '
+      + '<b>A taxa some quando se filtra por carteira</b>, de propósito: a marca costuma <b>perder a CS no cadastro junto com o módulo</b>, então o churn dela cai em "Sem CS" enquanto o denominador da carteira fica só com quem ficou — em setembro de 2026 seriam 37 dos 44 churns em "Sem CS". Pelo mesmo motivo boa parte das linhas da tabela aparece sem CS: é assim no dado de origem, não é falha de atribuição. '
+      + '<b>No cadastro?</b> avisa quando a marca da planilha não foi encontrada no cadastro — nesses casos não há plano nem mensalidade para mostrar.',
     filtros:['cliente','cs','canal','periodo'],
     tabela:'Marcas', chaveCliente:'nome',
     colunas:[
@@ -6040,8 +6203,15 @@ const TABS = [
     kpis:(rows)=>{
       const canc = rows.filter(r=>/solicitou/i.test(r.detalhe||''));
       const inad = rows.filter(r=>/inadimpl/i.test(r.detalhe||''));
+      const p = periodo();
+      const base = baseAtivaNoFim(mesAnterior(String(p.ini).slice(0,7)));
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:'pela Data da Perda, sem marca repetida'},
+        /* A contagem sozinha engana quando a base muda de tamanho: 45 marcas
+           perdidas valem 5% numa carteira de 900 e 6,4% numa de 700. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, p)),
+         s: !recorteEhABaseInteira() ? SEM_TAXA_POR_CS
+            : 'de '+fmt.int(base)+' ativas no começo'+(mesesDoRecorte(p)>1 ? ', somando os '+mesesDoRecorte(p)+' meses' : '')},
         /* O valor é o TOTAL COBRADO da planilha — plano mais integração,
            assistente e filial. Dizer de quantas linhas ele é conhecido evita
            que o resto pareça zero. */
@@ -6248,7 +6418,7 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões, mas só as que têm <b>empresa associada</b> — reunião de agenda pessoal (1:1, interna) sem marca vinculada no HubSpot fica de fora (pedido da Laura, 17/09/2026); <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor. <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões, mas só as que têm <b>empresa associada</b> — reunião de agenda pessoal (1:1, interna) sem marca vinculada no HubSpot fica de fora (pedido da Laura, 17/09/2026); <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor. <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Churn</b> = a planilha do time, pela Data da Perda, recortada pelo período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
     filtros:['csFoco','periodo','produtoFoco','estagioFoco'],
     semTabela:true,
     linhas:()=>[],
@@ -6337,10 +6507,11 @@ function marcosDoCs(cs, p){
     ...eventos.map(ev=>({cliente:ev.cliente, tipo:ev.tipo, data:ev.data})),
   ].sort((a,b)=>b.data.localeCompare(a.data));
 }
-/* Churn da CS no período, pela régua única (13/10/2026). Antes era a foto de
-   hoje do Painel Elisa, sem data de evento. Marca bloqueada costuma perder a
-   CS no cadastro junto com o módulo — essas ficam em "Sem CS" e não entram
-   aqui, que é uma visão por pessoa. */
+/* Churn da CS no período, pela planilha do time (15/10/2026). Marca costuma
+   perder a CS no cadastro junto com o módulo — essas ficam em "Sem CS" e não
+   entram aqui, que é uma visão por pessoa. É também por isso que este bloco
+   não mostra TAXA de churn: o denominador da carteira ficaria só com quem
+   ficou. Ver `recorteEhABaseInteira`. */
 function churnDoCs(cs){
   return eventosDeChurn(periodo(), quem => quem === cs);
 }
@@ -6391,6 +6562,8 @@ function kpisCarteiraCs(){
     {l:'Negócios perdidos', v:fmt.int(perdidos.length), s:fmt.moneyCompact(soma(perdidos,'valor'))+' no período'},
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
+    /* Sem taxa aqui: este bloco é de UMA carteira, e taxa por carteira não
+       fecha — veja `recorteEhABaseInteira`. */
     {l:'Churn no período', v:fmt.int(churnLinhas.length),
      s:fmt.int(bloqueadas)+' pediram para sair · '+fmt.int(canceladas)+' inadimplentes · '
        +fmt.moneyCompact(churnLinhas.reduce((t,c)=>t+(c.perdido||0),0))+' por mês'},
