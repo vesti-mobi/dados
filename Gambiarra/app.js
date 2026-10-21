@@ -10,7 +10,8 @@ const fmtBRLCurto = (n) => {
 };
 
 // state.chaves = lista de periodos selecionados (multi-selecao). 1 item = comportamento antigo.
-const CANAIS = ["Starter","Vesti","Uemtel","Atta","Parceiros"];
+// Varejo Vesti separado de Vesti como canal proprio -- pedido da Laura, 21/10/2026
+const CANAIS = ["Starter","Vesti","Varejo Vesti","Uemtel","Atta","Parceiros"];
 const state = { periodo:"mensal", chaves:[], cs:"todas", canais:new Set(CANAIS), empresa:"todas", tab:"home", cadMes:"todos", upgMin:300000, soCoorte:true, reativOrigem:"todas", reativDrill:null, portesSel:new Set(),
   inadDias:0, situacoes:new Set(["alerta","bloqueada","cancelada"]) };
 const D = (typeof DADOS !== "undefined") ? DADOS : { empresas:[], mesesList:[], semanasList:[], anosList:[] };
@@ -18,7 +19,8 @@ const D = (typeof DADOS !== "undefined") ? DADOS : { empresas:[], mesesList:[], 
 const PARC_EXCL = new Set(["atta","attasoft","onix","uemtel","vesti","varejo vesti"]);
 const isUemtel = (e) => (e.partner_raw||"").toLowerCase() === "uemtel";
 const isAtta   = (e) => ["atta","attasoft"].includes((e.partner_raw||"").toLowerCase());
-const isVesti  = (e) => ["vesti","varejo vesti"].includes((e.partner_raw||"").toLowerCase());
+const isVarejoVesti = (e) => (e.partner_raw||"").toLowerCase() === "varejo vesti";
+const isVesti  = (e) => (e.partner_raw||"").toLowerCase() === "vesti";
 const COLORS = ["#6C5CE7","#00B894","#F39C12","#E17055","#0984E3","#FD79A8","#00CEC9","#A29BFE","#D63031","#74B9FF","#FFB94A","#55EFC4"];
 const charts = {}; // canvas id -> Chart instance
 // Corte entre "em alerta" e "bloqueada": e' o mesmo do n8n ("Bloqueio e Desbloqueio"),
@@ -33,6 +35,7 @@ const INAD_ABANDONO_DIAS = 60;
 function canalDe(e) {
   if (e.starter_interno) return "Starter";
   if (isVesti(e)) return "Vesti";
+  if (isVarejoVesti(e)) return "Varejo Vesti";
   if (isUemtel(e)) return "Uemtel";
   if (isAtta(e)) return "Atta";
   return "Parceiros";
@@ -1489,6 +1492,10 @@ function renderTabUpgrade() {
     {label:"Mensalidade contratada", cls:"num", fn:r=>r._mens?fmtBRL(r._mens):"—", sort:r=>r._mens||0},
     {label:"Última fatura paga", cls:"num", fn:r=>r.valor_mensal?fmtBRL(r.valor_mensal):"—", sort:r=>r.valor_mensal||0},
     {label:"Filiais", cls:"num", fn:r=>fmtInt(r.qtdFiliais||0), sort:r=>r.qtdFiliais||0},
+    // mesma janela pra todo mundo (ultimos3MesesFechados), mas vira coluna pra
+    // nao se perder no Baixar Excel -- so o texto acima da tabela some' no
+    // export, a coluna fica. Pedido da Laura, 21/10/2026.
+    {label:"Meses considerados (GMV)", fn:r=>meses.join(" + ") || "—", sort:r=>meses.join(" ")},
     {label:"GMV 3 meses", cls:"num", fn:r=>fmtBRL(r._g3), sort:r=>r._g3},
     {label:"Pedidos 3 meses", cls:"num", fn:r=>fmtInt(r._q3), sort:r=>r._q3},
     // quantas vezes o GMV do trimestre cabe na mensalidade: quanto maior, mais defasado o plano
