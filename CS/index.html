@@ -3242,9 +3242,12 @@ const CARDS_GERENCIAL = [
          março tinha 540 clientes ativos, o churn foi 54 clientes, ou seja,
          10%". A base é a do início do mês, reconstruída em `VIDAS`. */
       /* Eixo próprio e linha: a taxa vive entre 2% e 8% e, dividindo a escala
-         com uma contagem que chega a 80, virava um risco no chão do gráfico. */
-      {k:'taxa', l:'% da base ativa', f:fmt.pct1, tipo:'line', eixo:'dir',
+         com uma contagem que chega a 80, virava um risco no chão do gráfico.
+         O valor perdido, pelo mesmo motivo, pega o segundo eixo da direita. */
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, fEixo:fmt.pct1, tipo:'line', eixo:'dir',
        v:(rows,m)=>taxaChurn(rows.length, m)},
+      {k:'valorPerdido', l:'Valor perdido', f:fmt.moneyCompact, fEixo:fmt.moneyCompact,
+       tipo:'line', eixo:'dir2', v:rows=>soma(rows,'perdido')},
     ],
     colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data da perda', f:fmt.date},
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
@@ -3789,7 +3792,12 @@ function pecasDoCard(c, ctx, rows){
   if(ctx.tipo === 'periodo' && !c.campoData) return null;
 
   const dados = ctx.tipo === 'mes' ? serieMensalDoCard(c, ctx) : seriePorBucketDoCard(c, ctx, rows);
-  const corSerie = i => i ? tint(c.cor,.58) : c.cor;
+  /* A terceira série precisa de cor PRÓPRIA, não de outro tom da mesma: no
+     card do churn a taxa e o valor perdido saíam os dois no mesmo rosa claro
+     e a legenda não dizia qual linha era qual. Âmbar porque ele contrasta
+     tanto com o vermelho do churn quanto com o azul e o cinza das barras. */
+  const TONS_EXTRA = ['#B4530A', '#1E74C8', '#2F7D5B'];
+  const corSerie = i => i===0 ? c.cor : i===1 ? tint(c.cor,.58) : TONS_EXTRA[(i-2) % TONS_EXTRA.length];
   const destaque = ctx.tipo === 'mes' ? ctx.m : null;
   /* ANO CONTRA ANO, como no relatório mensal: quando o card tem uma métrica
      só e o recorte é de mês, cada mês ganha duas barras — o ano anterior em
@@ -3800,8 +3808,8 @@ function pecasDoCard(c, ctx, rows){
   /* Métrica em eixo PRÓPRIO não disputa as barras — é uma linha por cima —,
      então ela não impede a comparação com o ano anterior. O card do churn tem
      as duas coisas: barras de 2025 e 2026 e a taxa correndo por cima. */
-  const metricasDeBarra = c.metricas.filter(x=>x.eixo !== 'dir');
-  const metricasDeEixoProprio = c.metricas.filter(x=>x.eixo === 'dir');
+  const metricasDeBarra = c.metricas.filter(x=>!x.eixo);
+  const metricasDeEixoProprio = c.metricas.filter(x=>x.eixo === 'dir' || x.eixo === 'dir2');
   const anoAano = ctx.tipo === 'mes' && metricasDeBarra.length === 1
     && dados.filter(d=>(d[metricasDeBarra[0].k+'Ant']||0) > 0).length >= 3;
   const anoAtual = dados.length ? dados[dados.length-1].bucket.slice(0,4) : '';
@@ -3840,11 +3848,14 @@ function pecasDoCard(c, ctx, rows){
        azul claro quase igual ao cinza do ano anterior e a comparação sumia. */
     ? [{k:metricasDeBarra[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:metricasDeBarra[0].f},
        {k:metricasDeBarra[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:metricasDeBarra[0].f}]
-      .concat(metricasDeEixoProprio.map(x=>({k:x.k, l:x.l, tipo:x.tipo||'line', eixo:'dir',
-        cor:corSerie(c.metricas.indexOf(x)), f:x.f})))
+      /* `eixo: x.eixo`, não 'dir' fixo: com o eixo chumbado, a taxa e o valor
+         perdido caíam na MESMA régua e a taxa (2 a 8) virava um risco no chão
+         de uma escala que ia a R$ 40 mil. */
+      .concat(metricasDeEixoProprio.map(x=>({k:x.k, l:x.l, tipo:x.tipo||'line', eixo:x.eixo,
+        cor:corSerie(c.metricas.indexOf(x)), fEixo:x.fEixo, f:x.f})))
     : c.metricas.map((x,i)=>{
     const cor = corSerie(i);
-    return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
+    return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f, fEixo:x.fEixo,
       /* no recorte de mês, o mês escolhido fica em cor cheia e o resto apagado:
          é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
       corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : acende(cor)};
@@ -5004,8 +5015,10 @@ const CARDS_VISAO = [
       ]; },
     metricas:[
       {k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length},
-      {k:'taxa', l:'% da base ativa', f:fmt.pct1, tipo:'line', eixo:'dir',
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, fEixo:fmt.pct1, tipo:'line', eixo:'dir',
        v:(rows,m)=>taxaChurn(rows.length, m)},
+      {k:'valorPerdido', l:'Valor perdido', f:fmt.moneyCompact, fEixo:fmt.moneyCompact,
+       tipo:'line', eixo:'dir2', v:rows=>soma(rows,'perdido')},
     ],
     colunas:[{k:'data', l:'Data da perda', f:fmt.date}, COL_NOME, COL_CS_CARD,
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
@@ -8336,13 +8349,21 @@ function desenhar(host, dados, series){
   const draw = ()=>{
     host.innerHTML='';
     const W = Math.max(320, host.clientWidth), H = 240;
-    const temDir = series.some(s=>s.eixo==='dir');
-    const P = {t:16, r:temDir?54:20, b:28, l:48};
+    /* Até três escalas no mesmo desenho: as barras à esquerda e duas linhas à
+       direita, cada uma com a sua régua. O card do churn usa as três — marcas
+       perdidas (0 a 80), % da base (0 a 8) e valor perdido (0 a R$ 80 mil) —,
+       e sem isso as duas linhas ficariam deitadas no chão do gráfico. Cada
+       régua da direita sai na cor da linha que ela mede, senão não dá para
+       saber qual é qual. */
+    const esq  = series.filter(s=>s.eixo!=='dir' && s.eixo!=='dir2');
+    const dir  = series.filter(s=>s.eixo==='dir');
+    const dir2 = series.filter(s=>s.eixo==='dir2');
+    const P = {t:16, r: dir2.length ? 104 : dir.length ? 54 : 20, b:28, l:48};
     const iw = W-P.l-P.r, ih = H-P.t-P.b;
     const n = dados.length || 1;
-    const esq = series.filter(s=>s.eixo!=='dir'), dir = series.filter(s=>s.eixo==='dir');
     const maxDe = (ss)=>nice(Math.max(1,...ss.flatMap(s=>dados.map(d=>d[s.k]||0))));
-    const maxE = maxDe(esq), maxD = dir.length?maxDe(dir):0;
+    const maxE = maxDe(esq), maxD = dir.length?maxDe(dir):0, maxD2 = dir2.length?maxDe(dir2):0;
+    const maxDa = sr => sr.eixo==='dir2' ? maxD2 : sr.eixo==='dir' ? maxD : maxE;
     const barras = series.filter(x=>x.tipo==='bar');
     /* O teto da largura acompanha quantas barras existem. Era fixo em 26px, e
        com o gráfico filtrado em um mês só a barra ficava com 26 pixels perdida
@@ -8361,13 +8382,15 @@ function desenhar(host, dados, series){
       s += `<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="var(--line-2)" stroke-width="1"/>`;
       s += `<text x="${P.l-8}" y="${y+3.5}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--ink-3)">${rotulo(v,esq[0])}</text>`;
       if(dir.length){
-        const vd = maxD*g/4;
-        s += `<text x="${W-P.r+8}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--ink-3)">${rotulo(vd,dir[0])}</text>`;
+        s += `<text x="${W-P.r+8}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="${dir[0].cor}">${rotulo(maxD*g/4,dir[0])}</text>`;
+      }
+      if(dir2.length){
+        s += `<text x="${W-P.r+54}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="${dir2[0].cor}">${rotulo(maxD2*g/4,dir2[0])}</text>`;
       }
     }
     // barras (lado a lado quando há mais de uma série)
     barras.forEach((sr,bi)=>{
-      const max = sr.eixo==='dir'?maxD:maxE;
+      const max = maxDa(sr);
       const off = (bi-(barras.length-1)/2)*bw;
       dados.forEach((d,i)=>{
         const v=d[sr.k]||0, y=cy(v,max), h=Math.max(v>0?1.5:0, P.t+ih-y);
@@ -8380,7 +8403,7 @@ function desenhar(host, dados, series){
     });
     // linhas
     series.filter(x=>x.tipo==='line').forEach(sr=>{
-      const max = sr.eixo==='dir'?maxD:maxE;
+      const max = maxDa(sr);
       /* Uma linha com um ponto só não desenha traço nenhum, e o gráfico de um
          mês filtrado ficava com a série virando um pontinho solto no alto.
          Nesse caso ela vira um traço horizontal da largura do grupo de barras,
@@ -8438,6 +8461,9 @@ function nice(v){
 }
 function rotulo(v, sr){
   if(!sr) return fmt.compact(v);
+  /* `fEixo` deixa a série dizer como o eixo dela se escreve — a taxa de churn
+     precisa do "%", que nenhum palpite pelo nome da chave daria. */
+  if(sr.fEixo) return sr.fEixo(v);
   return /receita|valor|gmv/i.test(sr.k) ? fmt.moneyCompact(v) : fmt.compact(v);
 }
 
