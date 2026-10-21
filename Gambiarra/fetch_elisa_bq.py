@@ -121,6 +121,16 @@ LEFT JOIN inv_best ON inv_best.domain_id = d.id
 
 # -----------------------------------------------------------------------------
 # 2) GMV diario (agregacao mensal/semanal em Python, igual build_gmv)
+#
+#    SO' PEDIDO PAGO entra no GMV (payment_paidAt preenchido) -- pedido feito e
+#    nao pago nao e' venda. Antes somava TODOS os pedidos (status<>'') e isso
+#    inflava o GMV comparado ao Painel de Vendas da Vesti (que so conta pago):
+#    a Laura reportou R$6.854 de diferenca na Viotto em ago/set/2026, e o
+#    rastreio bateu EXATO (ate' o centavo) nos 2 meses quando filtrado por
+#    payment_paidAt. payment_isPaid e' 100% equivalente a payment_paidAt
+#    preenchido no dataset inteiro (conferido). Mudanca pedida pela Laura,
+#    21/10/2026 -- afeta GMV Total, GMV por canal, Upgrade etc (tudo que le
+#    valTotal/qtTotal).
 # -----------------------------------------------------------------------------
 SQL_GMV = f"""
 SELECT domainId domain_id, DATE(CAST(settings_createdAt AS TIMESTAMP)) dia,
@@ -130,10 +140,11 @@ SELECT domainId domain_id, DATE(CAST(settings_createdAt AS TIMESTAMP)) dia,
   SUM(CASE WHEN payment_method='PIX' THEN 1 ELSE 0 END) qt_pix,
   SUM(CASE WHEN payment_method='CREDIT_CARD' THEN 1 ELSE 0 END) qt_cartao,
   COUNT(*) qt_total,
-  SUM(CASE WHEN payment_paidAt IS NOT NULL AND payment_paidAt<>'' THEN 1 ELSE 0 END) qt_paid
+  COUNT(*) qt_paid
 FROM `{PROJECT}.{DATASET}.MongoDB_Pedidos_Geral`
 WHERE SAFE_CAST(summary_total AS FLOAT64) > 0 AND SAFE_CAST(summary_total AS FLOAT64) < 50000
   AND CAST(settings_createdAt AS TIMESTAMP) >= '{PISO}'
+  AND payment_paidAt IS NOT NULL AND payment_paidAt <> ''
 GROUP BY domainId, DATE(CAST(settings_createdAt AS TIMESTAMP))
 """
 
