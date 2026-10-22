@@ -1878,17 +1878,16 @@ const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
 /* ===========================================================================
    TIER — o porte da marca pelo GMV (Laura, 13/10/2026)
 
-     T1  acima de R$ 800 mil por mês
-     T2  de R$ 200 mil a R$ 800 mil
-     T3  de R$ 100 mil a R$ 200 mil
-     T4  abaixo de R$ 100 mil
+     T1  acima de R$ 5 milhões por mês
+     T2  de R$ 1 milhão a R$ 5 milhões
+     T3  de R$ 500 mil a R$ 1 milhão
+     T4  abaixo de R$ 500 mil
 
-   Réguas de 22/10/2026, a pedido da Laura: "o T1 acima de 800k e o T3 de
-   100k a 200k". As bordas vizinhas acompanharam — T2 passou a terminar em
-   800 mil e T4 a começar em 100 mil —, senão sobrariam faixas de GMV sem
-   tier nenhum. Mexer aqui NÃO mexe em quem foi fixado à mão: o fixo tem
-   precedência sobre o cálculo em `tierDaMarca`. A mudança moveu 88 marcas
-   das 923 — 85 de T3 para T4 e 3 de T2 para T1.
+   Réguas de 22/10/2026, as segundas do dia: de manhã a Laura pediu T1 acima
+   de 800 mil e T3 de 100 a 200 mil; à tarde subiu tudo para esta escala.
+   Mexer aqui NÃO mexe em quem foi fixado à mão: o fixo tem precedência
+   sobre o cálculo em `tierDaMarca`, e é por isso que o quadro pode mostrar
+   uma marca de R$ 900 mil em T1 — alguém a colocou lá.
 
    pela MÉDIA dos dois últimos meses FECHADOS — hoje, agosto e setembro. O mês
    corrente fica de fora de propósito: no dia 3 ele teria três dias de venda e
@@ -1906,10 +1905,10 @@ const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
    4:00. Casa por domínio e, na falta dele, pelo nome.
    ========================================================================= */
 const FAIXAS_TIER = [
-  {t:'T1', min:800000, l:'acima de R$ 800 mil/mês'},
-  {t:'T2', min:200000, l:'R$ 200 a 800 mil/mês'},
-  {t:'T3', min:100000, l:'R$ 100 a 200 mil/mês'},
-  {t:'T4', min:0,      l:'abaixo de R$ 100 mil/mês'},
+  {t:'T1', min:5000000, l:'acima de R$ 5 mi/mês'},
+  {t:'T2', min:1000000, l:'R$ 1 a 5 mi/mês'},
+  {t:'T3', min:500000,  l:'R$ 500 mil a R$ 1 mi/mês'},
+  {t:'T4', min:0,       l:'abaixo de R$ 500 mil/mês'},
 ];
 const TIERS = FAIXAS_TIER.map(f=>f.t);
 
@@ -5036,7 +5035,7 @@ const CARDS_VISAO = [
   {
     id:'quadroTiers', titulo:'Tiers da carteira', cor:'#1F4FD8',
     capa:'As marcas separadas por porte, para arrastar de um tier para outro',
-    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 800 mil/mês, <b>T2</b> de R$ 200 a 800 mil, <b>T3</b> de R$ 100 a 200 mil, <b>T4</b> abaixo de R$ 100 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
+    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 mi/mês, <b>T2</b> de R$ 1 a 5 mi, <b>T3</b> de R$ 500 mil a R$ 1 mi, <b>T4</b> abaixo de R$ 500 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
       + '<b>Este card não obedece ao filtro de período</b> da aba: o tier é sempre a média dos dois meses fechados, senão "esta marca é T2" mudaria de resposta conforme a janela escolhida. O <b>GMV no cabeçalho de cada coluna</b> é a soma dessas médias — é a mesma conta que classifica, não o GMV do período de cima. '
       + '<b>Arrastar uma marca para outra coluna fixa o tier dela</b>, e a partir daí o cálculo automático não mexe mais nessa marca: é o caso da que é pequena dentro da Vesti e grande fora. A marca fixada fica com uma marca dourada; arrastá-la de volta para a coluna onde ela já está desfaz a fixação. <b>O que você arrasta vale para o time inteiro</b> — é salvo no servidor na hora, não só neste navegador.',
     semTabela:true,
@@ -5971,7 +5970,7 @@ const TABS = [
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
     titulo:'Tabela geral dos clientes',
     desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>GMV</b> é o mesmo em todas as abas (15/10/2026): a régua do relatório <i>GMV - Métricas 2025</i> do Power BI — pedidos feitos, pagos ou não, <b>sem os cancelados, os não fechados e os de Link de cobrança</b>, e <b>sem o teto de R$ 50 mil</b> por pedido. A coluna <b>Do qual pago</b> ao lado mostra quanto virou dinheiro (só pedido pago, com teto) — é apoio, não o GMV. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
-      + '<b>Tier</b> (13/10/2026) é o <b>porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 800 mil/mês, <b>T2</b> de R$ 200 a 800 mil, <b>T3</b> de R$ 100 a 200 mil, <b>T4</b> abaixo de R$ 100 mil. Também <b>não depende do período do filtro</b>: "esta marca é T2" não pode mudar de resposta conforme a janela escolhida. <b>Uma marca pode ser fixada num tier à mão</b> — para o caso da que é pequena dentro da Vesti e grande fora dela —, e aí o cálculo automático nunca mais mexe nela: a linha mostra "fixado à mão" com o motivo, e o filtro <b>Tier</b> tem a opção <b>Fixado à mão</b> para listar todas. '
+      + '<b>Tier</b> (13/10/2026) é o <b>porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 mi/mês, <b>T2</b> de R$ 1 a 5 mi, <b>T3</b> de R$ 500 mil a R$ 1 mi, <b>T4</b> abaixo de R$ 500 mil. Também <b>não depende do período do filtro</b>: "esta marca é T2" não pode mudar de resposta conforme a janela escolhida. <b>Uma marca pode ser fixada num tier à mão</b> — para o caso da que é pequena dentro da Vesti e grande fora dela —, e aí o cálculo automático nunca mais mexe nela: a linha mostra "fixado à mão" com o motivo, e o filtro <b>Tier</b> tem a opção <b>Fixado à mão</b> para listar todas. '
       + '<b>Health score</b> (régua da Laura, 22/09/2026) é uma nota de 0 a 100 da saúde da marca, <b>independente do período do filtro</b>: ela olha sempre os <b>últimos 30 dias corridos</b>. '
       + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
       + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
@@ -7397,7 +7396,7 @@ function agregarSerie(t, janela){
    não está aqui aparece com o rótulo e sem linha de explicação — melhor do que
    inventar descrição para "CEP". */
 const AJUDA_COL = {
-  tier:'<b>Porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — o mês corrente fica de fora, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 800 mil por mês, <b>T2</b> de R$ 200 a 800 mil, <b>T3</b> de R$ 100 a 200 mil, <b>T4</b> abaixo de R$ 100 mil. O GMV é o mesmo da coluna ao lado (todo pedido criado, sem teto — a régua do relatório do Power BI). <b>Dá para fixar uma marca num tier à mão</b>, e aí o cálculo automático nunca mais mexe nela: é o caso da marca que é pequena dentro da Vesti e grande fora. A linha fixada mostra "fixado à mão" embaixo do chip, com o motivo; o filtro <b>Tier → Fixado à mão</b> lista todas elas.',
+  tier:'<b>Porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — o mês corrente fica de fora, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 milhões por mês, <b>T2</b> de R$ 1 a 5 milhões, <b>T3</b> de R$ 500 mil a R$ 1 milhão, <b>T4</b> abaixo de R$ 500 mil. O GMV é o mesmo da coluna ao lado (todo pedido criado, sem teto — a régua do relatório do Power BI). <b>Dá para fixar uma marca num tier à mão</b>, e aí o cálculo automático nunca mais mexe nela: é o caso da marca que é pequena dentro da Vesti e grande fora. A linha fixada mostra "fixado à mão" embaixo do chip, com o motivo; o filtro <b>Tier → Fixado à mão</b> lista todas elas.',
   cliente:'Nome da marca como está no cadastro da plataforma.',
   nome:'Nome da marca como está no cadastro da plataforma.',
   status:'Ativa é quem teve pedido nos últimos 45 dias; o resto fica inativa.',
@@ -8798,7 +8797,7 @@ function celula(r,c){
            + fmt.mes(mesesFechadosDoTier()[0]+'-01') + ' e ' + fmt.mes(mesesFechadosDoTier()[1]+'-01'))
         : `Média do GMV de ${fmt.mes(m1+'-01')} e ${fmt.mes(m2+'-01')} (os dois últimos meses fechados): `
           + fmt.money(t.media||0)
-          + '\n\nT1 acima de R$ 800 mil · T2 de R$ 200 a 800 mil · T3 de R$ 100 a 200 mil · T4 abaixo de R$ 100 mil'
+          + '\n\nT1 acima de R$ 5 mi · T2 de R$ 1 a 5 mi · T3 de R$ 500 mil a 1 mi · T4 abaixo de R$ 500 mil'
           + '\n\nArraste o chip para fixar a marca em outro tier.';
       const chip = td.querySelector('.tier-arrasta');
       chip.addEventListener('dragstart', e=>{
