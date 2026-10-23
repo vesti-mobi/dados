@@ -1,21 +1,6 @@
 {
-  "geradoEm": "2026-10-22T21:47:21.806099+00:00",
+  "geradoEm": "2026-10-23T15:41:17.116117+00:00",
   "dominios": {
-    "928822": {
-      "qtFaturas": 1,
-      "valorTotal": 1577.0,
-      "proximoVencimento": "2026-11-04",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/fb0bad31-bea5-4a10-b141-2497556c3ceb-bae5",
-      "proximoValor": 1577.0,
-      "faturas": [
-        {
-          "venc": "2026-11-04",
-          "valor": 1577.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/fb0bad31-bea5-4a10-b141-2497556c3ceb-bae5"
-        }
-      ]
-    },
     "1924064": {
       "qtFaturas": 1,
       "valorTotal": 1149.0,
@@ -76,6 +61,153 @@
         }
       ]
     },
+    "2071336": {
+      "qtFaturas": 2,
+      "valorTotal": 3800.0,
+      "proximoVencimento": "2026-10-25",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/66e55251-a2ea-4dcd-a53b-2a3e0553cbe0-9f4d",
+      "proximoValor": 1100.0,
+      "faturas": [
+        {
+          "venc": "2026-10-25",
+          "valor": 1100.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/66e55251-a2ea-4dcd-a53b-2a3e0553cbe0-9f4d"
+        },
+        {
+          "venc": "2026-10-28",
+          "valor": 2700.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/7d3685ac-4f08-4eec-87bc-8c8f55aa1d9b-c920"
+        }
+      ]
+    },
+    "1241282": {
+      "qtFaturas": 2,
+      "valorTotal": 2009.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/cde2af34-b7d5-41ab-a556-d91290af5f05-4cd4",
+      "proximoValor": 1100.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1100.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/cde2af34-b7d5-41ab-a556-d91290af5f05-4cd4"
+        },
+        {
+          "venc": "2026-11-06",
+          "valor": 909.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/6fffe3a6-a2b0-45d4-a325-a1310780a68d-6936"
+        }
+      ]
+    },
+    "1191066": {
+      "qtFaturas": 1,
+      "valorTotal": 724.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f",
+      "proximoValor": 724.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 724.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f"
+        }
+      ]
+    },
+    "8": {
+      "qtFaturas": 1,
+      "valorTotal": 1149.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/3e555926-e28e-47ee-8079-7dc46933db49-2c39",
+      "proximoValor": 1149.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1149.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/3e555926-e28e-47ee-8079-7dc46933db49-2c39"
+        }
+      ]
+    },
+    "47634": {
+      "qtFaturas": 1,
+      "valorTotal": 1100.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/1fc845c7-d4d1-41da-8886-fbe890a505f0-2c41",
+      "proximoValor": 1100.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1100.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/1fc845c7-d4d1-41da-8886-fbe890a505f0-2c41"
+        }
+      ]
+    },
+    "442162": {
+      "qtFaturas": 1,
+      "valorTotal": 1246.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/29b0e0c5-5d91-464d-a35a-9cf8c0c53517-31a3",
+      "proximoValor": 1246.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1246.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/29b0e0c5-5d91-464d-a35a-9cf8c0c53517-31a3"
+        }
+      ]
+    },
+    "1240668": {
+      "qtFaturas": 1,
+      "valorTotal": 1184.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/37bf9fc6-089b-4065-92f5-50b22e39e667-784f",
+      "proximoValor": 1184.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1184.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/37bf9fc6-089b-4065-92f5-50b22e39e667-784f"
+        }
+      ]
+    },
+    "65652": {
+      "qtFaturas": 1,
+      "valorTotal": 1149.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/5052861a-819d-43d0-8eef-dc790c500679-8c5c",
+      "proximoValor": 1149.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1149.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/5052861a-819d-43d0-8eef-dc790c500679-8c5c"
+        }
+      ]
+    },
+    "54397": {
+      "qtFaturas": 1,
+      "valorTotal": 1232.0,
+      "proximoVencimento": "2026-11-06",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/279f2f29-1ec6-499a-ad6f-96a8fc5fe66c-ec50",
+      "proximoValor": 1232.0,
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "valor": 1232.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/279f2f29-1ec6-499a-ad6f-96a8fc5fe66c-ec50"
+        }
+      ]
+    },
     "15": {
       "qtFaturas": 1,
       "valorTotal": 2700.0,
@@ -103,21 +235,6 @@
           "valor": 1299.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/2279d6c4-a6d4-4efa-b6f1-dea6edd79e97-824a"
-        }
-      ]
-    },
-    "1574253": {
-      "qtFaturas": 1,
-      "valorTotal": 447.0,
-      "proximoVencimento": "2026-10-25",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/20280743-0ced-4b34-9ee3-db17e290d2fe-1800",
-      "proximoValor": 447.0,
-      "faturas": [
-        {
-          "venc": "2026-10-25",
-          "valor": 447.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/20280743-0ced-4b34-9ee3-db17e290d2fe-1800"
         }
       ]
     },
@@ -151,18 +268,18 @@
         }
       ]
     },
-    "2159823": {
+    "1942327": {
       "qtFaturas": 1,
       "valorTotal": 429.0,
-      "proximoVencimento": "2026-10-25",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/d42a59f5-941b-4ca6-ba04-fd77bf72ab17-47d7",
+      "proximoVencimento": "2026-10-27",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/0d9f7380-6e24-403d-b06f-49411ca4a4ed-d5d8",
       "proximoValor": 429.0,
       "faturas": [
         {
-          "venc": "2026-10-25",
+          "venc": "2026-10-27",
           "valor": 429.0,
           "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/d42a59f5-941b-4ca6-ba04-fd77bf72ab17-47d7"
+          "link": "https://checkout.iugu.com/invoices/0d9f7380-6e24-403d-b06f-49411ca4a4ed-d5d8"
         }
       ]
     },
@@ -178,21 +295,6 @@
           "valor": 1299.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/e8e946a6-1daa-4b2d-80d7-a055c10f4346-f47e"
-        }
-      ]
-    },
-    "828876": {
-      "qtFaturas": 1,
-      "valorTotal": 1573.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/9850cf21-ce5a-48b0-bec5-5519fde9e4ec-c089",
-      "proximoValor": 1573.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1573.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/9850cf21-ce5a-48b0-bec5-5519fde9e4ec-c089"
         }
       ]
     },
@@ -277,36 +379,6 @@
         }
       ]
     },
-    "548863": {
-      "qtFaturas": 1,
-      "valorTotal": 740.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/8f695df8-f3aa-4a3e-a9bb-cc7430f5f100-454e",
-      "proximoValor": 740.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 740.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/8f695df8-f3aa-4a3e-a9bb-cc7430f5f100-454e"
-        }
-      ]
-    },
-    "1040413": {
-      "qtFaturas": 1,
-      "valorTotal": 499.0,
-      "proximoVencimento": "2026-10-23",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/325ef71d-942e-4a2f-9f37-ecdca24d1964-492b",
-      "proximoValor": 499.0,
-      "faturas": [
-        {
-          "venc": "2026-10-23",
-          "valor": 499.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/325ef71d-942e-4a2f-9f37-ecdca24d1964-492b"
-        }
-      ]
-    },
     "34354": {
       "qtFaturas": 1,
       "valorTotal": 2590.0,
@@ -319,21 +391,6 @@
           "valor": 2590.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/a5147bd4-27af-4e67-9bff-acb9759cc449-8ce1"
-        }
-      ]
-    },
-    "141380": {
-      "qtFaturas": 1,
-      "valorTotal": 209.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/f47f387e-5803-49c6-8fa5-3b9a977df5d2-ed95",
-      "proximoValor": 209.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 209.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/f47f387e-5803-49c6-8fa5-3b9a977df5d2-ed95"
         }
       ]
     },
@@ -478,21 +535,6 @@
         }
       ]
     },
-    "1035659": {
-      "qtFaturas": 1,
-      "valorTotal": 793.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/03924960-73ef-4470-ad16-121019805831-3cd4",
-      "proximoValor": 793.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 793.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/03924960-73ef-4470-ad16-121019805831-3cd4"
-        }
-      ]
-    },
     "323816": {
       "qtFaturas": 1,
       "valorTotal": 840.0,
@@ -580,21 +622,6 @@
         }
       ]
     },
-    "129809": {
-      "qtFaturas": 1,
-      "valorTotal": 442.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/4ece5a1f-b591-4069-ac49-7e76a3e69e5e-b719",
-      "proximoValor": 442.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 442.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/4ece5a1f-b591-4069-ac49-7e76a3e69e5e-b719"
-        }
-      ]
-    },
     "1210327": {
       "qtFaturas": 1,
       "valorTotal": 724.0,
@@ -634,21 +661,6 @@
           "valor": 1160.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/11f4f279-d158-424e-8e0a-6b8ffaf32143-6a9c"
-        }
-      ]
-    },
-    "2184259": {
-      "qtFaturas": 1,
-      "valorTotal": 499.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/8bdfd86f-3e81-46a3-9412-8a46329c3873-332f",
-      "proximoValor": 499.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 499.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/8bdfd86f-3e81-46a3-9412-8a46329c3873-332f"
         }
       ]
     },
@@ -697,21 +709,6 @@
         }
       ]
     },
-    "155660": {
-      "qtFaturas": 1,
-      "valorTotal": 990.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/83ed2db4-581a-43ff-9178-a116b28eefe6-e7e9",
-      "proximoValor": 990.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 990.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/83ed2db4-581a-43ff-9178-a116b28eefe6-e7e9"
-        }
-      ]
-    },
     "2186204": {
       "qtFaturas": 1,
       "valorTotal": 1299.0,
@@ -754,21 +751,6 @@
           "valor": 1100.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/3849ab35-4cc0-40e0-b5fd-83a70ff26ad4-3c3d"
-        }
-      ]
-    },
-    "182668": {
-      "qtFaturas": 1,
-      "valorTotal": 317.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/098efbd0-5b4a-458e-b7ca-8bd1bd7d9e0b-55dc",
-      "proximoValor": 317.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 317.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/098efbd0-5b4a-458e-b7ca-8bd1bd7d9e0b-55dc"
         }
       ]
     },
@@ -838,15 +820,15 @@
         },
         {
           "venc": "2026-10-28",
-          "valor": 365.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/4e43c9ff-9bd2-4010-bcca-1a9fbcc74b00-ec16"
-        },
-        {
-          "venc": "2026-10-28",
           "valor": 752.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/ed4a0d48-ee8c-45e9-871a-0081a5fcaf37-6e09"
+        },
+        {
+          "venc": "2026-10-28",
+          "valor": 365.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/4e43c9ff-9bd2-4010-bcca-1a9fbcc74b00-ec16"
         },
         {
           "venc": "2026-11-02",
@@ -913,42 +895,6 @@
           "valor": 793.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/ad6fcbea-fad1-469d-bfdc-df0285f6a887-ec68"
-        }
-      ]
-    },
-    "1524895": {
-      "qtFaturas": 1,
-      "valorTotal": 1172.0,
-      "proximoVencimento": "2026-10-28",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/c25b56f3-bc46-4a36-afe4-c4baf9beea74-b32d",
-      "proximoValor": 1172.0,
-      "faturas": [
-        {
-          "venc": "2026-10-28",
-          "valor": 1172.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/c25b56f3-bc46-4a36-afe4-c4baf9beea74-b32d"
-        }
-      ]
-    },
-    "2128227": {
-      "qtFaturas": 2,
-      "valorTotal": 2100.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/78552e21-2699-44be-87a8-37732631ed01-e6c2",
-      "proximoValor": 1000.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1000.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/78552e21-2699-44be-87a8-37732631ed01-e6c2"
-        },
-        {
-          "venc": "2026-10-23",
-          "valor": 1100.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/6c7df493-42d0-4198-9c08-e1b10e3607f2-aecb"
         }
       ]
     },
@@ -1105,6 +1051,21 @@
         }
       ]
     },
+    "928822": {
+      "qtFaturas": 1,
+      "valorTotal": 1577.0,
+      "proximoVencimento": "2026-11-04",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/fb0bad31-bea5-4a10-b141-2497556c3ceb-bae5",
+      "proximoValor": 1577.0,
+      "faturas": [
+        {
+          "venc": "2026-11-04",
+          "valor": 1577.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/fb0bad31-bea5-4a10-b141-2497556c3ceb-bae5"
+        }
+      ]
+    },
     "125361": {
       "qtFaturas": 1,
       "valorTotal": 400.0,
@@ -1147,57 +1108,6 @@
           "valor": 447.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/e09474fb-716b-45d3-83e5-260118df5f07-0077"
-        }
-      ]
-    },
-    "1409936": {
-      "qtFaturas": 1,
-      "valorTotal": 333.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/c7ca83a3-2fc0-4468-8ef3-94cfac4967eb-b860",
-      "proximoValor": 333.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 333.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/c7ca83a3-2fc0-4468-8ef3-94cfac4967eb-b860"
-        }
-      ]
-    },
-    "33995": {
-      "qtFaturas": 1,
-      "valorTotal": 1149.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/5172ad90-353a-46b8-a50b-f059f42dc304-857e",
-      "proximoValor": 1149.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1149.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/5172ad90-353a-46b8-a50b-f059f42dc304-857e"
-        }
-      ]
-    },
-    "2071336": {
-      "qtFaturas": 2,
-      "valorTotal": 4210.0,
-      "proximoVencimento": "2026-10-25",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/66e55251-a2ea-4dcd-a53b-2a3e0553cbe0-9f4d",
-      "proximoValor": 1100.0,
-      "faturas": [
-        {
-          "venc": "2026-10-25",
-          "valor": 1100.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/66e55251-a2ea-4dcd-a53b-2a3e0553cbe0-9f4d"
-        },
-        {
-          "venc": "2026-10-28",
-          "valor": 3110.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/ae624eeb-fe2a-4f62-ab63-48143d9e772b-ba8f"
         }
       ]
     },
@@ -1291,6 +1201,21 @@
         }
       ]
     },
+    "2159823": {
+      "qtFaturas": 1,
+      "valorTotal": 429.0,
+      "proximoVencimento": "2026-10-25",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/d42a59f5-941b-4ca6-ba04-fd77bf72ab17-47d7",
+      "proximoValor": 429.0,
+      "faturas": [
+        {
+          "venc": "2026-10-25",
+          "valor": 429.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/d42a59f5-941b-4ca6-ba04-fd77bf72ab17-47d7"
+        }
+      ]
+    },
     "1237877": {
       "qtFaturas": 1,
       "valorTotal": 1449.0,
@@ -1366,6 +1291,21 @@
         }
       ]
     },
+    "2128227": {
+      "qtFaturas": 1,
+      "valorTotal": 1100.0,
+      "proximoVencimento": "2026-10-23",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/6c7df493-42d0-4198-9c08-e1b10e3607f2-aecb",
+      "proximoValor": 1100.0,
+      "faturas": [
+        {
+          "venc": "2026-10-23",
+          "valor": 1100.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/6c7df493-42d0-4198-9c08-e1b10e3607f2-aecb"
+        }
+      ]
+    },
     "2165839": {
       "qtFaturas": 4,
       "valorTotal": 4700.0,
@@ -1396,21 +1336,6 @@
           "valor": 1200.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/842877fb-9d38-43ed-adf0-a2badc85a731-25c4"
-        }
-      ]
-    },
-    "40672": {
-      "qtFaturas": 1,
-      "valorTotal": 444.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/984e2392-0133-4727-b931-6033c22f0841-5af7",
-      "proximoValor": 444.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 444.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/984e2392-0133-4727-b931-6033c22f0841-5af7"
         }
       ]
     },
@@ -1519,21 +1444,6 @@
         }
       ]
     },
-    "1431828": {
-      "qtFaturas": 1,
-      "valorTotal": 868.0,
-      "proximoVencimento": "2026-10-25",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/1be7aabc-174d-40da-9918-a0c73446cf92-577a",
-      "proximoValor": 868.0,
-      "faturas": [
-        {
-          "venc": "2026-10-25",
-          "valor": 868.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/1be7aabc-174d-40da-9918-a0c73446cf92-577a"
-        }
-      ]
-    },
     "567903": {
       "qtFaturas": 1,
       "valorTotal": 1791.0,
@@ -1564,21 +1474,6 @@
         }
       ]
     },
-    "757564": {
-      "qtFaturas": 1,
-      "valorTotal": 273.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/e1f43997-b08b-4981-8348-e4d60c8cc977-9c57",
-      "proximoValor": 273.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 273.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/e1f43997-b08b-4981-8348-e4d60c8cc977-9c57"
-        }
-      ]
-    },
     "63957": {
       "qtFaturas": 1,
       "valorTotal": 900.0,
@@ -1606,6 +1501,21 @@
           "valor": 1100.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/3c3b6abc-17d7-443f-a88e-aab0a2280a69-6001"
+        }
+      ]
+    },
+    "1574253": {
+      "qtFaturas": 1,
+      "valorTotal": 447.0,
+      "proximoVencimento": "2026-10-25",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/20280743-0ced-4b34-9ee3-db17e290d2fe-1800",
+      "proximoValor": 447.0,
+      "faturas": [
+        {
+          "venc": "2026-10-25",
+          "valor": 447.0,
+          "status": "pending",
+          "link": "https://checkout.iugu.com/invoices/20280743-0ced-4b34-9ee3-db17e290d2fe-1800"
         }
       ]
     },
@@ -1681,21 +1591,6 @@
           "valor": 200.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/278762ba-49d1-4bdb-bbb5-73708473db41-d189"
-        }
-      ]
-    },
-    "1228706": {
-      "qtFaturas": 1,
-      "valorTotal": 929.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/e3c36f51-dc1d-4a80-a8a4-132a5b690ef8-4ca2",
-      "proximoValor": 929.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 929.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/e3c36f51-dc1d-4a80-a8a4-132a5b690ef8-4ca2"
         }
       ]
     },
@@ -1897,21 +1792,6 @@
         }
       ]
     },
-    "1794660": {
-      "qtFaturas": 1,
-      "valorTotal": 1648.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/6552890a-acb8-4047-8f6f-0ecedfad972f-35cc",
-      "proximoValor": 1648.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1648.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/6552890a-acb8-4047-8f6f-0ecedfad972f-35cc"
-        }
-      ]
-    },
     "460552": {
       "qtFaturas": 1,
       "valorTotal": 1100.0,
@@ -1972,36 +1852,6 @@
         }
       ]
     },
-    "1178586": {
-      "qtFaturas": 1,
-      "valorTotal": 710.0,
-      "proximoVencimento": "2026-10-28",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/4f3dd221-a648-4fa7-b909-4fa071f2e3cc-5939",
-      "proximoValor": 710.0,
-      "faturas": [
-        {
-          "venc": "2026-10-28",
-          "valor": 710.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/4f3dd221-a648-4fa7-b909-4fa071f2e3cc-5939"
-        }
-      ]
-    },
-    "878111": {
-      "qtFaturas": 1,
-      "valorTotal": 759.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/873319bb-e31a-4baf-beb2-82f61265def0-d7ee",
-      "proximoValor": 759.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 759.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/873319bb-e31a-4baf-beb2-82f61265def0-d7ee"
-        }
-      ]
-    },
     "1024327": {
       "qtFaturas": 1,
       "valorTotal": 600.0,
@@ -2044,21 +1894,6 @@
           "valor": 600.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/841fd797-f369-4fc1-9f94-feda148d5d4b-aeeb"
-        }
-      ]
-    },
-    "968033": {
-      "qtFaturas": 1,
-      "valorTotal": 1510.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/f7e8799d-9b5c-489f-bb5c-16c278ec13da-7d2b",
-      "proximoValor": 1510.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1510.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/f7e8799d-9b5c-489f-bb5c-16c278ec13da-7d2b"
         }
       ]
     },
@@ -2137,21 +1972,6 @@
         }
       ]
     },
-    "501774": {
-      "qtFaturas": 1,
-      "valorTotal": 273.33,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/e06c5b11-2275-4ff9-b780-5cff0e703932-3755",
-      "proximoValor": 273.33,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 273.33,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/e06c5b11-2275-4ff9-b780-5cff0e703932-3755"
-        }
-      ]
-    },
     "10479": {
       "qtFaturas": 1,
       "valorTotal": 745.0,
@@ -2183,18 +2003,12 @@
       ]
     },
     "1805647": {
-      "qtFaturas": 2,
-      "valorTotal": 4361.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/6aee6a90-3eb3-42fa-b3eb-e047d12c8c53-ecf9",
-      "proximoValor": 900.0,
+      "qtFaturas": 1,
+      "valorTotal": 3461.0,
+      "proximoVencimento": "2026-10-28",
+      "linkProximaFatura": "https://checkout.iugu.com/invoices/8d26257d-3ebe-4148-a139-a1bfe148aa23-6793",
+      "proximoValor": 3461.0,
       "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 900.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/6aee6a90-3eb3-42fa-b3eb-e047d12c8c53-ecf9"
-        },
         {
           "venc": "2026-10-28",
           "valor": 3461.0,
@@ -2236,21 +2050,6 @@
           "valor": 650.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/a6dc5e07-50ef-42d8-881b-41416ecef7cc-40fa"
-        }
-      ]
-    },
-    "619424": {
-      "qtFaturas": 1,
-      "valorTotal": 697.17,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/0b9be575-0c9c-4333-88ac-79cfdf6a9e7d-ad2a",
-      "proximoValor": 697.17,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 697.17,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/0b9be575-0c9c-4333-88ac-79cfdf6a9e7d-ad2a"
         }
       ]
     },
@@ -2326,21 +2125,6 @@
           "valor": 285.0,
           "status": "pending",
           "link": "https://checkout.iugu.com/invoices/5538e6a1-919c-4fb0-b61e-51c81b70d29a-c0ac"
-        }
-      ]
-    },
-    "1541278": {
-      "qtFaturas": 1,
-      "valorTotal": 1100.0,
-      "proximoVencimento": "2026-10-22",
-      "linkProximaFatura": "https://checkout.iugu.com/invoices/d9723806-1486-41ef-ab6f-e96cc73bcf71-24ab",
-      "proximoValor": 1100.0,
-      "faturas": [
-        {
-          "venc": "2026-10-22",
-          "valor": 1100.0,
-          "status": "pending",
-          "link": "https://checkout.iugu.com/invoices/d9723806-1486-41ef-ab6f-e96cc73bcf71-24ab"
         }
       ]
     },
