@@ -2470,6 +2470,68 @@ const chaveNomeMarca = s => String(s||'').normalize('NFD').replace(/[\u0300-\u03
   .toLowerCase().replace(/\s+/g,' ').trim();
 const CLIENTE_POR_NOME = (()=>{ const m={};
   DATA.clientes.forEach(c=>{ const k = chaveNomeMarca(c.nome); if(k && !m[k]) m[k]=c }); return m })();
+/* --- reunião interna × reunião com cliente (26/10/2026) -------------------
+   Pedido da Laura: "em visão geral - reuniões, tem várias sem empresa e sem
+   assunto da Luana" e, depois de ver o diagnóstico, "tirar todas as
+   internas". Em outubro ela tinha 22 reuniões e 17 eram daily, 1:1 e
+   alinhamento de time — e como reunião vale 1 ponto na pontuação, isso ia
+   direto para o placar dela.
+
+   A régua: reunião SEM empresa associada no HubSpot cujo título também não
+   nomeia nenhuma marca do cadastro é INTERNA. O título serve para resgatar
+   as que são com cliente e só perderam a associação — "Oráculo Benesh",
+   "Chargeback Black Jeans", "Visita Dagomar - Upper Concept". Só vale nome
+   de marca com cinco letras ou mais, e inteiro: "Anne" solto, dentro de
+   "Anne Blanc", casaria com meio mundo.
+
+   "Interno" escrito no título vence o casamento. As doze "Charisma interno"
+   são reuniões SOBRE a marca, não com ela — sem o desempate elas voltariam
+   para a conta pela porta dos fundos.
+
+   Esta régua existe DUAS VEZES: aqui e em `fetch_dados.js`, que marca o
+   campo `interna` e tira essas reuniões da bonificação. O painel prefere o
+   campo quando ele vem; enquanto o dados.js for anterior a 26/10/2026, ele
+   classifica sozinho. Mexeu numa, mexa na outra. */
+const chaveTitulo = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+/* Do nome mais longo para o mais curto: "Charisma Varejo" tem que ganhar de
+   "Charisma" quando os dois cabem no título. */
+const MARCAS_DO_TITULO = (()=>{
+  const vistos = new Set(), out = [];
+  DATA.clientes.forEach(c=>{
+    const k = chaveTitulo(c.nome);
+    if(!k || k.replace(/ /g,'').length < 5 || vistos.has(k)) return;
+    vistos.add(k); out.push({nome:c.nome, dominio:c.dominio, k});
+  });
+  return out.sort((a,b)=>b.k.length-a.k.length);
+})();
+function marcaNoTitulo(titulo){
+  const t = ' ' + chaveTitulo(titulo) + ' ';
+  return MARCAS_DO_TITULO.find(m=> t.includes(' ' + m.k + ' ')) || null;
+}
+function ehReuniaoInterna(r){
+  if(r.interna != null) return !!r.interna;
+  if(r.cliente && !/^\(sem empresa\)$/i.test(r.cliente)) return false;
+  if(/\bintern[oa]s?\b/i.test(r.reuniao||'')) return true;
+  return !marcaNoTitulo(r.reuniao);
+}
+/* As internas saem de `DATA.reunioes` inteiras, e não de cada card: um
+   consumidor esquecido voltaria a contá-las. Ficam aqui ao lado para o card
+   poder dizer quantas foram deixadas de fora. */
+const REUNIOES_INTERNAS = [];
+(()=>{
+  const comCliente = [];
+  (DATA.reunioes||[]).forEach(r=>{
+    if(ehReuniaoInterna(r)){ REUNIOES_INTERNAS.push(r); return }
+    if(!r.cliente || /^\(sem empresa\)$/i.test(r.cliente)){
+      const m = marcaNoTitulo(r.reuniao);
+      if(m){ r.cliente = m.nome; r.dominio = r.dominio || m.dominio; r.porTitulo = true }
+    }
+    comCliente.push(r);
+  });
+  DATA.reunioes = comCliente;
+})();
+
 
 /* --- o recorte de CS das abas de card -------------------------------------
    Toda linha passa por aqui. O universo depende da aba: a <b>Gerencial</b>
@@ -3101,10 +3163,12 @@ const CARDS_GERENCIAL = [
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(r=>r.resultado==='Fechou negócio').length} fecharam negócio · ${fmt.moneyCompact(soma(rows.filter(r=>r.resultado==='Fechou negócio'),'valor'))}`
                      : 'nenhuma reunião no mês'}),
-    kpis:rows=>{ const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
+    kpis:(rows,ctx)=>{ const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
       const marcas = new Set(rows.map(r=>r.nome));
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:'no mês, sem contar agendadas'},
+        {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(janelaDoMes(ctx.m))),
+         s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
         {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
         {l:'Valor fechado', v:fmt.moneyCompact(soma(fechou,'valor')), s:'negócios creditados a essas reuniões'},
         {l:'Marcas atendidas', v:fmt.int(marcas.size), s:'empresas distintas no mês'},
@@ -5053,7 +5117,7 @@ const CARDS_VISAO = [
   {
     id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
     capa:'Reuniões já realizadas dentro do período',
-    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Desde 24/09/2026 entram as de <b>qualquer dono</b>, não só as do time de CS: reunião marcada por vendas ou por parceiro também conta. Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
+    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Desde 24/09/2026 entram as de <b>qualquer dono</b>, não só as do time de CS: reunião marcada por vendas ou por parceiro também conta. Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento — por isso um negócio fechado em outubro pode aparecer numa reunião de maio, e sumir do recorte quando o filtro não alcança maio. <b>Reunião interna não entra</b> desde 26/10/2026, a pedido da Laura: daily, 1:1 e alinhamento de time não são reunião com cliente e não valem ponto. A régua é não ter empresa associada no HubSpot <i>e</i> o título não nomear nenhuma marca do cadastro — o título resgata as que são com cliente e só perderam a associação ("Oráculo Benesh", "Chargeback Black Jeans"), e "interno" escrito nele vence o resgate. Das 108 sem empresa, 15 voltaram com o nome da marca e 93 ficaram de fora; o KPI <i>Internas fora da conta</i> diz quantas foram no recorte.',
     campoData:'data',
     linhas:ctx=>reunioesNoPeriodo(ctx.p).map(r=>({nome:r.cliente||'(sem empresa)',
       cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS', data:r.data, resultado:r.resultado,
@@ -5066,6 +5130,9 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        /* O que o filtro de internas tirou, dito em voz alta (26/10/2026). */
+        {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(ctx.p)),
+         s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
         {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
         {l:'Valor fechado', v:fmt.moneyCompact(soma(fechou,'valor')), s:'negócios creditados a essas reuniões'},
         {l:'Marcas atendidas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas distintas'},
@@ -5080,7 +5147,7 @@ const CARDS_VISAO = [
   {
     id:'negociosVg', titulo:'Negócios', cor:'#4048B8',
     capa:'Cross-sell e upgrade criados no período — o que já foi ganho e o que ainda está em negociação',
-    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele — quem não tem mensalidade anterior fica em branco e é contado à parte.',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade anterior</b> — marca cuja receita não passa pelo Iugu, como a Boise, com 293 dias de série e nenhum centavo de mensalidade — não tem de onde tirar a diferença e entra com ganho zero aqui; o valor cheio desses negócios aparece no KPI <i>Upgrades sem base</i>, para o dinheiro não sumir da vista (26/10/2026).',
     campoData:'data',
     linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
                  ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
@@ -5119,6 +5186,18 @@ const CARDS_VISAO = [
         {l:'Cross-sell ganho', v:fmt.moneyCompact(soma(cross,'valor')), s:fmt.int(cross.length)+' negócios de produto novo'},
         {l:'Upgrade: ganho por mês', v:fmt.moneyCompact(soma(up,'efetivo')),
          s:fmt.int(up.length)+' upgrades'+(semBase?' · '+fmt.int(semBase)+' sem base anterior':'')+' · é a diferença, não o plano cheio'},
+        /* O dinheiro que a régua da diferença não alcança, dito à parte
+           (26/10/2026). A Laura viu o upgrade da Boise na tabela por R$ 1.299
+           e o KPI de ganho ignorando ele: o Iugu não tem mensalidade nenhuma
+           da marca — 293 dias de série, tudo zero —, então não há de onde
+           tirar a diferença e o efetivo fica em zero. Somar o plano cheio
+           junto com as diferenças misturaria duas réguas no mesmo número, e
+           a régua da diferença é da Laura. Então o valor aparece aqui, do
+           lado, pelo que o negócio vale no HubSpot. */
+        {l:'Upgrades sem base', v:fmt.moneyCompact(soma(gan.filter(r=>r.semBase),'valor')),
+         s: semBase
+            ? fmt.int(semBase)+' negócios pelo valor cheio · fora do ganho acima, que é só diferença'
+            : 'todo upgrade do período tem mensalidade anterior no Iugu'},
       ]; },
     metricas:[
       {k:'valorGanho', l:'Ganho (upgrade pela diferença)', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Ganho'),'efetivo')},
@@ -5735,6 +5814,13 @@ function novasVendasNoPeriodo(p){
    pipelines, sempre com esse nome). Campo de data: `fechadoEm`
    (closedate/hs_lastmodifieddate) — aproximado, não é a data exata da troca
    de estágio. */
+/* Quantas reuniões internas o recorte deixou de fora — a prestação de contas
+   do filtro. Sem isso a contagem simplesmente encolhe e ninguém sabe por quê. */
+function internasNoPeriodo(p, quem){
+  const cs = quem || (x => csDoFoco().has(normalizarCs(x)||'Sem CS'));
+  return REUNIOES_INTERNAS.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim
+    && cs(r.cs)).length;
+}
 function reunioesNoPeriodo(p){
   return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && r.resultado!=='Agendada');
 }

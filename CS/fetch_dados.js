@@ -1931,6 +1931,55 @@ function carregarChurnGambiarra(porDom, faturaDaMarca) {
   return linhas;
 }
 
+/* --- reunião interna × reunião com cliente (26/10/2026) -------------------
+   Pedido da Laura: "tirar todas as internas". Em outubro a Luana tinha 22
+   reuniões e 17 eram daily, 1:1 e alinhamento de time; como reunião vale 1
+   ponto, isso ia direto para a pontuação dela.
+
+   A régua: reunião SEM empresa associada no HubSpot cujo título também não
+   nomeia nenhuma marca do cadastro é interna. O título resgata as que são
+   com cliente e só perderam a associação — "Oráculo Benesh", "Chargeback
+   Black Jeans", "Visita Dagomar - Upper Concept". Só vale nome de marca com
+   cinco letras ou mais, e inteiro: "Anne" solto, dentro de "Anne Blanc",
+   casaria com meio mundo. "Interno" escrito no título vence o casamento —
+   as doze "Charisma interno" são reuniões SOBRE a marca, não com ela.
+
+   Quem casa pelo título sai daqui já com o nome da marca no lugar de
+   "(sem empresa)". Das 108 sem empresa, 15 são resgatadas e 93 viram
+   internas.
+
+   A mesma régua existe em `index.html`, que usa o campo `interna` quando ele
+   vem e se vira sozinho num dados.js mais velho. Mexeu numa, mexa na outra. */
+function marcarReunioesInternas(reunioes, porDom) {
+  const chave = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const vistos = new Set();
+  const marcas = [];
+  porDom.forEach(m => {
+    const k = chave(m.nome);
+    if (!k || k.replace(/ /g, '').length < 5 || vistos.has(k)) return;
+    vistos.add(k);
+    marcas.push({ nome: m.nome, dominio: m.dom, k });
+  });
+  /* Do nome mais longo para o mais curto: "Charisma Varejo" tem que ganhar de
+     "Charisma" quando os dois cabem no título. */
+  marcas.sort((a, b) => b.k.length - a.k.length);
+  let internas = 0, resgatadas = 0;
+  reunioes.forEach(r => {
+    const semEmpresa = !r.cliente || /^\(sem empresa\)$/i.test(r.cliente);
+    if (!semEmpresa) { r.interna = false; return }
+    if (/\bintern[oa]s?\b/i.test(r.reuniao || '')) { r.interna = true; internas++; return }
+    const t = ' ' + chave(r.reuniao) + ' ';
+    const m = marcas.find(x => t.includes(' ' + x.k + ' '));
+    if (m) {
+      r.interna = false; r.cliente = m.nome; r.dominio = r.dominio || m.dominio;
+      r.porTitulo = true; resgatadas++;
+    } else { r.interna = true; internas++ }
+  });
+  console.log('  reuniões internas (fora da conta)'.padEnd(44) + String(internas).padStart(8));
+  console.log('    resgatadas pelo título da reunião'.padEnd(44) + String(resgatadas).padStart(8));
+}
+
 function montar(bqd, hsd, tinoDados) {
   console.log('\n[montagem]');
   /* Toda série é (marca × dia). A guarda troca "semana entre 1 e a atual" por
@@ -2953,7 +3002,13 @@ function montar(bqd, hsd, tinoDados) {
     somaBon(x.mes, cs, 'filiais', 1, nome);
   });
   // Reuniões e integrações vêm do HubSpot
-  (hsd.reunioes || []).forEach(r => somaBon(mesDe(r.data), normalizarCsNome(r.cs), 'reunioes', 1, r.cliente));
+  /* Marca o que é reunião interna ANTES de pontuar: daily, 1:1 e alinhamento
+     de time não são reunião com cliente e não valem o ponto. Ver
+     `marcarReunioesInternas`. */
+  marcarReunioesInternas(hsd.reunioes || [], porDom);
+  (hsd.reunioes || [])
+    .filter(r => !r.interna)
+    .forEach(r => somaBon(mesDe(r.data), normalizarCsNome(r.cs), 'reunioes', 1, r.cliente));
   /* O retrato diário da carteira continua sendo tirado mesmo sem a coluna de
      "Novas integrações" que ele alimentava. Ele é a ÚNICA coisa que registra
      quando uma integração começa — o cadastro guarda quem TEM, não desde
