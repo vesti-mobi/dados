@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel da Tribo</title>
+<style>
+:root{--font-anthropic-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--font-anthropic-serif:Georgia,"Times New Roman",serif;
+--cds-font-size-caption:12px;--cds-font-size-body:14px;--cds-font-size-heading:16px;--cds-font-size-title:24px;--cds-font-weight-medium:500;
+--cds-gap-xs:4px;--cds-gap-sm:8px;--cds-gap-md:12px;--cds-gap-lg:20px;--cds-gap-xl:32px;--cds-pad-xs:4px;--cds-pad-sm:8px;--cds-pad-md:12px;--cds-pad-lg:16px;
+--cds-radius:10px;--cds-dur-slow:.3s;
+--color-fg:#1a1a1a;--color-fg-muted:#6b6b6b;--color-bg:#ffffff;--color-panel:#fafafa;--color-border-line:#e2e2e2;--color-ok:#1a7f4b;--color-bad:#c0392b;
+--cds-chart-grid:#eeeeee;--cds-chart-muted:#b8b8b8;--cds-chart-axis:#cccccc;--cds-chart-reference:#888888;--cds-surface-popover:#ffffff;--cds-border:#dddddd;
+--cds-shadow-popover:0 4px 12px rgba(0,0,0,.12);--cds-text-secondary:#666666;--serie-2026:#2f6fdf}
+@media (prefers-color-scheme: dark){:root{--color-fg:#ededed;--color-fg-muted:#a0a0a0;--color-bg:#161616;--color-panel:#1f1f1f;--color-border-line:#333;
+--color-ok:#4cc38a;--color-bad:#ff6b5e;--cds-chart-grid:#2a2a2a;--cds-chart-muted:#666;--cds-chart-axis:#444;--cds-chart-reference:#999;
+--cds-surface-popover:#262626;--cds-border:#3a3a3a;--cds-text-secondary:#aaa;--serie-2026:#6ea0ff}}
+html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
+#dash-root{padding:24px 16px;max-width:1100px;margin:0 auto}
+</style>
+
+<style>
+.ft-fontes{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs) var(--cds-gap-lg);font-size:var(--cds-font-size-caption);
+  color:var(--color-fg-muted);border-top:1px solid var(--color-border-line);padding-top:var(--cds-pad-md);margin:0}
+.ft-fontes b{color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+@media print{.ft-ctrl,.ft-tog,.ft-all{display:none}}
+</style>
+<script src="d3.v7.min.js"></script>
+<script src="dados.js"></script>
+</head>
+<body>
+<div id="dash-root">
+<style>
+.ft{font-family:var(--font-anthropic-sans);font-variant-numeric:tabular-nums;max-width:64rem;margin-inline:auto;display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
+.ft-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:var(--cds-gap-md)}
+.ft-title{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0}
+.ft-sub{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption);margin:var(--cds-gap-xs) 0 0}
+.ft-sub .ft-per{color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.ft-tag{border:1px dashed var(--color-border-line);border-radius:999px;padding:0 var(--cds-pad-sm)}
+.ft-ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm)}
+.ft-dates{display:flex;flex-wrap:wrap;gap:var(--cds-gap-sm);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.ft-dates label{display:inline-flex;align-items:center;gap:var(--cds-gap-xs)}
+.ft-date{font:inherit;font-size:var(--cds-font-size-body);color:var(--color-fg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:999px;padding:var(--cds-pad-xs) var(--cds-pad-md);color-scheme:light dark}
+.ft-seg{display:inline-flex;border:1px solid var(--color-border-line);border-radius:999px;padding:3px;background:var(--color-panel)}
+.ft-seg button{font:inherit;font-size:var(--cds-font-size-body);border:0;background:transparent;color:var(--color-fg-muted);padding:var(--cds-pad-xs) var(--cds-pad-md);border-radius:999px;cursor:pointer}
+.ft-seg button[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
+.ft-tabs{display:flex;gap:var(--cds-gap-md);border-bottom:1px solid var(--color-border-line)}
+.ft-tabs button{font:inherit;font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);border:0;background:transparent;color:var(--color-fg-muted);padding:var(--cds-pad-sm) 0;margin-bottom:-1px;border-bottom:2px solid transparent;cursor:pointer}
+.ft-tabs button[aria-selected=true]{color:var(--color-fg);border-bottom-color:var(--color-fg)}
+.ft-page{display:flex;flex-direction:column;gap:var(--cds-gap-xl)}
+.ft-page[hidden]{display:none}
+.ft-tree{display:flex;flex-direction:column;align-items:center}
+.ft-box{box-sizing:border-box;background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md) var(--cds-pad-lg);display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.ft-top{width:min(100%,24rem);border-width:2px;border-color:var(--color-fg)}
+.ft-lbl{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);text-transform:uppercase;letter-spacing:.04em}
+.ft-big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:calc(var(--cds-font-size-title) * 1.4);line-height:1.1}
+.ft-mid{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);line-height:1.1}
+.ft-pair{display:flex;gap:var(--cds-gap-xl);justify-content:center;flex-wrap:wrap}
+.ft-pair>div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ft-pair-sm{gap:var(--cds-gap-md);width:100%;justify-content:space-around}
+.ft-pair-sm .ft-mid{font-size:var(--cds-font-size-heading)}
+.ft-pair-sm .ft-badge{padding:1px var(--cds-pad-xs)}
+.ft-fora{color:var(--color-bad)}
+#arvore-suporte .ft-kids{width:100%}
+.ft-top-larga{width:min(100%,42rem)}
+.ft-top-larga>.ft-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:var(--cds-gap-lg);width:100%}
+.ft-pair-sm .ft-prev{white-space:nowrap}
+.ft-sec{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.ft-sec span{color:var(--color-fg)}
+.ft-prev{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.ft-badge{display:inline-flex;align-items:center;gap:4px;font-size:var(--cds-font-size-caption);font-weight:var(--cds-font-weight-medium);padding:2px var(--cds-pad-sm);border-radius:999px;margin-top:2px}
+.ft-badge.ok{color:var(--color-ok);background:color-mix(in srgb,var(--color-ok) 14%,transparent)}
+.ft-badge.bad{color:var(--color-bad);background:color-mix(in srgb,var(--color-bad) 14%,transparent)}
+.ft-badge.flat{color:var(--color-fg-muted);background:color-mix(in srgb,var(--color-fg-muted) 12%,transparent)}
+.ft-rule{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-sm) var(--cds-pad-md);display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs) var(--cds-gap-lg)}
+.ft-rule b{color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
+.ft-stem{width:2px;height:var(--cds-gap-lg);background:var(--color-border-line)}
+.ft-kids{--n:2;position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:var(--cds-gap-md);width:min(100%,calc(var(--n) * 17rem));padding-top:var(--cds-gap-lg)}
+.ft-kids::before{content:"";position:absolute;top:0;left:calc(50% / var(--n));right:calc(50% / var(--n));height:2px;background:var(--color-border-line)}
+.ft-kid{position:relative;display:flex;flex-direction:column}
+.ft-kid::before{content:"";position:absolute;top:calc(-1 * var(--cds-gap-lg));left:calc(50% - 1px);width:2px;height:var(--cds-gap-lg);background:var(--color-border-line)}
+.ft-kid .ft-box{flex:1}
+.ft-note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);text-align:center;margin:0}
+@media (max-width:640px){
+  .ft-kids{grid-template-columns:1fr;padding-top:var(--cds-gap-md)}
+  .ft-kids::before,.ft-kid::before{display:none}
+}
+.ft-tree:not(.aberto)>.ft-stem,.ft-tree:not(.aberto)>.ft-kids{display:none}
+.ft-tog{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);background:transparent;border:1px solid var(--color-border-line);border-radius:999px;padding:2px var(--cds-pad-sm);margin-top:var(--cds-gap-xs);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.ft-tog:hover{color:var(--color-fg);border-color:var(--color-fg-muted)}
+.ft-tabbar{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--cds-gap-md);border-bottom:1px solid var(--color-border-line)}
+.ft-tabbar .ft-tabs{border-bottom:0}
+.ft-all{font:inherit;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);background:transparent;border:0;padding:var(--cds-pad-sm) 0;cursor:pointer}
+.ft-all:hover{color:var(--color-fg)}
+.ft-click{cursor:pointer;border-radius:var(--cds-radius);transition:box-shadow var(--cds-dur-slow)}
+.ft-click:hover{box-shadow:0 0 0 2px var(--color-border-line)}
+.ft-click.sel{box-shadow:0 0 0 2px var(--color-fg)}
+.ft-pair>.ft-click{padding:var(--cds-pad-xs)}
+.ft-chart-card{box-sizing:border-box;width:100%;margin-top:var(--cds-gap-lg);background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg);display:flex;flex-direction:column;gap:var(--cds-gap-sm)}
+.ft-chart-card[hidden]{display:none}
+.ft-ch-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--cds-gap-md)}
+.ft-ch-title{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0}
+.ft-ch-note{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin:2px 0 0}
+.ft-ch-close{font:inherit;font-size:var(--cds-font-size-heading);line-height:1;color:var(--color-fg-muted);background:transparent;border:0;cursor:pointer;padding:0 var(--cds-pad-xs)}
+.ft-ch-close:hover{color:var(--color-fg)}
+.ft-ch-legend{display:flex;gap:var(--cds-gap-md);font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+.ft-ch-legend i{display:inline-block;width:14px;height:2px;border-radius:1px;vertical-align:middle;margin-right:6px}
+.ft-ch-legend i.band{height:10px;width:10px;border-radius:2px;background:var(--cds-chart-grid)}
+.ft-ch-legend i.ref{border-top:2px dashed var(--cds-chart-reference);height:0}
+.ft-ch{position:relative;min-height:260px}
+.ft-ch-vazio{display:flex;align-items:center;justify-content:center;height:260px;margin:0;
+  color:var(--color-fg-muted);font-size:var(--cds-font-size-body)}
+.ft-ch svg{display:block}
+.ft-tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);display:none;flex-direction:column;gap:2px;white-space:nowrap;z-index:2}
+.ft-tip .t{color:var(--cds-text-secondary)}
+.ft-tip .v{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium)}
+.ft-tip .r{color:var(--color-fg-muted)}
+.ft-tip .ft-badge{align-self:flex-start}
+[data-dash-source-state=empty]{color:transparent}
+[data-dash-source-state=refreshing]{opacity:.5;transition:opacity var(--cds-dur-slow)}
+</style>
+
+<div class="ft">
+  <div class="ft-head">
+    <div>
+      <h1 class="ft-title">Painel da Tribo</h1>
+      <p class="ft-sub" id="periodo-texto"><span class="ft-per">—</span> · comparado a <span class="ft-cmp">—</span> · <span class="ft-tag">carregando…</span></p>
+    </div>
+    <div class="ft-ctrl">
+      <div class="ft-dates" id="filtro-periodo">
+        <label>De <input class="ft-date" type="date" data-p="inicio" aria-label="Data início"></label>
+        <label>até <input class="ft-date" type="date" data-p="fim" aria-label="Data fim"></label>
+      </div>
+      <div class="ft-seg" role="group" aria-label="Segmento">
+        <button type="button" data-seg="atacado">Atacado</button>
+        <button type="button" data-seg="varejo">Varejo</button>
+        <button type="button" data-seg="total">Total</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ft-tabbar">
+    <div class="ft-tabs" role="tablist">
+      <button type="button" role="tab" data-tab="plataforma">Plataforma</button>
+      <button type="button" role="tab" data-tab="pagamento">Pagamento</button>
+    </div>
+    <button type="button" class="ft-all" id="abrir-tudo">Ocultar tudo</button>
+  </div>
+
+  <div class="ft-chart-card" id="grafico-semanal" hidden>
+    <div class="ft-ch-head">
+      <div>
+        <h3 class="ft-ch-title" id="grafico-titulo">—</h3>
+        <p class="ft-ch-note" id="grafico-nota">—</p>
+      </div>
+      <button type="button" class="ft-ch-close" aria-label="Fechar gráfico">×</button>
+    </div>
+    <div class="ft-ch-legend"><span><i class="l26"></i>2026</span><span><i class="l25"></i>2025</span><span><i class="band"></i>período filtrado</span><span class="leg-ref" hidden><i class="ref"></i>régua</span></div>
+    <div class="ft-ch" id="grafico" data-source="diario"></div>
+  </div>
+
+  <!-- PLATAFORMA -->
+  <div class="ft-page" id="plataforma" role="tabpanel">
+    <div class="ft-tree aberto" data-source="diario" id="arvore-gmv">
+      <div class="ft-box ft-top">
+        <span class="ft-lbl">GMV</span>
+        <span class="ft-big v" data-k="gmv">—</span>
+        <span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="gmv">—</span></span><span class="ft-badge d" data-k="gmv">—</span>
+        <button type="button" class="ft-tog" aria-expanded="true">Ocultar <span class="seta">▴</span></button>
+      </div>
+      <div class="ft-stem"></div>
+      <div class="ft-kids" style="--n:2">
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Integração</span>
+          <span class="ft-mid p" data-k="gmv_integracao">—</span>
+          <span class="ft-sec"><span class="v" data-k="gmv_integracao">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="ap" data-k="gmv_integracao">—</span> · <span class="a" data-k="gmv_integracao">—</span></span><span class="ft-badge d" data-k="gmv_integracao">—</span>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Oráculo</span>
+          <span class="ft-mid p" data-k="gmv_oraculo">—</span>
+          <span class="ft-sec"><span class="v" data-k="gmv_oraculo">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="ap" data-k="gmv_oraculo">—</span> · <span class="a" data-k="gmv_oraculo">—</span></span><span class="ft-badge d" data-k="gmv_oraculo">—</span>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="ft-tree aberto" data-source="diario" id="arvore-suporte">
+      <div class="ft-box ft-top ft-top-larga">
+        <span class="ft-lbl">Suporte</span>
+        <div class="ft-pair">
+          <div><span class="ft-big v" data-k="csat_nota">—</span><span class="ft-sec">CSAT</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_nota">—</span></span><span class="ft-badge d" data-k="csat_nota">—</span></div>
+          <div><span class="ft-big v" data-k="csat_resposta">—</span><span class="ft-sec">Resposta</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_resposta">—</span></span><span class="ft-badge d" data-k="csat_resposta">—</span></div>
+          <div><span class="ft-big v" data-k="sla_dias">—</span><span class="ft-sec">SLA</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="sla_dias">—</span></span><span class="ft-badge d" data-k="sla_dias">—</span></div>
+        </div>
+        <button type="button" class="ft-tog" aria-expanded="true">Ocultar <span class="seta">▴</span></button>
+      </div>
+      <div class="ft-stem"></div>
+      <div class="ft-kids" style="--n:3">
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Integrações</span>
+          <div class="ft-pair ft-pair-sm"><div><span class="ft-mid v" data-k="csat_nota_integracao">—</span><span class="ft-sec">CSAT</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_nota_integracao">—</span></span><span class="ft-badge d" data-k="csat_nota_integracao">—</span></div><div><span class="ft-mid v" data-k="csat_resp_integracao">—</span><span class="ft-sec">Resposta</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_resp_integracao">—</span></span><span class="ft-badge d" data-k="csat_resp_integracao">—</span></div><div><span class="ft-mid v" data-k="sla_dias_integracao">—</span><span class="ft-sec">SLA</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="sla_dias_integracao">—</span></span><span class="ft-badge d" data-k="sla_dias_integracao">—</span></div></div>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">VestiPago</span>
+          <div class="ft-pair ft-pair-sm"><div><span class="ft-mid v" data-k="csat_nota_vestipago">—</span><span class="ft-sec">CSAT</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_nota_vestipago">—</span></span><span class="ft-badge d" data-k="csat_nota_vestipago">—</span></div><div><span class="ft-mid v" data-k="csat_resp_vestipago">—</span><span class="ft-sec">Resposta</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_resp_vestipago">—</span></span><span class="ft-badge d" data-k="csat_resp_vestipago">—</span></div><div><span class="ft-mid v" data-k="sla_dias_vestipago">—</span><span class="ft-sec">SLA</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="sla_dias_vestipago">—</span></span><span class="ft-badge d" data-k="sla_dias_vestipago">—</span></div></div>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Plataforma</span>
+          <div class="ft-pair ft-pair-sm"><div><span class="ft-mid v" data-k="csat_nota_plataforma">—</span><span class="ft-sec">CSAT</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_nota_plataforma">—</span></span><span class="ft-badge d" data-k="csat_nota_plataforma">—</span></div><div><span class="ft-mid v" data-k="csat_resp_plataforma">—</span><span class="ft-sec">Resposta</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="csat_resp_plataforma">—</span></span><span class="ft-badge d" data-k="csat_resp_plataforma">—</span></div><div><span class="ft-mid v" data-k="sla_dias_plataforma">—</span><span class="ft-sec">SLA</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="sla_dias_plataforma">—</span></span><span class="ft-badge d" data-k="sla_dias_plataforma">—</span></div></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGAMENTO -->
+  <div class="ft-page" id="pagamento" role="tabpanel" hidden>
+    <div class="ft-tree aberto" data-source="diario" id="arvore-receita">
+      <div class="ft-box ft-top">
+        <span class="ft-lbl">Receita</span>
+        <span class="ft-big vd" data-k="receita_total">—</span>
+        <span class="ft-prev"><span class="cmp">—</span> · <span class="ad" data-k="receita_total">—</span></span><span class="ft-badge d" data-k="receita_total">—</span>
+        <button type="button" class="ft-tog" aria-expanded="true">Ocultar <span class="seta">▴</span></button>
+      </div>
+      <div class="ft-stem"></div>
+      <div class="ft-kids" style="--n:3">
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">MDR</span>
+          <span class="ft-mid v" data-k="receita_mdr">—</span>
+          <span class="ft-sec"><span class="p" data-k="receita_mdr">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="receita_mdr">—</span></span><span class="ft-badge d" data-k="receita_mdr">—</span>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Antifraude</span>
+          <span class="ft-mid v" data-k="receita_antifraude">—</span>
+          <span class="ft-sec"><span class="p" data-k="receita_antifraude">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="receita_antifraude">—</span></span><span class="ft-badge d" data-k="receita_antifraude">—</span>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Antecipação</span>
+          <span class="ft-mid v" data-k="receita_antecipacao">—</span>
+          <span class="ft-sec"><span class="p" data-k="receita_antecipacao">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="receita_antecipacao">—</span></span><span class="ft-badge d" data-k="receita_antecipacao">—</span>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="ft-tree aberto" data-source="diario" id="arvore-tpv">
+      <div class="ft-box ft-top">
+        <span class="ft-lbl">TPV</span>
+        <span class="ft-big v" data-k="tpv">—</span>
+        <span class="ft-sec"><span class="p" data-k="tpv">—</span> do GMV</span>
+        <span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="tpv">—</span></span><span class="ft-badge d" data-k="tpv">—</span>
+        <button type="button" class="ft-tog" aria-expanded="true">Ocultar <span class="seta">▴</span></button>
+      </div>
+      <div class="ft-stem"></div>
+      <div class="ft-kids" style="--n:2">
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Cartão</span>
+          <span class="ft-mid p" data-k="tpv_cartao">—</span>
+          <span class="ft-sec"><span class="v" data-k="tpv_cartao">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="ap" data-k="tpv_cartao">—</span> · <span class="a" data-k="tpv_cartao">—</span></span><span class="ft-badge d" data-k="tpv_cartao">—</span>
+        </div></div>
+        <div class="ft-kid"><div class="ft-box">
+          <span class="ft-lbl">Pix</span>
+          <span class="ft-mid p" data-k="tpv_pix">—</span>
+          <span class="ft-sec"><span class="v" data-k="tpv_pix">—</span></span>
+          <span class="ft-prev"><span class="cmp">—</span> · <span class="ap" data-k="tpv_pix">—</span> · <span class="a" data-k="tpv_pix">—</span></span><span class="ft-badge d" data-k="tpv_pix">—</span>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="ft-tree" data-source="diario" id="arvore-antifraude">
+      <div class="ft-box ft-top ft-top-larga">
+        <span class="ft-lbl">Antifraude</span>
+        <div class="ft-pair">
+          <div><span class="ft-big v" data-k="af_tempo">—</span><span class="ft-sec">Tempo médio de análise</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="af_tempo">—</span></span><span class="ft-badge d" data-k="af_tempo">—</span></div>
+          <div><span class="ft-big v" data-k="af_aprovacao">—</span><span class="ft-sec">Aprovação</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="af_aprovacao">—</span></span><span class="ft-badge d" data-k="af_aprovacao">—</span></div>
+          <div><span class="ft-big v" data-k="chargeback_valor">—</span><span class="ft-sec">Chargeback perdido · <span class="p" data-k="chargeback_valor">—</span> do TPV em cartão</span><span class="ft-prev"><span class="cmp">—</span> · <span class="a" data-k="chargeback_valor">—</span></span><span class="ft-badge d" data-k="chargeback_valor">—</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="ft-fontes" id="rodape-fontes"></p>
+</div>
+<script>
+(() => {
+  const root = document.querySelector('.ft');
+  const DADOS = window.DADOS_TRIBO || { diario: [], fontes: {}, sem_fonte: [] };
+
+  // Estado do painel: segmento e período viajam na URL, então um link reabre a mesma visão.
+  const dash = (() => {
+    const params = { segmento: 'atacado', inicio: null, fim: null };
+    const ouvintes = [];
+    const hash = new URLSearchParams(location.hash.slice(1).split('&').slice(1).join('&'));
+    if (['atacado', 'varejo', 'total'].includes(hash.get('seg'))) params.segmento = hash.get('seg');
+    if (hash.get('ini')) params.inicio = hash.get('ini');
+    if (hash.get('fim')) params.fim = hash.get('fim');
+    let aba = location.hash.slice(1).split('&')[0] || 'plataforma';
+    const gravarUrl = () => {
+      const q = new URLSearchParams();
+      q.set('seg', params.segmento);
+      if (params.inicio) q.set('ini', params.inicio);
+      if (params.fim) q.set('fim', params.fim);
+      try { history.replaceState(null, '', '#' + aba + '&' + q); } catch (e) {}
+    };
+    const rodar = () => ouvintes.forEach((f) => f());
+    window.addEventListener('resize', rodar);
+    return {
+      params: () => ({ ...params }),
+      setParams: (p) => { Object.assign(params, p); gravarUrl(); rodar(); },
+      data: () => ({ status: DADOS.diario.length ? 'ok' : 'vazio', data: DADOS.diario }),
+      onData: (f) => { ouvintes.push(f); f(); },
+      setLink: (id) => { aba = id; gravarUrl(); },
+      colors: [getComputedStyle(document.documentElement).getPropertyValue('--serie-2026').trim() || '#2f6fdf'],
+    };
+  })();
+  // Definição de cada indicador: unidade, de que total ele é parte e qual direção é melhor.
+  const DEF = {
+    gmv: ['brl', null, 'maior'], gmv_integracao: ['brl', 'gmv', 'maior'], gmv_oraculo: ['brl', 'gmv', 'maior'],
+    gmv_oraculo_direta: ['brl', 'gmv', 'maior'], gmv_oraculo_influenciada: ['brl', 'gmv', 'maior'],
+    tpv: ['brl', 'gmv', 'maior'], tpv_cartao: ['brl', 'tpv', 'maior'], tpv_pix: ['brl', 'tpv', 'maior'],
+    chargeback_valor: ['brl', 'tpv_cartao', 'menor'],
+    receita_total: ['brl', null, 'maior'], receita_mdr: ['brl', 'receita_total', 'maior'],
+    receita_antifraude: ['brl', 'receita_total', 'maior'], receita_antecipacao: ['brl', 'receita_total', 'maior'],
+    csat_nota: ['nota', null, 'maior'], csat_resposta: ['pct', null, 'maior'],
+    csat_nota_integracao: ['nota', null, 'maior'], csat_nota_vestipago: ['nota', null, 'maior'], csat_nota_plataforma: ['nota', null, 'maior'],
+    csat_resp_integracao: ['pct', null, 'maior'], csat_resp_vestipago: ['pct', null, 'maior'], csat_resp_plataforma: ['pct', null, 'maior'],
+    af_tempo: ['min', null, 'menor'], af_aprovacao: ['pct', null, 'maior'],
+    sla_dias: ['dias', null, 'menor'], sla_dias_integracao: ['dias', null, 'menor'],
+    sla_dias_vestipago: ['dias', null, 'menor'], sla_dias_plataforma: ['dias', null, 'menor'],
+  };
+  const TIMES = ['integracao', 'vestipago', 'plataforma'];
+  // Réguas de suporte: fora delas, o valor fica em vermelho.
+  // Compara o valor como ele aparece na tela (1 casa decimal): 4,9 exibido é 4,9 e fica dentro da régua.
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const REGUA = { nota: (v) => r1(v) < 4.9, dias: (v) => r1(v) > 3 };
+  const COLS = ['gmv', 'gmv_integracao', 'gmv_oraculo_direta', 'gmv_oraculo_influenciada', 'tpv_cartao', 'tpv_pix',
+    'chargeback_com_seguro', 'chargeback_sem_seguro',
+    'receita_mdr', 'receita_antifraude', 'receita_antecipacao', 'af_analises', 'af_aprovadas', 'af_minutos', 'af_tempo_analises',
+    ...TIMES.flatMap((t) => ['csat_soma_' + t, 'csat_qtd_' + t, 'csat_env_' + t, 'sla_dias_' + t, 'sla_qtd_' + t])];
+
+  // Colunas que ainda não têm origem mapeada: ficam null e o painel exibe "—".
+  const SEM_FONTE = new Set(DADOS.sem_fonte || []);
+
+  // Soma as colunas diárias do intervalo e monta os indicadores a partir dos totais (nunca média de médias).
+  const somar = (rows, ini, fim) => {
+    const t = Object.fromEntries(COLS.map((c) => [c, SEM_FONTE.has(c) ? null : 0]));
+    for (const r of rows) if (r.data >= ini && r.data <= fim)
+      for (const c of COLS) {
+        if (t[c] === null) continue;
+        if (r[c] == null) t[c] = null;            // fonte não cobre este dia
+        else t[c] += Number(r[c]) || 0;
+      }
+    // Sem numerador não há indicador: null se propaga em vez de virar zero.
+    const q = (a, b) => (a == null || !b ? null : a / b);
+    const mais = (...v) => (v.some((x) => x == null) ? null : v.reduce((a, x) => a + x, 0));
+    const soma = (p) => mais(...TIMES.map((x) => t[p + x]));
+    const o = {
+      gmv: t.gmv, gmv_integracao: t.gmv_integracao,
+      gmv_oraculo_direta: t.gmv_oraculo_direta, gmv_oraculo_influenciada: t.gmv_oraculo_influenciada,
+      gmv_oraculo: mais(t.gmv_oraculo_direta, t.gmv_oraculo_influenciada),
+      tpv_cartao: t.tpv_cartao, tpv_pix: t.tpv_pix, tpv: mais(t.tpv_cartao, t.tpv_pix),
+      // com e sem seguro somam num numero so: o total que a Vesti perdeu.
+      chargeback_valor: mais(t.chargeback_com_seguro, t.chargeback_sem_seguro),
+      receita_mdr: t.receita_mdr, receita_antifraude: t.receita_antifraude, receita_antecipacao: t.receita_antecipacao,
+      receita_total: mais(t.receita_mdr, t.receita_antifraude, t.receita_antecipacao),
+      csat_nota: q(soma('csat_soma_'), soma('csat_qtd_')), csat_resposta: q(soma('csat_qtd_'), soma('csat_env_')),
+      sla_dias: q(soma('sla_dias_'), soma('sla_qtd_')),
+      // o tempo tem denominador proprio: vem da planilha do time, enquanto a
+      // aprovacao vem do lake, que conta outra populacao de analises.
+      af_tempo: q(t.af_minutos, t.af_tempo_analises), af_aprovacao: q(t.af_aprovadas, t.af_analises),
+    };
+    for (const x of TIMES) { o['csat_nota_' + x] = q(t['csat_soma_' + x], t['csat_qtd_' + x]); o['csat_resp_' + x] = q(t['csat_qtd_' + x], t['csat_env_' + x]); o['sla_dias_' + x] = q(t['sla_dias_' + x], t['sla_qtd_' + x]); }
+    return o;
+  };
+
+  // Em "Total" os dois segmentos somam — menos as colunas de suporte, que valem
+  // para a equipe inteira e vêm repetidas em atacado e varejo. Somá-las
+  // contaria cada atendimento duas vezes.
+  // Em "Total", estas colunas NÃO somam: o mesmo número vem repetido em
+  // atacado e varejo, e somar contaria cada atendimento duas vezes.
+  const COLS_GLOBAIS = new Set(TIMES.flatMap((t) =>
+    ['csat_soma_' + t, 'csat_qtd_' + t, 'csat_env_' + t, 'sla_dias_' + t, 'sla_qtd_' + t])
+    // tempo de análise e chargeback também vêm sem segmento, das planilhas do
+    // time de antifraude, e estão repetidos em atacado e varejo.
+    .concat(['af_minutos', 'af_tempo_analises', 'chargeback_com_seguro', 'chargeback_sem_seguro']));
+
+  const linhasDoSegmento = (dados, seg) => {
+    if (seg !== 'total') return dados.filter((r) => r.segmento === seg);
+    const porData = new Map();
+    for (const r of dados) {
+      let o = porData.get(r.data);
+      if (!o) porData.set(r.data, (o = { data: r.data, segmento: 'total', _vistas: new Set() }));
+      for (const c of COLS) {
+        if (COLS_GLOBAIS.has(c)) {
+          // o mesmo número nos dois segmentos: fica com o primeiro que aparecer
+          if (!o._vistas.has(c)) { o[c] = r[c]; o._vistas.add(c); }
+        } else if (o[c] !== null) {
+          o[c] = r[c] == null ? null : (o[c] || 0) + Number(r[c]);
+        }
+      }
+    }
+    return [...porData.values()].sort((a, b) => (a.data < b.data ? -1 : 1));
+  };
+
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const add = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+  const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const dia = (s) => { const [y, m, d] = s.split('-'); return { y, m: MES[Number(m) - 1], d }; };
+  const faixa = (a, b) => {
+    const x = dia(a), y = dia(b);
+    if (a === b) return `${x.d} ${x.m} ${x.y}`;
+    if (x.y === y.y && x.m === y.m) return `${x.d}–${y.d} ${y.m} ${y.y}`;
+    if (x.y === y.y) return `${x.d} ${x.m} – ${y.d} ${y.m} ${y.y}`;
+    return `${x.d} ${x.m} ${x.y} – ${y.d} ${y.m} ${y.y}`;
+  };
+
+  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 });
+  const n1 = (v, d = 1) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const fmt = (v, u) => v == null ? '—' : u === 'brl' ? brl.format(v) : u === 'pct' ? n1(v * 100) + '%' : u === 'nota' ? n1(v) : u === 'dias' ? n1(v) + ' dias' : Math.round(v) + ' min';
+  const fmtDelta = (v) => (v > 0 ? '▲ +' : v < 0 ? '▼ −' : '● ') + n1(Math.abs(v) * 100) + '%';
+
+  // Abas
+  const tabs = [...root.querySelectorAll('.ft-tabs button')];
+  const show = (id) => {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === id)));
+    root.querySelectorAll('.ft-page').forEach((p) => (p.hidden = p.id !== id));
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => { show(t.dataset.tab); dash.setLink(t.dataset.tab); }));
+  show(location.hash.slice(1).split('&')[0] === 'pagamento' ? 'pagamento' : 'plataforma');
+
+  // Expandir e ocultar os micros de cada funil. Começa tudo aberto.
+  const arvores = [...root.querySelectorAll('.ft-tree')].filter((t) => t.querySelector('.ft-tog'));
+  const allBtn = root.querySelector('#abrir-tudo');
+  const abrir = (t, sim) => {
+    t.classList.toggle('aberto', sim);
+    const b = t.querySelector('.ft-tog');
+    b.setAttribute('aria-expanded', String(sim));
+    b.firstChild.textContent = sim ? 'Ocultar ' : 'Detalhar ';
+    b.querySelector('.seta').textContent = sim ? '▴' : '▾';
+  };
+  const sincronizar = () => {
+    const visiveis = arvores.filter((t) => !t.closest('.ft-page').hidden);
+    allBtn.textContent = visiveis.length && visiveis.every((t) => t.classList.contains('aberto')) ? 'Ocultar tudo' : 'Expandir tudo';
+  };
+  arvores.forEach((t) => t.querySelector('.ft-tog').addEventListener('click', () => { abrir(t, !t.classList.contains('aberto')); sincronizar(); }));
+  allBtn.addEventListener('click', () => {
+    const visiveis = arvores.filter((t) => !t.closest('.ft-page').hidden);
+    const sim = !visiveis.every((t) => t.classList.contains('aberto'));
+    visiveis.forEach((t) => abrir(t, sim));
+    sincronizar();
+  });
+  tabs.forEach((t) => t.addEventListener('click', sincronizar));
+  sincronizar();
+
+  // Segmento
+  root.querySelectorAll('.ft-seg button').forEach((b) =>
+    b.addEventListener('click', () => dash.setParams({ segmento: b.dataset.seg })));
+
+  // Período: data início e data fim. Sem escolha, vale a última semana fechada (seg–dom) com dados.
+  const inputs = [...root.querySelectorAll('.ft-date')];
+  let limites = null;
+  const periodo = () => {
+    const p = dash.params();
+    if (!limites) return null;
+    let fim = p.fim, ini = p.inicio;
+    if (!fim || !ini) {
+      const ult = new Date(limites.max + 'T00:00:00Z');
+      const domingo = add(limites.max, -((ult.getUTCDay() + 7) % 7));
+      fim = domingo; ini = add(domingo, -6);
+    }
+    return { ini, fim };
+  };
+  inputs.forEach((el) => {
+    el.addEventListener('change', () => {
+      if (!el.value || !el.validity.valid || !limites) return;
+      const atual = periodo();
+      let ini = el.dataset.p === 'inicio' ? el.value : atual.ini;
+      let fim = el.dataset.p === 'fim' ? el.value : atual.fim;
+      if (ini > fim) { if (el.dataset.p === 'inicio') fim = ini; else ini = fim; }
+      dash.setParams({ inicio: ini, fim });
+    });
+    el.addEventListener('blur', () => desenhar());
+  });
+
+  const desenhar = () => {
+    const seg = dash.params().segmento || 'atacado';
+    root.querySelectorAll('.ft-seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.seg === seg)));
+    const src = dash.data('diario');
+    const rows = src.status === 'ok' ? linhasDoSegmento(src.data, seg) : [];
+    if (rows.length) {
+      const datas = rows.map((r) => r.data).sort();
+      limites = { min: add(datas[0], 364), max: datas[datas.length - 1] };
+    }
+    const per = periodo();
+    inputs.forEach((el) => {
+      if (limites) { el.min = limites.min; el.max = limites.max; }
+      if (per && el !== document.activeElement) el.value = el.dataset.p === 'inicio' ? per.ini : per.fim;
+    });
+
+    // Comparação: o mesmo intervalo 52 semanas antes (364 dias), alinhado pelo dia da semana.
+    let cur = null, prev = null;
+    if (per && rows.length) {
+      cur = somar(rows, per.ini, per.fim);
+      prev = somar(rows, add(per.ini, -364), add(per.fim, -364));
+    }
+    root.querySelector('.ft-per').textContent = per ? faixa(per.ini, per.fim) : '—';
+    root.querySelector('.ft-cmp').textContent = per ? faixa(add(per.ini, -364), add(per.fim, -364)) : '—';
+    const anoCmp = per ? add(per.ini, -364).slice(0, 4) : '—';
+
+    root.querySelectorAll('.cmp').forEach((el) => (el.textContent = anoCmp));
+    root.querySelectorAll('[data-k]').forEach((el) => {
+      const k = el.dataset.k, def = DEF[k];
+      if (!def || !cur) { el.textContent = '—'; el.classList.remove('ok', 'bad', 'flat'); return; }
+      const [u, pai, melhor] = def;
+      const v = cur[k], a = prev[k];
+      const c = el.classList;
+      if (c.contains('v') || c.contains('vd')) { el.textContent = fmt(v, u); c.toggle('ft-fora', v != null && !!REGUA[u] && REGUA[u](v)); }
+      else if (c.contains('a') || c.contains('ad')) el.textContent = fmt(a, u);
+      else if (c.contains('p')) el.textContent = v != null && pai && cur[pai] ? n1((v / cur[pai]) * 100) + '%' : '—';
+      else if (c.contains('ap')) el.textContent = a != null && pai && prev[pai] ? n1((a / prev[pai]) * 100) + '%' : '—';
+      else if (c.contains('d')) {
+        c.remove('ok', 'bad', 'flat');
+        if (v == null || a == null || !a) { el.textContent = '—'; return; }
+        const d = v / a - 1;
+        el.textContent = fmtDelta(d);
+        c.add(Math.abs(d) < 1e-9 ? 'flat' : (d > 0) === (melhor === 'maior') ? 'ok' : 'bad');
+      }
+    });
+  };
+
+  // ---------- Gráfico semanal ao clicar num bloco ----------
+  const NOME = {
+    gmv: 'GMV', gmv_integracao: 'GMV via integração', gmv_oraculo: 'GMV via Oráculo', tpv: 'TPV', tpv_cartao: 'TPV em cartão', tpv_pix: 'TPV em Pix',
+    chargeback_valor: 'Chargeback', receita_total: 'Receita', receita_mdr: 'Receita de MDR', receita_antifraude: 'Receita de antifraude',
+    receita_antecipacao: 'Receita de antecipação', csat_nota: 'CSAT', csat_resposta: 'Resposta CSAT', sla_dias: 'SLA',
+    csat_nota_integracao: 'CSAT · Integrações', csat_nota_vestipago: 'CSAT · VestiPago', csat_nota_plataforma: 'CSAT · Plataforma',
+    csat_resp_integracao: 'Resposta · Integrações', csat_resp_vestipago: 'Resposta · VestiPago', csat_resp_plataforma: 'Resposta · Plataforma',
+    sla_dias_integracao: 'SLA · Integrações', sla_dias_vestipago: 'SLA · VestiPago', sla_dias_plataforma: 'SLA · Plataforma',
+    af_tempo: 'Tempo médio de análise', af_aprovacao: 'Aprovação',
+  };
+  const LINHA_REGUA = { nota: 4.9, dias: 3 };
+  const ROTULO_SEG = { atacado: 'Atacado', varejo: 'Varejo', total: 'Atacado + varejo' };
+  const card = root.querySelector('#grafico-semanal');
+  const box = root.querySelector('#grafico');
+  let escolhido = null, unidadeSel = null;
+
+  // Cada bloco (ou cada indicador, nos blocos com vários) vira clicável.
+  const unidades = [];
+  root.querySelectorAll('.ft-box').forEach((b) => {
+    const pares = b.querySelector(':scope > .ft-pair');
+    const alvos = pares ? [...pares.children] : [b];
+    alvos.forEach((el) => {
+      const k = el.querySelector('[data-k]')?.dataset.k;
+      if (!k || !NOME[k]) return;
+      el.classList.add('ft-click'); el.dataset.chart = k; el.setAttribute('role', 'button'); el.tabIndex = 0;
+      unidades.push(el);
+    });
+  });
+  const abrirGrafico = (el) => {
+    if (escolhido === el.dataset.chart && !card.hidden) { fecharGrafico(); return; }
+    escolhido = el.dataset.chart; unidadeSel = el;
+    unidades.forEach((u) => u.classList.toggle('sel', u === el));
+    el.closest('.ft-tree').after(card);
+    card.hidden = false;
+    desenharGrafico();
+    card.scrollIntoView({ block: 'nearest' });
+  };
+  const fecharGrafico = () => { card.hidden = true; escolhido = null; unidades.forEach((u) => u.classList.remove('sel')); };
+  unidades.forEach((el) => {
+    el.addEventListener('click', (e) => { if (!e.target.closest('.ft-tog')) abrirGrafico(el); });
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirGrafico(el); } });
+  });
+  card.querySelector('.ft-ch-close').addEventListener('click', fecharGrafico);
+  tabs.forEach((t) => t.addEventListener('click', fecharGrafico));
+
+  // Semana ISO (segunda a domingo). A S1 de 2026 começa 364 dias depois da S1 de 2025: mesmo alinhamento da comparação.
+  const inicioS1 = (ano) => { const d = new Date(Date.UTC(ano, 0, 4)); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return iso(d); };
+  const semanas = (rows) => {
+    const S1 = inicioS1(2026), datas = new Set(rows.map((r) => r.data));
+    const out = [];
+    for (let w = 1; w <= 52; w++) {
+      const ini = add(S1, 7 * (w - 1)), fim = add(ini, 6);
+      const ini25 = add(ini, -364), fim25 = add(fim, -364);
+      const cheia = (a) => [0, 1, 2, 3, 4, 5, 6].every((i) => datas.has(add(a, i)));
+      out.push({ w, ini, fim,
+        v26: cheia(ini) ? somar(rows, ini, fim) : null,
+        v25: cheia(ini25) ? somar(rows, ini25, fim25) : null });
+    }
+    return out;
+  };
+  let cacheSeg = null, cacheSem = null;
+
+  const desenharGrafico = () => {
+    if (card.hidden || !escolhido) return;
+    const k = escolhido, [u, , melhor] = DEF[k];
+    const seg = dash.params().segmento || 'atacado';
+    const src = dash.data('diario');
+    root.querySelector('#grafico-titulo').textContent = NOME[k] + ' por semana do ano';
+    root.querySelector('#grafico-nota').textContent = ROTULO_SEG[seg] + ' · 2026 vs 2025, semanas de segunda a domingo';
+    card.querySelector('.l26').style.background = dash.colors[0];
+    card.querySelector('.l25').style.background = 'var(--cds-chart-muted)';
+    card.querySelector('.leg-ref').hidden = !(u in LINHA_REGUA);
+    box.replaceChildren();
+    if (src.status !== 'ok') return;
+    if (cacheSeg !== seg) { cacheSeg = seg; cacheSem = semanas(linhasDoSegmento(src.data, seg)); }
+    const pts = cacheSem.map((s) => ({ ...s, a: s.v26 ? s.v26[k] : null, b: s.v25 ? s.v25[k] : null }));
+    const vals = pts.flatMap((p) => [p.a, p.b]).filter((v) => v != null);
+    if (!vals.length) {
+      // Sem nenhum ponto nos dois anos: diz isso, em vez de abrir um quadro vazio.
+      const aviso = document.createElement('p');
+      aviso.className = 'ft-ch-vazio';
+      aviso.textContent = '— sem dados para este indicador no período';
+      box.appendChild(aviso);
+      return;
+    }
+
+    const W = box.clientWidth || 600, H = 260;
+    const ref = LINHA_REGUA[u];
+    let lo = d3.min(vals), hi = d3.max(vals);
+    if (ref != null) { lo = Math.min(lo, ref); hi = Math.max(hi, ref); }
+    if (u === 'brl') lo = 0; else { const pad = (hi - lo) * 0.15 || hi * 0.05 || 1; lo -= pad; hi += pad; }
+    const y = d3.scaleLinear([lo, hi], [H - 26, 10]).nice(5);
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+    const yt = y.ticks(5);
+    const gy = svg.append('g');
+    const tickTxt = gy.selectAll('text').data(yt).join('text').attr('font-size', 'var(--cds-font-size-caption)')
+      .attr('fill', 'var(--color-fg-muted)').attr('text-anchor', 'end').attr('dominant-baseline', 'middle').text((v) => fmt(v, u));
+    const ml = Math.ceil(d3.max(tickTxt.nodes(), (n) => n.getComputedTextLength()) || 30) + 10;
+    const x = d3.scaleLinear([1, 52], [ml, W - 12]);
+    tickTxt.attr('x', ml - 8).attr('y', (v) => y(v));
+    gy.selectAll('line').data(yt).join('line').attr('x1', ml).attr('x2', W - 12).attr('y1', (v) => y(v)).attr('y2', (v) => y(v))
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+
+    // Período filtrado em destaque
+    const per = periodo();
+    if (per) {
+      const ws = pts.filter((p) => p.fim >= per.ini && p.ini <= per.fim).map((p) => p.w);
+      if (ws.length) svg.insert('rect', ':first-child').attr('x', x(Math.max(1, d3.min(ws) - 0.5))).attr('y', 10)
+        .attr('width', x(Math.min(52, d3.max(ws) + 0.5)) - x(Math.max(1, d3.min(ws) - 0.5))).attr('height', H - 36)
+        .attr('fill', 'var(--cds-chart-grid)').attr('rx', 4);
+    }
+    // Eixo das semanas
+    const xt = [1, 10, 20, 30, 40, 52].filter((w) => x(w) - ml > 8 || w === 1);
+    svg.append('g').selectAll('text').data(W < 420 ? [1, 13, 26, 39, 52] : xt).join('text').attr('x', (w) => x(w)).attr('y', H - 6)
+      .attr('text-anchor', 'middle').attr('font-size', 'var(--cds-font-size-caption)').attr('fill', 'var(--color-fg-muted)').text((w) => 'S' + w);
+    svg.append('line').attr('x1', ml).attr('x2', W - 12).attr('y1', H - 26).attr('y2', H - 26).attr('stroke', 'var(--cds-chart-axis)');
+    // Régua
+    if (ref != null) svg.append('line').attr('x1', ml).attr('x2', W - 12).attr('y1', y(ref)).attr('y2', y(ref))
+      .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 4');
+    // Linhas
+    const linha = (f) => d3.line().defined((p) => p[f] != null).x((p) => x(p.w)).y((p) => y(p[f]));
+    svg.append('path').datum(pts).attr('d', linha('b')).attr('fill', 'none').attr('stroke', 'var(--cds-chart-muted)')
+      .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    svg.append('path').datum(pts).attr('d', linha('a')).attr('fill', 'none').attr('stroke', dash.colors[0])
+      .attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+    const guia = svg.append('line').attr('y1', 10).attr('y2', H - 26).attr('stroke', 'var(--cds-chart-axis)').attr('opacity', 0);
+    const p26 = svg.append('circle').attr('r', 4).attr('fill', dash.colors[0]).attr('opacity', 0);
+    const p25 = svg.append('circle').attr('r', 4).attr('fill', 'var(--cds-chart-muted)').attr('opacity', 0);
+
+    // Dica no padrão do painel: valor 2026, referência 2025 e selo de variação
+    const tip = document.createElement('div'); tip.className = 'ft-tip'; box.appendChild(tip);
+    const linhaTip = (cls, txt) => { const d = document.createElement('span'); d.className = cls; d.textContent = txt; return d; };
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - 12 - ml).attr('height', H).attr('fill', 'transparent')
+      .on('mousemove', (ev) => {
+        const [mx] = d3.pointer(ev);
+        const p = pts[Math.max(0, Math.min(51, Math.round(x.invert(mx)) - 1))];
+        guia.attr('x1', x(p.w)).attr('x2', x(p.w)).attr('opacity', 1);
+        p26.attr('cx', x(p.w)).attr('cy', p.a != null ? y(p.a) : 0).attr('opacity', p.a != null ? 1 : 0);
+        p25.attr('cx', x(p.w)).attr('cy', p.b != null ? y(p.b) : 0).attr('opacity', p.b != null ? 1 : 0);
+        const kids = [linhaTip('t', `S${p.w} · ${faixa(p.ini, p.fim)}`), linhaTip('v', p.a != null ? fmt(p.a, u) : 'sem dados em 2026'),
+          linhaTip('r', '2025 · ' + (p.b != null ? fmt(p.b, u) : '—'))];
+        if (p.a != null && p.b != null && p.b) {
+          const d = p.a / p.b - 1, b = linhaTip('ft-badge ' + (Math.abs(d) < 1e-9 ? 'flat' : (d > 0) === (melhor === 'maior') ? 'ok' : 'bad'), fmtDelta(d));
+          kids.push(b);
+        }
+        tip.replaceChildren(...kids); tip.style.display = 'flex';
+        const tw = tip.offsetWidth, px = x(p.w);
+        tip.style.left = Math.max(0, Math.min(W - tw, px + 12 + tw > W ? px - tw - 12 : px + 12)) + 'px';
+        tip.style.top = '8px';
+      })
+      .on('mouseleave', () => { tip.style.display = 'none'; guia.attr('opacity', 0); p26.attr('opacity', 0); p25.attr('opacity', 0); });
+  };
+
+  // Data da última atualização por fonte — critério de aceite do MDATA-503.
+  (() => {
+    const alvo = root.querySelector('#rodape-fontes');
+    if (!alvo) return;
+    const dia = (s) => s ? s.split('-').reverse().join('/') : '—';
+    const itens = Object.entries(DADOS.fontes || {}).map(([nome, f]) => {
+      const el = document.createElement('span');
+      el.innerHTML = `<b>${nome.replace(/_/g, ' ')}</b> ${dia(f.atualizado_ate)}` + (f.observacao ? ` · ${f.observacao}` : '');
+      return el;
+    });
+    if (DADOS.pendencias && DADOS.pendencias.length) {
+      const el = document.createElement('span');
+      el.innerHTML = '<b>sem fonte ainda</b> ' + DADOS.pendencias.join(' · ');
+      itens.push(el);
+    }
+    alvo.replaceChildren(...itens);
+    const quando = DADOS.gerado_em ? new Date(DADOS.gerado_em) : null;
+    const selo = root.querySelector('.ft-tag');
+    if (selo && quando) selo.textContent = 'atualizado em ' + quando.toLocaleDateString('pt-BR') +
+      ' às ' + quando.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  })();
+
+  dash.onData(() => { desenhar(); desenharGrafico(); });
+})();
+</script>
+</script>
+</div>
+</body>
+</html>
