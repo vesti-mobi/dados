@@ -5,6 +5,22 @@ e as reuniões gerenciais. Implementa o [MDATA-503](https://vesti.atlassian.net/
 
 Painel estático: abre no navegador, sem instalação e sem servidor.
 
+No ar em **https://vesti-mobi.github.io/dados/painel-tribo/**, atualizado todo
+dia às 05:00 pelo workflow `.github/workflows/painel-tribo.yml`.
+
+## Acesso
+
+A tela pede uma senha (`Mudar123`), no mesmo padrão dos outros painéis da casa.
+
+> **Isto esconde a tela, não o dado.** Este repositório é público, então o
+> `dados.js` continua acessível por URL direta — com GMV, receita, chargeback e
+> CSAT da série inteira. A senha evita que alguém que abra o link veja o painel
+> montado; não impede quem souber o caminho do arquivo.
+>
+> Para proteger de verdade, o painel precisa sair de um host público: um
+> repositório privado com Pages (plano pago) ou a Vercel com Deployment
+> Protection ligada.
+
 | Arquivo | O que é |
 |---|---|
 | `index.html` | O painel. Duas abas, funil invertido, gráfico semanal. |

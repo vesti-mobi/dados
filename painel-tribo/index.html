@@ -20,6 +20,20 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
 </style>
 
 <style>
+#login{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--color-bg);font-family:var(--font-anthropic-sans);z-index:10}
+#login[hidden]{display:none}
+#login form{display:flex;flex-direction:column;gap:var(--cds-gap-sm);width:min(100%,18rem);padding:var(--cds-pad-lg)}
+#login h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);
+  margin:0 0 var(--cds-gap-md);text-align:center}
+#login label{font-size:var(--cds-font-size-caption);color:var(--color-fg-muted)}
+#login input{font:inherit;font-size:var(--cds-font-size-body);padding:var(--cds-pad-sm) var(--cds-pad-md);
+  border:1px solid var(--color-border-line);border-radius:var(--cds-radius);
+  background:var(--color-panel);color:var(--color-fg)}
+#login button{font:inherit;font-size:var(--cds-font-size-body);padding:var(--cds-pad-sm);cursor:pointer;
+  border:0;border-radius:var(--cds-radius);background:var(--color-fg);color:var(--color-bg)}
+#login #login-erro{font-size:var(--cds-font-size-caption);color:var(--color-bad);margin:0;text-align:center}
+#login #login-erro[hidden]{display:none}
 .ft-fontes{display:flex;flex-wrap:wrap;gap:var(--cds-gap-xs) var(--cds-gap-lg);font-size:var(--cds-font-size-caption);
   color:var(--color-fg-muted);border-top:1px solid var(--color-border-line);padding-top:var(--cds-pad-md);margin:0}
 .ft-fontes b{color:var(--color-fg);font-weight:var(--cds-font-weight-medium)}
@@ -29,7 +43,17 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
 <script src="dados.js"></script>
 </head>
 <body>
-<div id="dash-root">
+<div id="login">
+  <form id="login-form" autocomplete="off">
+    <h1>Painel da Tribo</h1>
+    <label for="pwd">Senha</label>
+    <input id="pwd" type="password" autocomplete="current-password" autofocus>
+    <button type="submit">Entrar</button>
+    <p id="login-erro" hidden>Senha incorreta.</p>
+  </form>
+</div>
+
+<div id="dash-root" hidden>
 <style>
 .ft{font-family:var(--font-anthropic-sans);font-variant-numeric:tabular-nums;max-width:64rem;margin-inline:auto;display:flex;flex-direction:column;gap:var(--cds-gap-lg)}
 .ft-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:var(--cds-gap-md)}
@@ -285,7 +309,37 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
   <p class="ft-fontes" id="rodape-fontes"></p>
 </div>
 <script>
+// Trava de acesso, no mesmo padrão dos outros painéis da casa.
+// Isto esconde a TELA, não o dado: num repositório público, o dados.js
+// continua acessível por URL direta. Para proteger de verdade, o painel
+// precisa sair de um host público — ver o README.
 (() => {
+  const SENHA = 'Mudar123';
+  const login = document.getElementById('login');
+  const painel = document.getElementById('dash-root');
+  const erro = document.getElementById('login-erro');
+  let montado = false;
+
+  const abrir = () => {
+    login.hidden = true;
+    painel.hidden = false;
+    if (!montado) { montado = true; montarPainel(); }
+  };
+  document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (document.getElementById('pwd').value === SENHA) {
+      try { sessionStorage.setItem('tribo_auth', '1'); } catch (x) {}
+      abrir();
+    } else {
+      erro.hidden = false;
+      document.getElementById('pwd').select();
+    }
+  });
+  try { if (sessionStorage.getItem('tribo_auth') === '1') abrir(); } catch (x) {}
+  window.__abrirPainel = abrir;
+})();
+
+function montarPainel() {
   const root = document.querySelector('.ft');
   const DADOS = window.DADOS_TRIBO || { diario: [], fontes: {}, sem_fonte: [] };
 
@@ -707,7 +761,7 @@ html,body{margin:0;background:var(--color-bg);color:var(--color-fg)}
   })();
 
   dash.onData(() => { desenhar(); desenharGrafico(); });
-})();
+}
 </script>
 </script>
 </div>
