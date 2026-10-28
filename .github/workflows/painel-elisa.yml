@@ -1,13 +1,121 @@
+# ATRASO DO SCHEDULER DO GITHUB
+# O GitHub entrega os eventos `schedule` DIARIOS deste repositorio com 5 a 7h
+# de atraso, todo dia (medido em 27/10/2026: este workflow pediu 08:00 e 15:30 BRT e
+# rodou 13:16 e 19:26 BRT). `created_at == run_started_at`: o evento nasce tarde, nao
+# e fila de runner. E best-effort do lado do GitHub, sem correcao possivel
+# aqui. Crons HORARIOS atrasam pouco (5-59 min) mas o GitHub descarta boa
+# parte deles. Ver tambem o comentario em update-starkbank.yml.
+#
+# GATILHO PRINCIPAL (desde 28/10/2026): um job do Cloud Scheduler no projeto
+# GCP vesti-data-499015 crava 08:00 e 15:30 BRT e chama
+#   POST https://api.github.com/repos/vesti-mobi/dados/dispatches
+#   {"event_type":"painel-elisa-update"}
+#   gcloud scheduler jobs list --location=southamerica-east1 --project=vesti-data-499015
+#
+# Os crons `schedule` abaixo ficam como REDE DE SEGURANCA pra quando o
+# Scheduler falhar (PAT expirado, por exemplo). Eles pedem disparos de 15 em
+# 15 min numa faixa larga; quem decide e o job `guard`, pela hora REAL de
+# chegada — nunca pela hora agendada.
+
 name: Atualizar Painel Elisa
 
 on:
   schedule:
-    - cron: '0 11 * * *'   # 08:00 BRT
-    - cron: '30 18 * * *'  # 15:30 BRT
+    - cron: '*/15 10-13 * * *'   # cobre a janela das 08:00 BRT
+    - cron: '*/15 17-21 * * *'   # cobre a janela das 15:30 BRT
+  repository_dispatch:
+    types: [painel-elisa-update]
   workflow_dispatch:
 
+concurrency:
+  group: painel-elisa
+  cancel-in-progress: false
+
 jobs:
+  # Decide se o trabalho deve rodar. Barato: ~10s quando a resposta e nao.
+  guard:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Esta na janela e ainda nao rodou neste turno?
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENTO: ${{ github.event_name }}
+          WF: painel-elisa.yml
+          JOB_TRABALHO: build
+          # Janelas de execucao em minutos desde 00:00 BRT (08:00-10:59 e 15:30-18:59).
+          JANELAS: '480-659 930-1139'
+          # Horas de silencio exigidas depois de um trabalho real, pra dois
+          # disparos do mesmo turno nao rodarem o job duas vezes.
+          COOLDOWN_H: '5'
+        run: |
+          # Tres origens, tres regras:
+          #
+          #   workflow_dispatch   — eu, na mao, pela UI. Roda sempre.
+          #   repository_dispatch — o Cloud Scheduler no horario certo. Ignora
+          #                         a janela (o horario dele JA e o certo) mas
+          #                         respeita o cooldown, pra nao duplicar o
+          #                         trabalho num dia em que um cron do GitHub
+          #                         tenha chegado antes dele.
+          #   schedule            — os crons do GitHub, rede de seguranca.
+          #                         Janela + cooldown.
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
+            echo "Disparo manual: roda sem checar."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$EVENTO" = "schedule" ]; then
+            MIN=$(( $(TZ=America/Sao_Paulo date +%-H) * 60 + $(TZ=America/Sao_Paulo date +%-M) ))
+            DENTRO=0
+            for F in $JANELAS; do
+              if [ "$MIN" -ge "${F%%-*}" ] && [ "$MIN" -le "${F#*-}" ]; then DENTRO=1; fi
+            done
+            if [ "$DENTRO" -eq 0 ]; then
+              echo "Agora sao $(TZ=America/Sao_Paulo date +%H:%M) BRT — fora das janelas. Nada a fazer."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          # Quando foi o ultimo TRABALHO de verdade? Nao da pra olhar so a
+          # conclusao do run: um run em que o guard deu skip tambem termina
+          # como success, e usar isso como marcador se auto-envenenaria (o
+          # skip da 01h bloquearia o trabalho das 04h). Entao procuramos o
+          # run mais recente em que o job '$JOB_TRABALHO' concluiu com
+          # sucesso — ele so existe quando o guard liberou.
+          ULTIMO=""
+          for ID in $(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/${WF}/runs?status=success&per_page=30" \
+                        --jq '.workflow_runs[].id' 2>/dev/null | head -12); do
+            OK=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${ID}/jobs" \
+                   --jq "[.jobs[] | select(.name==\"${JOB_TRABALHO}\" and .conclusion==\"success\")] | length" 2>/dev/null || echo 0)
+            if [ "${OK:-0}" -gt 0 ]; then
+              ULTIMO=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${ID}" --jq '.created_at' 2>/dev/null || true)
+              break
+            fi
+          done
+          if [ -z "$ULTIMO" ]; then
+            # Fail-open: sem historico confiavel, preferimos rodar a deixar o
+            # painel sem atualizar.
+            echo "Nao achei nenhum run com '$JOB_TRABALHO' bem-sucedido nos ultimos 12 — roda por seguranca."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          H=$(( ( $(date -u +%s) - $(date -u -d "$ULTIMO" +%s) ) / 3600 ))
+          echo "Ultimo '$JOB_TRABALHO' bem-sucedido: $ULTIMO (ha ${H}h) | cooldown ${COOLDOWN_H}h"
+          if [ "$H" -lt "$COOLDOWN_H" ]; then
+            echo "Ja rodou neste turno. Nada a fazer."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Turno novo — seguindo."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: guard
+    if: needs.guard.outputs.skip != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
