@@ -1,35 +1,38 @@
 name: Atualizar Relatorio StarkBank VestiPago
 
-# ATRASO DO SCHEDULER DO GITHUB (constatado em 31/08/2026)
-# Desde 27/08/2026 o GitHub passou a entregar os eventos `schedule` deste
-# repositorio com 6 a 12h de atraso — nao so aqui: painel-clientes-cs (cron
-# '0 7'), update-dashboard ('30 7') e relatoriocs2 ('40 8') sofreram o mesmo
-# desvio nos mesmos dias. Ex.: o cron das 07:10 UTC disparou 18:15 (27/08),
-# 19:24 (28/08), 13:08 (29/08), 12:49 (30/08) e 15:03 (31/08). Ate 26/08 o
-# atraso era de ~35-50min. `created_at == run_started_at` em todos, ou seja,
-# o run nasce tarde: o evento e que atrasa, nao a fila de runners.
+# ATRASO DO SCHEDULER DO GITHUB (constatado 31/08/2026, re-medido 28/10/2026)
+# O GitHub entrega os eventos `schedule` DIARIOS deste repositorio com 5 a 7h
+# de atraso, todo dia. Nao e so aqui: em 27/10 o bdr-bigquery (cron 03:00 BRT)
+# rodou 08:39, o painel-elisa (08:00 BRT) rodou 13:16 e este (04:10 BRT) rodou
+# 10:08. `created_at == run_started_at` em todos: o evento nasce tarde, nao e
+# fila de runner. E comportamento best-effort do lado do GitHub, sem correcao
+# possivel aqui.
 #
-# Isso e comportamento conhecido e best-effort do lado do GitHub (schedules
-# podem ser atrasados ou descartados sob carga) e nao tem correcao no nosso
-# lado. O que da pra fazer e nao depender de um unico disparo:
-#   1. varios crons ao longo da manha (abaixo), em minutos nao-redondos;
-#   2. um job `guard` que sai na hora se o relatorio completo de hoje (BRT)
-#      ja foi gerado — entao os crons extras custam ~10s quando o primeiro
-#      funcionou, e so fazem trabalho de verdade quando ele foi pulado;
-#   3. `concurrency` pra dois disparos nunca rodarem em paralelo;
-#   4. `repository_dispatch`, pra um agendador externo (cron-job.org, Cloud
-#      Scheduler, etc.) chamar isto na hora certa quando quisermos horario
-#      garantido: POST /repos/vesti-mobi/dados/dispatches
-#      com {"event_type":"starkbank-update"}.
+# O QUE MUDA O JOGO: crons HORARIOS atrasam pouco — o atualizar-saldos
+# ('7 * * * *') chega com 5 a 59 min de atraso. Em troca, o GitHub DESCARTA
+# varios disparos (27/10 entregou 8 das 24 horas). Entao a estrategia e:
+#   1. pedir disparos a cada 15 min na faixa que antecede a janela desejada;
+#   2. o job `guard` decide pela hora REAL de chegada, nao pela agendada:
+#      so executa entre 04:00 e 07:59 BRT (madrugada + um fallback de manha
+#      cedo) e so se o relatorio de hoje ainda nao foi gerado;
+#   3. fora dessa faixa, ou se o dia ja foi feito, o guard sai em ~10s —
+#      repo publico, minutos de Actions ilimitados, custo zero;
+#   4. `concurrency` pra dois disparos nunca rodarem em paralelo;
+#
+# GATILHO PRINCIPAL (desde 28/10/2026): um job do Cloud Scheduler no projeto
+# GCP vesti-data-499015 crava 04:00 America/Sao_Paulo e chama
+#   POST /repos/vesti-mobi/dados/dispatches  {"event_type":"starkbank-update"}
+# Ele ignora a janela horaria do guard (o horario dele ja e o certo) mas
+# respeita a checagem do dia. Os crons `schedule` acima ficam como rede de
+# seguranca pra quando o Scheduler falhar.
+#   gcloud scheduler jobs list --location=<regiao> --project=vesti-data-499015
 
 on:
   schedule:
-    # Run COMPLETO (CR + CP, ambos API Vesti). O primeiro que pegar o dia faz
-    # o trabalho; os demais viram no-op via job `guard`.
-    - cron: '10 7 * * *'    # 04:10 BRT - principal
-    - cron: '48 8 * * *'    # 05:48 BRT - fallback 1
-    - cron: '26 10 * * *'   # 07:26 BRT - fallback 2
-    - cron: '52 12 * * *'   # 09:52 BRT - ultimo recurso
+    # Faixa 02:00-08:59 BRT agendada (05:00-11:59 UTC), a cada 15 min. Com o
+    # atraso tipico de 5-59 min, as chegadas cobrem com folga a janela de
+    # execucao 04:00-07:59 BRT que o `guard` aplica.
+    - cron: '*/15 5-11 * * *'
   repository_dispatch:
     types: [starkbank-update]
   workflow_dispatch:
@@ -64,11 +67,37 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           EVENTO: ${{ github.event_name }}
         run: |
-          # Disparo manual / externo sempre roda: quem pediu, pediu.
-          if [ "$EVENTO" != "schedule" ]; then
-            echo "Evento '$EVENTO': roda sem checar."
+          # Tres origens, tres regras:
+          #
+          #   workflow_dispatch   — eu, na mao, pela UI. Roda sempre, sem
+          #                         checar nada: quem pediu, pediu.
+          #   repository_dispatch — o Cloud Scheduler cravando 04:00 BRT.
+          #                         Ignora a janela horaria (o horario dele JA
+          #                         e o certo), mas respeita a checagem do dia
+          #                         — senao, num dia em que um cron do GitHub
+          #                         chegasse antes dele, rodariamos o job
+          #                         completo (~25min) duas vezes.
+          #   schedule            — os crons do GitHub, rede de seguranca pra
+          #                         quando o Scheduler falhar. Janela horaria
+          #                         + checagem do dia.
+          if [ "$EVENTO" = "workflow_dispatch" ]; then
+            echo "Disparo manual: roda sem checar."
             echo "skip=false" >> "$GITHUB_OUTPUT"
             exit 0
+          fi
+          if [ "$EVENTO" = "schedule" ]; then
+            # Janela de execucao: 04:00-07:59 BRT. O cron pede disparos de 15
+            # em 15 min porque o GitHub atrasa e descarta boa parte deles; quem
+            # manda e a hora REAL de chegada. Depois das 08:00 o dia nao
+            # atualiza mais — e o pedido explicito: uma atualizacao de
+            # madrugada, com um unico fallback de manha cedo, nunca de tarde.
+            # 10# evita base octal.
+            H=$(TZ=America/Sao_Paulo date +%H)
+            if [ "$((10#$H))" -lt 4 ] || [ "$((10#$H))" -ge 8 ]; then
+              echo "Agora sao ${H}h BRT — fora da janela 04:00-07:59. Nada a fazer."
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
           fi
           # invoices.js (CR) so e commitado quando o run completo roda, entao
           # a data do ultimo commit dele e o marcador confiavel do dia.
