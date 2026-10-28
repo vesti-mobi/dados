@@ -1156,6 +1156,7 @@ function renderTabTravadas() {
     {label:"Marca", fn:r=>r.name, sort:r=>r.name},
     {label:"CS", fn:r=>r.cs, sort:r=>r.cs},
     {label:"Canal", fn:r=>r.canal, sort:r=>r.canal},
+    {label:"Domínio", cls:"num", fn:r=>r.domain_id||"—", sort:r=>+r.domain_id||0},
     {label:"Data entrada", fn:r=>(r.dataEntrada||"—").slice(0,10), sort:r=>r.dataEntrada||""},
     {label:"1º pedido cadastrado", fn:r=>(r.primeiroPedidoCadastrado||"—").slice(0,10), sort:r=>r.primeiroPedidoCadastrado||""},
     {label:"1ª venda", fn:r=>(r.primeiraVenda||"—").slice(0,10), sort:r=>r.primeiraVenda||""},
