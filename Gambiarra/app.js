@@ -10,7 +10,8 @@ const fmtBRLCurto = (n) => {
 };
 
 // state.chaves = lista de periodos selecionados (multi-selecao). 1 item = comportamento antigo.
-const CANAIS = ["Starter","Vesti","Uemtel","Atta","Parceiros"];
+// Varejo Vesti separado de Vesti como canal proprio -- pedido da Laura, 21/10/2026
+const CANAIS = ["Starter","Vesti","Varejo Vesti","Uemtel","Atta","Parceiros"];
 const state = { periodo:"mensal", chaves:[], cs:"todas", canais:new Set(CANAIS), empresa:"todas", tab:"home", cadMes:"todos", upgMin:300000, soCoorte:true, reativOrigem:"todas", reativDrill:null, portesSel:new Set(),
   inadDias:0, situacoes:new Set(["alerta","bloqueada","cancelada"]) };
 const D = (typeof DADOS !== "undefined") ? DADOS : { empresas:[], mesesList:[], semanasList:[], anosList:[] };
@@ -18,7 +19,8 @@ const D = (typeof DADOS !== "undefined") ? DADOS : { empresas:[], mesesList:[], 
 const PARC_EXCL = new Set(["atta","attasoft","onix","uemtel","vesti","varejo vesti"]);
 const isUemtel = (e) => (e.partner_raw||"").toLowerCase() === "uemtel";
 const isAtta   = (e) => ["atta","attasoft"].includes((e.partner_raw||"").toLowerCase());
-const isVesti  = (e) => ["vesti","varejo vesti"].includes((e.partner_raw||"").toLowerCase());
+const isVarejoVesti = (e) => (e.partner_raw||"").toLowerCase() === "varejo vesti";
+const isVesti  = (e) => (e.partner_raw||"").toLowerCase() === "vesti";
 const COLORS = ["#6C5CE7","#00B894","#F39C12","#E17055","#0984E3","#FD79A8","#00CEC9","#A29BFE","#D63031","#74B9FF","#FFB94A","#55EFC4"];
 const charts = {}; // canvas id -> Chart instance
 // Corte entre "em alerta" e "bloqueada": e' o mesmo do n8n ("Bloqueio e Desbloqueio"),
@@ -33,6 +35,7 @@ const INAD_ABANDONO_DIAS = 60;
 function canalDe(e) {
   if (e.starter_interno) return "Starter";
   if (isVesti(e)) return "Vesti";
+  if (isVarejoVesti(e)) return "Varejo Vesti";
   if (isUemtel(e)) return "Uemtel";
   if (isAtta(e)) return "Atta";
   return "Parceiros";
@@ -416,6 +419,9 @@ function exportTableToExcel(tableId, filename) {
 function baixarInadimplentesExcel() {
   exportTableToExcel("tbl-inadimplentes", `inadimplentes_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+function baixarFaturasExcel() {
+  exportTableToExcel("tbl-faturas", `faturas_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
 
 // Copia o link de checkout da fatura (Iugu) pra CS colar e mandar pro
 // lojista. Clipboard API exige contexto seguro (https/localhost) -- sem isso
@@ -461,6 +467,15 @@ function diasSemPagar(e) {
 function abandonou(e) {
   const d = diasSemPagar(e);
   return d !== null && d > INAD_ABANDONO_DIAS;
+}
+
+// dias ATE o vencimento da proxima fatura (aba Faturas) -- negativo nunca
+// acontece aqui: o build ja so' traz due_dt >= hoje (ver SQL_FATURAS_ABERTAS).
+function diasAteVencer(e) {
+  if (!e.proximaFaturaVencimento) return null;
+  const t = new Date(e.proximaFaturaVencimento + "T00:00:00").getTime();
+  if (isNaN(t)) return null;
+  return Math.ceil((t - Date.now()) / 86400000);
 }
 
 // Devedoras de DENTRO do painel: modulo `vendas` ligado, sem pagar desde o
@@ -521,6 +536,20 @@ function linhasInadimplentes(minDias, ignorarSituacao) {
   const todas = [...marcasInadimplentes(min), ...canc];
   // o card da Home ignora os filtros da aba (passa ignorarSituacao)
   return ignorarSituacao ? todas : todas.filter(e => state.situacoes.has(situacaoDe(e)));
+}
+
+// Aba Faturas: todas as marcas com fatura ainda NAO vencida, MENOS quem ja
+// esta em Inadimplentes (faturasVencidas > 0 -- mesmo criterio de
+// inadAtivas()). Ordenada por vencimento mais proximo primeiro. Assim que a
+// fatura vence (due_dt < hoje), proximaFaturaVencimento some do build e
+// faturasVencidas passa a ter valor -- a marca sai daqui e entra em
+// Inadimplentes sozinha, no proximo refresh do painel (2x/dia). Pedido da
+// Laura, 20/10/2026.
+function linhasFaturas() {
+  return empresasFiltradas()
+    .filter(e => e.proximaFaturaVencimento && !(e.faturasVencidas || 0))
+    .sort((a, b) => a.proximaFaturaVencimento < b.proximaFaturaVencimento ? -1
+                   : a.proximaFaturaVencimento > b.proximaFaturaVencimento ? 1 : 0);
 }
 
 // 3 estados, definicao da Laura (ajustada em 08/09/2026):
@@ -613,6 +642,7 @@ function renderKpis() {
   $("kpi-inad-sub").textContent =
     `${fmtInt(nA)} em alerta · ${fmtInt(nB)} bloqueadas · ${fmtInt(nC)} canceladas · `
     + `${fmtBRL(inad.reduce((s,e)=>s+(e.valorEmAberto||0),0))} em aberto`;
+  $("kpi-faturas").textContent = fmtInt(linhasFaturas().length);
   $("kpi-cliques").textContent    = fmtInt(cliquesTot);
   $("kpi-links").textContent      = fmtInt(linksTot);
   $("kpi-marcas-link").textContent = fmtInt(marcasLink);
@@ -1286,6 +1316,40 @@ function renderTabInadimplentes() {
   });
 }
 
+// Aba Faturas: todas as marcas, menos quem ja esta em Inadimplentes -- ver
+// linhasFaturas(). Sem graficos/situacao: e' so' a lista pra CS acompanhar o
+// que vai vencer e mandar o link antes do prazo. Pedido da Laura, 20/10/2026.
+function renderTabFaturas() {
+  const lista = linhasFaturas();
+  const hint = $("faturas-hint");
+  if (hint) hint.innerHTML = lista.length
+    ? `${fmtInt(lista.length)} marcas · ${fmtBRL(lista.reduce((s,e)=>s+(e.proximaFaturaValor||0),0))} a vencer`
+    : "nenhuma marca com fatura em aberto (todo mundo sem fatura ainda ou ja esta em Inadimplentes)";
+  renderTable("tbl-faturas", [
+    // .trim() -- alguns nomes vem com espaco sobrando na ponta
+    // (odbc_companies/odbc_domains), o que bagunca a ordenacao alfabetica
+    // (espaco ordena antes de letra). So' nesta coluna nova, pra nao mexer
+    // no padrao ja' usado nas outras tabelas (mesmo "bug" latente nelas).
+    {label:"Marca", fn:r=>(r.name||"").trim(), sort:r=>(r.name||"").trim()},
+    {label:"CS", fn:r=>r.cs||"—", sort:r=>r.cs||""},
+    {label:"Canal", fn:r=>canalDe(r), sort:r=>canalDe(r)},
+    {label:"Domínio", cls:"num", fn:r=>r.domain_id||"—", sort:r=>+r.domain_id||0},
+    {label:"Vencimento", fn:r=>r.proximaFaturaVencimento||"—", sort:r=>r.proximaFaturaVencimento||""},
+    {label:"Dias até vencer", cls:"num", fn:r=>{
+       const d = diasAteVencer(r);
+       return d === null ? "—" : fmtInt(d);
+     }, sort:r=>diasAteVencer(r) ?? 9999},
+    // link de checkout da Iugu da proxima fatura -- mesmo botao da aba Inadimplentes
+    {label:"Fatura", fn:r=>{
+       const link = r.linkProximaFatura;
+       if (!link) return "—";
+       return `<button class="btn-copy-link" onclick="copiarLinkFatura(this,'${link.replace(/'/g,"\\'")}')">🔗 Copiar link</button>`;
+     }, sort:r=>r.linkProximaFatura||""},
+    {label:"Valor", cls:"num", fn:r=>fmtBRL(r.proximaFaturaValor||0), sort:r=>r.proximaFaturaValor||0},
+    {label:"Mensalidade", cls:"num", fn:r=>r.valor_mensal==null?"—":fmtBRL(r.valor_mensal), sort:r=>r.valor_mensal||0},
+  ], lista);
+}
+
 function renderTabLinks() {
   const lista = empresasFiltradas();
   // evolução mensal — duas linhas: cliques e links
@@ -1428,6 +1492,10 @@ function renderTabUpgrade() {
     {label:"Mensalidade contratada", cls:"num", fn:r=>r._mens?fmtBRL(r._mens):"—", sort:r=>r._mens||0},
     {label:"Última fatura paga", cls:"num", fn:r=>r.valor_mensal?fmtBRL(r.valor_mensal):"—", sort:r=>r.valor_mensal||0},
     {label:"Filiais", cls:"num", fn:r=>fmtInt(r.qtdFiliais||0), sort:r=>r.qtdFiliais||0},
+    // mesma janela pra todo mundo (ultimos3MesesFechados), mas vira coluna pra
+    // nao se perder no Baixar Excel -- so o texto acima da tabela some' no
+    // export, a coluna fica. Pedido da Laura, 21/10/2026.
+    {label:"Meses considerados (GMV)", fn:r=>meses.join(" + ") || "—", sort:r=>meses.join(" ")},
     {label:"GMV 3 meses", cls:"num", fn:r=>fmtBRL(r._g3), sort:r=>r._g3},
     {label:"Pedidos 3 meses", cls:"num", fn:r=>fmtInt(r._q3), sort:r=>r._q3},
     // quantas vezes o GMV do trimestre cabe na mensalidade: quanto maior, mais defasado o plano
@@ -1559,7 +1627,7 @@ const TAB_LABELS = {
   reativ:"Ativações e reativações", topstarter:"TOP 10 Starter", topparceiros:"TOP 10 Parceiros",
   vpinativo:"Sem VP Ativo", freteinativo:"Sem Frete Ativo", travadas:"Marcas Travadas",
   upgrade:"Oportunidades de Upgrade", tamanho:"Tamanho da marca",
-  inadimplentes:"Inadimplentes", links:"Links & Cliques"
+  inadimplentes:"Inadimplentes", faturas:"Faturas", links:"Links & Cliques"
 };
 
 function switchTab(tab) {
@@ -1594,6 +1662,7 @@ function renderActiveTab() {
   else if (state.tab === "upgrade") renderTabUpgrade();
   else if (state.tab === "tamanho") renderTabTamanho();
   else if (state.tab === "inadimplentes") renderTabInadimplentes();
+  else if (state.tab === "faturas") renderTabFaturas();
   else if (state.tab === "links") renderTabLinks();
 }
 

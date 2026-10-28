@@ -46,7 +46,7 @@ SHEET_ID = os.environ.get("CHURN_SHEET_ID") or "19gGUPtmDT9xacgfkTWcLM_MN_iWhUGJ
 # painel ("vamos usar somente essa planilha como referência para todas as abas
 # que tenham churn" — Laura), então o ano anterior também precisa vir: sem ele
 # a comparação "contra o mesmo trimestre do ano passado" não teria base.
-ABAS = [a.strip() for a in (os.environ.get("CHURN_SHEET_ABA") or "2026,2025").split(",") if a.strip()]
+ABAS = [a.strip() for a in (os.environ.get("CHURN_SHEET_ABA") or "2026,2025,2024").split(",") if a.strip()]
 
 # Só estas observações contam como churn. O resto da planilha é ignorado —
 # regra explícita do Walid, não invenção nossa.
@@ -59,7 +59,11 @@ ABAS = [a.strip() for a in (os.environ.get("CHURN_SHEET_ABA") or "2026,2025").sp
 #
 # "solicitou cancelamento e inadimplente" entra pelo startswith; "solicitou O
 # cancelamento", que aparece em 2025, precisa da terceira entrada.
-OBSERVACOES = ["solicitou cancelamento", "solicitou o cancelamento", "inadimplente"]
+#
+# "inadimenplente" é erro de digitação, 16 linhas da aba de 2024. São churns de
+# verdade: sem a entrada abaixo elas sumiriam do painel.
+OBSERVACOES = ["solicitou cancelamento", "solicitou o cancelamento",
+               "inadimplente", "inadimenplente"]
 
 SCOPES = ["https://www.googleapis.com/auth/drive.readonly"]
 
@@ -200,7 +204,7 @@ def main() -> None:
         )
         sys.exit(1)
 
-    aceitos, ignorados = [], {}
+    aceitos, ignorados, semData = [], {}, 0
     for l in linhas:
         obs = pegar(l, "observacao", "observacoes", "obs")
         k = chave(obs)
@@ -212,6 +216,13 @@ def main() -> None:
             continue
         nome = pegar(l, "marca", "cliente", "empresa", "nome")
         if not nome:
+            continue
+        # Sem Data da Perda a linha não tem lugar no tempo: não entra em
+        # período nenhum do painel e ainda contaria como marca viva na
+        # reconstrução da base. Melhor fora. São ~214, quase todas de 2024.
+        data = iso(pegar(l, "data da perda", "data", "data do churn", "mes", "cancelamento"))
+        if not data:
+            semData += 1
             continue
         # A coluna de domínio da planilha vem de fórmula e chega como "#REF!" ou
         # "None" em boa parte das linhas — só vale quando é número mesmo.
@@ -233,14 +244,21 @@ def main() -> None:
             # `alvo` é a entrada de OBSERVACOES que casou. "solicitou o
             # cancelamento" é uma delas e também é cancelamento — comparar com
             # a string exata fazia essas 7 linhas de 2025 virarem "Inadimplente".
-            "motivo": "Inadimplente" if alvo == "inadimplente" else "Solicitou cancelamento",
+            "motivo": "Inadimplente" if alvo.startswith("inadim") else "Solicitou cancelamento",
             "observacao": str(obs).strip(),
-            "data": iso(pegar(l, "data da perda", "data", "data do churn", "mes", "cancelamento")),
+            "data": data,
+            # ANIVERSÁRIO é a data em que a marca ENTROU. É o que permite
+            # reconstruir a base ativa de um mês passado: quem saiu depois dele
+            # e entrou antes dele estava ativo lá. Sem isso o churn em % só
+            # existiria contra a base de hoje.
+            "entrada": iso(pegar(l, "aniversario", "entrada", "data de entrada", "inicio")),
             "plano": (str(pegar(l, "plano") or "")).strip() or None,
             "valor": valor,
         })
 
     print(f"[churn] aceitos: {len(aceitos)} (solicitou cancelamento / inadimplente)")
+    if semData:
+        print(f"[churn] descartadas por nao terem Data da Perda: {semData}")
     if ignorados:
         top = sorted(ignorados.items(), key=lambda x: -x[1])[:6]
         print("[churn] observações ignoradas: " + ", ".join(f"{k} ({n})" for k, n in top))

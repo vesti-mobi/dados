@@ -1878,10 +1878,16 @@ const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
 /* ===========================================================================
    TIER — o porte da marca pelo GMV (Laura, 13/10/2026)
 
-     T1  acima de R$ 1 milhão por mês
-     T2  de R$ 200 mil a R$ 1 milhão
-     T3  de R$ 50 mil a R$ 200 mil
-     T4  abaixo de R$ 50 mil
+     T1  acima de R$ 5 milhões por mês
+     T2  de R$ 1 milhão a R$ 5 milhões
+     T3  de R$ 500 mil a R$ 1 milhão
+     T4  abaixo de R$ 500 mil
+
+   Réguas de 22/10/2026, as segundas do dia: de manhã a Laura pediu T1 acima
+   de 800 mil e T3 de 100 a 200 mil; à tarde subiu tudo para esta escala.
+   Mexer aqui NÃO mexe em quem foi fixado à mão: o fixo tem precedência
+   sobre o cálculo em `tierDaMarca`, e é por isso que o quadro pode mostrar
+   uma marca de R$ 900 mil em T1 — alguém a colocou lá.
 
    pela MÉDIA dos dois últimos meses FECHADOS — hoje, agosto e setembro. O mês
    corrente fica de fora de propósito: no dia 3 ele teria três dias de venda e
@@ -1899,10 +1905,10 @@ const temTinoAtivo = c => TINO_ATIVO_POR_DOM[String(c.dominio)] === 'Ativa';
    4:00. Casa por domínio e, na falta dele, pelo nome.
    ========================================================================= */
 const FAIXAS_TIER = [
-  {t:'T1', min:1000000, l:'acima de R$ 1 mi/mês'},
-  {t:'T2', min:200000,  l:'R$ 200 mil a R$ 1 mi/mês'},
-  {t:'T3', min:50000,   l:'R$ 50 a 200 mil/mês'},
-  {t:'T4', min:0,       l:'abaixo de R$ 50 mil/mês'},
+  {t:'T1', min:5000000, l:'acima de R$ 5 mi/mês'},
+  {t:'T2', min:1000000, l:'R$ 1 a 5 mi/mês'},
+  {t:'T3', min:500000,  l:'R$ 500 mil a R$ 1 mi/mês'},
+  {t:'T4', min:0,       l:'abaixo de R$ 500 mil/mês'},
 ];
 const TIERS = FAIXAS_TIER.map(f=>f.t);
 
@@ -2464,6 +2470,68 @@ const chaveNomeMarca = s => String(s||'').normalize('NFD').replace(/[\u0300-\u03
   .toLowerCase().replace(/\s+/g,' ').trim();
 const CLIENTE_POR_NOME = (()=>{ const m={};
   DATA.clientes.forEach(c=>{ const k = chaveNomeMarca(c.nome); if(k && !m[k]) m[k]=c }); return m })();
+/* --- reunião interna × reunião com cliente (26/10/2026) -------------------
+   Pedido da Laura: "em visão geral - reuniões, tem várias sem empresa e sem
+   assunto da Luana" e, depois de ver o diagnóstico, "tirar todas as
+   internas". Em outubro ela tinha 22 reuniões e 17 eram daily, 1:1 e
+   alinhamento de time — e como reunião vale 1 ponto na pontuação, isso ia
+   direto para o placar dela.
+
+   A régua: reunião SEM empresa associada no HubSpot cujo título também não
+   nomeia nenhuma marca do cadastro é INTERNA. O título serve para resgatar
+   as que são com cliente e só perderam a associação — "Oráculo Benesh",
+   "Chargeback Black Jeans", "Visita Dagomar - Upper Concept". Só vale nome
+   de marca com cinco letras ou mais, e inteiro: "Anne" solto, dentro de
+   "Anne Blanc", casaria com meio mundo.
+
+   "Interno" escrito no título vence o casamento. As doze "Charisma interno"
+   são reuniões SOBRE a marca, não com ela — sem o desempate elas voltariam
+   para a conta pela porta dos fundos.
+
+   Esta régua existe DUAS VEZES: aqui e em `fetch_dados.js`, que marca o
+   campo `interna` e tira essas reuniões da bonificação. O painel prefere o
+   campo quando ele vem; enquanto o dados.js for anterior a 26/10/2026, ele
+   classifica sozinho. Mexeu numa, mexa na outra. */
+const chaveTitulo = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+/* Do nome mais longo para o mais curto: "Charisma Varejo" tem que ganhar de
+   "Charisma" quando os dois cabem no título. */
+const MARCAS_DO_TITULO = (()=>{
+  const vistos = new Set(), out = [];
+  DATA.clientes.forEach(c=>{
+    const k = chaveTitulo(c.nome);
+    if(!k || k.replace(/ /g,'').length < 5 || vistos.has(k)) return;
+    vistos.add(k); out.push({nome:c.nome, dominio:c.dominio, k});
+  });
+  return out.sort((a,b)=>b.k.length-a.k.length);
+})();
+function marcaNoTitulo(titulo){
+  const t = ' ' + chaveTitulo(titulo) + ' ';
+  return MARCAS_DO_TITULO.find(m=> t.includes(' ' + m.k + ' ')) || null;
+}
+function ehReuniaoInterna(r){
+  if(r.interna != null) return !!r.interna;
+  if(r.cliente && !/^\(sem empresa\)$/i.test(r.cliente)) return false;
+  if(/\bintern[oa]s?\b/i.test(r.reuniao||'')) return true;
+  return !marcaNoTitulo(r.reuniao);
+}
+/* As internas saem de `DATA.reunioes` inteiras, e não de cada card: um
+   consumidor esquecido voltaria a contá-las. Ficam aqui ao lado para o card
+   poder dizer quantas foram deixadas de fora. */
+const REUNIOES_INTERNAS = [];
+(()=>{
+  const comCliente = [];
+  (DATA.reunioes||[]).forEach(r=>{
+    if(ehReuniaoInterna(r)){ REUNIOES_INTERNAS.push(r); return }
+    if(!r.cliente || /^\(sem empresa\)$/i.test(r.cliente)){
+      const m = marcaNoTitulo(r.reuniao);
+      if(m){ r.cliente = m.nome; r.dominio = r.dominio || m.dominio; r.porTitulo = true }
+    }
+    comCliente.push(r);
+  });
+  DATA.reunioes = comCliente;
+})();
+
 
 /* --- o recorte de CS das abas de card -------------------------------------
    Toda linha passa por aqui. O universo depende da aba: a <b>Gerencial</b>
@@ -3095,10 +3163,12 @@ const CARDS_GERENCIAL = [
     resumo:rows=>({v:fmt.int(rows.length),
       s: rows.length ? `${rows.filter(r=>r.resultado==='Fechou negócio').length} fecharam negócio · ${fmt.moneyCompact(soma(rows.filter(r=>r.resultado==='Fechou negócio'),'valor'))}`
                      : 'nenhuma reunião no mês'}),
-    kpis:rows=>{ const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
+    kpis:(rows,ctx)=>{ const fechou = rows.filter(r=>r.resultado==='Fechou negócio');
       const marcas = new Set(rows.map(r=>r.nome));
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:'no mês, sem contar agendadas'},
+        {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(janelaDoMes(ctx.m))),
+         s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
         {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
         {l:'Valor fechado', v:fmt.moneyCompact(soma(fechou,'valor')), s:'negócios creditados a essas reuniões'},
         {l:'Marcas atendidas', v:fmt.int(marcas.size), s:'empresas distintas no mês'},
@@ -3203,13 +3273,14 @@ const CARDS_GERENCIAL = [
   {
     id:'churnMes', titulo:'Churn do mês', cor:'#C0453B',
     capa:'Marcas perdidas no mês, pela Data da Perda da planilha do time',
-    fonte:'marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura. <b>Marca apenas bloqueada não entra</b> (13/10/2026): bloqueio é fatura vencida há 11+ dias, ou módulo cortado com a fatura ainda em aberto — a marca pode voltar a pagar, e volta. Quem está bloqueada e o time já sabe que foi embora entra pela planilha. <b>"Em alerta" também fica de fora</b>: 1 a 10 dias de atraso é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, na Gerencial. A coluna <b>Origem</b> diz por qual das duas pontas a marca entrou.',
+    fonte:'o que o time registrou na <b>planilha de churn</b>, pela <b>Data da Perda</b> — só as observações &quot;solicitou cancelamento&quot; e &quot;inadimplente&quot;, sem contar a mesma marca duas vezes. A planilha é a <b>única fonte</b> do churn em todo o painel desde 15/10/2026, a pedido da Laura. As abas de <b>2026, 2025 e 2024</b> entram juntas; linha sem Data da Perda fica de fora, porque não teria lugar no tempo. <b>A taxa</b> divide as marcas perdidas pela base ativa no começo do recorte. Essa base é <b>reconstruída</b>: o cadastro só guarda quem existe hoje, então cada marca vira uma vida com data de entrada (o cadastro, ou a coluna ANIVERSÁRIO da planilha) e data de saída (a Data da Perda, o churn do cadastro ou, em último caso, o último pedido). Estava ativa em março quem entrou antes e ainda não tinha saído. A conta dá 707 marcas no fim de setembro contra 695 ativas hoje — o erro é pequeno perto de hoje e cresce para trás, porque marca que entrou e saiu sem deixar registro não aparece. <b>A taxa some quando se filtra por carteira</b>: a marca perde a CS no cadastro quando sai, então o churn dela cai em &quot;Sem CS&quot; enquanto o denominador da carteira fica só com quem ficou.',
     vazio:'Nenhuma marca da carteira em foco deu churn neste mês.',
     linhas:ctx=>soDoFoco(eventosDeChurn(janelaDoMes(ctx.m))),
     resumo:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m))).length;
+      const taxa = taxaChurn(rows.length, ctx.m);
       return {v:fmt.int(rows.length),
         s: rows.length
-          ? `${fmt.moneyCompact(soma(rows,'perdido'))}/mês perdidos · ${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
+          ? `${taxa==null?'':fmt.pct1(taxa)+' da base ativa · '}${fmt.moneyCompact(soma(rows,'perdido'))}/mês perdidos · ${rows.length-ant>=0?'+':''}${rows.length-ant} vs ${rotuloMes(mesAnterior(ctx.m))}`
           : 'nenhuma marca perdida no mês'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardGerencial('churnMes'), ctxGerencial(mesAnterior(ctx.m)));
       const doze = MESES_GERENCIAL.slice(0,12)
@@ -3217,6 +3288,14 @@ const CARDS_GERENCIAL = [
       const media12 = doze.length ? doze.reduce((a,b)=>a+b,0)/doze.length : 0;
       return [
         {l:'Marcas perdidas', v:fmt.int(rows.length), s:(rows.length-ant.length>=0?'+':'')+fmt.int(rows.length-ant.length)+' vs '+rotuloMes(mesAnterior(ctx.m))},
+        /* A mesma perda em duas réguas: quantas marcas e quanto da base elas
+           eram. 45 marcas em setembro de 2026 é mais do que 45 em 2025,
+           porque a base encolheu no meio do caminho. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, ctx.m)),
+         s: recorteEhABaseInteira() ? 'das marcas ativas no começo do mês' : SEM_TAXA_POR_CS},
+        {l:'Base ativa no começo do mês',
+         v: recorteEhABaseInteira() ? fmt.int(baseAtivaNoFim(mesAnterior(ctx.m))) : '—',
+         s: recorteEhABaseInteira() ? 'reconstruída pela entrada e pela saída de cada marca' : SEM_TAXA_POR_CS},
         {l:'Solicitaram cancelamento', v:fmt.int(rows.filter(r=>/solicitou/i.test(r.detalhe||'')).length),
          s:'pediram para sair'},
         {l:'Inadimplentes', v:fmt.int(rows.filter(r=>/inadimpl/i.test(r.detalhe||'')).length),
@@ -3227,7 +3306,19 @@ const CARDS_GERENCIAL = [
         {l:'Sem CS no cadastro', v:fmt.int(rows.filter(r=>r.cs==='Sem CS').length),
          s:'a marca saiu e levou o responsável junto'},
       ]; },
-    metricas:[{k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length}],
+    metricas:[
+      {k:'qtd', l:'Marcas perdidas', f:fmt.int, v:rows=>rows.length},
+      /* A taxa, e não só a contagem — pedido da Laura em 20/10/2026: "em
+         março tinha 540 clientes ativos, o churn foi 54 clientes, ou seja,
+         10%". A base é a do início do mês, reconstruída em `VIDAS`. */
+      /* Eixo próprio e linha: a taxa vive entre 2% e 8% e, dividindo a escala
+         com uma contagem que chega a 80, virava um risco no chão do gráfico.
+         O valor perdido, pelo mesmo motivo, pega o segundo eixo da direita. */
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, fEixo:fmt.pct1, tipo:'line', eixo:'dir',
+       v:(rows,m)=>taxaChurn(rows.length, m)},
+      {k:'valorPerdido', l:'Valor perdido', f:fmt.moneyCompact, fEixo:fmt.moneyCompact,
+       tipo:'line', eixo:'dir2', v:rows=>soma(rows,'perdido')},
+    ],
     colunas:[COL_NOME, COL_CS_CARD, {k:'data', l:'Data da perda', f:fmt.date},
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
@@ -3534,7 +3625,10 @@ function seriePorBucketDoCard(c, ctx, rows){
   return buckets.map((b, i)=>{
     const o = Object.assign({}, b);
     o.noFiltro = b.bucket >= fIni && b.bucket <= fFim;
-    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], ctxJanela) });
+    /* O 2º argumento é o MÊS do balde, não o contexto: é o que a série
+       gerencial já passa, e é o que uma métrica como a taxa de churn precisa
+       para saber contra qual base dividir. */
+    c.metricas.forEach(x=>{ o[x.k] = x.v(listas[i], b.bucket) });
     return o;
   });
 }
@@ -3768,7 +3862,12 @@ function pecasDoCard(c, ctx, rows){
   if(ctx.tipo === 'periodo' && !c.campoData) return null;
 
   const dados = ctx.tipo === 'mes' ? serieMensalDoCard(c, ctx) : seriePorBucketDoCard(c, ctx, rows);
-  const corSerie = i => i ? tint(c.cor,.58) : c.cor;
+  /* A terceira série precisa de cor PRÓPRIA, não de outro tom da mesma: no
+     card do churn a taxa e o valor perdido saíam os dois no mesmo rosa claro
+     e a legenda não dizia qual linha era qual. Âmbar porque ele contrasta
+     tanto com o vermelho do churn quanto com o azul e o cinza das barras. */
+  const TONS_EXTRA = ['#B4530A', '#1E74C8', '#2F7D5B'];
+  const corSerie = i => i===0 ? c.cor : i===1 ? tint(c.cor,.58) : TONS_EXTRA[(i-2) % TONS_EXTRA.length];
   const destaque = ctx.tipo === 'mes' ? ctx.m : null;
   /* ANO CONTRA ANO, como no relatório mensal: quando o card tem uma métrica
      só e o recorte é de mês, cada mês ganha duas barras — o ano anterior em
@@ -3776,13 +3875,19 @@ function pecasDoCard(c, ctx, rows){
      comparação sairia ilegível, então ali continua como era. */
   /* Três meses com valor no ano anterior é o mínimo para a barra cinza dizer
      alguma coisa; abaixo disso é ausência de dado, não queda. */
-  const anoAano = ctx.tipo === 'mes' && c.metricas.length === 1
-    && dados.filter(d=>(d[c.metricas[0].k+'Ant']||0) > 0).length >= 3;
+  /* Métrica em eixo PRÓPRIO não disputa as barras — é uma linha por cima —,
+     então ela não impede a comparação com o ano anterior. O card do churn tem
+     as duas coisas: barras de 2025 e 2026 e a taxa correndo por cima. */
+  const metricasDeBarra = c.metricas.filter(x=>!x.eixo);
+  const metricasDeEixoProprio = c.metricas.filter(x=>x.eixo === 'dir' || x.eixo === 'dir2');
+  const anoAano = ctx.tipo === 'mes' && metricasDeBarra.length === 1
+    && dados.filter(d=>(d[metricasDeBarra[0].k+'Ant']||0) > 0).length >= 3;
   const anoAtual = dados.length ? dados[dados.length-1].bucket.slice(0,4) : '';
   const anoAntes = String(Number(anoAtual) - 1);
 
   const leg = anoAano
     ? `<i><b style="background:#B8C2D6"></b>${anoAntes}</i><i><b style="background:#1F4FD8"></b>${anoAtual}</i>`
+      + metricasDeEixoProprio.map((x,i)=>`<i><b style="background:${corSerie(c.metricas.indexOf(x))}"></b>${x.l}</i>`).join('')
     : c.metricas.map((x,i)=>`<i><b style="background:${corSerie(i)}"></b>${x.l}</i>`).join('');
   /* O título do bloco é o nome do card — "Volume transacionado" no slide — e a
      nota à direita diz o que o gráfico mostra. */
@@ -3811,11 +3916,16 @@ function pecasDoCard(c, ctx, rows){
     /* Aqui as barras do ano corrente ficam TODAS em azul cheio: apagar as que
        não são o mês escolhido, como o gráfico de uma série só faz, deixava o
        azul claro quase igual ao cinza do ano anterior e a comparação sumia. */
-    ? [{k:c.metricas[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:c.metricas[0].f},
-       {k:c.metricas[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:c.metricas[0].f}]
+    ? [{k:metricasDeBarra[0].k+'Ant', l:anoAntes, tipo:'bar', cor:'#B8C2D6', f:metricasDeBarra[0].f},
+       {k:metricasDeBarra[0].k, l:anoAtual, tipo:'bar', cor:AZUL, f:metricasDeBarra[0].f}]
+      /* `eixo: x.eixo`, não 'dir' fixo: com o eixo chumbado, a taxa e o valor
+         perdido caíam na MESMA régua e a taxa (2 a 8) virava um risco no chão
+         de uma escala que ia a R$ 40 mil. */
+      .concat(metricasDeEixoProprio.map(x=>({k:x.k, l:x.l, tipo:x.tipo||'line', eixo:x.eixo,
+        cor:corSerie(c.metricas.indexOf(x)), fEixo:x.fEixo, f:x.f})))
     : c.metricas.map((x,i)=>{
     const cor = corSerie(i);
-    return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f,
+    return {k:x.k, l:x.l, tipo:x.tipo || 'bar', eixo:x.eixo, cor, f:x.f, fEixo:x.fEixo,
       /* no recorte de mês, o mês escolhido fica em cor cheia e o resto apagado:
          é o que faz o "melhor ou pior" saltar sem precisar ler o eixo. */
       corDe: destaque ? (d)=> d.bucket===destaque ? cor : tint(cor,.38) : acende(cor)};
@@ -3963,7 +4073,9 @@ function kpisGerencial(){
      s: fmt.int(pedidos)+' pedidos no mês · '+fmt.moneyCompact(gmv)+' de fato pagos'},
     {l:'Faturado no Iugu', v:fmt.moneyCompact(plano+outros), s:fmt.moneyCompact(plano)+' de plano · '+fmt.moneyCompact(outros)+' de Oráculo, filial e afins (Starter incluído)'},
     {l:'Marcas novas', v:fmt.int(novas), s:'cadastro criado no mês'},
-    {l:'Churn no mês', v:fmt.int(churn), s:'pela Data da Perda da planilha do time'},
+    {l:'Churn no mês', v:fmt.int(churn),
+     s:(()=>{ const t = taxaChurn(churn, m); return (t==null?'':fmt.pct1(t)+' da base ativa · ')
+       +'pela Data da Perda da planilha do time' })()},
   ];
 }
 
@@ -4260,6 +4372,123 @@ function eventosDeChurn(p, quem){
       naCarteira: marca ? 'sim' : 'não achou no cadastro'});
   });
   return out.sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+}
+/* --- a base ativa de um mês do passado ------------------------------------
+   Pedido da Laura em 20/10/2026: "Hoje a gente tá vendo churn em número (ex:
+   5 churns). É possível ver em % e olhar para o passado? Por ex: em março
+   tinha 540 clientes ativos, o churn foi 54 clientes, ou seja, 10%".
+
+   O cadastro só guarda quem existe HOJE. Para dizer quantas marcas estavam
+   ativas em março é preciso reconstruir a base: cada marca vira uma VIDA com
+   data de entrada e, quando já saiu, data de saída. Estava ativa no fim do
+   mês M quem entrou até lá e ainda não tinha saído.
+
+   De onde vem cada ponta:
+     entrada — `dataCadastro` do cadastro; para quem já nem está no cadastro,
+               a coluna ANIVERSÁRIO da planilha de churn;
+     saída   — `dataChurn` do cadastro, a Data da Perda da planilha ou, em
+               último caso, o último pedido de uma marca que hoje está
+               inativa e não foi registrada em lugar nenhum.
+
+   O que a conta NÃO alcança, e por isso a base fica um pouco baixa (e a taxa
+   um pouco alta) quanto mais para trás se olha: as marcas inativas hoje sem
+   nenhuma data de saída, que ficam de fora de todos os meses, e as que
+   entraram e saíram sem deixar registro. O erro encolhe ao se aproximar de
+   hoje — no fim de setembro a conta dá 707 contra as 695 ativas de agora.
+
+   A CS é sempre a de HOJE aplicada ao passado: o cadastro não guarda troca de
+   carteira, então a taxa por carteira é uma aproximação. A da empresa toda,
+   não: ela não depende de quem atendia. */
+const VIDAS = (()=>{
+  const daPlanilha = new Map();
+  ((DATA.churnPlanilha||{}).linhas||[]).forEach(l=>{
+    const k = chaveNomeMarca(l.cliente); if(!k) return;
+    const e = daPlanilha.get(k) || {entrada:null, saida:null, dominio:null, casou:false};
+    if(l.entrada && (!e.entrada || l.entrada < e.entrada)) e.entrada = l.entrada;
+    if(l.data    && (!e.saida   || l.data    > e.saida  )) e.saida   = l.data;
+    if(l.dominio) e.dominio = String(l.dominio);
+    daPlanilha.set(k, e);
+  });
+  const porDominio = new Map();
+  daPlanilha.forEach(v=>{ if(v.dominio) porDominio.set(v.dominio, v) });
+
+  const vidas = [];
+  DATA.clientes.forEach(c=>{
+    const p = daPlanilha.get(chaveNomeMarca(c.nome)) || porDominio.get(String(c.dominio));
+    if(p) p.casou = true;
+    const viva = c.status === 'ativo';
+    const entrada = c.dataCadastro || (p && p.entrada) || null;
+    const saida = viva ? null : (c.dataChurn || (p && p.saida) || c.ultimoPedido || null);
+    /* Sem entrada não dá para saber desde quando contar; inativa sem nenhuma
+       data de saída ficaria viva para sempre. Inventar data seria pior do que
+       admitir o buraco, então essas marcas ficam fora da conta. */
+    if(!entrada || (!viva && !saida)) return;
+    vidas.push({cs: c.cs || 'Sem CS', entrada, saida, viva});
+  });
+  daPlanilha.forEach(p=>{
+    if(p.casou || !p.entrada || !p.saida) return;
+    /* Marca que saiu e já não está no cadastro: a CS vem da carteira de
+       ontem, a mesma fonte que o card do churn usa para não dizer "Sem CS"
+       em quem levou o responsável junto ao sair. */
+    const hist = daCarteiraDeOntem(p.dominio);
+    vidas.push({cs: (hist && hist.cs) || 'Sem CS', entrada: p.entrada, saida: p.saida, viva:false});
+  });
+  return vidas;
+})();
+
+/* Quantas marcas estavam ativas no ÚLTIMO DIA do mês `m` ('2026-03'). Sem
+   `quem`, é a EMPRESA INTEIRA — não `csDoFoco()`. O universo de CS muda de
+   aba (a Visão geral só conhece as CS da carteira) e o denominador encolhia
+   junto enquanto o numerador seguia inteiro: a banda de churn chegou a
+   mostrar 43,6% porque dividia 129 marcas perdidas por 296. A taxa por
+   carteira não existe de qualquer forma — veja `recorteEhABaseInteira`. */
+function baseAtivaNoFim(m, quem){
+  if(!m) return 0;
+  const f = ultimoDiaDoMes(m + '-01');
+  let n = 0;
+  for(const v of VIDAS){
+    if(v.entrada > f) continue;
+    if(!v.viva && v.saida <= f) continue;
+    if(quem && !quem(v.cs)) continue;
+    n++;
+  }
+  return n;
+}
+/* A taxa olha a base no INÍCIO do recorte — a do fim do mês anterior ao
+   primeiro —, que é como o time lê: "em março tinha 540 ativos, saíram 54,
+   ou seja 10%". `quando` chega como mês ('2026-03') nos gráficos mês a mês e
+   como contexto ou período nas leituras do filtro de data. */
+function mesInicialDe(quando){
+  if(!quando) return null;
+  if(typeof quando === 'string') return quando.slice(0,7);
+  const p = quando.p || quando;
+  return p && p.ini ? String(p.ini).slice(0,7) : null;
+}
+/* A TAXA SÓ VALE NA BASE INTEIRA, e é por isso que ela some quando alguém
+   filtra por carteira. A marca que sai costuma perder a CS no cadastro junto
+   com o módulo: em setembro de 2026, 37 dos 44 churns estão como "Sem CS". O
+   denominador, porém, fica com quem ficou. A conta por carteira daria 1% para
+   a Gabriella, 2,9% para a Thamiris e 16,7% para "Sem CS" — três números
+   errados. Tentei corrigir pela carteira histórica e ela só alcança 2 das 243
+   marcas sem CS, porque só existe desde 13/08/2026. Enquanto o cadastro não
+   guardar de quem era a marca quando ela saiu, taxa por CS é invenção. */
+function recorteEhABaseInteira(){
+  const u = universoCs(), f = estado.filtros.cs;
+  return !f || !f.size || [...f].filter(n=>u.includes(n)).length === u.length;
+}
+const SEM_TAXA_POR_CS = 'sem taxa por carteira: quem sai perde a CS no cadastro';
+/* Quantos meses o recorte cobre. "15,6% da base" lido sozinho parece taxa
+   mensal; num trimestre ele é a soma dos três meses, e precisa dizer isso. */
+function mesesDoRecorte(p){
+  if(!p || !p.ini) return 1;
+  const a = p.ini.slice(0,7), z = String(p.fim||p.ini).slice(0,7);
+  return (Number(z.slice(0,4))-Number(a.slice(0,4)))*12 + (Number(z.slice(5,7))-Number(a.slice(5,7))) + 1;
+}
+function taxaChurn(qtd, quando, quem){
+  const m = mesInicialDe(quando); if(!m) return null;
+  if(!quem && !recorteEhABaseInteira()) return null;
+  const base = baseAtivaNoFim(mesAnterior(m), quem);
+  return base ? qtd / base * 100 : null;
 }
 /* A bonificação pede por lista de meses e só conta as três CS do programa —
    ou uma delas, na visão individual. O filtro por mês fica depois da janela
@@ -4813,7 +5042,7 @@ const CARDS_VISAO = [
   {
     id:'churnCs', titulo:'Churn', cor:'#C0453B',
     capa:'Marcas perdidas no período, pela Data da Perda da planilha do time',
-    fonte:'marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (observação "solicitou cancelamento" ou "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. Régua escrita pelo Eduardo em 07/10/2026 para a bonificação e estendida às outras abas a pedido da Laura. <b>Marca apenas bloqueada não entra</b> (13/10/2026): bloqueio é fatura vencida há 11+ dias, ou módulo cortado com a fatura ainda em aberto — a marca pode voltar a pagar, e volta. Quem está bloqueada e o time já sabe que foi embora entra pela planilha. <b>"Em alerta" também fica de fora</b>: 1 a 10 dias de atraso é cobrança, não perda — quem está devendo hoje está no card <i>Inadimplência hoje</i>, na Gerencial. A coluna <b>Origem</b> diz por qual das duas pontas a marca entrou.',
+    fonte:'o que o time registrou na <b>planilha de churn</b>, pela <b>Data da Perda</b> — só as observações &quot;solicitou cancelamento&quot; e &quot;inadimplente&quot;, sem contar a mesma marca duas vezes. A planilha é a <b>única fonte</b> do churn em todo o painel desde 15/10/2026, a pedido da Laura. As abas de <b>2026, 2025 e 2024</b> entram juntas; linha sem Data da Perda fica de fora, porque não teria lugar no tempo. <b>A taxa</b> divide as marcas perdidas pela base ativa no começo do recorte. Essa base é <b>reconstruída</b>: o cadastro só guarda quem existe hoje, então cada marca vira uma vida com data de entrada (o cadastro, ou a coluna ANIVERSÁRIO da planilha) e data de saída (a Data da Perda, o churn do cadastro ou, em último caso, o último pedido). Estava ativa em março quem entrou antes e ainda não tinha saído. A conta dá 707 marcas no fim de setembro contra 695 ativas hoje — o erro é pequeno perto de hoje e cresce para trás, porque marca que entrou e saiu sem deixar registro não aparece. <b>A taxa some quando se filtra por carteira</b>: a marca perde a CS no cadastro quando sai, então o churn dela cai em &quot;Sem CS&quot; enquanto o denominador da carteira fica só com quem ficou.',
     campoData:'data',
     /* Sem filtro de CS: esta aba só tem o de período, e boa parte das marcas
        bloqueadas já perdeu a CS no cadastro — sairiam da conta se filtrasse. */
@@ -4823,9 +5052,12 @@ const CARDS_VISAO = [
       /* O valor perdido vem no resumo, não só nos KPIs: é a pergunta que vem
          logo depois de "quantas marcas", e sem abrir o card ela não aparecia. */
       const perdido = soma(rows, 'perdido');
+      const taxa = taxaChurn(rows.length, ctx);
+      const nm = mesesDoRecorte(ctx.p);
       return {v:fmt.int(rows.length),
         s: rows.length
-          ? fmt.moneyCompact(perdido)+'/mês perdidos · '
+          ? (taxa==null ? '' : fmt.pct1(taxa)+' da base ativa'+(nm>1 ? ' em '+nm+' meses' : '')+' · ')
+            + fmt.moneyCompact(perdido)+'/mês perdidos · '
             + (dif===0 ? 'igual ao período anterior' : (dif>0?'+':'')+fmt.int(dif)+' vs período anterior')
           : 'nenhum churn no período'}; },
     kpis:(rows,ctx)=>{ const ant = linhasDoCard(cardVisao('churnCs'), ctxPeriodo(periodoAnterior(ctx.p)));
@@ -4833,6 +5065,14 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        /* Número e taxa lado a lado: a base encolheu de ~900 para ~700 em
+           dois anos, então a mesma contagem pesa diferente em cada ponto. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, ctx)),
+         s: !recorteEhABaseInteira() ? SEM_TAXA_POR_CS
+            : 'das ativas no começo'+(mesesDoRecorte(ctx.p)>1 ? ', somando os '+mesesDoRecorte(ctx.p)+' meses' : ' do período')},
+        {l:'Base ativa no começo',
+         v: recorteEhABaseInteira() ? fmt.int(baseAtivaNoFim(mesAnterior(String(ctx.p.ini).slice(0,7)))) : '—',
+         s: recorteEhABaseInteira() ? 'reconstruída pela entrada e pela saída de cada marca' : SEM_TAXA_POR_CS},
         {l:'Valor perdido por mês', v:fmt.moneyCompact(soma(rows,'perdido')),
          s:`o que essas marcas pagavam · conhecido de ${fmt.int(rows.filter(r=>r.perdido>0).length)} das ${fmt.int(rows.length)}`},
         {l:'Solicitaram cancelamento', v:fmt.int(rows.filter(r=>/solicitou/i.test(r.detalhe||'')).length),
@@ -4843,7 +5083,13 @@ const CARDS_VISAO = [
         {l:'Contra os clientes novos', v:pctTexto(rows.length, novas.length),
          s:fmt.int(novas.length)+' clientes novos no mesmo período'},
       ]; },
-    metricas:[{k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length}],
+    metricas:[
+      {k:'qtd', l:'Churn', f:fmt.int, v:rows=>rows.length},
+      {k:'taxa', l:'% da base ativa', f:fmt.pct1, fEixo:fmt.pct1, tipo:'line', eixo:'dir',
+       v:(rows,m)=>taxaChurn(rows.length, m)},
+      {k:'valorPerdido', l:'Valor perdido', f:fmt.moneyCompact, fEixo:fmt.moneyCompact,
+       tipo:'line', eixo:'dir2', v:rows=>soma(rows,'perdido')},
+    ],
     colunas:[{k:'data', l:'Data da perda', f:fmt.date}, COL_NOME, COL_CS_CARD,
       {k:'perdido', l:'Valor perdido', r:true, forte:true, dinheiro:true, principal:true, f:v=>v?fmt.money(v):'—'},
       {k:'detalhe', l:'Motivo'},
@@ -4853,7 +5099,7 @@ const CARDS_VISAO = [
   {
     id:'quadroTiers', titulo:'Tiers da carteira', cor:'#1F4FD8',
     capa:'As marcas separadas por porte, para arrastar de um tier para outro',
-    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
+    fonte:'<b>Tier</b> é o porte da marca pelo GMV, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 mi/mês, <b>T2</b> de R$ 1 a 5 mi, <b>T3</b> de R$ 500 mil a R$ 1 mi, <b>T4</b> abaixo de R$ 500 mil. O GMV é o da régua do relatório do Power BI (todo pedido criado, sem teto), o mesmo da coluna GMV da Tabela geral. '
       + '<b>Este card não obedece ao filtro de período</b> da aba: o tier é sempre a média dos dois meses fechados, senão "esta marca é T2" mudaria de resposta conforme a janela escolhida. O <b>GMV no cabeçalho de cada coluna</b> é a soma dessas médias — é a mesma conta que classifica, não o GMV do período de cima. '
       + '<b>Arrastar uma marca para outra coluna fixa o tier dela</b>, e a partir daí o cálculo automático não mexe mais nessa marca: é o caso da que é pequena dentro da Vesti e grande fora. A marca fixada fica com uma marca dourada; arrastá-la de volta para a coluna onde ela já está desfaz a fixação. <b>O que você arrasta vale para o time inteiro</b> — é salvo no servidor na hora, não só neste navegador.',
     semTabela:true,
@@ -4871,7 +5117,7 @@ const CARDS_VISAO = [
   {
     id:'reunioesVg', titulo:'Reuniões realizadas', cor:'#B54A72',
     capa:'Reuniões já realizadas dentro do período',
-    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Desde 24/09/2026 entram as de <b>qualquer dono</b>, não só as do time de CS: reunião marcada por vendas ou por parceiro também conta. Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento.',
+    fonte:'HubSpot — <code>meetings</code> (data de início e dono). Desde 24/09/2026 entram as de <b>qualquer dono</b>, não só as do time de CS: reunião marcada por vendas ou por parceiro também conta. Agendamento futuro não entra; o negócio ganho é creditado à última reunião daquela empresa antes do fechamento — por isso um negócio fechado em outubro pode aparecer numa reunião de maio, e sumir do recorte quando o filtro não alcança maio. <b>Reunião interna não entra</b> desde 26/10/2026, a pedido da Laura: daily, 1:1 e alinhamento de time não são reunião com cliente e não valem ponto. A régua é não ter empresa associada no HubSpot <i>e</i> o título não nomear nenhuma marca do cadastro — o título resgata as que são com cliente e só perderam a associação ("Oráculo Benesh", "Chargeback Black Jeans"), e "interno" escrito nele vence o resgate. Das 108 sem empresa, 15 voltaram com o nome da marca e 93 ficaram de fora; o KPI <i>Internas fora da conta</i> diz quantas foram no recorte.',
     campoData:'data',
     linhas:ctx=>reunioesNoPeriodo(ctx.p).map(r=>({nome:r.cliente||'(sem empresa)',
       cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS', data:r.data, resultado:r.resultado,
@@ -4884,6 +5130,9 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        /* O que o filtro de internas tirou, dito em voz alta (26/10/2026). */
+        {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(ctx.p)),
+         s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
         {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
         {l:'Valor fechado', v:fmt.moneyCompact(soma(fechou,'valor')), s:'negócios creditados a essas reuniões'},
         {l:'Marcas atendidas', v:fmt.int(new Set(rows.map(r=>r.nome)).size), s:'empresas distintas'},
@@ -4898,7 +5147,7 @@ const CARDS_VISAO = [
   {
     id:'negociosVg', titulo:'Negócios', cor:'#4048B8',
     capa:'Cross-sell e upgrade criados no período — o que já foi ganho e o que ainda está em negociação',
-    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele — quem não tem mensalidade anterior fica em branco e é contado à parte.',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade anterior</b> — marca cuja receita não passa pelo Iugu, como a Boise, com 293 dias de série e nenhum centavo de mensalidade — não tem de onde tirar a diferença e entra com ganho zero aqui; o valor cheio desses negócios aparece no KPI <i>Upgrades sem base</i>, para o dinheiro não sumir da vista (26/10/2026).',
     campoData:'data',
     linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
                  ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
@@ -4937,6 +5186,18 @@ const CARDS_VISAO = [
         {l:'Cross-sell ganho', v:fmt.moneyCompact(soma(cross,'valor')), s:fmt.int(cross.length)+' negócios de produto novo'},
         {l:'Upgrade: ganho por mês', v:fmt.moneyCompact(soma(up,'efetivo')),
          s:fmt.int(up.length)+' upgrades'+(semBase?' · '+fmt.int(semBase)+' sem base anterior':'')+' · é a diferença, não o plano cheio'},
+        /* O dinheiro que a régua da diferença não alcança, dito à parte
+           (26/10/2026). A Laura viu o upgrade da Boise na tabela por R$ 1.299
+           e o KPI de ganho ignorando ele: o Iugu não tem mensalidade nenhuma
+           da marca — 293 dias de série, tudo zero —, então não há de onde
+           tirar a diferença e o efetivo fica em zero. Somar o plano cheio
+           junto com as diferenças misturaria duas réguas no mesmo número, e
+           a régua da diferença é da Laura. Então o valor aparece aqui, do
+           lado, pelo que o negócio vale no HubSpot. */
+        {l:'Upgrades sem base', v:fmt.moneyCompact(soma(gan.filter(r=>r.semBase),'valor')),
+         s: semBase
+            ? fmt.int(semBase)+' negócios pelo valor cheio · fora do ganho acima, que é só diferença'
+            : 'todo upgrade do período tem mensalidade anterior no Iugu'},
       ]; },
     metricas:[
       {k:'valorGanho', l:'Ganho (upgrade pela diferença)', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Ganho'),'efetivo')},
@@ -5553,6 +5814,13 @@ function novasVendasNoPeriodo(p){
    pipelines, sempre com esse nome). Campo de data: `fechadoEm`
    (closedate/hs_lastmodifieddate) — aproximado, não é a data exata da troca
    de estágio. */
+/* Quantas reuniões internas o recorte deixou de fora — a prestação de contas
+   do filtro. Sem isso a contagem simplesmente encolhe e ninguém sabe por quê. */
+function internasNoPeriodo(p, quem){
+  const cs = quem || (x => csDoFoco().has(normalizarCs(x)||'Sem CS'));
+  return REUNIOES_INTERNAS.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim
+    && cs(r.cs)).length;
+}
 function reunioesNoPeriodo(p){
   return DATA.reunioes.filter(r=>r.data && r.data>=p.ini && r.data<=p.fim && r.resultado!=='Agendada');
 }
@@ -5788,7 +6056,7 @@ const TABS = [
     id:'clientes', grupo:'Carteira', nav:'Tabela geral', cor:'#0E7A73', cor2:'#B7791F',
     titulo:'Tabela geral dos clientes',
     desc:'Uma linha por cliente com contrato, uso e composição de receita. Pedidos e receita são somados dentro do período selecionado — que agora é uma <b>janela de datas</b>, então "agosto" é agosto inteiro e só ele. <b>GMV</b> é o mesmo em todas as abas (15/10/2026): a régua do relatório <i>GMV - Métricas 2025</i> do Power BI — pedidos feitos, pagos ou não, <b>sem os cancelados, os não fechados e os de Link de cobrança</b>, e <b>sem o teto de R$ 50 mil</b> por pedido. A coluna <b>Do qual pago</b> ao lado mostra quanto virou dinheiro (só pedido pago, com teto) — é apoio, não o GMV. <b>Data de cadastro</b> é a entrada da marca na Vesti (criação do domínio), com o tempo de casa embaixo. <b>Canal</b> é o parceiro dono da conta (Vesti, Attasoft, Uemtel…). <b>Tino</b>, <b>Oráculo</b> e <b>VestiPago</b> dizem se a marca <i>tem</i> o produto, não se usa: o Tino vem da base do próprio produto, o VestiPago de ter conta de pagamento criada e o Oráculo de ter atendimento registrado. Quem contratou e ainda não rodou nada aparece como <b>Sim</b> — o volume de cada um está nas abas de produto. <b>Interchange</b> já é líquido: o fee do cartão menos a taxa do banco. <b>Último acesso</b> ainda não tem fonte: o BigQuery não guarda login de lojista. '
-      + '<b>Tier</b> (13/10/2026) é o <b>porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 mi/mês, <b>T2</b> de R$ 200 mil a R$ 1 mi, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. Também <b>não depende do período do filtro</b>: "esta marca é T2" não pode mudar de resposta conforme a janela escolhida. <b>Uma marca pode ser fixada num tier à mão</b> — para o caso da que é pequena dentro da Vesti e grande fora dela —, e aí o cálculo automático nunca mais mexe nela: a linha mostra "fixado à mão" com o motivo, e o filtro <b>Tier</b> tem a opção <b>Fixado à mão</b> para listar todas. '
+      + '<b>Tier</b> (13/10/2026) é o <b>porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — hoje, agosto e setembro; o mês corrente não entra, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 mi/mês, <b>T2</b> de R$ 1 a 5 mi, <b>T3</b> de R$ 500 mil a R$ 1 mi, <b>T4</b> abaixo de R$ 500 mil. Também <b>não depende do período do filtro</b>: "esta marca é T2" não pode mudar de resposta conforme a janela escolhida. <b>Uma marca pode ser fixada num tier à mão</b> — para o caso da que é pequena dentro da Vesti e grande fora dela —, e aí o cálculo automático nunca mais mexe nela: a linha mostra "fixado à mão" com o motivo, e o filtro <b>Tier</b> tem a opção <b>Fixado à mão</b> para listar todas. '
       + '<b>Health score</b> (régua da Laura, 22/09/2026) é uma nota de 0 a 100 da saúde da marca, <b>independente do período do filtro</b>: ela olha sempre os <b>últimos 30 dias corridos</b>. '
       + 'São cinco regras — <b>+20</b> pedido há menos de 5 dias · <b>+30</b> atividade na plataforma há menos de 3 dias · <b>+20</b> mais de 1 link compartilhado por dia · <b>+20</b> GMV estável ou crescendo (queda de até 15% vs os 30 dias anteriores) · <b>+10</b> média de 2 ou mais pedidos por dia. '
       + 'Como login de lojista não existe no lake, <b>atividade</b> é o mais recente entre link de produto compartilhado por um vendedor da marca e pedido criado — é uso, não login. '
@@ -6016,11 +6284,11 @@ const TABS = [
   {
     id:'churn', grupo:'Carteira', nav:'Churn', cor:'#C0453B', cor2:'#7B8595',
     titulo:'Churn',
-    desc:'<b>A régua do churn, a mesma em todo o painel desde 13/10/2026</b> — pedido da Laura: "usa a mesma regra da bonificação de churn em todas as abas". Entra a marca com a <b>plataforma cancelada</b> — módulo de vendas cortado <i>e</i> a última fatura com status <code>canceled</code> na Iugu, lido do <a href="https://vesti-mobi.github.io/dados/Gambiarra/" target="_blank" rel="noopener">Painel Elisa</a> — <b>somada</b> ao que o time registrou na <b>planilha de churn</b> (só as observações "solicitou cancelamento" e "inadimplente"), <b>sem contar a mesma marca duas vezes</b>. É a régua que o Eduardo escreveu em 07/10/2026 para a bonificação. '
-      + '<b>O filtro de período recorta pela data do churn</b>: a do corte do módulo, ou a que o time escreveu na planilha. '
-      + '<b>Marca apenas bloqueada não entra</b>, desde 13/10/2026. As três situações do Painel Elisa são degraus do mesmo caminho e só o último é perda: <b>alerta</b> é fatura vencida há 1 a 10 dias, cobrança; <b>bloqueada</b> é 11+ dias ou módulo cortado com a fatura ainda em aberto, e a marca pode voltar a pagar — e volta; <b>cancelada</b> é módulo cortado <i>com</i> a fatura cancelada, e aí acabou. Quem está bloqueada e o time já sabe que foi embora entra assim mesmo, pela planilha. A foto de quem está devendo <i>hoje</i>, em qualquer situação, continua inteira no card <b>Inadimplência hoje</b>, na aba Gerencial. '
-      + '<b>Origem</b> diz por qual das duas pontas a marca entrou; <b>No cadastro?</b> avisa quando a marca da planilha não foi encontrada no cadastro — nesses casos não há CS, plano nem mensalidade para mostrar. '
-      + 'Marca bloqueada costuma <b>perder a CS no cadastro junto com o módulo</b>, então boa parte das linhas aparece como "Sem CS": é assim no dado de origem, não é falha de atribuição.',
+    desc:'<b>A planilha de churn é a única régua do painel desde 15/10/2026</b> — pedido da Laura: "vamos usar somente essa planilha como referência para todas as abas que tenham churn, olhe para a coluna Data da Perda". Entra a marca que o time registrou lá com observação <b>"solicitou cancelamento"</b> ou <b>"inadimplente"</b>, sem contar a mesma marca duas vezes. As abas de <b>2026, 2025 e 2024</b> são lidas juntas. '
+      + '<b>O filtro de período recorta pela Data da Perda</b> — a data que o time escreveu. Linha sem essa data fica de fora: não teria lugar no tempo, e ainda contaria como marca viva na reconstrução da base. '
+      + '<b>A taxa de churn</b> divide as marcas perdidas pela base ativa no começo do recorte. A base é reconstruída marca a marca, porque o cadastro só guarda quem existe hoje: a entrada vem do cadastro ou da coluna ANIVERSÁRIO da planilha, e a saída, da Data da Perda, do churn do cadastro ou — em último caso — do último pedido. Quem entrou antes e ainda não tinha saído estava ativo. No fim de setembro a conta dá 707 marcas contra 695 ativas hoje; para trás o erro cresce, porque marca que entrou e saiu sem registro não aparece em lugar nenhum. '
+      + '<b>A taxa some quando se filtra por carteira</b>, de propósito: a marca costuma <b>perder a CS no cadastro junto com o módulo</b>, então o churn dela cai em "Sem CS" enquanto o denominador da carteira fica só com quem ficou — em setembro de 2026 seriam 37 dos 44 churns em "Sem CS". Pelo mesmo motivo boa parte das linhas da tabela aparece sem CS: é assim no dado de origem, não é falha de atribuição. '
+      + '<b>No cadastro?</b> avisa quando a marca da planilha não foi encontrada no cadastro — nesses casos não há plano nem mensalidade para mostrar.',
     filtros:['cliente','cs','canal','periodo'],
     tabela:'Marcas', chaveCliente:'nome',
     colunas:[
@@ -6040,8 +6308,15 @@ const TABS = [
     kpis:(rows)=>{
       const canc = rows.filter(r=>/solicitou/i.test(r.detalhe||''));
       const inad = rows.filter(r=>/inadimpl/i.test(r.detalhe||''));
+      const p = periodo();
+      const base = baseAtivaNoFim(mesAnterior(String(p.ini).slice(0,7)));
       return [
         {l:'Churn no período', v:fmt.int(rows.length), s:'pela Data da Perda, sem marca repetida'},
+        /* A contagem sozinha engana quando a base muda de tamanho: 45 marcas
+           perdidas valem 5% numa carteira de 900 e 6,4% numa de 700. */
+        {l:'Taxa de churn', v:fmt.pct1(taxaChurn(rows.length, p)),
+         s: !recorteEhABaseInteira() ? SEM_TAXA_POR_CS
+            : 'de '+fmt.int(base)+' ativas no começo'+(mesesDoRecorte(p)>1 ? ', somando os '+mesesDoRecorte(p)+' meses' : '')},
         /* O valor é o TOTAL COBRADO da planilha — plano mais integração,
            assistente e filial. Dizer de quantas linhas ele é conhecido evita
            que o resto pareça zero. */
@@ -6248,7 +6523,7 @@ const TABS = [
   {
     id:'carteiraCs', grupo:'Time', nav:'Carteira por CS', cor:'#2E7D46', cor2:'#4048B8',
     titulo:'Carteira por CS',
-    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões, mas só as que têm <b>empresa associada</b> — reunião de agenda pessoal (1:1, interna) sem marca vinculada no HubSpot fica de fora (pedido da Laura, 17/09/2026); <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor. <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Situação de churn</b> = aba Churn (Painel Elisa), é <b>foto de hoje</b>, não do período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
+    desc:'Pedido da Laura em 15/09/2026: um retrato só de <b>uma CS por vez</b> — escolha em cima —, juntando um pedaço de cada aba pra responder "como está indo o trabalho dela". Não mede nada novo, só reagrupa por pessoa o que já existe: <b>marcas</b> = <code>DATA.clientes</code> com esse CS; <b>GMV</b> = mesma série da Tabela geral, só da carteira dela, dentro do período; <b>Cross-sell/Upsell</b> = mesma fonte HubSpot das abas dedicadas. <b>Ganho</b> e <b>Perdido</b> são eventos: contam quem foi criado dentro do período. <b>Em aberto</b> é estado, não evento — o KPI e a lista de "aberto agora" são <b>foto de hoje, sem filtro de período</b>: negócio aberto há 4 meses aparece igual, filtrando "este mês" ou não. O filtro <b>Produto</b> (Tino, Filial, VestiPago, Oráculo...) recorta TODOS os negócios da aba — ganhos, perdidos e aberto agora — pra um produto só; o filtro <b>Etapa</b> recorta o "aberto agora" pra uma fase específica do pipeline (ex.: só "Montar proposta / Negociação"), e já respeita o Produto escolhido. <b>Reuniões</b> = HubSpot, mesma leitura da aba Reuniões, mas só as que têm <b>empresa associada</b> — reunião de agenda pessoal (1:1, interna) sem marca vinculada no HubSpot fica de fora (pedido da Laura, 17/09/2026); <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor. <b>Marcos de volume</b> = BigQuery, mesma fonte da Visão geral, atribuído pela marca que bateu o marco; <b>Churn</b> = a planilha do time, pela Data da Perda, recortada pelo período do filtro; <b>Pontuação</b> = mesma conta da aba Bonificação, mas do <b>mês do período escolhido no filtro</b> (não do "mês fechado" independente da aba Bonificação) — só aparece pra quem participa dela.',
     filtros:['csFoco','periodo','produtoFoco','estagioFoco'],
     semTabela:true,
     linhas:()=>[],
@@ -6337,10 +6612,11 @@ function marcosDoCs(cs, p){
     ...eventos.map(ev=>({cliente:ev.cliente, tipo:ev.tipo, data:ev.data})),
   ].sort((a,b)=>b.data.localeCompare(a.data));
 }
-/* Churn da CS no período, pela régua única (13/10/2026). Antes era a foto de
-   hoje do Painel Elisa, sem data de evento. Marca bloqueada costuma perder a
-   CS no cadastro junto com o módulo — essas ficam em "Sem CS" e não entram
-   aqui, que é uma visão por pessoa. */
+/* Churn da CS no período, pela planilha do time (15/10/2026). Marca costuma
+   perder a CS no cadastro junto com o módulo — essas ficam em "Sem CS" e não
+   entram aqui, que é uma visão por pessoa. É também por isso que este bloco
+   não mostra TAXA de churn: o denominador da carteira ficaria só com quem
+   ficou. Ver `recorteEhABaseInteira`. */
 function churnDoCs(cs){
   return eventosDeChurn(periodo(), quem => quem === cs);
 }
@@ -6391,6 +6667,8 @@ function kpisCarteiraCs(){
     {l:'Negócios perdidos', v:fmt.int(perdidos.length), s:fmt.moneyCompact(soma(perdidos,'valor'))+' no período'},
     {l:'Reuniões no período', v:fmt.int(reun.length), s:fmt.int(fechouReuniao)+' fecharam negócio'},
     {l:'Risco de churn alto', v:fmt.int(riscoAlto), s:'entre as marcas ativas hoje'},
+    /* Sem taxa aqui: este bloco é de UMA carteira, e taxa por carteira não
+       fecha — veja `recorteEhABaseInteira`. */
     {l:'Churn no período', v:fmt.int(churnLinhas.length),
      s:fmt.int(bloqueadas)+' pediram para sair · '+fmt.int(canceladas)+' inadimplentes · '
        +fmt.moneyCompact(churnLinhas.reduce((t,c)=>t+(c.perdido||0),0))+' por mês'},
@@ -7204,7 +7482,7 @@ function agregarSerie(t, janela){
    não está aqui aparece com o rótulo e sem linha de explicação — melhor do que
    inventar descrição para "CEP". */
 const AJUDA_COL = {
-  tier:'<b>Porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — o mês corrente fica de fora, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 1 milhão por mês, <b>T2</b> de R$ 200 mil a R$ 1 milhão, <b>T3</b> de R$ 50 a 200 mil, <b>T4</b> abaixo de R$ 50 mil. O GMV é o mesmo da coluna ao lado (todo pedido criado, sem teto — a régua do relatório do Power BI). <b>Dá para fixar uma marca num tier à mão</b>, e aí o cálculo automático nunca mais mexe nela: é o caso da marca que é pequena dentro da Vesti e grande fora. A linha fixada mostra "fixado à mão" embaixo do chip, com o motivo; o filtro <b>Tier → Fixado à mão</b> lista todas elas.',
+  tier:'<b>Porte da marca pelo GMV</b>, pela <b>média dos dois últimos meses fechados</b> — o mês corrente fica de fora, senão no dia 3 ele rebaixaria a carteira inteira. <b>T1</b> acima de R$ 5 milhões por mês, <b>T2</b> de R$ 1 a 5 milhões, <b>T3</b> de R$ 500 mil a R$ 1 milhão, <b>T4</b> abaixo de R$ 500 mil. O GMV é o mesmo da coluna ao lado (todo pedido criado, sem teto — a régua do relatório do Power BI). <b>Dá para fixar uma marca num tier à mão</b>, e aí o cálculo automático nunca mais mexe nela: é o caso da marca que é pequena dentro da Vesti e grande fora. A linha fixada mostra "fixado à mão" embaixo do chip, com o motivo; o filtro <b>Tier → Fixado à mão</b> lista todas elas.',
   cliente:'Nome da marca como está no cadastro da plataforma.',
   nome:'Nome da marca como está no cadastro da plataforma.',
   status:'Ativa é quem teve pedido nos últimos 45 dias; o resto fica inativa.',
@@ -8163,13 +8441,21 @@ function desenhar(host, dados, series){
   const draw = ()=>{
     host.innerHTML='';
     const W = Math.max(320, host.clientWidth), H = 240;
-    const temDir = series.some(s=>s.eixo==='dir');
-    const P = {t:16, r:temDir?54:20, b:28, l:48};
+    /* Até três escalas no mesmo desenho: as barras à esquerda e duas linhas à
+       direita, cada uma com a sua régua. O card do churn usa as três — marcas
+       perdidas (0 a 80), % da base (0 a 8) e valor perdido (0 a R$ 80 mil) —,
+       e sem isso as duas linhas ficariam deitadas no chão do gráfico. Cada
+       régua da direita sai na cor da linha que ela mede, senão não dá para
+       saber qual é qual. */
+    const esq  = series.filter(s=>s.eixo!=='dir' && s.eixo!=='dir2');
+    const dir  = series.filter(s=>s.eixo==='dir');
+    const dir2 = series.filter(s=>s.eixo==='dir2');
+    const P = {t:16, r: dir2.length ? 104 : dir.length ? 54 : 20, b:28, l:48};
     const iw = W-P.l-P.r, ih = H-P.t-P.b;
     const n = dados.length || 1;
-    const esq = series.filter(s=>s.eixo!=='dir'), dir = series.filter(s=>s.eixo==='dir');
     const maxDe = (ss)=>nice(Math.max(1,...ss.flatMap(s=>dados.map(d=>d[s.k]||0))));
-    const maxE = maxDe(esq), maxD = dir.length?maxDe(dir):0;
+    const maxE = maxDe(esq), maxD = dir.length?maxDe(dir):0, maxD2 = dir2.length?maxDe(dir2):0;
+    const maxDa = sr => sr.eixo==='dir2' ? maxD2 : sr.eixo==='dir' ? maxD : maxE;
     const barras = series.filter(x=>x.tipo==='bar');
     /* O teto da largura acompanha quantas barras existem. Era fixo em 26px, e
        com o gráfico filtrado em um mês só a barra ficava com 26 pixels perdida
@@ -8188,13 +8474,15 @@ function desenhar(host, dados, series){
       s += `<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="var(--line-2)" stroke-width="1"/>`;
       s += `<text x="${P.l-8}" y="${y+3.5}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--ink-3)">${rotulo(v,esq[0])}</text>`;
       if(dir.length){
-        const vd = maxD*g/4;
-        s += `<text x="${W-P.r+8}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--ink-3)">${rotulo(vd,dir[0])}</text>`;
+        s += `<text x="${W-P.r+8}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="${dir[0].cor}">${rotulo(maxD*g/4,dir[0])}</text>`;
+      }
+      if(dir2.length){
+        s += `<text x="${W-P.r+54}" y="${y+3.5}" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="${dir2[0].cor}">${rotulo(maxD2*g/4,dir2[0])}</text>`;
       }
     }
     // barras (lado a lado quando há mais de uma série)
     barras.forEach((sr,bi)=>{
-      const max = sr.eixo==='dir'?maxD:maxE;
+      const max = maxDa(sr);
       const off = (bi-(barras.length-1)/2)*bw;
       dados.forEach((d,i)=>{
         const v=d[sr.k]||0, y=cy(v,max), h=Math.max(v>0?1.5:0, P.t+ih-y);
@@ -8207,7 +8495,7 @@ function desenhar(host, dados, series){
     });
     // linhas
     series.filter(x=>x.tipo==='line').forEach(sr=>{
-      const max = sr.eixo==='dir'?maxD:maxE;
+      const max = maxDa(sr);
       /* Uma linha com um ponto só não desenha traço nenhum, e o gráfico de um
          mês filtrado ficava com a série virando um pontinho solto no alto.
          Nesse caso ela vira um traço horizontal da largura do grupo de barras,
@@ -8265,6 +8553,9 @@ function nice(v){
 }
 function rotulo(v, sr){
   if(!sr) return fmt.compact(v);
+  /* `fEixo` deixa a série dizer como o eixo dela se escreve — a taxa de churn
+     precisa do "%", que nenhum palpite pelo nome da chave daria. */
+  if(sr.fEixo) return sr.fEixo(v);
   return /receita|valor|gmv/i.test(sr.k) ? fmt.moneyCompact(v) : fmt.compact(v);
 }
 
@@ -8592,7 +8883,7 @@ function celula(r,c){
            + fmt.mes(mesesFechadosDoTier()[0]+'-01') + ' e ' + fmt.mes(mesesFechadosDoTier()[1]+'-01'))
         : `Média do GMV de ${fmt.mes(m1+'-01')} e ${fmt.mes(m2+'-01')} (os dois últimos meses fechados): `
           + fmt.money(t.media||0)
-          + '\n\nT1 acima de R$ 1 mi · T2 de R$ 200 mil a 1 mi · T3 de R$ 50 a 200 mil · T4 abaixo de R$ 50 mil'
+          + '\n\nT1 acima de R$ 5 mi · T2 de R$ 1 a 5 mi · T3 de R$ 500 mil a 1 mi · T4 abaixo de R$ 500 mil'
           + '\n\nArraste o chip para fixar a marca em outro tier.';
       const chip = td.querySelector('.tier-arrasta');
       chip.addEventListener('dragstart', e=>{

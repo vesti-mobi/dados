@@ -61,6 +61,7 @@
       <div class="canal-checks" id="filter-canal">
         <label class="chk"><input type="checkbox" value="Starter" checked> Starter</label>
         <label class="chk"><input type="checkbox" value="Vesti" checked> Vesti</label>
+        <label class="chk"><input type="checkbox" value="Varejo Vesti" checked> Varejo Vesti</label>
         <label class="chk"><input type="checkbox" value="Uemtel" checked> Uemtel</label>
         <label class="chk"><input type="checkbox" value="Atta" checked> Atta</label>
         <label class="chk"><input type="checkbox" value="Parceiros" checked> Parceiros</label>
@@ -128,6 +129,10 @@
       <div class="hl-card" onclick="switchTab('inadimplentes')" style="background:linear-gradient(135deg,#C0392B,#F0704F)">
         <div class="hl-icon">💸</div><div class="hl-label">Inadimplentes</div>
         <div class="hl-val" id="kpi-inad">0</div><div class="hl-sub" id="kpi-inad-sub">marcas com fatura vencida</div>
+      </div>
+      <div class="hl-card" onclick="switchTab('faturas')" style="background:linear-gradient(135deg,#0B8457,#4ACB8E)">
+        <div class="hl-icon">🧾</div><div class="hl-label">Faturas</div>
+        <div class="hl-val" id="kpi-faturas">0</div><div class="hl-sub">marcas com fatura em aberto (não vencida)</div>
       </div>
       <div class="hl-card" onclick="switchTab('upgrade')" style="background:linear-gradient(135deg,#00B894,#26D0A5)">
         <div class="hl-icon">📈</div><div class="hl-label">Oportunidades de Upgrade</div>
@@ -326,6 +331,20 @@
       <div class="ch"><h4>Valor em aberto por CS</h4><div class="cw"><canvas id="chart-inad-cs"></canvas></div></div>
     </div>
     <div class="tbl-card"><h4>Marcas com fatura vencida em aberto <button class="btn-export" onclick="baixarInadimplentesExcel()">⬇️ Baixar Excel</button></h4><div class="tbl-wrap"><table class="dt" id="tbl-inadimplentes"></table></div></div>
+  </div>
+
+  <div id="tab-faturas" class="tab-panel">
+    <h2 class="tab-title">🧾 Faturas</h2>
+    <p class="hint" style="margin-bottom:12px;color:var(--g);font-size:12px">
+      Próxima fatura em aberto (<em>pending</em> ou <em>partially_paid</em>) de cada marca,
+      com vencimento <strong>hoje ou no futuro</strong> — todas as marcas do painel,
+      <strong>exceto</strong> quem já está na aba Inadimplentes. Ordenado pela data de
+      vencimento mais próxima primeiro. Assim que a fatura vence, ela sai daqui
+      automaticamente e passa a aparecer em Inadimplentes — não precisa mover nada
+      na mão, é o mesmo dado atualizado 2x por dia. Fonte: espelho da Iugu no BigQuery.
+    </p>
+    <span class="hint" id="faturas-hint"></span>
+    <div class="tbl-card"><h4>Marcas com fatura em aberto, ainda não vencida <button class="btn-export" onclick="baixarFaturasExcel()">⬇️ Baixar Excel</button></h4><div class="tbl-wrap"><table class="dt" id="tbl-faturas"></table></div></div>
   </div>
 
   <div id="tab-upgrade" class="tab-panel">
