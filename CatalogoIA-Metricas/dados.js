@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-27T17:02:56.919Z",
+  "gerado_em": "2026-10-28T00:11:24.763Z",
   "hoje": "2026-10-27",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -19,8 +19,8 @@ window.DADOS = {
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2416,
-    "produtos_7d": 238,
-    "descricoes_total": 2993,
+    "produtos_7d": 239,
+    "descricoes_total": 2994,
     "total_estimado": true
   },
   "marcas": [
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 32
+      "dias": 33
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 32
+      "dias": 33
     },
     {
       "slug": "petit",
@@ -106,12 +106,12 @@ window.DADOS = {
       "estimado": false,
       "produtos_7d": 40,
       "ativa": true,
-      "acessos": 101,
-      "buscas": 286,
+      "acessos": 109,
+      "buscas": 297,
       "descricoes": 287,
       "envios": 259,
       "primeiro": "2026-07-28T11:47:18.529Z",
-      "ultimo": "2026-10-27T12:09:23.877Z",
+      "ultimo": "2026-10-27T18:38:59.872Z",
       "dias": 0
     },
     {
@@ -122,14 +122,14 @@ window.DADOS = {
       "email": "missmilliebr@gmail.com",
       "produtos": 131,
       "estimado": true,
-      "produtos_7d": 6,
+      "produtos_7d": 7,
       "ativa": true,
-      "acessos": 22,
-      "buscas": 123,
-      "descricoes": 145,
-      "envios": 145,
+      "acessos": 25,
+      "buscas": 128,
+      "descricoes": 146,
+      "envios": 146,
       "primeiro": "2026-07-28T18:41:18.639Z",
-      "ultimo": "2026-10-27T15:10:32.651Z",
+      "ultimo": "2026-10-27T17:42:27.104Z",
       "dias": 0
     },
     {
@@ -470,7 +470,7 @@ window.DADOS = {
     {
       "inicio": "2026-10-26",
       "fim": "2026-11-01",
-      "produtos": 197,
+      "produtos": 198,
       "ativas": 3,
       "usaram": 5,
       "cadastros": 10,
@@ -490,9 +490,9 @@ window.DADOS = {
         "paradas": 4,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 2028,
-        "produtos_7d": 221,
-        "descricoes_total": 2405,
+        "produtos_total": 2029,
+        "produtos_7d": 222,
+        "descricoes_total": 2406,
         "total_estimado": false,
         "produtos_atribuidos": 0
       },
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 32,
+          "dias": 33,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 32,
+          "dias": 33,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -567,12 +567,12 @@ window.DADOS = {
           "estimado": false,
           "produtos_7d": 23,
           "ativa": true,
-          "acessos": 34,
-          "buscas": 175,
+          "acessos": 42,
+          "buscas": 186,
           "descricoes": 211,
           "envios": 195,
           "primeiro": "2026-08-18T13:22:59.954Z",
-          "ultimo": "2026-10-27T12:09:23.877Z",
+          "ultimo": "2026-10-27T18:38:59.872Z",
           "dias": 0,
           "produtos_medidos": 161,
           "atribuido": 0
@@ -583,18 +583,18 @@ window.DADOS = {
           "arquetipo": "sabio",
           "tem_conta": true,
           "email": "missmilliebr@gmail.com",
-          "produtos": 30,
+          "produtos": 31,
           "estimado": false,
-          "produtos_7d": 6,
+          "produtos_7d": 7,
           "ativa": true,
-          "acessos": 5,
-          "buscas": 19,
-          "descricoes": 31,
-          "envios": 35,
+          "acessos": 8,
+          "buscas": 24,
+          "descricoes": 32,
+          "envios": 36,
           "primeiro": "2026-08-21T01:32:04.730Z",
-          "ultimo": "2026-10-27T15:10:30.574Z",
+          "ultimo": "2026-10-27T17:42:27.104Z",
           "dias": 0,
-          "produtos_medidos": 30,
+          "produtos_medidos": 31,
           "atribuido": 0
         },
         {
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 28,
+          "dias": 29,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -1003,12 +1003,12 @@ window.DADOS = {
         {
           "inicio": "2026-10-26",
           "fim": "2026-11-01",
-          "produtos": 196,
+          "produtos": 197,
           "ativas": 3,
           "usaram": 4,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 196,
+          "produtos_medidos": 197,
           "atribuido": 0
         }
       ]
@@ -1108,7 +1108,7 @@ window.DADOS = {
           "envios": 52,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-10-26T17:34:52.075Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 50,
           "atribuido": 102
         },
@@ -1538,13 +1538,13 @@ window.DADOS = {
         {
           "inicio": "2026-10-26",
           "fim": "2026-11-01",
-          "produtos": 8,
+          "produtos": 9,
           "ativas": 0,
           "usaram": 2,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 1,
-          "atribuido": 7
+          "atribuido": 8
         }
       ]
     }
