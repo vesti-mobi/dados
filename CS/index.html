@@ -4194,7 +4194,12 @@ const trimestreAnterior = k =>{ const [a, t] = String(k||'').split('-T'); return
    `acelera` marca as duas que pagam mais quando passam da meta. */
 const METAS_TRI = [
   { k:'mentoria', l:'Mentoria/Setup', unidade:'un', ind:3, col:9, acelera:true, cor:'#4F46E5',
-    ajuda:'Soma 1 para cada implantação nova no trimestre: <b>Oráculo, integração e varejo</b>. O Tino saiu daqui em 13/10/2026 — ele tem meta própria, e somava dezenas (50 marcas só em julho) contra uma meta de 9 feita para esforço manual.' },
+    ajuda:'Soma 1 para cada implantação nova no trimestre: <b>Oráculo, integração e varejo</b>. '
+      + '<b>A fonte é o negócio ganho no HubSpot</b> desde 28/10/2026, a pedido da Laura — "precisa pegar do HubSpot" —, e o crédito vai para o <b>proprietário do negócio</b>, quem vendeu, não para a CS da marca. '
+      + 'Varejo é o produto "Outros" com <b>Varejo no nome do negócio</b>, que é como o time escreve. '
+      + 'Antes a integração vinha do retrato diário do cadastro: o painel via o campo <code>integracao</code> do lake mudar e contava 1 para a CS da marca. Em outubro isso dava 11 de 9 com 8 integrações de <b>parceiro</b> (API/SIMPLE) que ninguém do time tinha feito. '
+      + '<b>O que o HubSpot não alcança:</b> ele sabe quando o negócio foi <i>ganho</i>, não quando a loja entrou no ar — o varejo da CVL fechou em 28/08 e o da Charisma em 30/09, e o time conta os dois em outubro; e o que não vira negócio lá não aparece, como a integração da Casualli. '
+      + 'O Tino saiu daqui em 13/10/2026 — tem meta própria, e somava dezenas (50 marcas só em julho) contra uma meta de 9 feita para esforço manual.' },
   { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#15803D',
     ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
   { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7490',
@@ -4239,32 +4244,65 @@ const somaBonifTri = (k, meses, cs) => meses.reduce((a,m)=>{
    Então o quadrante é a soma de quatro implantações, todas lidas direto da
    Vesti: Oráculo configurado, integração que apareceu no retrato diário,
    filial nova de varejo e marca que entrou na base do Tino. */
+/* MENTORIA/SETUP VEM DO HUBSPOT (28/10/2026) ------------------------------
+
+   Pedido da Laura: "nas vendas em bonificações tá entrando integração que a
+   Tati fez por exemplo. Precisa pegar do HubSpot acho."
+
+   Ela estava certa, e o buraco era maior do que o relato. A integração nova
+   vinha do RETRATO DIÁRIO DO CADASTRO: o painel comparava o campo
+   `integracao` do lake dia a dia e, quando uma marca passava a ter, contava 1
+   e creditava à CS da marca — quem atende, não quem fez. Em outubro isso deu
+   11 de 9, com a meta batida, e quase nada daquilo era trabalho do time: 8
+   das 11 eram integração de PARCEIRO (`integracaoDona = API`, tipo SIMPLE), o
+   mesmo "SIMPLE" que em 09/10 apareceu de uma vez em 485 marcas. A lista real
+   que a Laura trouxe do time tinha 5 itens, e o painel acertava 1.
+
+   Agora a fonte é o negócio GANHO no HubSpot, que é onde o time registra o
+   que vendeu e com o dono certo:
+     Integração nova — produto "Integração";
+     Oráculo novo    — produto "Oráculo";
+     Varejo novo     — produto "Outros" com "Varejo" no nome do negócio,
+                       que é como o time escreve ("Upper Concept - Varejo",
+                       "Varejo D2C | CVL").
+   O crédito vai para o PROPRIETÁRIO DO NEGÓCIO, e o mês é o do fechamento.
+
+   O que isso muda, e vale saber ao ler o número: o HubSpot só sabe quando o
+   negócio foi ganho, não quando a loja entrou no ar. O varejo da CVL fechou
+   em 28/08 e o da Charisma em 30/09, e o time conta os dois em outubro. E o
+   que não vira negócio lá não existe aqui — a integração da Casualli, que a
+   Thamiris fez, não tem registro nenhum no HubSpot.
+
+   A marcação manual de varejo (`varejo_manual.json`, o botão "Salvar para
+   todo mundo") continua valendo para a métrica mensal `filiais` da
+   pontuação. Ela não alimenta mais este quadrante: aqui quem manda é o
+   negócio registrado. */
+const PRODUTO_MENTORIA = {
+  'Integração': 'Integração nova',
+  'Oráculo':    'Oráculo novo',
+};
+function tipoMentoria(n){
+  if(PRODUTO_MENTORIA[n.produto]) return PRODUTO_MENTORIA[n.produto];
+  /* "Varejo D2C" é vendido como produto "Outros" — o que separa um varejo de
+     um brinde qualquer é a palavra no nome do negócio. */
+  if(n.produto === 'Outros' && /varejo/i.test(n.negocio||'')) return 'Varejo novo';
+  return null;
+}
 function itensMentoria(meses, cs){
-  const dentro = d => d && meses.includes(String(d).slice(0,7));
-  const daCs = x => cs ? x.cs===cs : BONIF_CS.includes(x.cs);
   const out = [];
-  ((DATA.oraculo||{}).tabela||[]).forEach(o=>{
-    if(dentro(o.implantado) && daCs(o)) out.push({tipo:'Oráculo novo', nome:o.cliente, cs:o.cs, data:o.implantado});
+  (DATA.negocios||[]).forEach(n=>{
+    if(n.status !== 'Ganho') return;
+    const tipo = tipoMentoria(n); if(!tipo) return;
+    const mes = String(n.fechadoEm || n.data || '').slice(0,7);
+    if(!meses.includes(mes)) return;
+    /* O dono do NEGÓCIO, não a CS da marca: é a correção que a Laura pediu.
+       Uma integração vendida pela Thamiris numa marca da Luana conta para a
+       Thamiris. */
+    const quem = normalizarCs(n.cs);
+    if(cs ? quem!==cs : !BONIF_CS.includes(quem)) return;
+    out.push({tipo, nome:n.cliente, cs:quem, data:n.fechadoEm||n.data,
+      detalhe:n.negocio||'', valor:n.valor||0});
   });
-  (DATA.integracoesNovas||[]).forEach(i=>{
-    if(dentro(i.data) && daCs(i)) out.push({tipo:'Integração nova', nome:i.cliente, cs:i.cs, data:i.data, detalhe:i.integracao});
-  });
-  ((DATA.bonificacao||{}).filiais||[]).forEach(f=>{
-    if(dentro(f.mes) && daCs(f) && varejoTipo(f)==='Varejo')
-      out.push({tipo:'Varejo novo', nome:f.nome, cs:f.cs, data:f.criado||f.mes});
-  });
-  /* O TINO SAIU DAQUI (13/10/2026). "Tire o Tino de Mentoria/Setup, deixe só
-     na meta de Tino mesmo."
-
-     Ele entrou neste quadrante em 07/10 ("mentoria e Oráculo novo, integração
-     nova, varejo novo são por hora a mesma coisa, add Tino novo também"), mas
-     a meta de 9 vinha da planilha do Eduardo, dimensionada como 3 CS × 3
-     mentorias — esforço manual. O Tino é adoção de produto e entra em dezenas:
-     50 marcas só em julho. Resultado: o quadrante marcava 96 de 9 no trimestre
-     passado, com 73 vindos do Tino.
-
-     E o Tino já tem meta própria. Contá-lo aqui fazia o mesmo trabalho pagar
-     em dois quadrantes. */
   return out.sort((a,b)=>String(a.data).localeCompare(String(b.data)));
 }
 
