@@ -422,6 +422,9 @@ function baixarInadimplentesExcel() {
 function baixarFaturasExcel() {
   exportTableToExcel("tbl-faturas", `faturas_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+function baixarTravadasExcel() {
+  exportTableToExcel("tbl-travadas", `marcas_travadas_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
 
 // Copia o link de checkout da fatura (Iugu) pra CS colar e mandar pro
 // lojista. Clipboard API exige contexto seguro (https/localhost) -- sem isso
