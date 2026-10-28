@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-10-28T17:40:26.690Z",
+  "gerado_em": "2026-10-28T21:06:14.068Z",
   "hoje": "2026-10-28",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 33
+      "dias": 34
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 33
+      "dias": 34
     },
     {
       "slug": "petit",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 259,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-10-27T18:38:59.872Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "amiska",
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 146,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-10-27T17:42:27.104Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "monnika-marikinha",
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 33,
+          "dias": 34,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -533,7 +533,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 33,
+          "dias": 34,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -573,7 +573,7 @@ window.DADOS = {
           "envios": 195,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-10-27T18:38:59.872Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 161,
           "atribuido": 0
         },
@@ -593,7 +593,7 @@ window.DADOS = {
           "envios": 36,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-10-27T17:42:27.104Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 31,
           "atribuido": 0
         },
@@ -653,7 +653,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 29,
+          "dias": 30,
           "produtos_medidos": 13,
           "atribuido": 0
         },
