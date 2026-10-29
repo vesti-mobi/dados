@@ -1716,13 +1716,33 @@ function renderTab1(){
 function renderTabFin(){
     const es=filtered;
     const comPlano=es.filter(e=>e.planoTotalCobrado>0||e.planos);
-    // Deduplicate by CNPJ to avoid doubling plan values for filiais
-    const seenCnpj=new Set();
+    /* DEDUPLICAR POR DOMINIO + PLANO, nao por CNPJ (29/10/2026).
+
+       A dedup por CNPJ nao resolvia o que se propunha a resolver: cada filial
+       tem CNPJ proprio -- a Trama Villon e 62.879.739/0004-15, a Villon Jeans
+       Fashion /0005-04, a Rota da Moda /0003-34 --, entao nenhuma era vista
+       como repetida. So que o registro de PLANO e o mesmo nas tres, replicado
+       por dominio: o contrato da matriz aparece em cada filial. Somando,
+       (1.069 + 480) x 3 = R$ 4.647 numa marca que paga R$ 1.549.
+
+       Nao era so a Villon. Sao 81 dominios com o plano replicado, e a
+       Diamantes Lingerie tem 77 filiais x R$ 9.919 = R$ 763 mil de uma marca
+       so. O KPI "Mensalidade Total" marcava R$ 1,556 milhao contra os
+       R$ 631 mil reais -- 171% a mais.
+
+       A chave agora e dominio + a assinatura do plano. Deduplicar so por
+       dominio seria demais: 47 dos 682 dominios tem empresas com contratos
+       DIFERENTES (a Mon Clos e a Clichy dividem dominio e pagam planos
+       distintos), e esses precisam somar. */
+    const seenPlano=new Set();
     const uniquePlano=[];
+    const assinaturaPlano=e=>e.idDominio+'|'+JSON.stringify(
+        (e.planos&&e.planos.length)?e.planos
+            :[{p:e.plano,t:e.planoTotalCobrado,m:e.planoMensalidade}]);
     comPlano.forEach(e=>{
-        const cnpj=(e.cnpj||'').replace(/[.\-\/]/g,'');
-        if(cnpj&&seenCnpj.has(cnpj))return;
-        if(cnpj)seenCnpj.add(cnpj);
+        const k=assinaturaPlano(e);
+        if(seenPlano.has(k))return;
+        seenPlano.add(k);
         uniquePlano.push(e);
     });
 
