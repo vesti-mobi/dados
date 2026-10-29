@@ -80,6 +80,24 @@ jobs:
       # Só olha o ESQUELETO da planilha de mensalidades: abas, cabeçalhos e
       # contagem de linhas. Nenhum nome de marca, nenhum valor, nenhum e-mail
       # de service account — o log deste repositório é público.
+      # As duas service accounts de planilha, além da do BigQuery: a planilha
+      # de mensalidades foi compartilhada com a de leitura de planilhas, não
+      # com a do lake. O script tenta uma a uma e diz qual funcionou.
+      - name: Gravar credenciais de planilha
+        if: inputs.modo == 'mensalidades'
+        env:
+          SHEETS_SA: ${{ secrets.PAINEL_TRIBO_SHEETS_SA }}
+          SHEETS_SA_ALT: ${{ secrets.GOOGLE_SHEETS_SA_JSON }}
+        run: |
+          if [ -n "$SHEETS_SA" ]; then
+            printf '%s' "$SHEETS_SA" > "$RUNNER_TEMP/sheets_sa.json"
+            echo "SHEETS_SA_FILE=$RUNNER_TEMP/sheets_sa.json" >> "$GITHUB_ENV"
+          fi
+          if [ -n "$SHEETS_SA_ALT" ]; then
+            printf '%s' "$SHEETS_SA_ALT" > "$RUNNER_TEMP/sheets_sa_alt.json"
+            echo "SHEETS_SA_ALT_FILE=$RUNNER_TEMP/sheets_sa_alt.json" >> "$GITHUB_ENV"
+          fi
+
       - name: Explorar a planilha de mensalidades
         if: inputs.modo == 'mensalidades'
         working-directory: CS
