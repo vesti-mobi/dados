@@ -1740,9 +1740,16 @@ function renderTabFin(){
         (e.planos&&e.planos.length)?e.planos
             :[{p:e.plano,t:e.planoTotalCobrado,m:e.planoMensalidade}]);
     comPlano.forEach(e=>{
-        const k=assinaturaPlano(e);
-        if(seenPlano.has(k))return;
-        seenPlano.add(k);
+        /* So o contrato HERDADO e deduplicado. Contrato proprio soma sempre,
+           mesmo quando duas filiais pagam exatamente a mesma coisa: a Villon
+           Jeans Fashion e a Rota da Moda tem um Agente de atendimento cada,
+           de R$ 480, e sao R$ 960, nao R$ 480. Deduplicar por assinatura
+           comia uma das duas. */
+        if(e.planoHerdado!==false){
+            const k=assinaturaPlano(e);
+            if(seenPlano.has(k))return;
+            seenPlano.add(k);
+        }
         uniquePlano.push(e);
     });
 

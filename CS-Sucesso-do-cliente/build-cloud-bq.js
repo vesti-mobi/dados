@@ -444,10 +444,23 @@ async function main() {
     let empresasList = empresasAtivas.map(e => {
         const cnpjNum = (e.cnpj || '').replace(/[.\-\/]/g, '');
         let marca = marcasMap[cnpjNum];
+        /* `planoHerdado` marca o contrato que NÃO é desta empresa: veio da
+           matriz pelo casamento por raiz de CNPJ ou por nome, porque a
+           planilha não tem linha para ela. Isso importa na hora de somar a
+           Mensalidade Total de um grupo: contrato herdado é o mesmo papel
+           contado de novo, contrato próprio é dinheiro de verdade.
+
+           A Villon mostra os dois lados. Na planilha de abril só havia linha
+           do CNPJ da matriz, então as duas filiais herdavam o contrato
+           inteiro e o total dava 3 x R$ 1.549. Na de novembro cada filial tem
+           a sua linha de Agente de atendimento, e aí as três somam de fato:
+           R$ 1.117 + 480 + 480 + 480 = R$ 2.557. */
+        let planoHerdado = false;
         if (!marca && cnpjNum.length >= 8) {
-            for (const [mcnpj, mdata] of Object.entries(marcasMap)) if (mcnpj.substring(0, 8) === cnpjNum.substring(0, 8)) { marca = mdata; break; }
+            for (const [mcnpj, mdata] of Object.entries(marcasMap)) if (mcnpj.substring(0, 8) === cnpjNum.substring(0, 8)) { marca = mdata; planoHerdado = true; break; }
         }
         if (!marca) {
+            planoHerdado = true;
             const nomeEmp = normSimple(e.nomeFantasia || e.nomeDominio);
             for (const [, mdata] of Object.entries(marcasMap)) { const nMarca = normSimple(mdata.marca); if (nMarca && nomeEmp && nMarca === nomeEmp) { marca = mdata; break; } }
             if (!marca && nomeEmp.length >= 5) for (const [, mdata] of Object.entries(marcasMap)) { const nMarca = normSimple(mdata.marca); if (nMarca.length >= 5 && (nomeEmp.includes(nMarca) || nMarca.includes(nomeEmp))) { marca = mdata; break; } }
@@ -551,6 +564,10 @@ async function main() {
             planoTotalCobrado: marca ? marca.totalCobrado : 0, planoSetup: marca ? marca.setup : 0,
             planoObservacoes: marca ? marca.observacoes : '', planoSubconta: marca ? marca.subconta : '',
             planos: marca && marca.planos ? marca.planos : undefined,
+            /* Contrato que veio da matriz por falta de linha propria na
+               planilha. Quem soma a Mensalidade Total de um grupo ignora
+               estes, senao conta o mesmo papel uma vez por filial. */
+            planoHerdado: marca ? planoHerdado : undefined,
             marcaAtiva: e.statusEmpresa === 'Ativa' ? 'Sim' : e.statusEmpresa === 'Desativada' ? 'Não' : '',
             mensalidade, etapaHub, oraculoEtapa,
             temOraculoFabric: !!(oraculoStats || oraculoConfig),
