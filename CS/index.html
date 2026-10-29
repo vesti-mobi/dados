@@ -2949,10 +2949,17 @@ function baseDaPlanilha(dom, nome){
     if(c && mesmoNome(c)) r = c;
   }
   if(!r && k) r = MENSALIDADE_POR_NOME.get(k);
+  /* Último degrau: o nome da planilha aparecendo como PALAVRA INTEIRA dentro
+     do nome do negócio. É o que liga "Fyhe - Filial Quebela" à "Quebela" e
+     "Venoro Acessorios" ao "Venoro". Palavra inteira, seis letras no mínimo e
+     resultado único — com duas candidatas isso vira chute, e aí não casa.
+     Medido sobre a base toda: encontra três marcas e nenhuma ambiguidade. */
   if(!r && k.length >= 5){
+    const alvo = ' ' + k + ' ';
     const cand = [];
     MENSALIDADE_POR_NOME.forEach((v, nk)=>{
-      if(nk.length >= 5 && (k.startsWith(nk) || nk.startsWith(k))) cand.push(v);
+      if(nk.replace(/ /g,'').length < 6) return;
+      if(k.startsWith(nk) || nk.startsWith(k) || alvo.includes(' '+nk+' ')) cand.push(v);
     });
     if(cand.length === 1) r = cand[0];
   }
