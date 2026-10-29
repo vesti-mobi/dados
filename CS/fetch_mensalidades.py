@@ -207,13 +207,32 @@ def main() -> None:
             }
             if not reg["mensalidade"] and not reg["total"]:
                 continue
-            # A chave é o domínio quando existe; senão o nome. Quando a marca
-            # aparece nas duas famílias, fica a de maior mensalidade: é a
-            # linha principal, não a de um Starter antigo esquecido.
+            # UMA MARCA PODE TER VÁRIAS LINHAS. A Villon tem três na
+            # planilha — a matriz e duas filiais —, e o que ela paga é a soma.
+            # Então o registro guarda as duas leituras:
+            #   `mensalidade` e `total` são da LINHA PRINCIPAL (a de maior
+            #     mensalidade), que é o plano da marca — é o que serve de base
+            #     para medir a diferença de um upgrade de plano;
+            #   `totalGeral` e `mensalidadeGeral` somam TODAS as linhas, que é
+            #     o que a marca paga por inteiro.
+            # Misturar os dois daria base errada no upgrade: comparar o plano
+            # novo de uma loja com a soma da matriz e das filiais.
             k = ("d:" + dom) if dom else ("n:" + chave(nome_marca))
             antes = marcas.get(k)
-            if not antes or reg["mensalidade"] > antes["mensalidade"]:
+            if not antes:
+                reg["linhas"] = 1
+                reg["mensalidadeGeral"] = reg["mensalidade"]
+                reg["totalGeral"] = reg["total"]
                 marcas[k] = reg
+            else:
+                antes["linhas"] += 1
+                antes["mensalidadeGeral"] += reg["mensalidade"]
+                antes["totalGeral"] += reg["total"]
+                if reg["mensalidade"] > antes["mensalidade"]:
+                    antes["mensalidade"] = reg["mensalidade"]
+                    antes["total"] = reg["total"]
+                    antes["plano"] = reg["plano"]
+                    antes["marca"] = reg["marca"] or antes["marca"]
             n += 1
         print(f'[mens] aba "{aba}" ({mes}): {n} linhas com valor')
 
@@ -224,7 +243,9 @@ def main() -> None:
         "marcas": marcas,
     }
     OUT.write_text(json.dumps(saida, ensure_ascii=False), encoding="utf-8")
-    print(f"[mens] {len(marcas)} marcas com mensalidade")
+    varias = sum(1 for r in marcas.values() if r.get("linhas", 1) > 1)
+    print(f"[mens] {len(marcas)} marcas com mensalidade"
+          + (f" · {varias} com mais de uma linha (matriz + filiais, somadas)" if varias else ""))
     print(f"[write] {OUT.name}")
 
 
