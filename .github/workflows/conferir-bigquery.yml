@@ -28,7 +28,7 @@ on:
         required: false
         default: '0'
       modo:
-        description: 'conferir (padrão), explorar, gmv (todas as réguas) ou pbi (reproduz a medida do Power BI)'
+        description: 'conferir (padrão), explorar, gmv, pbi ou mensalidades (esqueleto da planilha de mensalidades)'
         required: false
         default: 'conferir'
 
@@ -53,7 +53,7 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
 
       - name: Conferir painel × BigQuery
-        if: inputs.modo != 'explorar'
+        if: inputs.modo != 'explorar' && inputs.modo != 'mensalidades'
         working-directory: CS
         env:
           MESES: ${{ inputs.meses }}
@@ -76,6 +76,16 @@ jobs:
         env:
           MES: ${{ inputs.meses }}
         run: node conferir_pbi.js
+
+      # Só olha o ESQUELETO da planilha de mensalidades: abas, cabeçalhos e
+      # contagem de linhas. Nenhum nome de marca, nenhum valor, nenhum e-mail
+      # de service account — o log deste repositório é público.
+      - name: Explorar a planilha de mensalidades
+        if: inputs.modo == 'mensalidades'
+        working-directory: CS
+        run: |
+          pip install --quiet openpyxl google-auth
+          python explorar_mensalidades.py
 
       # Mede o GMV do mês em todas as réguas possíveis (pago x criado, com teto
       # x sem, carteira x base toda) para achar de onde sai cada número.

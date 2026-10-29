@@ -95,8 +95,11 @@ def token_sa() -> str:
 
     creds = service_account.Credentials.from_service_account_file(str(SA_JSON), scopes=SCOPES)
     creds.refresh(google.auth.transport.requests.Request())
-    email = getattr(creds, "service_account_email", "(desconhecido)")
-    print(f"[churn] usando a service account {email}")
+    # O E-MAIL DA SERVICE ACCOUNT NÃO VAI PARA O LOG (29/10/2026). Este
+    # repositório é público e o log do Actions também: imprimir o endereço
+    # entregava de graça o alvo a quem quisesse tentar. Quem precisa dele
+    # acha no GCP Console, em IAM e administrador > Contas de serviço.
+    print("[churn] usando a service account configurada")
     return creds.token
 
 
