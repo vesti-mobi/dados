@@ -816,6 +816,20 @@ async function puxarBQ() {
     console.log('  sem churn_planilha.json — o card do churn declarado fica vazio');
   }
 
+  /* O que cada marca paga, da planilha de mensalidades (aba Vesti e Starter
+     do mês mais recente). Serve de BASE para o ganho do upgrade quando a
+     marca não tem mensalidade no Iugu — pedido da Laura em 29/10/2026, depois
+     de ver o upgrade da Boise entrar com ganho zero. Quem escreve o arquivo é
+     o fetch_mensalidades.py, passo opcional do workflow. */
+  let mensalidadesPlanilha = { marcas: {}, geradoEm: null, abas: null, meses: null };
+  try {
+    mensalidadesPlanilha = JSON.parse(fs.readFileSync(path.join(__dirname, 'mensalidades_planilha.json'), 'utf8'));
+    console.log('  mensalidades na planilha'.padEnd(44)
+      + String(Object.keys(mensalidadesPlanilha.marcas || {}).length).padStart(8));
+  } catch {
+    console.log('  sem mensalidades_planilha.json — upgrade sem base no Iugu segue sem valor');
+  }
+
   /* Cliques nos links compartilhados. `rankings_shared_links` é um snapshot
      diário acumulado por usuário — o Painel Elisa soma o diário, e é o mesmo
      que fazemos aqui, para os dois painéis contarem igual. */
@@ -869,6 +883,7 @@ async function puxarBQ() {
   return { cadastro, cadastroFora, pedidos, pedidosPagosTudo, gmvTudo, ultimoPedido, vestipago, oraculoGmv, oraculoAtend,
            interchange, mensalidade, faturas, implantacaoVP, implantacaoOraculo, filiaisNovas, coberturaTipo,
            linksVendedor, cliquesVendedor, empresasDaMarca, faturasHist, churnPlanilha,
+           mensalidadesPlanilha,
            primeiraVP, mensalidadeBonif, pedidosCriados, tipoPorMarca,
            temIntegrationOwner: TEM_OWNER };
 }
@@ -3284,6 +3299,7 @@ function montar(bqd, hsd, tinoDados) {
     /* Churn declarado pelo time na planilha (aba 2026), já filtrado pelas duas
        observações que contam. */
     churnPlanilha: bqd.churnPlanilha || { linhas: [] },
+    mensalidadesPlanilha: bqd.mensalidadesPlanilha || { marcas: {} },
     /* Links compartilhados pelos vendedores e cliques, por marca e mês. */
     linksSeries: empacotar(linksSeries),
     /* Uma linha por fatura do Iugu, com status — alimenta o card de

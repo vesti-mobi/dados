@@ -101,6 +101,33 @@ jobs:
           CHURN_SHEET_ID: ${{ vars.CHURN_SHEET_ID }}
         run: python fetch_churn_planilha.py
 
+      # A planilha de mensalidades NÃO é pública: vai pela service account de
+      # leitura de planilhas. Serve de base para o ganho do upgrade quando a
+      # marca não tem mensalidade no Iugu (pedido da Laura, 29/10/2026).
+      # `continue-on-error`: sem ela a carga segue, só esses upgrades ficam
+      # sem valor — como já ficavam antes.
+      - name: Gravar credencial das planilhas
+        continue-on-error: true
+        env:
+          SHEETS_SA: ${{ secrets.PAINEL_TRIBO_SHEETS_SA }}
+          SHEETS_SA_ALT: ${{ secrets.GOOGLE_SHEETS_SA_JSON }}
+        run: |
+          if [ -n "$SHEETS_SA" ]; then
+            printf '%s' "$SHEETS_SA" > "$RUNNER_TEMP/sheets_sa.json"
+            echo "SHEETS_SA_FILE=$RUNNER_TEMP/sheets_sa.json" >> "$GITHUB_ENV"
+          fi
+          if [ -n "$SHEETS_SA_ALT" ]; then
+            printf '%s' "$SHEETS_SA_ALT" > "$RUNNER_TEMP/sheets_sa_alt.json"
+            echo "SHEETS_SA_ALT_FILE=$RUNNER_TEMP/sheets_sa_alt.json" >> "$GITHUB_ENV"
+          fi
+
+      - name: Puxar mensalidades da planilha
+        working-directory: CS
+        continue-on-error: true
+        env:
+          MENS_SHEET_ID: ${{ vars.MENS_SHEET_ID }}
+        run: python fetch_mensalidades.py
+
       - name: Rodar carga (BigQuery + HubSpot + Tino)
         working-directory: CS
         env:

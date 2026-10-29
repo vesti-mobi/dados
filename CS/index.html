@@ -2896,12 +2896,37 @@ function categoriasTemperatura(linhas){
    duas (17 e 21/09/2026), "não o valor fechado". Sem mensalidade anterior no
    Iugu o ganho fica em branco e quem chama decide o que fazer: somar o valor
    cheio inflaria o número. */
+/* A BASE DO UPGRADE, EM DUAS PONTAS (29/10/2026) --------------------------
+   Primeiro o Iugu, que é o que a marca de fato pagou. Quando ele não tem
+   nada — e não ter é comum: a Boise tem 293 dias de série sem um centavo de
+   mensalidade —, vale a PLANILHA DE MENSALIDADES, pedido da Laura: "quando
+   acontecer isso, puxe daqui, sempre da aba vesti e starter e sempre olhando
+   no mês mais atual que tem lá".
+
+   Da planilha vem a MENSALIDADE, não o total cobrado: o negócio de upgrade
+   vale o plano novo, então a base justa é o plano velho. Comparar com o total
+   (plano + integração + assistente + filial) daria diferença negativa em
+   quem tem muito adicional.
+
+   Uma ressalva que o painel escreve na tela: a planilha é a foto do mês mais
+   recente, que pode ser POSTERIOR ao upgrade — aí ela já traz o plano novo e
+   a diferença dá zero. `origem` diz de onde veio a base, para ninguém ler um
+   zero desses como "não ganhou nada". */
+function baseDaPlanilha(dom, nome){
+  const m = (DATA.mensalidadesPlanilha||{}).marcas || {};
+  const r = (dom && m['d:'+String(dom)]) || (nome && m['n:'+chaveNomeMarca(nome)]);
+  return (r && r.mensalidade > 0) ? r : null;
+}
 function ganhoDoUpgrade(n){
   const dom = n.dominio || DOM_POR_CLIENTE[n.cliente || n.nome];
   const mesRef = String(n.fechadoEm || n.data || '').slice(0,7);
   const antes = (dom && mesRef) ? mensalidadeAntesDe(dom, mesRef) : null;
-  return antes ? {antes:antes.valor, mesAntes:antes.mes, ganhoMes:(n.valor||0) - antes.valor}
-               : {antes:null, mesAntes:null, ganhoMes:null};
+  if(antes) return {antes:antes.valor, mesAntes:antes.mes, origem:'Iugu',
+                    ganhoMes:(n.valor||0) - antes.valor};
+  const p = baseDaPlanilha(dom, n.cliente || n.nome);
+  if(p) return {antes:p.mensalidade, mesAntes:p.mes, origem:'planilha',
+                ganhoMes:(n.valor||0) - p.mensalidade};
+  return {antes:null, mesAntes:null, origem:null, ganhoMes:null};
 }
 
 /* --- 10/11. Cross-sell e Upsell: criadas E ganhas -------------------------
@@ -4324,7 +4349,11 @@ function itensCross(meses, cs){
          com valor em branco e aparece à parte, para ninguém somar o cheio. */
       const g = ganhoDoUpgrade(n);
       out.push({tipo:'Upgrade (diferença)', nome:n.cliente, cs:quem, data:n.fechadoEm||n.data,
-        valor: g.ganhoMes, incompleto: g.ganhoMes==null, detalhe: g.antes!=null ? 'de '+fmt.money(g.antes)+' para '+fmt.money(n.valor||0) : 'sem mensalidade anterior no Iugu'});
+        valor: g.ganhoMes, incompleto: g.ganhoMes==null,
+        detalhe: g.antes!=null
+          ? 'de '+fmt.money(g.antes)+' para '+fmt.money(n.valor||0)
+            + (g.origem==='planilha' ? ' · base da planilha, '+rotuloMes(g.mesAntes) : '')
+          : 'sem mensalidade no Iugu nem na planilha'});
       return;
     }
     if(!PRODUTO_RECORRENTE[n.produto]) return;
@@ -5201,7 +5230,7 @@ const CARDS_VISAO = [
         return {nome:n.cliente, cs:n.cs, dominio:n.dominio, categoriaTxt:n.categoriaTxt,
           produto:n.produto||'—', negocio:n.negocio, status:n.status, estagio:n.estagio,
           temperatura:n.temperatura||'', valor:n.valor||0, antes:g.antes, mesAntes:g.mesAntes,
-          ganhoMes:g.ganhoMes, efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
+          ganhoMes:g.ganhoMes, baseOrigem:g.origem||null, efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
           emNegociacao: n.status==='Em aberto' ? (n.valor||0) : 0,
           semBase: n.categoriaTxt==='Upgrade' && n.status==='Ganho' && g.ganhoMes==null};
       })
@@ -5235,7 +5264,9 @@ const CARDS_VISAO = [
         {l:'Upgrades sem base', v:fmt.moneyCompact(soma(gan.filter(r=>r.semBase),'valor')),
          s: semBase
             ? fmt.int(semBase)+' negócios pelo valor cheio · fora do ganho acima, que é só diferença'
-            : 'todo upgrade do período tem mensalidade anterior no Iugu'},
+            : (gan.some(r=>r.baseOrigem==='planilha')
+               ? 'todo upgrade tem base — '+fmt.int(gan.filter(r=>r.baseOrigem==='planilha').length)+' pela planilha de mensalidades'
+               : 'todo upgrade do período tem mensalidade anterior no Iugu')},
       ]; },
     metricas:[
       {k:'valorGanho', l:'Ganho (upgrade pela diferença)', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Ganho'),'efetivo')},
