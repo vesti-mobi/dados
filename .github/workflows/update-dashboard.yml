@@ -30,6 +30,27 @@ jobs:
           printf '%s' "$GCP_SA_KEY" > "$RUNNER_TEMP/gcp_sa.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
 
+      # A planilha de Marcas e Planos, viva. O xlsx versionado parou em
+      # abril/2026 e a Mensalidade Total ficava defasada. `continue-on-error`:
+      # sem a planilha o build cai no arquivo do repositório.
+      - name: Baixar Marcas e Planos
+        continue-on-error: true
+        env:
+          SHEETS_SA: ${{ secrets.PAINEL_TRIBO_SHEETS_SA }}
+          SHEETS_SA_ALT: ${{ secrets.GOOGLE_SHEETS_SA_JSON }}
+          MARCAS_SHEET_ID: ${{ vars.MARCAS_SHEET_ID }}
+        run: |
+          pip install --quiet openpyxl google-auth
+          if [ -n "$SHEETS_SA" ]; then
+            printf '%s' "$SHEETS_SA" > "$RUNNER_TEMP/sheets_sa.json"
+            export SHEETS_SA_FILE="$RUNNER_TEMP/sheets_sa.json"
+          fi
+          if [ -n "$SHEETS_SA_ALT" ]; then
+            printf '%s' "$SHEETS_SA_ALT" > "$RUNNER_TEMP/sheets_sa_alt.json"
+            export SHEETS_SA_ALT_FILE="$RUNNER_TEMP/sheets_sa_alt.json"
+          fi
+          python CS-Sucesso-do-cliente/baixar_marcas_planos.py
+
       - name: Rebuild CS Sucesso do Cliente via BigQuery e HubSpot
         env:
           HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}

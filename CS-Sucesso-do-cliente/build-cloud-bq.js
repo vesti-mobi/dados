@@ -80,7 +80,17 @@ async function main() {
 
     // Marcas e Planos (Excel preferencial, fallback CSV)
     const marcasMap = {};
-    const excelPath = path.join(DIR, 'Marcas e Planos.xlsx');
+    /* A PLANILHA VIVA GANHA DO XLSX VERSIONADO (29/10/2026). O arquivo do
+       repositório está congelado em abril de 2026 -- 16 abas, a última
+       "Vesti 04-2026" -- enquanto a planilha de verdade vai até novembro. A
+       diferença aparece no dinheiro: a Villon tem 2 linhas em abril
+       (R$ 1.549) e 4 em novembro (R$ 2.557). `baixar_marcas_planos.py` grava
+       o arquivo vivo antes do build; sem ele, o versionado segue valendo
+       como rede de segurança. */
+    const excelLive = path.join(DIR, 'marcas_planos_live.xlsx');
+    const excelPath = fs.existsSync(excelLive) ? excelLive : path.join(DIR, 'Marcas e Planos.xlsx');
+    if (excelPath === excelLive) console.log('  Marcas e Planos: usando a planilha viva');
+    else console.log('  Marcas e Planos: usando o xlsx versionado (planilha viva indisponível)');
     let marcasSource = 'CSV';
     if (fs.existsSync(excelPath)) {
         try {
