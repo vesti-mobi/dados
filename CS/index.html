@@ -2912,9 +2912,50 @@ function categoriasTemperatura(linhas){
    recente, que pode ser POSTERIOR ao upgrade — aí ela já traz o plano novo e
    a diferença dá zero. `origem` diz de onde veio a base, para ninguém ler um
    zero desses como "não ganhou nada". */
+/* Achar a marca na planilha de mensalidades é mais trabalhoso do que
+   deveria, por dois motivos que valem estar escritos:
+
+   O DOMÍNIO DE LÁ TEM UM ZERO A MAIS. A Boise é 828876 no cadastro e 8288760
+   na planilha; dos 668 domínios da planilha, 593 só casam tirando o último
+   dígito e 24 casam direto.
+
+   O NOME VEM MAIS CURTO. A planilha escreve "Venoro" e "Winnie"; o negócio no
+   HubSpot vem como "Venoro Acessorios" e "Winnie Modas". E nem todo negócio
+   traz domínio — o do Venoro vem sem.
+
+   Daí a busca em quatro degraus, do mais seguro ao mais frouxo. O último só
+   aceita prefixo quando ele acha UMA marca só: "Amor" dentro de "Amor e Moda"
+   e "Amor Perfeito" seria chute, não casamento. */
+const MENSALIDADE_POR_NOME = (()=>{
+  const m = (DATA.mensalidadesPlanilha||{}).marcas || {};
+  const porNome = new Map();
+  Object.values(m).forEach(r=>{
+    const k = chaveNomeMarca(r.marca||''); if(!k) return;
+    /* Nome repetido na planilha não serve para casar: fica a de maior
+       mensalidade, que é a linha principal da marca. */
+    const antes = porNome.get(k);
+    if(!antes || r.mensalidade > antes.mensalidade) porNome.set(k, r);
+  });
+  return porNome;
+})();
 function baseDaPlanilha(dom, nome){
   const m = (DATA.mensalidadesPlanilha||{}).marcas || {};
-  const r = (dom && m['d:'+String(dom)]) || (nome && m['n:'+chaveNomeMarca(nome)]);
+  const k = chaveNomeMarca(nome||'');
+  const mesmoNome = r => !k || !r.marca || (x=>x===k || x.startsWith(k) || k.startsWith(x))(chaveNomeMarca(r.marca));
+
+  let r = dom ? m['d:'+String(dom)] : null;
+  if(!r && dom){
+    const c = m['d:'+String(dom)+'0'];
+    if(c && mesmoNome(c)) r = c;
+  }
+  if(!r && k) r = MENSALIDADE_POR_NOME.get(k);
+  if(!r && k.length >= 5){
+    const cand = [];
+    MENSALIDADE_POR_NOME.forEach((v, nk)=>{
+      if(nk.length >= 5 && (k.startsWith(nk) || nk.startsWith(k))) cand.push(v);
+    });
+    if(cand.length === 1) r = cand[0];
+  }
   return (r && r.mensalidade > 0) ? r : null;
 }
 function ganhoDoUpgrade(n){
@@ -2925,6 +2966,17 @@ function ganhoDoUpgrade(n){
                     ganhoMes:(n.valor||0) - antes.valor};
   const p = baseDaPlanilha(dom, n.cliente || n.nome);
   if(p) return {antes:p.mensalidade, mesAntes:p.mes, origem:'planilha',
+                /* A planilha é a foto do MÊS MAIS RECENTE, sempre — hoje
+                   novembro —, então ela é quase sempre posterior ao upgrade.
+                   Na maioria das marcas isso não atrapalha: a Boise subiu
+                   para R$ 1.299 em outubro e a planilha de novembro ainda
+                   mostra R$ 821, que é a base certa. Mas quando a planilha JÁ
+                   registrou o plano novo, a diferença zera — a Winnie Modas
+                   subiu para o PRO em agosto e aparece no PRO em novembro. O
+                   que sinaliza isso não é a data, é a conta não sobrar nada:
+                   um "ganho zero" vindo da planilha quer dizer "a foto já
+                   está na frente do fato", nunca "não ganhou". */
+                baseAlcancou: (n.valor||0) - p.mensalidade <= 0,
                 ganhoMes:(n.valor||0) - p.mensalidade};
   return {antes:null, mesAntes:null, origem:null, ganhoMes:null};
 }
@@ -4352,7 +4404,10 @@ function itensCross(meses, cs){
         valor: g.ganhoMes, incompleto: g.ganhoMes==null,
         detalhe: g.antes!=null
           ? 'de '+fmt.money(g.antes)+' para '+fmt.money(n.valor||0)
-            + (g.origem==='planilha' ? ' · base da planilha, '+rotuloMes(g.mesAntes) : '')
+            + (g.origem==='planilha'
+               ? ' · base da planilha, '+rotuloMes(g.mesAntes)
+                 + (g.baseAlcancou ? ' — que já registra o plano novo, por isso a diferença some' : '')
+               : '')
           : 'sem mensalidade no Iugu nem na planilha'});
       return;
     }
@@ -5214,7 +5269,7 @@ const CARDS_VISAO = [
   {
     id:'negociosVg', titulo:'Negócios', cor:'#4048B8',
     capa:'Cross-sell e upgrade criados no período — o que já foi ganho e o que ainda está em negociação',
-    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade anterior</b> — marca cuja receita não passa pelo Iugu, como a Boise, com 293 dias de série e nenhum centavo de mensalidade — não tem de onde tirar a diferença e entra com ganho zero aqui; o valor cheio desses negócios aparece no KPI <i>Upgrades sem base</i>, para o dinheiro não sumir da vista (26/10/2026).',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade no Iugu</b> — marca cuja receita não passa por lá, como a Boise, com 293 dias de série e nenhum centavo — tem a base buscada na <b>planilha de mensalidades</b> do time, na aba de Vesti e na de Starter do <b>mês mais recente</b> que existir lá (29/10/2026, a pedido da Laura). De lá vem a MENSALIDADE, não o total cobrado: o negócio vale o plano novo, então a base justa é o plano velho. A linha diz de onde veio a base. <b>Duas ressalvas:</b> a planilha é a foto do mês mais recente e às vezes <i>já registra o plano novo</i> — aí a diferença some, e a linha avisa; e marca que não está nem no Iugu nem na planilha continua sem base, com o valor cheio no KPI <i>Upgrades sem base</i> para o dinheiro não sumir da vista.',
     campoData:'data',
     linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
                  ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
@@ -5230,7 +5285,8 @@ const CARDS_VISAO = [
         return {nome:n.cliente, cs:n.cs, dominio:n.dominio, categoriaTxt:n.categoriaTxt,
           produto:n.produto||'—', negocio:n.negocio, status:n.status, estagio:n.estagio,
           temperatura:n.temperatura||'', valor:n.valor||0, antes:g.antes, mesAntes:g.mesAntes,
-          ganhoMes:g.ganhoMes, baseOrigem:g.origem||null, efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
+          ganhoMes:g.ganhoMes, baseOrigem:g.origem||null, baseAlcancou:!!g.baseAlcancou,
+          efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
           emNegociacao: n.status==='Em aberto' ? (n.valor||0) : 0,
           semBase: n.categoriaTxt==='Upgrade' && n.status==='Ganho' && g.ganhoMes==null};
       })
@@ -5267,6 +5323,12 @@ const CARDS_VISAO = [
             : (gan.some(r=>r.baseOrigem==='planilha')
                ? 'todo upgrade tem base — '+fmt.int(gan.filter(r=>r.baseOrigem==='planilha').length)+' pela planilha de mensalidades'
                : 'todo upgrade do período tem mensalidade anterior no Iugu')},
+        /* Quem a planilha alcançou, e em quantos ela chegou tarde demais para
+           medir a diferença. */
+        {l:'Base vinda da planilha', v:fmt.int(gan.filter(r=>r.baseOrigem==='planilha').length),
+         s: gan.some(r=>r.baseAlcancou)
+            ? fmt.int(gan.filter(r=>r.baseAlcancou).length)+' já com o plano novo na planilha — nessas a diferença some'
+            : 'marcas sem mensalidade no Iugu, resgatadas pela planilha'},
       ]; },
     metricas:[
       {k:'valorGanho', l:'Ganho (upgrade pela diferença)', f:fmt.money, v:rows=>soma(rows.filter(r=>r.status==='Ganho'),'efetivo')},
