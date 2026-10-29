@@ -4285,7 +4285,9 @@ const METAS_TRI = [
       + '<b>O que o HubSpot não alcança:</b> ele sabe quando o negócio foi <i>ganho</i>, não quando a loja entrou no ar — o varejo da CVL fechou em 28/08 e o da Charisma em 30/09, e o time conta os dois em outubro; e o que não vira negócio lá não aparece, como a integração da Casualli. '
       + 'O Tino saiu daqui em 13/10/2026 — tem meta própria, e somava dezenas (50 marcas só em julho) contra uma meta de 9 feita para esforço manual.' },
   { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#15803D',
-    ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença.' },
+    ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença. '
+      + '<b>O Tino não entra</b> desde 29/10/2026 — tem meta própria, e contá-lo aqui faria o mesmo trabalho pagar em dois quadrantes. O valor não mudou com isso: todo negócio de Tino vem do HubSpot com R$ 0. '
+      + 'Integração e setup também ficam de fora, por serem cobrança única.' },
   { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7490',
     ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
   { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#1F4FD8',
@@ -4391,8 +4393,15 @@ function itensMentoria(meses, cs){
 }
 
 /* Cross-sell/Upsell: só o que é RECORRENTE novo. Integração e setup ficam de
-   fora — são cobrança única, e já contam no quadrante de Mentoria/Setup. */
-const PRODUTO_RECORRENTE = { 'Oráculo':1, 'Filial':1, 'Multiloja':1, 'Outros':1, 'Assistente do Vendedor':1, 'Tino':1 };
+   fora — são cobrança única, e já contam no quadrante de Mentoria/Setup.
+
+   O TINO SAIU DAQUI (29/10/2026), a pedido da Laura: "pode tirar Tino em
+   cross-sell e upsell". É a mesma razão que o tirou de Mentoria/Setup em
+   13/10 — ele tem meta própria, e contá-lo aqui faz o mesmo trabalho pagar
+   em dois quadrantes. O valor não muda com a saída: todo negócio de Tino no
+   HubSpot vem com R$ 0, então ele somava zero e só enchia a lista — foram
+   3 linhas zeradas neste trimestre e 13 no anterior. */
+const PRODUTO_RECORRENTE = { 'Oráculo':1, 'Filial':1, 'Multiloja':1, 'Outros':1, 'Assistente do Vendedor':1 };
 function itensCross(meses, cs){
   const out = [];
   (DATA.negocios||[]).forEach(n=>{
