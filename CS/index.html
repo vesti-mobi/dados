@@ -4287,7 +4287,8 @@ const METAS_TRI = [
   { k:'cross', l:'Cross-sell/Upsell', unidade:'R$', ind:7000, col:21000, acelera:true, cor:'#15803D',
     ajuda:'Valor RECORRENTE novo: mensalidade de Oráculo, de varejo e de filial pelo valor cheio; upgrade de plano só pela diferença. '
       + '<b>O Tino não entra</b> desde 29/10/2026 — tem meta própria, e contá-lo aqui faria o mesmo trabalho pagar em dois quadrantes. O valor não mudou com isso: todo negócio de Tino vem do HubSpot com R$ 0. '
-      + 'Integração e setup também ficam de fora, por serem cobrança única.' },
+      + 'Integração e setup também ficam de fora, por serem cobrança única. '
+      + '<b>Negócio de R$ 0 não entra</b> desde 30/10/2026: o produto "Filial" no HubSpot é usado tanto para vender uma filial quanto para registrar alguma coisa numa filial que já existe — "Filiais CVL" vale R$ 200 e é a venda, enquanto "VestiPago Filial CVL" e "Integração Totvs | Filiais CVL" vêm zerados. Sem valor não há recorrência nova para somar, e a mesma marca aparecia quatro vezes na lista.' },
   { k:'vestipago', l:'VestiPago', unidade:'R$', cresce:0.30, cor:'#0E7490',
     ajuda:'TPV do trimestre contra o mesmo trimestre do ano passado, na carteira de hoje.' },
   { k:'gmv', l:'GMV', unidade:'R$', cresce:0.10, cor:'#1F4FD8',
@@ -4428,6 +4429,19 @@ function itensCross(meses, cs){
       return;
     }
     if(!PRODUTO_RECORRENTE[n.produto]) return;
+    /* NEGÓCIO DE R$ 0 NÃO É RECORRÊNCIA NOVA (30/10/2026). A Laura, vendo
+       quatro CVL e duas Entretons na mesma lista: "tire o que for de valor
+       zero".
+
+       Eles aparecem porque o produto "Filial" no HubSpot é usado para duas
+       coisas: vender uma filial e fazer alguma coisa numa filial que já
+       existe. Os nomes denunciam — "Filiais CVL" vale R$ 200 e é a venda,
+       enquanto "VestiPago Filial CVL | Loja da Paulinha" e "Integração Totvs
+       | Filiais CVL" vêm com R$ 0 porque são a habilitação do VestiPago e a
+       integração, registradas sobre uma filial. Sem valor não há recorrência
+       nova para somar, e a linha só fazia a mesma marca aparecer quatro
+       vezes. */
+    if(!(n.valor > 0)) return;
     out.push({tipo:n.produto, nome:n.cliente, cs:quem, data:n.fechadoEm||n.data, valor:n.valor||0});
   });
   return out.sort((a,b)=>(b.valor||0)-(a.valor||0));
