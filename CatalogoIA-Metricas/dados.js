@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-10-29T21:05:53.843Z",
-  "hoje": "2026-10-29",
+  "gerado_em": "2026-10-30T12:08:39.899Z",
+  "hoje": "2026-10-30",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 569,
       "primeiro": "2026-08-10T19:02:35.392Z",
       "ultimo": "2026-10-27T11:13:00.573Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "opera-kids",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 24,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-10-21T09:19:27.156Z",
-      "dias": 8
+      "dias": 9
     },
     {
       "slug": "trimix",
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 544,
           "primeiro": "2026-08-11T18:28:02.542Z",
           "ultimo": "2026-10-27T11:13:00.573Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 242,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 23,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-10-21T09:19:27.156Z",
-          "dias": 8,
+          "dias": 9,
           "produtos_medidos": 23,
           "atribuido": 0
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 70,
+          "dias": 71,
           "produtos_medidos": 0,
           "atribuido": 8
         },
