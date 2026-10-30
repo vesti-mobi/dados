@@ -7,14 +7,16 @@
 # Fontes, todas lidas a cada execução:
 #   BigQuery  GMV, GMV integração, GMV Oráculo, TPV, receita de antifraude,
 #             análises do antifraude e CSAT do VestiPago (dataset huggy)
-#   Sheets    CSAT e resposta de Integrações e Plataforma, SLA das três
-#             equipes, tempo de análise e chargeback perdido
+#   Sheets    CSAT e resposta de Integrações e Plataforma, tempo de análise
+#             e chargeback perdido
+#   HubSpot   SLA das três equipes, pipeline Suporte
 #
 # Secrets:
 #   GCP_SA_KEY              conta de serviço do BigQuery (já usada por outros
 #                           workflows deste repositório)
-#   PAINEL_TRIBO_SHEETS_SA  conta de serviço com acesso às três planilhas
+#   PAINEL_TRIBO_SHEETS_SA  conta de serviço com acesso às planilhas
 #                           (painel-cs-sheets-reader@csatenps)
+#   HUBSPOT_TOKEN           token privado do HubSpot, para o SLA
 
 # ATRASO DO SCHEDULER DO GITHUB
 # O GitHub entrega os eventos `schedule` DIARIOS deste repositorio com 5 a 7h
@@ -170,6 +172,7 @@ jobs:
         working-directory: painel-tribo
         env:
           DESDE: ${{ inputs.desde }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
         run: node build_data.js
 
       - name: Conferir que o arquivo saiu sadio

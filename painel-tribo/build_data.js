@@ -19,7 +19,7 @@
  *   af_analises/aprovadas  MongoDB_Pedidos_Geral.payment_analysisStatus
  *   CSAT VestiPago ....... huggy.chats_raw + huggy.csat_raw (mesmo BigQuery)
  *   CSAT Integr./Platf. .. suporte.js → planilha "OKRs e KPIs - Tribo 1"
- *   SLA .................. suporte.js → planilha "SLA Vesti"
+ *   SLA .................. sla.js → HubSpot, pipeline Suporte
  *   tempo de análise ..... antifraude.js → xlsx "Metrica Antifraude 2026"
  *   chargeback perdido ... antifraude.js → planilha "Chargebacks"
  *
@@ -316,6 +316,7 @@ const COLS_SUPORTE = TIMES.flatMap((t) =>
 
 const { lerSuporte } = require(path.join(__dirname, 'suporte.js'));
 const { lerAntifraude } = require(path.join(__dirname, 'antifraude.js'));
+const { lerSla } = require(path.join(__dirname, 'sla.js'));
 
 async function main() {
   console.log(`Painel da Tribo — gerando dados de ${DESDE} a ${ATE}`);
@@ -366,13 +367,20 @@ async function main() {
     console.log(`  [sheets] AVISO: antifraude não lido (${e.message.slice(0, 110)})`);
   }
 
+  let sla = { porDia: {}, cobertura: {} };
+  try {
+    sla = await lerSla({ ate: ATE });
+    const c = Object.entries(sla.cobertura).map(([k, v]) => `${k} ${v}`).join(' · ');
+    console.log(`  [hubspot] SLA, ${c} tickets (${sla.de} a ${sla.ate})`);
+  } catch (e) {
+    console.log(`  [hubspot] AVISO: SLA não lido (${e.message.slice(0, 110)}) — fica "—" no painel.`);
+  }
+
   let suporte = { porDia: {}, cobertura: {} };
   try {
     suporte = await lerSuporte();
     const fmt = (o) => Object.entries(o || {}).map(([k, v]) => `${k} ${v}`).join(' · ');
     console.log(`  [sheets] CSAT, ${fmt(suporte.cobertura)} semanas`);
-    const j = suporte.janelaSla;
-    console.log(`  [sheets] SLA,  ${fmt(suporte.coberturaSla)} tickets` + (j ? ` (${j.de} a ${j.ate})` : ''));
   } catch (e) {
     console.log(`  [sheets] AVISO: suporte não lido (${e.message.slice(0, 120)}) — fica "—" no painel.`);
   }
@@ -386,7 +394,7 @@ async function main() {
     // planilha nem o Huggy separam. A exceção é a Plataforma a partir de 2026,
     // cuja planilha divide confecção (atacado) e multimarca (varejo) — ali a
     // coluna vem sufixada com @segmento e cada lado fica com o seu número.
-    const s = { ...(suporte.porDia[r.data] || {}), ...(csatVp[r.data] || {}) };
+    const s = { ...(suporte.porDia[r.data] || {}), ...(sla.porDia[r.data] || {}), ...(csatVp[r.data] || {}) };
     for (const k of COLS_SUPORTE) {
       const v = s[`${k}@${r.segmento}`] != null ? s[`${k}@${r.segmento}`] : s[k];
       o[k] = v == null ? null : Number(v.toFixed(4));
@@ -419,7 +427,7 @@ async function main() {
           antifraude_analises: { tabela: 'MongoDB_Pedidos_Geral.payment_analysisStatus', atualizado_ate: ATE },
       suporte_csat: { tabela: 'planilha OKRs e KPIs - Tribo 1', atualizado_ate: ATE, observacao: 'Integrações e Plataforma' },
       suporte_csat_vestipago: { tabela: 'huggy.chats_raw + csat_raw', atualizado_ate: ATE, observacao: 'csat_raw parada em 29/09' },
-      suporte_sla: { tabela: 'planilha SLA Vesti', atualizado_ate: '2026-10-09', observacao: 'tickets de erro, só 2026' },
+      suporte_sla: { tabela: 'HubSpot, pipeline Suporte', atualizado_ate: ATE, observacao: 'tickets de erro, só 2026' },
       antifraude_tempo: { tabela: 'xlsx Metrica Antifraude 2026', atualizado_ate: ATE, observacao: 'semanal, só 2026' },
       chargeback: { tabela: 'planilha Chargebacks', atualizado_ate: ATE, observacao: 'só os perdidos' },
     },

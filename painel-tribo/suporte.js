@@ -1,7 +1,10 @@
 /**
- * suporte.js — lê os indicadores de suporte das três equipes direto do Google
- * Sheets: CSAT e taxa de resposta da planilha "OKRs e KPIs - Tribo 1", SLA da
- * planilha "SLA Vesti".
+ * suporte.js — CSAT e taxa de resposta de Integrações e Plataforma, da
+ * planilha "OKRs e KPIs - Tribo 1".
+ *
+ * As outras duas peças do bloco Suporte têm fonte própria: o CSAT do VestiPago
+ * vem do Huggy no BigQuery (em build_data.js) e o SLA das três equipes vem do
+ * HubSpot (em sla.js).
  *
  * Acesso pela service account painel-cs-sheets-reader@csatenps, a mesma que o
  * PainelCSGerencial já usa. A planilha está compartilhada com ela; não há nada
@@ -27,25 +30,6 @@ const path = require('path');
 const { JWT } = require(path.join(__dirname, '..', 'node_modules', 'google-auth-library'));
 
 const PLANILHA = '15i3jOD_I6oAgtKUo34rliVZ3cqIQTPE9eM5Qm9sopWY';
-const PLANILHA_SLA = '1eTCorxSCgUk6qJTrSJeee7X2bBZvK6EBpN-SXv__dJU';
-
-// Abas de SLA: uma por equipe, com a lista de tickets a partir da linha 22
-// (cabeçalho na 21). Colunas: 3 nome, 4 criação, 5 fechamento, 7 SLA em horas.
-const ABAS_SLA = [
-  { equipe: 'integracao', aba: 'SLA - Integração' },
-  { equipe: 'plataforma', aba: 'SLA - Plataforma' },
-  { equipe: 'vestipago', aba: 'SLA - Vestipago' },
-];
-const SLA_LINHA0 = 22, SLA_COL_NOME = 3, SLA_COL_FECHAMENTO = 5, SLA_COL_HORAS = 7;
-
-// A planilha de SLA ainda está em construção e tem tickets de teste dentro.
-// Em setembro/2026 os únicos dois tickets da Integração eram "Teste Ticket" e
-// "Teste Ticket 2", ambos fechados em minutos: o SLA da equipe dava 0,0 dia, um
-// número ótimo e falso. Ligar isto descarta ticket cujo nome começa por "teste".
-// Default false para não inventar regra sobre o dado de ninguém.
-const IGNORAR_TICKETS_TESTE = false;
-const ehTeste = (nome) => /^\s*teste\b/i.test(String(nome || ''));
-
 const CAMINHOS_CHAVE = [
   process.env.GOOGLE_SHEETS_SA_JSON_FILE,
   path.join(__dirname, 'google_sa.json'),
@@ -125,59 +109,6 @@ const EPOCA_SHEETS = Date.UTC(1899, 11, 30);
 function diaDoSerial(serial) {
   if (typeof serial !== 'number' || !Number.isFinite(serial)) return null;
   return new Date(EPOCA_SHEETS + serial * 86400000).toISOString().slice(0, 10);
-}
-
-/**
- * SLA por dia, a partir da lista de tickets. Diferente do CSAT, aqui existem
- * os componentes de verdade — um ticket por linha — então nada é reconstruído
- * nem diluído: cada ticket entra no dia em que foi FECHADO, que é o que o
- * ticket do Jira pede ("atendimentos resolvidos no período").
- *
- * A coluna "SLA (Horas)" é o tempo corrido entre abertura e fechamento
- * (conferido ticket a ticket nos 320 da Plataforma), o que é exatamente a
- * definição de SLA do MDATA-503: dias corridos, fim de semana incluído.
- *
- * Dentro da janela que a planilha cobre, dia sem ticket vale ZERO resolvidos,
- * não "desconhecido" — senão o painel descartaria o período inteiro por causa
- * de um domingo sem fechamento. Fora da janela o valor fica null de propósito:
- * ali não dá para saber se ninguém fechou ticket ou se a planilha ainda não
- * foi atualizada.
- */
-async function lerSla(cliente) {
-  const abas = await buscarAbas(cliente, PLANILHA_SLA, ABAS_SLA.map((a) => a.aba));
-  const porDia = {};
-  const cobertura = {};
-  for (const { equipe, aba } of ABAS_SLA) {
-    const V = abas[aba] || [];
-    for (const linha of V.slice(SLA_LINHA0)) {
-      if (!linha || linha.length <= SLA_COL_HORAS) continue;
-      const dia = diaDoSerial(linha[SLA_COL_FECHAMENTO]);
-      const horas = linha[SLA_COL_HORAS];
-      if (!dia || typeof horas !== 'number' || !Number.isFinite(horas) || horas < 0) continue;
-      if (IGNORAR_TICKETS_TESTE && ehTeste(linha[SLA_COL_NOME])) continue;
-      const alvo = porDia[dia] || (porDia[dia] = {});
-      alvo[`sla_dias_${equipe}`] = (alvo[`sla_dias_${equipe}`] || 0) + horas / 24;
-      alvo[`sla_qtd_${equipe}`] = (alvo[`sla_qtd_${equipe}`] || 0) + 1;
-      cobertura[equipe] = (cobertura[equipe] || 0) + 1;
-    }
-  }
-
-  // Preenche com zero os dias sem fechamento dentro da janela coberta.
-  const dias = Object.keys(porDia).sort();
-  if (dias.length) {
-    const fim = new Date(dias[dias.length - 1] + 'T00:00:00Z');
-    for (let d = new Date(dias[0] + 'T00:00:00Z'); d <= fim; d.setUTCDate(d.getUTCDate() + 1)) {
-      const dia = d.toISOString().slice(0, 10);
-      const alvo = porDia[dia] || (porDia[dia] = {});
-      for (const { equipe } of ABAS_SLA) {
-        if (alvo[`sla_qtd_${equipe}`] == null) {
-          alvo[`sla_dias_${equipe}`] = 0;
-          alvo[`sla_qtd_${equipe}`] = 0;
-        }
-      }
-    }
-  }
-  return { porDia, cobertura, janela: dias.length ? { de: dias[0], ate: dias[dias.length - 1] } : null };
 }
 
 const numero = (V, i, c) => {
@@ -261,19 +192,7 @@ async function lerSuporte() {
     }
   }
 
-  // SLA vem de outra planilha e numa granularidade melhor: ticket a ticket.
-  // Se ela falhar, o CSAT continua de pé e só o SLA fica "—".
-  let sla = { porDia: {}, cobertura: {}, janela: null };
-  try {
-    sla = await lerSla(cliente);
-    for (const [dia, vals] of Object.entries(sla.porDia)) {
-      Object.assign(porDia[dia] || (porDia[dia] = {}), vals);
-    }
-  } catch (e) {
-    console.log(`  [sheets] AVISO: SLA não lido (${e.message.slice(0, 100)})`);
-  }
-
-  return { porDia, cobertura, coberturaSla: sla.cobertura, janelaSla: sla.janela };
+  return { porDia, cobertura };
 }
 
 module.exports = { lerSuporte, autenticar, BLOCOS };

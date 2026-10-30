@@ -18,7 +18,7 @@ origem dele.
 | **CSAT e Resposta · Integrações** | Planilha **OKRs e KPIs - Tribo 1**, aba `Integração - KPIs` | linhas 97 a 99: CSAT, Total atendimentos e % de respostas |
 | **CSAT e Resposta · Plataforma** | Planilha **OKRs e KPIs - Tribo 1**, abas `Plataforma - KPIs` e `Plataforma - KPIs (2026)` | confecção e multimarca somados |
 | **CSAT e Resposta · VestiPago** | BigQuery `huggy.chats_raw` + `huggy.csat_raw` | tabulação "Vestipago", agentes Vânia, Kalinka e Tiago, departamentos Confecção, Multimarca e Parceiro |
-| **SLA · as três equipes** | Planilha **SLA Vesti**, abas `SLA - Integração`, `SLA - Plataforma` e `SLA - Vestipago` | lista de tickets, pela data de fechamento; dias corridos entre abertura e resolução |
+| **SLA · as três equipes** | **HubSpot**, pipeline Suporte | tickets encerrados com identificador Jira, categoria "Erro - <equipe>"; dias corridos entre abertura e fechamento, pelo dia do fechamento |
 
 ## Aba Pagamento
 
@@ -96,7 +96,7 @@ tabelas, fica dentro de 0,25%.
 | CSAT · Integrações e Plataforma | semanal, conforme a planilha é preenchida |
 | Tempo de análise | semanal, só 2026 — sem comparação anual |
 | MDR e antecipação | só de maio/2026 em diante, logo a Receita total ainda não tem comparação anual |
-| SLA | parado em 09/10 e sem 2025 — a planilha depende de reexportação |
+| SLA | completo até ontem, lido do HubSpot; sem 2025, logo sem comparação anual |
 | Chargeback | amadurece para trás: entra como "Disputa" e só vira "Perdido" quando julgado |
 
 ---
