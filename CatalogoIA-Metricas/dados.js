@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-10-30T21:06:32.867Z",
-  "hoje": "2026-10-30",
+  "gerado_em": "2026-10-31T12:07:01.082Z",
+  "hoje": "2026-10-31",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -19,7 +19,7 @@ window.DADOS = {
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2425,
-    "produtos_7d": 215,
+    "produtos_7d": 211,
     "descricoes_total": 3019,
     "total_estimado": true
   },
@@ -94,7 +94,7 @@ window.DADOS = {
       "envios": 569,
       "primeiro": "2026-08-10T19:02:35.392Z",
       "ultimo": "2026-10-27T11:13:00.573Z",
-      "dias": 3
+      "dias": 4
     },
     {
       "slug": "opera-kids",
@@ -104,7 +104,7 @@ window.DADOS = {
       "email": "contato@operakids.com.br",
       "produtos": 223,
       "estimado": false,
-      "produtos_7d": 17,
+      "produtos_7d": 13,
       "ativa": true,
       "acessos": 111,
       "buscas": 305,
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 24,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-10-21T09:19:27.156Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "trimix",
@@ -491,7 +491,7 @@ window.DADOS = {
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 2039,
-        "produtos_7d": 211,
+        "produtos_7d": 207,
         "descricoes_total": 2418,
         "total_estimado": false,
         "produtos_atribuidos": 0
@@ -553,7 +553,7 @@ window.DADOS = {
           "envios": 544,
           "primeiro": "2026-08-11T18:28:02.542Z",
           "ultimo": "2026-10-27T11:13:00.573Z",
-          "dias": 3,
+          "dias": 4,
           "produtos_medidos": 242,
           "atribuido": 0
         },
@@ -565,7 +565,7 @@ window.DADOS = {
           "email": "contato@operakids.com.br",
           "produtos": 167,
           "estimado": false,
-          "produtos_7d": 13,
+          "produtos_7d": 9,
           "ativa": true,
           "acessos": 43,
           "buscas": 191,
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 23,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-10-21T09:19:27.156Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 23,
           "atribuido": 0
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 71,
+          "dias": 72,
           "produtos_medidos": 0,
           "atribuido": 8
         },
