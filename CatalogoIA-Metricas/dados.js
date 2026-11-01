@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-10-31T21:05:49.206Z",
-  "hoje": "2026-10-31",
+  "gerado_em": "2026-11-01T12:07:53.759Z",
+  "hoje": "2026-11-01",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -88,13 +88,13 @@ window.DADOS = {
       "estimado": false,
       "produtos_7d": 187,
       "ativa": true,
-      "acessos": 80,
-      "buscas": 357,
+      "acessos": 81,
+      "buscas": 358,
       "descricoes": 543,
       "envios": 569,
       "primeiro": "2026-08-10T19:02:35.392Z",
-      "ultimo": "2026-10-27T11:13:00.573Z",
-      "dias": 4
+      "ultimo": "2026-11-01T08:41:00.207Z",
+      "dias": 0
     },
     {
       "slug": "opera-kids",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 24,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-10-21T09:19:27.156Z",
-      "dias": 10
+      "dias": 11
     },
     {
       "slug": "trimix",
@@ -547,13 +547,13 @@ window.DADOS = {
           "estimado": false,
           "produtos_7d": 187,
           "ativa": true,
-          "acessos": 71,
-          "buscas": 317,
+          "acessos": 72,
+          "buscas": 318,
           "descricoes": 540,
           "envios": 544,
           "primeiro": "2026-08-11T18:28:02.542Z",
-          "ultimo": "2026-10-27T11:13:00.573Z",
-          "dias": 4,
+          "ultimo": "2026-11-01T08:41:00.207Z",
+          "dias": 0,
           "produtos_medidos": 242,
           "atribuido": 0
         },
@@ -633,7 +633,7 @@ window.DADOS = {
           "envios": 23,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-10-21T09:19:27.156Z",
-          "dias": 10,
+          "dias": 11,
           "produtos_medidos": 23,
           "atribuido": 0
         },
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 72,
+          "dias": 73,
           "produtos_medidos": 0,
           "atribuido": 8
         },
