@@ -112,8 +112,8 @@
     "canalPlanilha": "Starter"
   },
   "33269": {
-    "ligado": true,
-    "update": "2026-10-01",
+    "ligado": false,
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Quebela",
     "canalPlanilha": "Vesti"
@@ -700,8 +700,8 @@
     "canalPlanilha": "Starter"
   },
   "909617": {
-    "ligado": true,
-    "update": "2026-09-27",
+    "ligado": false,
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Bella Moda Intima",
     "canalPlanilha": "Vesti"
@@ -735,8 +735,8 @@
     "canalPlanilha": "Vesti"
   },
   "196201": {
-    "ligado": true,
-    "update": "2026-09-29",
+    "ligado": false,
+    "update": "2026-11-01",
     "religamentoReal": false,
     "nomePlanilha": "Sigui Atacado",
     "canalPlanilha": "Vesti"
@@ -931,8 +931,8 @@
     "canalPlanilha": "Vesti"
   },
   "1845843": {
-    "ligado": false,
-    "update": "2026-10-30",
+    "ligado": true,
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Luvesa Modas",
     "canalPlanilha": "Uemtel"
@@ -1023,7 +1023,7 @@
   },
   "1289726": {
     "ligado": true,
-    "update": "2026-10-01",
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Planet Charm",
     "canalPlanilha": "Vesti"
@@ -1086,8 +1086,8 @@
   },
   "1541278": {
     "ligado": true,
-    "update": "2026-09-23",
-    "religamentoReal": false,
+    "update": "2026-11-02",
+    "religamentoReal": true,
     "nomePlanilha": "V.R. MODAS.PLUS",
     "canalPlanilha": "Vesti"
   },
@@ -1114,8 +1114,8 @@
   },
   "873969": {
     "ligado": true,
-    "update": "2026-10-01",
-    "religamentoReal": false,
+    "update": "2026-11-02",
+    "religamentoReal": true,
     "nomePlanilha": "Estação Fit integração",
     "canalPlanilha": "Vesti"
   },
@@ -1128,7 +1128,7 @@
   },
   "166159": {
     "ligado": true,
-    "update": "2026-10-01",
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Aqua",
     "canalPlanilha": "Attasoft"
@@ -2044,8 +2044,8 @@
     "canalPlanilha": ""
   },
   "1688322": {
-    "ligado": true,
-    "update": "2026-09-23",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "AMIK MODAS",
     "canalPlanilha": "Uemtel"
@@ -2731,8 +2731,8 @@
   },
   "646683": {
     "ligado": true,
-    "update": "2026-09-21",
-    "religamentoReal": false,
+    "update": "2026-11-02",
+    "religamentoReal": true,
     "nomePlanilha": "Gabyanna",
     "canalPlanilha": "Vesti"
   },
@@ -3101,8 +3101,8 @@
     "canalPlanilha": "Vesti"
   },
   "28810": {
-    "ligado": true,
-    "update": "2026-09-21",
+    "ligado": false,
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "Shanes",
     "canalPlanilha": "Attasoft"
@@ -6412,8 +6412,8 @@
     "canalPlanilha": "N/A"
   },
   "2061322": {
-    "ligado": true,
-    "update": "2026-08-22",
+    "ligado": false,
+    "update": "2026-10-31",
     "religamentoReal": false,
     "nomePlanilha": "MMK Confecções",
     "canalPlanilha": "Uemtel"
@@ -6482,8 +6482,8 @@
     "canalPlanilha": "Starter"
   },
   "79208": {
-    "ligado": true,
-    "update": "2026-09-21",
+    "ligado": false,
+    "update": "2026-11-01",
     "religamentoReal": false,
     "nomePlanilha": "Neglape",
     "canalPlanilha": "Starter"
@@ -7112,8 +7112,8 @@
     "canalPlanilha": "Vesti"
   },
   "2025163": {
-    "ligado": true,
-    "update": "2026-09-22",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "Artesanal",
     "canalPlanilha": "Starter"
@@ -7567,11 +7567,11 @@
     "canalPlanilha": "Vesti"
   },
   "2121681": {
-    "ligado": true,
-    "update": "2026-08-25",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "Agro Gold",
-    "canalPlanilha": ""
+    "canalPlanilha": "N/A"
   },
   "654724": {
     "ligado": false,
@@ -8034,5 +8034,12 @@
     "religamentoReal": false,
     "nomePlanilha": "",
     "canalPlanilha": ""
+  },
+  "2184259": {
+    "ligado": false,
+    "update": "2026-11-02",
+    "religamentoReal": false,
+    "nomePlanilha": "Bressia Modas",
+    "canalPlanilha": "Uemtel"
   }
 }
