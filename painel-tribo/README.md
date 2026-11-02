@@ -27,7 +27,7 @@ A tela pede uma senha (`Mudar123`), no mesmo padrão dos outros painéis da casa
 | `dados.js` | Série diária por segmento, gerada do BigQuery. |
 | `build_data.js` | Pipeline BigQuery → `dados.js`. |
 | `FONTES.md` | De onde vem cada número e cada gráfico, e a conferência com o relatório. |
-| `suporte.js` | Lê CSAT, resposta e SLA das planilhas do time. |
+| `suporte.js` | Lê CSAT e resposta das planilhas do time — hoje só reserva. |
 | `antifraude.js` | Lê tempo de análise e chargeback perdido. |
 | `d3.v7.min.js` | D3 local, para o painel abrir sem internet. |
 
@@ -39,7 +39,8 @@ node build_data.js                       # histórico completo, 2025-01-01 → o
 DESDE=2026-01-01 node build_data.js      # recorte menor, para testar
 ```
 
-O suporte vem da planilha de KPIs pela API, na mesma execução — não há passo
+O CSAT vem do mesmo BigQuery; o SLA, do HubSpot. A planilha de KPIs é lida
+como reserva na mesma execução — não há passo
 manual. Se a chave da service account não for encontrada, o build avisa e o
 suporte fica `—`, sem derrubar o resto.
 
@@ -74,9 +75,8 @@ Tudo em `vesti-data-499015.vestilake_BI` (us-central1).
 | Receita de antifraude | `MongoDB_Pedidos_Geral` | `payment_transaction_antifraudValue` |
 | Receita de antecipação | `vestipago_transaction_detail` | `antecipationVestiFee` |
 | Aprovação do antifraude | `MongoDB_Pedidos_Geral` | `payment_analysisStatus` |
-| CSAT e Resposta · Integrações e Plataforma | planilha "OKRs e KPIs - Tribo 1" | abas Integração / Plataforma - KPIs |
-| CSAT e Resposta · VestiPago | `huggy.chats_raw` + `huggy.csat_raw` | tabulação Vestipago, 3 agentes, 3 departamentos |
-| SLA · 3 equipes | planilha "SLA Vesti" | abas SLA - Integração / Plataforma / Vestipago, ticket a ticket |
+| CSAT e Resposta · as 3 equipes | `huggy.chats_raw` + `huggy.csat_raw` | departamentos Confecção, Multimarca e Parceiro; equipe = tabulação, Plataforma é o resto |
+| SLA · 3 equipes | HubSpot, pipeline Suporte | tickets encerrados com identificador Jira, ticket a ticket |
 | Tempo médio de análise | xlsx "Metrica Antifraude 2026" | aba Resumo Semanal, coluna "Analise Geral" |
 | Chargeback perdido | planilha "Chargebacks" | abas por ano, status Perdido (com e sem seguro somados) |
 

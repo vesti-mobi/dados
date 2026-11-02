@@ -43,12 +43,15 @@ O seletor do topo filtra **tudo**. São três posições: os dois segmentos
 separados, como o ticket pede, e **Total** para a soma dos dois — útil para
 conferir contra o BI do VestiPago, que não separa segmento.
 
-> No Total, os valores financeiros somam. Os indicadores de suporte **não**,
-> com uma exceção: CSAT, taxa de resposta e SLA das Integrações e do VestiPago
-> valem para a equipe inteira e vêm repetidos nos dois segmentos, então somá-los
-> contaria cada atendimento duas vezes — no Total eles aparecem com o mesmo
-> valor. O CSAT da Plataforma em 2026 é a exceção: ali atacado e varejo são
-> públicos diferentes (confecção e multimarca), e somar é o certo.
+> No Total, os valores financeiros somam. Os indicadores de suporte **não**:
+> CSAT, taxa de resposta e SLA valem para a equipe inteira e vêm repetidos nos
+> dois segmentos, então somá-los contaria cada atendimento duas vezes — no
+> Total eles aparecem com o mesmo valor.
+>
+> (Havia aqui uma exceção para o CSAT da Plataforma, cuja planilha divide
+> confecção e multimarca. Ela caiu quando o CSAT passou a vir do Huggy: lá os
+> dois são **departamentos de atendimento**, não segmentos de loja, e a equipe
+> é a mesma atendendo os dois. Ver "CSAT das três equipes" abaixo.)
 >
 > O ticket deixou a visão consolidada fora da v1 ("são duas dinâmicas
 > diferentes"), então o padrão continua sendo Atacado — o Total é uma terceira
@@ -150,7 +153,9 @@ Cada equipe tem uma aba com régua própria:
 | Plataforma | `Plataforma - KPIs` (2025) | 14 CSAT · 16 atendimentos · 15 Taxa de Resposta | 26 semanas, **2025/S27** → S52 |
 | Plataforma | `Plataforma - KPIs (2026)` | dois blocos: 13/15/14 confecção e 21/23/22 multimarca | 2026/S2 → S43 |
 
-**VestiPago não vem mais da planilha** — vem do Huggy, no BigQuery. Ver abaixo.
+**Nenhuma das três equipes vem mais da planilha** — todas vêm do Huggy, no
+BigQuery. Ver abaixo. As abas continuam sendo lidas como *reserva*, para um dia
+que o Huggy não cubra, mas na prática ele cobre 2025 e 2026 inteiros.
 
 Três detalhes que as abas não compartilham:
 
@@ -173,33 +178,64 @@ Três detalhes que as abas não compartilham:
   todas as abas seguem semana ISO, de segunda a domingo. O rótulo está
   desatualizado.
 
-#### CSAT do VestiPago — direto do Huggy
+#### CSAT das três equipes — direto do Huggy
 
-Esta equipe não passa pela planilha. A fonte é o **mesmo BigQuery** do resto do
+Nenhuma das três passa pela planilha. A fonte é o **mesmo BigQuery** do resto do
 painel, dataset `huggy`, que guarda os atendimentos e as notas vindos da
 ferramenta de atendimento:
 
 ```sql
 FROM `vesti-data-499015.huggy.chats_raw` c
 LEFT JOIN `vesti-data-499015.huggy.csat_raw` f ON f.chat_id = c.id
-WHERE tabulationId = '43825'                      -- "Vestipago"
-  AND agentId IN ('94200','111156','172808')      -- Vânia, Kalinka, Tiago
-  AND departmentId IN ('49778','49777','52888')   -- Confecção, Multimarca, Parceiro
+WHERE departmentId IN ('49778','49777','52888')     -- Confecção, Multimarca, Parceiro
+  AND (tabulationId IS NULL OR tabulationId NOT IN
+       ('41924','41487','47456'))                   -- não é atendimento (ver abaixo)
   AND closedAt IS NOT NULL
+-- equipe = tabulação: 43825 VestiPago, 43826 Integração, o resto Plataforma
 ```
 
-Recorte confirmado com a equipe. "Marca", como chamam o departamento, é o
-`Confecção` do Huggy — não existe um departamento com esse nome.
+**A equipe é a tabulação, não a pessoa.** Agente entra e sai da equipe; a
+tabulação não. A régua anterior fixava três agentes do VestiPago e por isso
+envelhecia a cada mudança de time.
+
+**Não existe tabulação "Plataforma".** O cadastro tem 30 tabulações e só duas
+são de equipe — VestiPago e Integração. As outras 28 são assuntos da loja
+virtual (Dúvida, Erro, Pedido, Frete, Relatórios, Preço, Pixel/Analytics,
+Conversão). Plataforma é, portanto, *o resto* — e é isso que faz o macro ser
+exatamente a soma das três.
+
+**Também não serve filtrar pelos departamentos de equipe.** Existem no cadastro
+um departamento "Plataforma" (68042), um "Integração" (68040) e um "Vestipago"
+(68041), criados em março/2025 — e eles somam **81 atendimentos em 20 meses**,
+contra 24 mil de Confecção. Em outubro/2026 tiveram um. Cada atendimento
+pertence a um único departamento (os quatro têm `parentID: null`, são irmãos),
+então selecionar "Confecção e Plataforma" é uma soma, não um cruzamento: não
+isola equipe nenhuma. É por isso que a tela de Satisfação do Huggy devolve
+"Nenhum dado" quando se filtra só por Plataforma.
+
+##### Três tabulações fora da conta
+
+*Não interagiu* (41924), *Testes* (41487) e *Atendimento duplicado* (47456) não
+são atendimento e inflavam o denominador da taxa de resposta. Excluí-las foi o
+que alinhou o painel à planilha: o erro médio semanal caiu de 13,9 para 5,9
+atendimentos, e a semana 19–25/10 passou a bater exato (94 contra 94).
+
+Testei também excluir *Notificações sem uso* e *Treinamento/reunião*: as duas
+pioram o ajuste, então ficam dentro.
+
+##### Por que três departamentos
+
+A equipe de Plataforma atende também as **multimarcas** — as lojistas
+compradoras, que usam a plataforma sem vender nela. A planilha de KPIs dela
+registra isso em dois blocos, um por departamento, e os soma. VestiPago e
+Integração são quase só Confecção (96% e 98%). Parceiro entra pelo mesmo teste:
+incluí-lo reduz o viés do bloco de multimarca de −59 para −27 em 17 semanas,
+sem piorar o erro.
 
 Aqui **não há reconstrução**: a consulta devolve os componentes de verdade —
 atendimentos fechados, quantos avaliaram e a soma das notas — por dia. É melhor
 que a planilha em três frentes: granularidade diária, sem aproximação a partir
 de taxas arredondadas, e sem depender de alguém copiar à mão.
-
-> O BI (repo `vesti-pago-kpis`) usa um quarto agente, **Marilecia** (192502),
-> que não está na régua informada pela equipe. São 3 atendimentos em 2026,
-> 0,07% do total. Para bater com o BI ao centavo, acrescente o id em
-> `CSAT_VP.agentes` no `build_data.js`.
 
 ##### Até onde a série vai
 
@@ -218,9 +254,18 @@ apareceria como 0%, que seria falso.
 silêncio, enquanto a carga de chats segue normal. Religada em 26/10 com
 `CHATS_LOOKBACK_DAYS=30`, recuperando os 27 dias.
 
-O pipeline agora roda de `~/Documents/huggy-to-bigquery` nesta máquina, usando
-a credencial do gcloud (ADC) em vez de service account. **Não está agendado** —
-precisa ser rodado à mão, ou movido para Cloud Scheduler.
+O pipeline roda hoje em **Cloud Run Job** (`huggy-to-bq`, região
+`southamerica-east1`), disparado por **Cloud Scheduler às 03:30** — antes da
+janela das 05:00 em que o painel lê o BigQuery. Antes rodava às 07:00, *depois*
+do painel, e por isso o CSAT aparecia sempre um dia atrasado sem nada falhar.
+Os tokens ficam no Secret Manager (`huggy-tokens`), que o próprio job atualiza
+quando renova — o container é efêmero e não tem disco para guardá-los.
+
+A coleta de feedback é uma chamada por chat (`GET /chats/{id}/feedback`), e cada
+lote de 500 já é consolidado em `csat_raw`. Isso é o que torna um backfill longo
+retomável: o alvo é sempre "quem ainda não está em `csat_raw`", então cada
+execução avança um pedaço e a seguinte continua. Consolidar só no fim faria um
+backfill que não cabe no timeout ser descartado todo dia, sem nunca progredir.
 
 ##### Comparação com a planilha
 

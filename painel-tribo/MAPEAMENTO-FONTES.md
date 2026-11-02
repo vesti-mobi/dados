@@ -15,10 +15,19 @@ origem dele.
 | **GMV** | BigQuery `vestilake_BI.MongoDB_Pedidos_Geral` | `summary_total`, pela data de criação do pedido |
 | **GMV via integração** | idem, cruzado com `vestilake_BI.odbc_domains` | mesma soma, só de domínio com `integration_owner` preenchido |
 | **GMV via Oráculo** | BigQuery `vestilake_BI.oraculo_Pedidos` | `Tipo_Venda_Oraculo` — venda direta e influenciada, classificação pronta da fonte |
-| **CSAT e Resposta · Integrações** | Planilha **OKRs e KPIs - Tribo 1**, aba `Integração - KPIs` | linhas 97 a 99: CSAT, Total atendimentos e % de respostas |
-| **CSAT e Resposta · Plataforma** | Planilha **OKRs e KPIs - Tribo 1**, abas `Plataforma - KPIs` e `Plataforma - KPIs (2026)` | confecção e multimarca somados |
-| **CSAT e Resposta · VestiPago** | BigQuery `huggy.chats_raw` + `huggy.csat_raw` | tabulação "Vestipago", agentes Vânia, Kalinka e Tiago, departamentos Confecção, Multimarca e Parceiro |
+| **CSAT e Resposta · as três equipes** | BigQuery `huggy.chats_raw` + `huggy.csat_raw` | departamentos **Confecção, Multimarca e Parceiro**; dentro deles cada equipe é uma **tabulação**: VestiPago (43825), Integração (43826) e Plataforma (todas as demais). Sem recorte de pessoa. Fora da conta: *Não interagiu*, *Testes* e *Atendimento duplicado*, que não são atendimento. Nota = média das notas 1 a 5; resposta = avaliados ÷ atendimentos |
+| **CSAT · macro** | idem | a soma das três equipes |
 | **SLA · as três equipes** | **HubSpot**, pipeline Suporte | tickets encerrados com identificador Jira, categoria "Erro - <equipe>"; dias corridos entre abertura e fechamento, pelo dia do fechamento |
+
+### Por que três departamentos, e não só Confecção
+
+A equipe de Plataforma atende também as **multimarcas** — as lojistas
+compradoras, que usam a plataforma sem vender nela. A planilha de KPIs dela
+mede isso em dois blocos, um por departamento, e os soma. VestiPago e
+Integração são praticamente só Confecção (96% e 98%).
+
+Não confundir com o atacado/varejo do painel: multimarca não é o segmento
+varejo. A régua de segmento é `odbc_companies.layout_webmobile`.
 
 ## Aba Pagamento
 
@@ -70,13 +79,50 @@ Feita em 27/10/2026.
 | Comparação | Resultado |
 |---|---|
 | GMV × relatório "GMV - Métricas 2025" (Fabric), 22 meses | 0,009% no pior mês de 2025 |
-| CSAT e taxa de resposta × planilha de KPIs | idênticos |
+| CSAT × exportação do Huggy (Analítico → Exportar), set/2026 | nota 4,805 contra 4,807 |
+| Atendimentos × planilha de KPIs da Plataforma, 17 semanas | desvio somado de 0,2% no bloco de confecção; ~6% semana a semana |
+| Taxa de resposta × planilha de KPIs da Plataforma, 30 semanas | 28,2% contra 28,6% |
+| CSAT × planilha de KPIs da Plataforma, 30 semanas | 4,91 contra 4,78 — ver abaixo |
 | SLA × planilha SLA Vesti | idêntico |
 | Tempo de análise × planilha de antifraude | idêntico |
 | Chargeback × planilha, 10 meses de 2026 | ao centavo |
 | MDR e antecipação × BI do VestiPago | 0,00% |
 | Receita de antifraude × BI do VestiPago | até 1% |
 | TPV × BI do VestiPago | até 0,7% |
+
+### O CSAT fica acima do da planilha, e isso é esperado
+
+O painel marca cerca de **0,1 acima** da planilha, de forma sistemática. A
+causa foi medida, não suposta: as duas fontes contam avaliações diferentes.
+
+Nas semanas 27 a 43, bloco de confecção, a planilha registra 528 avaliações
+somando 2.561 pontos (CSAT 4,85); o Huggy tem 552 somando 2.712 (CSAT 4,91).
+As 24 avaliações a mais do Huggy teriam de ter média **6,29** para explicar a
+diferença — acima do máximo da escala. Logo não é questão de cobertura: as
+notas em si divergem.
+
+Onde divergem: a planilha tem **18 avaliações negativas** no período e o Huggy
+tem **11**; em contrapartida o Huggy tem 31 positivas a mais. Ou seja, a
+planilha guarda notas ruins que já não existem no Huggy.
+
+A leitura mais provável é que a API devolva a avaliação **vigente** do
+atendimento: nota ruim é a que o time reabre e resolve, e o cliente reavalia. A
+planilha congelou a nota do dia da apuração. Não é demonstrável, porque o
+endpoint de feedback expõe só `score` e `text`, sem data nem histórico.
+
+As duas respondem perguntas diferentes — a planilha, "como estava quando
+apuramos"; o painel, "como está hoje". O painel segue o Huggy porque é
+reproduzível: quem reconsultar chega no mesmo número.
+
+### Os atendimentos também oscilam por semana
+
+O CSAT da Plataforma não reproduz a planilha célula a célula, e isso é
+esperado: a planilha é fechada à mão, em dias que variam, então um atendimento
+cai de um lado ou do outro da fronteira da semana. Os desvios oscilam para os
+dois lados e se cancelam (soma de −4 em ~1.700 atendimentos), que é a
+assinatura de ruído e não de régua faltando — foram testadas as réguas por data
+de criação e de fechamento, com e sem filtro de encerrado, e nenhuma reduz a
+diferença. No acumulado do mês em diante, bate.
 
 As duas últimas têm explicação conhecida: o painel lê o antifraude do pedido,
 que tem histórico desde 2025, enquanto o BI lê da
@@ -92,8 +138,7 @@ tabelas, fica dentro de 0,25%.
 | Indicador | Cobertura |
 |---|---|
 | GMV, GMV integração, GMV Oráculo, TPV, receita, aprovação | completa, até D-1 |
-| CSAT · VestiPago | completa, até D-1 |
-| CSAT · Integrações e Plataforma | semanal, conforme a planilha é preenchida |
+| CSAT · as três equipes | completa, até D-1 |
 | Tempo de análise | semanal, só 2026 — sem comparação anual |
 | MDR e antecipação | só de maio/2026 em diante, logo a Receita total ainda não tem comparação anual |
 | SLA | completo até ontem, lido do HubSpot; sem 2025, logo sem comparação anual |

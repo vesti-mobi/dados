@@ -17,8 +17,10 @@
  *   receita_antifraude ... MongoDB_Pedidos_Geral.payment_transaction_antifraudValue
  *   receita_antecipacao .. vestipago_transaction_detail.antecipationVestiFee
  *   af_analises/aprovadas  MongoDB_Pedidos_Geral.payment_analysisStatus
- *   CSAT VestiPago ....... huggy.chats_raw + huggy.csat_raw (mesmo BigQuery)
- *   CSAT Integr./Platf. .. suporte.js → planilha "OKRs e KPIs - Tribo 1"
+ *   CSAT das 3 equipes ... huggy.chats_raw + huggy.csat_raw (mesmo BigQuery):
+ *                          departamento Confecção, uma tabulação por equipe.
+ *                          suporte.js (planilha "OKRs e KPIs - Tribo 1") fica
+ *                          só de reserva, para dia que o Huggy não cobrir.
  *   SLA .................. sla.js → HubSpot, pipeline Suporte
  *   tempo de análise ..... antifraude.js → xlsx "Metrica Antifraude 2026"
  *   chargeback perdido ... antifraude.js → planilha "Chargebacks"
@@ -96,16 +98,32 @@ const TIPOS_VESTIPAGO = `('PRE_PAYMENT','POST_PAYMENT')`;
 const DESDE = process.env.DESDE || '2025-01-01';
 const ATE = process.env.ATE || new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-// CSAT do VestiPago: recorte do Huggy confirmado com a equipe —
-// tabulação "Vestipago", agentes Vânia, Kalinka e Tiago, departamentos
-// Confecção ("Marca"), Multimarca e Parceiro.
-// O BI (repo vesti-pago-kpis) usa um quarto agente, Marilecia (192502), que não
-// está nessa régua; são 3 atendimentos em 2026, 0,07% do total. Para bater com
-// o BI ao centavo, acrescente '192502' aqui.
-const CSAT_VP = {
-  tabulacao: '43825',
-  agentes: ['94200', '111156', '172808'],
-  departamentos: ['49778', '49777', '52888'],
+// CSAT das três equipes, do Huggy. Cada equipe é uma TABULAÇÃO; não há recorte
+// de pessoa, porque agente entra e sai da equipe e a tabulação não.
+//
+// Não existe tabulação "Plataforma": as outras 28 do cadastro são assuntos da
+// loja virtual (Dúvida, Erro, Pedido, Frete, Relatórios, Preço,
+// Pixel/Analytics, Conversão...). Plataforma é, portanto, o resto — é o que faz
+// o macro ser exatamente a soma das três.
+//
+// Os três departamentos, e não só Confecção: a planilha "Plataforma - KPIs
+// (2026)" mede essa equipe em dois blocos, que são Confecção e Multimarca
+// (multimarca são as lojistas COMPRADORAS, que também usam a plataforma).
+// Conferido contra ela em 17 semanas: o desvio SOMADO do bloco de confecção é
+// -4 em ~1.700 atendimentos. Parceiro entra pelo mesmo teste — incluí-lo leva o
+// viés do bloco de multimarca de -59 para -27, sem piorar o erro semanal.
+//
+// Semana a semana a diferença é de ~6%, e não é régua faltando: os desvios
+// oscilam para os dois lados e se cancelam, que é a assinatura de planilha
+// fechada à mão em dias diferentes.
+const CSAT_HUGGY = {
+  departamentos: ['49778', '49777', '52888'],   // Confecção, Multimarca, Parceiro
+  tabulacoes: { vestipago: '43825', integracao: '43826' },
+  resto: 'plataforma',
+  // Tabulações que não são atendimento e inflavam o denominador da taxa de
+  // resposta. Excluí-las é o que fez a semana 43 bater exato com a planilha
+  // (94 contra 94) e derrubou o erro médio de 13,9 para 5,9 por semana.
+  naoAtendimento: ['41924', '41487', '47456'],  // Não interagiu, Testes, Atend. duplicado
 };
 
 const bq = new BigQuery({ projectId: PROJETO });
@@ -275,28 +293,41 @@ ORDER BY data, segmento`;
 // Cortar pelo último dia COM nota não serve: sábado e domingo não têm
 // atendimento, então a série terminaria sempre na sexta e derrubaria a semana
 // inteira para "—".
-const SQL_CSAT_VESTIPAGO = `
+const SQL_CSAT_HUGGY = `
 WITH chat AS (
-  SELECT DATE(SAFE.PARSE_DATETIME('%Y-%m-%d %H:%M:%S', c.created_at)) dia, f.score
+  SELECT DATE(SAFE.PARSE_DATETIME('%Y-%m-%d %H:%M:%S', c.created_at)) dia,
+    f.chat_id IS NOT NULL consultado,
+    CASE JSON_VALUE(c.raw, '$.tabulationId')
+${Object.entries(CSAT_HUGGY.tabulacoes).map(([t, id]) => `      WHEN '${id}' THEN '${t}'`).join('\n')}
+      ELSE '${CSAT_HUGGY.resto}'
+    END equipe,
+    f.score
   FROM ${DS_HUGGY}.chats_raw c
   LEFT JOIN ${DS_HUGGY}.csat_raw f ON f.chat_id = c.id
-  WHERE JSON_VALUE(c.raw, '$.tabulationId') = '${CSAT_VP.tabulacao}'
-    AND JSON_VALUE(c.raw, '$.agentId') IN (${CSAT_VP.agentes.map((a) => `'${a}'`).join(',')})
-    AND JSON_VALUE(c.raw, '$.departmentId') IN (${CSAT_VP.departamentos.map((d) => `'${d}'`).join(',')})
+  WHERE JSON_VALUE(c.raw, '$.departmentId') IN (${CSAT_HUGGY.departamentos.map((d) => `'${d}'`).join(',')})
+    AND (JSON_VALUE(c.raw, '$.tabulationId') IS NULL
+         OR JSON_VALUE(c.raw, '$.tabulationId') NOT IN (${CSAT_HUGGY.naoAtendimento.map((t) => `'${t}'`).join(',')}))
     AND JSON_VALUE(c.raw, '$.closedAt') IS NOT NULL
     AND DATE(SAFE.PARSE_DATETIME('%Y-%m-%d %H:%M:%S', c.created_at)) BETWEEN DATE '${DESDE}' AND DATE '${ATE}'
 ),
 ate_quando AS (
   SELECT DATE(MAX(_loaded_at)) dia FROM ${DS_HUGGY}.csat_raw
 )
-SELECT FORMAT_DATE('%Y-%m-%d', dia) data,
-  COUNT(*) fechados,
+SELECT FORMAT_DATE('%Y-%m-%d', dia) data, equipe,
+  -- Denominador = atendimentos cuja nota JA FOI CONSULTADA (tem linha em
+  -- csat_raw, com nota ou sem). Contar todos os encerrados daria uma taxa de
+  -- resposta falsa enquanto a coleta nao alcanca o periodo: zero avaliados
+  -- sobre 191 atendimentos viraria "0% responderam", quando o certo e "ainda
+  -- nao sabemos". Foi o que teria acontecido nos 27 dias de setembro em que a
+  -- ingestao ficou parada. Com a coleta em dia os dois numeros coincidem, pois
+  -- todo encerrado do recorte acaba consultado.
+  COUNTIF(consultado) fechados,
   COUNTIF(score BETWEEN 1 AND 5) avaliados,
   SUM(IF(score BETWEEN 1 AND 5, score, 0)) soma,
   FORMAT_DATE('%Y-%m-%d', (SELECT dia FROM ate_quando)) limite
 FROM chat
 WHERE dia <= (SELECT dia FROM ate_quando)
-GROUP BY dia ORDER BY dia`;
+GROUP BY dia, equipe ORDER BY dia, equipe`;
 
 // Colunas que o painel lê mas que ainda não têm origem mapeada.
 // Ficam null (e não zero) para o painel exibir "—" em vez de fingir um número.
@@ -323,35 +354,41 @@ async function main() {
   const linhas = await consultar(SQL, 'série diária por segmento');
   if (!linhas.length) throw new Error('A consulta não devolveu nenhuma linha.');
 
-  const csatVp = {};
+  const csatHuggy = {};
   try {
-    const linhas = await consultar(SQL_CSAT_VESTIPAGO, 'CSAT VestiPago (huggy)');
+    const linhas = await consultar(SQL_CSAT_HUGGY, 'CSAT das 3 equipes (huggy)');
     // Até onde a fonte é confiável: a data da última carga da csat_raw, limitada
     // ao fim da série. Dia sem atendimento aqui dentro vale zero, não "—".
     const limiteFonte = linhas.length
       ? [linhas[0].limite, ATE].sort()[0]
       : null;
+    const atendidos = {};
     for (const r of linhas) {
-      csatVp[r.data] = {
-        csat_env_vestipago: Number(r.fechados) || 0,
-        csat_qtd_vestipago: Number(r.avaliados) || 0,
-        csat_soma_vestipago: Number(r.soma) || 0,
-      };
+      const t = r.equipe;
+      (csatHuggy[r.data] = csatHuggy[r.data] || {});
+      csatHuggy[r.data][`csat_env_${t}`] = Number(r.fechados) || 0;
+      csatHuggy[r.data][`csat_qtd_${t}`] = Number(r.avaliados) || 0;
+      csatHuggy[r.data][`csat_soma_${t}`] = Number(r.soma) || 0;
+      atendidos[t] = (atendidos[t] || 0) + (Number(r.fechados) || 0);
     }
-    // Dia sem nenhum atendimento não volta da consulta. Dentro da janela isso é
-    // zero atendimento, não desconhecido — sem preencher, um sábado parado
-    // derrubaria a semana inteira para "—".
-    const dias = Object.keys(csatVp).sort();
+    // Dia (ou equipe no dia) sem nenhum atendimento não volta da consulta.
+    // Dentro da janela isso é zero atendimento, não desconhecido — sem
+    // preencher, um sábado parado derrubaria a semana inteira para "—".
+    const dias = Object.keys(csatHuggy).sort();
     if (dias.length && limiteFonte) {
       const fim = new Date(limiteFonte + 'T00:00:00Z');
       for (let d = new Date(dias[0] + 'T00:00:00Z'); d <= fim; d.setUTCDate(d.getUTCDate() + 1)) {
         const dia = d.toISOString().slice(0, 10);
-        if (!csatVp[dia]) csatVp[dia] = { csat_env_vestipago: 0, csat_qtd_vestipago: 0, csat_soma_vestipago: 0 };
+        const o = (csatHuggy[dia] = csatHuggy[dia] || {});
+        for (const t of TIMES)
+          for (const c of ['env', 'qtd', 'soma'])
+            if (o[`csat_${c}_${t}`] == null) o[`csat_${c}_${t}`] = 0;
       }
-      console.log(`  [bq] CSAT VestiPago: ${dias[0]} a ${limiteFonte}`);
+      const vol = TIMES.map((t) => `${t} ${atendidos[t] || 0}`).join(' · ');
+      console.log(`  [bq] CSAT: ${dias[0]} a ${limiteFonte} — ${vol} atendimentos`);
     }
   } catch (e) {
-    console.log(`  [bq] AVISO: CSAT VestiPago não lido (${e.message.slice(0, 100)})`);
+    console.log(`  [bq] AVISO: CSAT do Huggy não lido (${e.message.slice(0, 100)})`);
   }
 
   let antifraude = { porDia: {}, resumo: {} };
@@ -394,7 +431,15 @@ async function main() {
     // planilha nem o Huggy separam. A exceção é a Plataforma a partir de 2026,
     // cuja planilha divide confecção (atacado) e multimarca (varejo) — ali a
     // coluna vem sufixada com @segmento e cada lado fica com o seu número.
-    const s = { ...(suporte.porDia[r.data] || {}), ...(sla.porDia[r.data] || {}), ...(csatVp[r.data] || {}) };
+    const s = { ...(suporte.porDia[r.data] || {}), ...(sla.porDia[r.data] || {}) };
+    // O Huggy é a fonte oficial do CSAT e não separa segmento. Onde ele tem o
+    // dia, ele vence — inclusive a variante @segmento que a planilha de
+    // Plataforma trazia, que de outro modo ganharia por ser mais específica e
+    // deixaria a reserva sobrescrevendo a fonte.
+    for (const [k, v] of Object.entries(csatHuggy[r.data] || {})) {
+      s[k] = v;
+      delete s[`${k}@${r.segmento}`];
+    }
     for (const k of COLS_SUPORTE) {
       const v = s[`${k}@${r.segmento}`] != null ? s[`${k}@${r.segmento}`] : s[k];
       o[k] = v == null ? null : Number(v.toFixed(4));
@@ -426,7 +471,7 @@ async function main() {
       receita_mdr_antecipacao: { tabela: 'vestipago_transaction_detail', atualizado_ate: ATE, observacao: 'desde mai/2026' },
           antifraude_analises: { tabela: 'MongoDB_Pedidos_Geral.payment_analysisStatus', atualizado_ate: ATE },
       suporte_csat: { tabela: 'planilha OKRs e KPIs - Tribo 1', atualizado_ate: ATE, observacao: 'Integrações e Plataforma' },
-      suporte_csat_vestipago: { tabela: 'huggy.chats_raw + csat_raw', atualizado_ate: ATE, observacao: 'csat_raw parada em 29/09' },
+      suporte_csat: { tabela: 'huggy.chats_raw + csat_raw', atualizado_ate: ATE, observacao: 'departamento Confecção; equipe = tabulação' },
       suporte_sla: { tabela: 'HubSpot, pipeline Suporte', atualizado_ate: ATE, observacao: 'tickets de erro, só 2026' },
       antifraude_tempo: { tabela: 'xlsx Metrica Antifraude 2026', atualizado_ate: ATE, observacao: 'semanal, só 2026' },
       chargeback: { tabela: 'planilha Chargebacks', atualizado_ate: ATE, observacao: 'só os perdidos' },
