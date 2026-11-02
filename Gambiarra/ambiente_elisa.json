@@ -1086,8 +1086,8 @@
   },
   "1541278": {
     "ligado": true,
-    "update": "2026-09-23",
-    "religamentoReal": false,
+    "update": "2026-11-02",
+    "religamentoReal": true,
     "nomePlanilha": "V.R. MODAS.PLUS",
     "canalPlanilha": "Vesti"
   },
@@ -2044,8 +2044,8 @@
     "canalPlanilha": ""
   },
   "1688322": {
-    "ligado": true,
-    "update": "2026-09-23",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "AMIK MODAS",
     "canalPlanilha": "Uemtel"
@@ -7112,8 +7112,8 @@
     "canalPlanilha": "Vesti"
   },
   "2025163": {
-    "ligado": true,
-    "update": "2026-09-22",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "Artesanal",
     "canalPlanilha": "Starter"
@@ -7567,11 +7567,11 @@
     "canalPlanilha": "Vesti"
   },
   "2121681": {
-    "ligado": true,
-    "update": "2026-08-25",
+    "ligado": false,
+    "update": "2026-11-02",
     "religamentoReal": false,
     "nomePlanilha": "Agro Gold",
-    "canalPlanilha": ""
+    "canalPlanilha": "N/A"
   },
   "654724": {
     "ligado": false,
@@ -8034,5 +8034,12 @@
     "religamentoReal": false,
     "nomePlanilha": "",
     "canalPlanilha": ""
+  },
+  "2184259": {
+    "ligado": false,
+    "update": "2026-11-02",
+    "religamentoReal": false,
+    "nomePlanilha": "Bressia Modas",
+    "canalPlanilha": "Uemtel"
   }
 }
