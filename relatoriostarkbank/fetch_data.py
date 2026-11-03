@@ -11,7 +11,8 @@ Filtros: isClosed + payment.isPaid + CREDIT_CARD + STARKBANK, janela de
 ~6 meses por payment.paidAt. Todas as marcas (sem filtro de companyId).
 Antecipacao x Fluxo: parcela com antecipationValue > 0 = antecipada.
 
-Auth: VESTI_ORDER_TOKEN (Bearer JWT de servico, sem expiracao).
+Auth: VESTI_ORDER_TOKEN (Bearer JWT de servico, sem expiracao). Manda
+User-Agent proprio: a Cloudflare da apivesti barra o UA do urllib (403).
 As funcoes Fabric (connect/fetch_rows/SQL) ficam abaixo so como legado.
 """
 
@@ -623,7 +624,13 @@ def fetch_orders() -> list[dict]:
     token = _order_token()
     now = datetime.now(timezone.utc)
     start = now - timedelta(days=WINDOW_DAYS)
-    headers = {"accept": "application/json", "Authorization": "Bearer " + token}
+    # User-Agent explicito: a Cloudflare na frente da apivesti bloqueia a
+    # assinatura padrao do urllib ("Python-urllib/3.x") com 403 e corpo
+    # "error code: 1010". Quebrou o CP em 02/11/2026 — o run seguia verde
+    # por causa do continue-on-error e o dados.js congelou. O CR
+    # (fetch_invoices.py) nunca quebrou porque sempre mandou o seu.
+    headers = {"accept": "application/json", "Authorization": "Bearer " + token,
+               "User-Agent": "relatoriostarkbank/1.0"}
     base = {
         "filter[isClosed]": "true",
         "filter[payment.isPaid]": "true",
@@ -785,7 +792,13 @@ def _ids_nao_pagos(candidatos: list[dict]) -> set:
         print("[persist] sem VESTI_ORDER_TOKEN — nao consigo checar pagamento "
               "recusado; persistindo todos os candidatos", file=sys.stderr)
         return set()
-    headers = {"accept": "application/json", "Authorization": "Bearer " + token}
+    # User-Agent explicito: a Cloudflare na frente da apivesti bloqueia a
+    # assinatura padrao do urllib ("Python-urllib/3.x") com 403 e corpo
+    # "error code: 1010". Quebrou o CP em 02/11/2026 — o run seguia verde
+    # por causa do continue-on-error e o dados.js congelou. O CR
+    # (fetch_invoices.py) nunca quebrou porque sempre mandou o seu.
+    headers = {"accept": "application/json", "Authorization": "Bearer " + token,
+               "User-Agent": "relatoriostarkbank/1.0"}
     por_marca: dict[str, dict[str, dict]] = {}
     for p in candidatos:
         oid = p.get("orderId")
