@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-02T21:04:50.027Z",
+  "gerado_em": "2026-11-03T02:47:03.320Z",
   "hoje": "2026-11-02",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -1168,7 +1168,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 74,
+          "dias": 75,
           "produtos_medidos": 0,
           "atribuido": 8
         },
