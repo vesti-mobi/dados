@@ -37,6 +37,25 @@
 # 15 min numa faixa larga; quem decide e o job `guard`, pela hora REAL de
 # chegada — nunca pela hora agendada.
 
+# ATRASO DO SCHEDULER DO GITHUB
+# O GitHub entrega os eventos `schedule` DIARIOS deste repositorio com 5 a 7h
+# de atraso, todo dia (medido em 27/10/2026: este workflow pediu 05:00 BRT e
+# rodou 05:03 BRT (ainda pontual em 28/10, mas os outros tambem comecaram assim)). `created_at == run_started_at`: o evento nasce tarde, nao
+# e fila de runner. E best-effort do lado do GitHub, sem correcao possivel
+# aqui. Crons HORARIOS atrasam pouco (5-59 min) mas o GitHub descarta boa
+# parte deles. Ver tambem o comentario em update-starkbank.yml.
+#
+# GATILHO PRINCIPAL (desde 28/10/2026): um job do Cloud Scheduler no projeto
+# GCP vesti-data-499015 crava 05:00 BRT e chama
+#   POST https://api.github.com/repos/vesti-mobi/dados/dispatches
+#   {"event_type":"painel-tribo-update"}
+#   gcloud scheduler jobs list --location=southamerica-east1 --project=vesti-data-499015
+#
+# Os crons `schedule` abaixo ficam como REDE DE SEGURANCA pra quando o
+# Scheduler falhar (PAT expirado, por exemplo). Eles pedem disparos de 15 em
+# 15 min numa faixa larga; quem decide e o job `guard`, pela hora REAL de
+# chegada — nunca pela hora agendada.
+
 name: Painel da Tribo
 
 on:
