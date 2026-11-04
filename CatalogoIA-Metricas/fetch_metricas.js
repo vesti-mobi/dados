@@ -111,6 +111,39 @@ const diasDesde = (iso) => {
   for (const m of JSON.parse(process.env.VESTI_BRANDS || '[]')) porSlug.set(normSlug(m.slug || m.nome), { slug: normSlug(m.slug || m.nome), nome: m.nome || m.slug });
   for (const m of await lerJson('marcas:registry')) porSlug.set(normSlug(m.slug || m.nome), { slug: normSlug(m.slug || m.nome), nome: m.nome || m.slug });
   for (const m of await lerJson('marcas:removidas')) porSlug.delete(normSlug(m.slug || m.nome));
+
+  // Marca que usa SO pela jornada do Vesti Vendas (botao "Gerar descricao com IA"
+  // dentro da propria Vesti, sem apikey) nunca passa pelo /admin — entao nunca entra
+  // em marcas:registry. Ficava com uso real e invisivel no painel (caso real:
+  // Imagivan, achado em 04/11/2026: 8 descricoes, 14 envios, zero aparicao aqui).
+  // Essas marcas vivem sob o slug "company:<uuid>"; identificamos pela chave de uso
+  // no nivel da marca (sem sufixo :w:/:d:/:produtos).
+  {
+    let cursor = '0';
+    const slugsJornada = new Set();
+    do {
+      const [prox, achadas] = await r.scan(cursor, 'MATCH', 'uso:company:*', 'COUNT', 1000);
+      cursor = prox;
+      for (const k of achadas) {
+        const m = k.match(/^uso:(company:[0-9a-fA-F-]+)$/);
+        if (m) slugsJornada.add(m[1]);
+      }
+    } while (cursor !== '0');
+    for (const slug of slugsJornada) {
+      if (porSlug.has(slug)) continue;
+      // O nome real so existe se a marca ja respondeu o arquetipo (fica salvo em
+      // arq:<slug>.n) — sem isso, nao ha de onde tirar o nome: a jornada nunca grava
+      // apikey nem nos devolve o nome da empresa fora dessa resposta.
+      let nome = '';
+      try {
+        const a = await r.get(`arq:${slug}`);
+        if (a && a.startsWith('{')) nome = JSON.parse(a).n || '';
+      } catch (_) {}
+      const uuid = slug.slice('company:'.length);
+      porSlug.set(slug, { slug, nome: nome || `Via Vesti (${uuid.slice(0, 8)})`, via_jornada: true });
+    }
+  }
+
   const marcas = [...porSlug.values()].filter((m) => m.slug);
   const slugs = marcas.map((m) => m.slug);
 
