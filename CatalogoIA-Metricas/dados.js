@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-03T18:51:43.721Z",
+  "gerado_em": "2026-11-04T01:00:22.356Z",
   "hoje": "2026-11-03",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 39
+      "dias": 40
     },
     {
       "slug": "kauly",
@@ -166,7 +166,7 @@ window.DADOS = {
       "envios": 13,
       "primeiro": "2026-08-04T14:28:52.117Z",
       "ultimo": "2026-10-29T19:57:22.382Z",
-      "dias": 4
+      "dias": 5
     },
     {
       "slug": "andressa-vesti",
@@ -513,7 +513,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 39,
+          "dias": 40,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -1248,7 +1248,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T11:49:43.332Z",
           "ultimo": "2026-10-29T19:57:22.382Z",
-          "dias": 4,
+          "dias": 5,
           "produtos_medidos": 0,
           "atribuido": 1
         },
