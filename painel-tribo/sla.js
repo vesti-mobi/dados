@@ -107,8 +107,19 @@ async function lerSla({ desde = DESDE_PADRAO, ate } = {}) {
 
   const dias = Object.keys(porDia).sort();
   if (dias.length) {
+    // Dia sem ticket encerrado vale ZERO, não "desconhecido", e por isso o
+    // preenchimento vai até o fim da série — não até o último dia que teve
+    // ticket. O HubSpot responde ao vivo: se não voltou ticket num dia, é
+    // porque nenhum foi encerrado nele, e não porque a carga está atrasada.
+    //
+    // Parar no último dia com ticket deixava os dias seguintes ausentes, e o
+    // painel anula o período inteiro quando um só dia vem null. Bastava a
+    // semana terminar num fim de semana — quando ninguém encerra ticket — para
+    // o SLA da semana toda virar "—", mesmo com tickets de segunda a sexta.
+    // (Diferente do CSAT, onde a coleta realmente pode ficar atrás e o
+    // desconhecido é verdadeiro.)
     const limite = ate || new Date().toISOString().slice(0, 10);
-    const fim = new Date([dias[dias.length - 1], limite].sort()[0] + 'T00:00:00Z');
+    const fim = new Date(limite + 'T00:00:00Z');
     for (let d = new Date(dias[0] + 'T00:00:00Z'); d <= fim; d.setUTCDate(d.getUTCDate() + 1)) {
       const dia = d.toISOString().slice(0, 10);
       const alvo = porDia[dia] || (porDia[dia] = {});
@@ -120,7 +131,12 @@ async function lerSla({ desde = DESDE_PADRAO, ate } = {}) {
       }
     }
   }
-  return { porDia, cobertura, de: dias[0] || null, ate: dias[dias.length - 1] || null };
+  const cobertos = Object.keys(porDia).sort();
+  return {
+    porDia, cobertura,
+    de: cobertos[0] || null,
+    ate: cobertos[cobertos.length - 1] || null,
+  };
 }
 
 module.exports = { lerSla, CATEGORIAS };
