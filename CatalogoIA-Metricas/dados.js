@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-11-05T01:12:46.307Z",
-  "hoje": "2026-11-04",
+  "gerado_em": "2026-11-05T19:18:47.109Z",
+  "hoje": "2026-11-05",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -19,8 +19,8 @@ window.DADOS = {
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2441,
-    "produtos_7d": 41,
-    "descricoes_total": 3053,
+    "produtos_7d": 38,
+    "descricoes_total": 3065,
     "total_estimado": true
   },
   "marcas": [
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 41
+      "dias": 42
     },
     {
       "slug": "petit",
@@ -76,7 +76,7 @@ window.DADOS = {
       "envios": 294,
       "primeiro": "2026-08-27T10:08:32.689Z",
       "ultimo": "2026-09-16T16:01:07.318Z",
-      "dias": 49
+      "dias": 50
     },
     {
       "slug": "nicoboco",
@@ -86,14 +86,14 @@ window.DADOS = {
       "email": "nicoboco.shop@nicoboco.com.br",
       "produtos": 245,
       "estimado": false,
-      "produtos_7d": 11,
+      "produtos_7d": 12,
       "ativa": true,
-      "acessos": 85,
-      "buscas": 383,
-      "descricoes": 554,
-      "envios": 581,
+      "acessos": 88,
+      "buscas": 392,
+      "descricoes": 559,
+      "envios": 586,
       "primeiro": "2026-08-10T19:02:35.392Z",
-      "ultimo": "2026-11-04T20:25:46.234Z",
+      "ultimo": "2026-11-05T12:38:33.592Z",
       "dias": 0
     },
     {
@@ -104,7 +104,7 @@ window.DADOS = {
       "email": "contato@operakids.com.br",
       "produtos": 226,
       "estimado": false,
-      "produtos_7d": 12,
+      "produtos_7d": 6,
       "ativa": true,
       "acessos": 113,
       "buscas": 309,
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 272,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-11-04T17:36:13.723Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "amiska",
@@ -122,15 +122,15 @@ window.DADOS = {
       "email": "missmilliebr@gmail.com",
       "produtos": 131,
       "estimado": true,
-      "produtos_7d": 7,
+      "produtos_7d": 9,
       "ativa": true,
-      "acessos": 31,
-      "buscas": 148,
-      "descricoes": 153,
-      "envios": 153,
+      "acessos": 33,
+      "buscas": 156,
+      "descricoes": 159,
+      "envios": 159,
       "primeiro": "2026-07-28T18:41:18.639Z",
-      "ultimo": "2026-11-03T14:23:31.064Z",
-      "dias": 1
+      "ultimo": "2026-11-05T18:57:51.897Z",
+      "dias": 0
     },
     {
       "slug": "monnika-marikinha",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 27,
       "primeiro": "2026-08-06T14:16:43.085Z",
       "ultimo": "2026-11-03T09:19:40.574Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "trimix",
@@ -160,12 +160,12 @@ window.DADOS = {
       "estimado": false,
       "produtos_7d": 0,
       "ativa": false,
-      "acessos": 44,
-      "buscas": 140,
-      "descricoes": 149,
+      "acessos": 45,
+      "buscas": 141,
+      "descricoes": 150,
       "envios": 13,
       "primeiro": "2026-08-04T14:28:52.117Z",
-      "ultimo": "2026-11-04T18:12:25.058Z",
+      "ultimo": "2026-11-05T16:03:09.531Z",
       "dias": 0
     },
     {
@@ -184,7 +184,7 @@ window.DADOS = {
       "envios": 15,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-10-27T12:19:55.293Z",
-      "dias": 8
+      "dias": 9
     },
     {
       "slug": "company:2aa54ccb-f068-4f57-96e5-aa7e42669885",
@@ -202,7 +202,7 @@ window.DADOS = {
       "envios": 14,
       "primeiro": "2026-10-30T16:45:49.794Z",
       "ultimo": "2026-11-04T17:28:45.848Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "optimist-jeans",
@@ -220,7 +220,7 @@ window.DADOS = {
       "envios": 5,
       "primeiro": "2026-08-07T13:23:05.929Z",
       "ultimo": "2026-08-07T14:55:31.596Z",
-      "dias": 89
+      "dias": 90
     },
     {
       "slug": "optimist-feirinha",
@@ -238,7 +238,7 @@ window.DADOS = {
       "envios": 2,
       "primeiro": "2026-08-07T13:33:14.591Z",
       "ultimo": "2026-08-07T14:33:01.598Z",
-      "dias": 89
+      "dias": 90
     },
     {
       "slug": "anne-blanc",
@@ -418,7 +418,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-26T19:04:19.305Z",
       "ultimo": "2026-10-26T19:04:19.305Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -454,7 +454,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-11-03T14:14:10.778Z",
       "ultimo": "2026-11-03T14:14:10.778Z",
-      "dias": 1
+      "dias": 2
     }
   ],
   "semanas": [
@@ -560,7 +560,7 @@ window.DADOS = {
     {
       "inicio": "2026-11-02",
       "fim": "2026-11-08",
-      "produtos": 20,
+      "produtos": 24,
       "ativas": 4,
       "usaram": 7,
       "cadastros": 10,
@@ -580,9 +580,9 @@ window.DADOS = {
         "paradas": 6,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 2056,
+        "produtos_total": 2059,
         "produtos_7d": 36,
-        "descricoes_total": 2444,
+        "descricoes_total": 2455,
         "total_estimado": false,
         "produtos_atribuidos": 0
       },
@@ -623,7 +623,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 41,
+          "dias": 42,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -635,14 +635,14 @@ window.DADOS = {
           "email": "nicoboco.shop@nicoboco.com.br",
           "produtos": 244,
           "estimado": false,
-          "produtos_7d": 11,
+          "produtos_7d": 12,
           "ativa": true,
-          "acessos": 76,
-          "buscas": 343,
-          "descricoes": 551,
-          "envios": 556,
+          "acessos": 79,
+          "buscas": 352,
+          "descricoes": 556,
+          "envios": 561,
           "primeiro": "2026-08-11T18:28:02.542Z",
-          "ultimo": "2026-11-04T20:25:46.234Z",
+          "ultimo": "2026-11-05T12:38:33.592Z",
           "dias": 0,
           "produtos_medidos": 244,
           "atribuido": 0
@@ -655,7 +655,7 @@ window.DADOS = {
           "email": "contato@operakids.com.br",
           "produtos": 168,
           "estimado": false,
-          "produtos_7d": 7,
+          "produtos_7d": 4,
           "ativa": true,
           "acessos": 44,
           "buscas": 193,
@@ -663,7 +663,7 @@ window.DADOS = {
           "envios": 203,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-11-04T17:36:13.723Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 168,
           "atribuido": 0
         },
@@ -673,18 +673,18 @@ window.DADOS = {
           "arquetipo": "sabio",
           "tem_conta": true,
           "email": "missmilliebr@gmail.com",
-          "produtos": 38,
+          "produtos": 41,
           "estimado": false,
-          "produtos_7d": 7,
+          "produtos_7d": 9,
           "ativa": true,
-          "acessos": 14,
-          "buscas": 44,
-          "descricoes": 39,
-          "envios": 43,
+          "acessos": 16,
+          "buscas": 52,
+          "descricoes": 45,
+          "envios": 49,
           "primeiro": "2026-08-21T01:32:04.730Z",
-          "ultimo": "2026-11-03T14:23:31.064Z",
-          "dias": 1,
-          "produtos_medidos": 38,
+          "ultimo": "2026-11-05T18:57:51.897Z",
+          "dias": 0,
+          "produtos_medidos": 41,
           "atribuido": 0
         },
         {
@@ -703,7 +703,7 @@ window.DADOS = {
           "envios": 30,
           "primeiro": "2026-08-27T10:08:32.689Z",
           "ultimo": "2026-09-16T16:01:07.318Z",
-          "dias": 49,
+          "dias": 50,
           "produtos_medidos": 30,
           "atribuido": 0
         },
@@ -723,7 +723,7 @@ window.DADOS = {
           "envios": 26,
           "primeiro": "2026-08-21T01:34:17.651Z",
           "ultimo": "2026-11-03T09:19:40.574Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 26,
           "atribuido": 0
         },
@@ -743,7 +743,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 37,
+          "dias": 38,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -763,7 +763,7 @@ window.DADOS = {
           "envios": 14,
           "primeiro": "2026-10-30T16:45:49.794Z",
           "ultimo": "2026-11-04T17:28:45.848Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 8,
           "atribuido": 0
         },
@@ -783,7 +783,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-10-27T12:19:55.293Z",
-          "dias": 8,
+          "dias": 9,
           "produtos_medidos": 6,
           "atribuido": 0
         },
@@ -1023,7 +1023,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-26T19:04:19.305Z",
           "ultimo": "2026-10-26T19:04:19.305Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1063,7 +1063,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-11-03T14:14:10.778Z",
           "ultimo": "2026-11-03T14:14:10.778Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 0,
           "atribuido": 0
         }
@@ -1193,12 +1193,12 @@ window.DADOS = {
         {
           "inicio": "2026-11-02",
           "fim": "2026-11-08",
-          "produtos": 18,
+          "produtos": 22,
           "ativas": 3,
           "usaram": 6,
           "cadastros": 10,
           "novos": 0,
-          "produtos_medidos": 18,
+          "produtos_medidos": 22,
           "atribuido": 0
         }
       ]
@@ -1215,11 +1215,11 @@ window.DADOS = {
         "paradas": 3,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1688,
-        "produtos_7d": 5,
-        "descricoes_total": 519,
+        "produtos_total": 1684,
+        "produtos_7d": 2,
+        "descricoes_total": 520,
         "total_estimado": true,
-        "produtos_atribuidos": 1318
+        "produtos_atribuidos": 1314
       },
       "marcas": [
         {
@@ -1278,7 +1278,7 @@ window.DADOS = {
           "envios": 264,
           "primeiro": "2026-09-09T17:33:37.235Z",
           "ultimo": "2026-09-14T13:57:08.943Z",
-          "dias": 51,
+          "dias": 52,
           "produtos_medidos": 241,
           "atribuido": 0
         },
@@ -1288,9 +1288,9 @@ window.DADOS = {
           "arquetipo": "inocente",
           "tem_conta": true,
           "email": "contato@operakids.com.br",
-          "produtos": 164,
+          "produtos": 165,
           "estimado": true,
-          "produtos_7d": 5,
+          "produtos_7d": 2,
           "ativa": true,
           "acessos": 25,
           "buscas": 64,
@@ -1298,9 +1298,9 @@ window.DADOS = {
           "envios": 57,
           "primeiro": "2026-08-12T12:05:03.861Z",
           "ultimo": "2026-11-03T14:10:01.073Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 55,
-          "atribuido": 109
+          "atribuido": 110
         },
         {
           "slug": "amiska",
@@ -1308,7 +1308,7 @@ window.DADOS = {
           "arquetipo": "sabio",
           "tem_conta": true,
           "email": "missmilliebr@gmail.com",
-          "produtos": 102,
+          "produtos": 97,
           "estimado": true,
           "produtos_7d": 0,
           "ativa": false,
@@ -1318,9 +1318,9 @@ window.DADOS = {
           "envios": 79,
           "primeiro": "2026-08-17T12:54:41.838Z",
           "ultimo": "2026-10-15T12:49:49.396Z",
-          "dias": 20,
+          "dias": 21,
           "produtos_medidos": 74,
-          "atribuido": 28
+          "atribuido": 23
         },
         {
           "slug": "nicoboco",
@@ -1358,7 +1358,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 76,
+          "dias": 77,
           "produtos_medidos": 0,
           "atribuido": 8
         },
@@ -1452,12 +1452,12 @@ window.DADOS = {
           "estimado": true,
           "produtos_7d": 0,
           "ativa": false,
-          "acessos": 36,
-          "buscas": 113,
-          "descricoes": 110,
+          "acessos": 37,
+          "buscas": 114,
+          "descricoes": 111,
           "envios": 0,
           "primeiro": "2026-08-14T11:49:43.332Z",
-          "ultimo": "2026-11-04T18:12:25.058Z",
+          "ultimo": "2026-11-05T16:03:09.531Z",
           "dias": 0,
           "produtos_medidos": 0,
           "atribuido": 1
@@ -1740,13 +1740,13 @@ window.DADOS = {
         {
           "inicio": "2026-09-07",
           "fim": "2026-09-13",
-          "produtos": 300,
+          "produtos": 301,
           "ativas": 2,
           "usaram": 4,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 246,
-          "atribuido": 54
+          "atribuido": 55
         },
         {
           "inicio": "2026-09-14",
@@ -1817,24 +1817,24 @@ window.DADOS = {
         {
           "inicio": "2026-10-26",
           "fim": "2026-11-01",
-          "produtos": 21,
+          "produtos": 26,
           "ativas": 1,
           "usaram": 2,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 4,
-          "atribuido": 17
+          "atribuido": 22
         },
         {
           "inicio": "2026-11-02",
           "fim": "2026-11-08",
-          "produtos": 10,
+          "produtos": 4,
           "ativas": 1,
           "usaram": 2,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 2,
-          "atribuido": 8
+          "atribuido": 2
         }
       ]
     }
