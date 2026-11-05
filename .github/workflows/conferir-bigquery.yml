@@ -28,7 +28,7 @@ on:
         required: false
         default: '0'
       modo:
-        description: 'conferir (padrão), explorar, gmv, pbi ou mensalidades (esqueleto da planilha de mensalidades)'
+        description: 'conferir (padrão), explorar, gmv, pbi, mensalidades ou reunioes (campos do HubSpot)'
         required: false
         default: 'conferir'
 
@@ -53,7 +53,7 @@ jobs:
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/gcp_sa.json" >> "$GITHUB_ENV"
 
       - name: Conferir painel × BigQuery
-        if: inputs.modo != 'explorar' && inputs.modo != 'mensalidades'
+        if: inputs.modo != 'explorar' && inputs.modo != 'mensalidades' && inputs.modo != 'reunioes'
         working-directory: CS
         env:
           MESES: ${{ inputs.meses }}
@@ -97,6 +97,15 @@ jobs:
             printf '%s' "$SHEETS_SA_ALT" > "$RUNNER_TEMP/sheets_sa_alt.json"
             echo "SHEETS_SA_ALT_FILE=$RUNNER_TEMP/sheets_sa_alt.json" >> "$GITHUB_ENV"
           fi
+
+      # Só o esqueleto do objeto `meetings` do HubSpot: nomes de campo e
+      # opções de enumeração. Nenhum conteúdo de reunião.
+      - name: Explorar os campos de reunião
+        if: inputs.modo == 'reunioes'
+        working-directory: CS
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+        run: node explorar_reunioes.js
 
       - name: Explorar a planilha de mensalidades
         if: inputs.modo == 'mensalidades'
