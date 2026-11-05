@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Movimentações de Estoque</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--dark:#0B0E13;--dark-2:#151A21;--brand-2:#17BFB3;--r-sm:8px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--dark);color:#F2F4F7;font:14px/1.5 system-ui,-apple-system,sans-serif}
+
+#loginScreen{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--dark);padding:20px}
+.login-box{width:330px;max-width:100%;text-align:center;padding:38px 32px 32px;
+  background:var(--dark-2);border:1px solid #262D36;border-radius:14px;
+  box-shadow:0 24px 60px -30px rgba(0,0,0,.9)}
+.login-box h1{font-size:17px;font-weight:600;margin:0 0 3px;letter-spacing:-.02em;color:#F2F4F7}
+.login-box p{margin:0 0 24px;font-size:12.5px;color:#8A93A0}
+.login-box input{width:100%;border:1px solid #2E353F;background:#141920;color:#F2F4F7;
+  border-radius:var(--r-sm);padding:10px 11px;font-size:14px;text-align:center}
+.login-box input::placeholder{color:#69727E}
+.login-box input:focus{border-color:var(--brand-2);outline:none;background:#171D25}
+.login-box button{width:100%;margin-top:12px;border:0;background:var(--brand-2);color:#fff;
+  border-radius:var(--r-sm);padding:11px;font-size:13.5px;font-weight:600;cursor:pointer}
+.login-box button:hover{background:#15AAA0}
+#loginError{display:none;margin-top:10px;font-size:12px;color:#F08A80}
+
+#app{display:none;max-width:1200px;margin:0 auto;padding:28px 20px 60px}
+header.top{margin-bottom:22px}
+header.top h1{font-size:20px;margin:0 0 4px}
+header.top p{margin:0;color:#8A93A0;font-size:13px}
+
+.card{background:var(--dark-2);border:1px solid #262D36;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.hint{color:#8A93A0;font-size:12.5px}
+.hint a{color:var(--brand-2)}
+
+.form-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:12px;align-items:end}
+@media (max-width:900px){.form-grid{grid-template-columns:1fr 1fr}}
+.form-grid label{display:block;font-size:12px;color:#8A93A0;margin-bottom:5px}
+.form-grid input{width:100%;background:#141920;color:#F2F4F7;border:1px solid #2E353F;
+  border-radius:var(--r-sm);padding:9px 10px;font-size:13.5px}
+.form-grid input:focus{border-color:var(--brand-2);outline:none}
+#btnBuscar{background:var(--brand-2);color:#fff;border:0;border-radius:var(--r-sm);
+  padding:10px 18px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+#btnBuscar:hover{background:#15AAA0}
+#btnBuscar:disabled{background:#2E353F;cursor:wait}
+#formErro{display:none;margin-top:10px;font-size:12.5px;color:#F08A80}
+#formStatus{display:none;margin-top:10px;font-size:12.5px;color:#8A93A0}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid #2E353F;
+  border-top-color:var(--brand-2);border-radius:50%;animation:spin .8s linear infinite;
+  vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--dark-2);border:1px solid #262D36;border-radius:12px;padding:14px 16px}
+.kpi .n{font-size:22px;font-weight:700}
+.kpi .l{font-size:11.5px;color:#8A93A0;margin-top:2px}
+
+.selrow{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.selrow label{display:block;font-size:12px;color:#8A93A0;margin-bottom:5px}
+select,input.busca{background:#141920;color:#F2F4F7;border:1px solid #2E353F;border-radius:var(--r-sm);
+  padding:9px 10px;font-size:13.5px;min-width:260px}
+input.busca{min-width:220px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;color:#8A93A0;font-weight:600;font-size:11px;text-transform:uppercase;
+  letter-spacing:.03em;padding:8px 10px;border-bottom:1px solid #262D36;position:sticky;top:0;background:var(--dark-2)}
+td{padding:7px 10px;border-bottom:1px solid #1B222B;white-space:nowrap}
+tr:hover td{background:#171D25}
+.tbl-wrap{max-height:560px;overflow:auto;border:1px solid #262D36;border-radius:10px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.pill-INSERT{background:#123B2E;color:#4ADE80}
+.pill-UPDATE{background:#1E2E4A;color:#7DA6FF}
+.pill-DELETE{background:#3B1414;color:#F08A80}
+.empty{padding:30px;text-align:center;color:#8A93A0}
+a{color:var(--brand-2)}
+.tbl-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.btn-export{padding:8px 14px;border:1px solid #2E353F;border-radius:var(--r-sm);background:#141920;
+  color:var(--brand-2);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-export:hover{background:#1A2129;border-color:var(--brand-2)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>Movimentações de Estoque</h1>
+    <p>Buscas de log de estoque (Loki), ao vivo</p>
+    <input type="password" id="loginPass" placeholder="Senha" autocomplete="current-password"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="loginError">Senha incorreta</div>
+    <button onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="top">
+    <h1>📦 Movimentações de Estoque</h1>
+    <p>Log de <code>StockLog</code> por produto/empresa, consultado ao vivo (Loki + APIs Vesti) — sem passar por GitHub Actions.</p>
+  </header>
+
+  <div class="card">
+    <div class="form-grid">
+      <div>
+        <label for="fCompany">Empresa (UUID)</label>
+        <input id="fCompany" placeholder="9d42510e-9776-4fe1-87d7-8fe0dec1c58c">
+      </div>
+      <div>
+        <label for="fProduct">Código do produto</label>
+        <input id="fProduct" placeholder="KR9182625229">
+      </div>
+      <div>
+        <label for="fStart">Início</label>
+        <input id="fStart" type="datetime-local">
+      </div>
+      <div>
+        <label for="fEnd">Fim</label>
+        <input id="fEnd" type="datetime-local">
+      </div>
+      <button id="btnBuscar" onclick="buscar()">Buscar</button>
+    </div>
+    <div id="formErro"></div>
+    <div id="formStatus"><span class="spinner"></span><span id="formStatusTxt">Buscando…</span></div>
+    <p class="hint" style="margin:10px 0 0">
+      Período acima de <strong>6 dias</strong> é dividido automaticamente em janelas de 6 em 6 dias
+      (o Loki tem rate limit por janela) e o resultado vem tudo junto — até <strong>60 dias</strong> no total.
+      Pra período ainda maior, use o
+      <a href="https://github.com/vesti-mobi/dados/actions/workflows/stock-logs.yml" target="_blank" rel="noopener">workflow no GitHub Actions</a>
+      (mesma busca, sem limite de período, só que leva mais tempo e não aparece aqui).
+    </p>
+  </div>
+
+  <div id="resultado" style="display:none">
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <div class="selrow">
+        <div>
+          <label for="filtro">Filtrar (SKU, usuário, ação, origem, pedido…)</label>
+          <input class="busca" id="filtro" placeholder="digite para filtrar" oninput="renderTabela()">
+        </div>
+        <button class="btn-export" onclick="baixarResultadoExcel()">⬇️ Baixar Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table id="tbl">
+          <thead><tr>
+            <th>Data/hora</th><th>Ação</th><th>Origem</th><th>SKU</th>
+            <th>Qtd (antes→depois)</th><th>Saldo (antes→depois)</th>
+            <th>Usuário</th><th>Pedido</th><th>IP</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="cardHistorico" style="display:none">
+    <strong>Buscas recentes (só neste navegador)</strong>
+    <div class="selrow" style="margin-top:10px">
+      <select id="selHistorico" onchange="abrirHistorico()"></select>
+    </div>
+  </div>
+</div>
+
+<script>
+function _ss(acao, val){
+  try{ return acao==='get' ? sessionStorage.getItem('sl_auth') : sessionStorage.setItem('sl_auth', val) }
+  catch(e){ return null }
+}
+function doLogin(){
+  if(document.getElementById('loginPass').value === 'Mudar123'){
+    _ss('set','1');
+    entrar();
+  } else {
+    document.getElementById('loginError').style.display='block';
+    document.getElementById('loginPass').style.borderColor='#C0453B';
+  }
+}
+function entrar(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  boot();
+}
+if(_ss('get')==='1'){ document.addEventListener('DOMContentLoaded', entrar); }
+
+// ---------------- histórico local (por navegador, sem servidor) ----------------
+const HIST_KEY = 'sl_historico';
+const HIST_MAX = 5;
+function lerHistorico(){
+  try{ return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }catch(e){ return []; }
+}
+function salvarHistorico(busca){
+  try{
+    let h = lerHistorico();
+    h = h.filter(b => b.id !== busca.id);
+    h.unshift(busca);
+    h = h.slice(0, HIST_MAX);
+    localStorage.setItem(HIST_KEY, JSON.stringify(h));
+  }catch(e){ /* localStorage indisponível (modo privado etc.) -- só não guarda */ }
+  renderHistorico();
+}
+function renderHistorico(){
+  const h = lerHistorico();
+  const card = document.getElementById('cardHistorico');
+  if(!h.length){ card.style.display='none'; return; }
+  card.style.display='block';
+  const sel = document.getElementById('selHistorico');
+  sel.innerHTML = '<option value="">— selecionar —</option>' + h.map((b,i) =>
+    `<option value="${i}">${b.productCode} · ${b.companyId.slice(0,8)}… · ${b.periodoInicio.slice(0,16)} a ${b.periodoFim.slice(0,16)} (${b.totalLinhas} linhas)</option>`
+  ).join('');
+}
+function abrirHistorico(){
+  const i = document.getElementById('selHistorico').value;
+  if(i === '') return;
+  const b = lerHistorico()[+i];
+  if(!b) return;
+  atual = b;
+  document.getElementById('fCompany').value = b.companyId;
+  document.getElementById('fProduct').value = b.productCode;
+  mostrarResultado();
+}
+
+// ---------------- busca ----------------
+let atual = null;
+
+const JANELA_DIAS = 6; // mesmo teto do MAX_DIAS em api/buscar.js -- período maior é dividido em janelas dessa
+const MAX_DIAS_TOTAL = 60; // teto de bom senso: mesmo dividindo em janelas, período maior que isso vira dezenas
+                            // de chamadas sequenciais (o Loki tem rate limit por janela) -- prefira GitHub Actions
+
+function fmtDt(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('pt-BR'); }catch(e){ return iso; }
+}
+
+// formata de volta pro mesmo formato "YYYY-MM-DDTHH:MM:SS" que o datetime-local
+// manda, usando os componentes LOCAIS do Date -- isso espelha exatamente como o
+// valor foi parseado (new Date(str) tambem le como hora local), entao o
+// round-trip nao desloca o horario nenhuma hora pra la ou pra ca.
+function fmtLocalISO(d){
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+function boot(){
+  const agora = new Date();
+  const seteDiasAtras = new Date(agora.getTime() - 3*86400000);
+  document.getElementById('fEnd').value = agora.toISOString().slice(0,16);
+  document.getElementById('fStart').value = seteDiasAtras.toISOString().slice(0,16);
+  renderHistorico();
+}
+
+async function buscar(){
+  const companyId = document.getElementById('fCompany').value.trim();
+  const productCode = document.getElementById('fProduct').value.trim();
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const erroEl = document.getElementById('formErro');
+  const statusEl = document.getElementById('formStatus');
+  const statusTxt = document.getElementById('formStatusTxt');
+  const btn = document.getElementById('btnBuscar');
+  erroEl.style.display = 'none';
+
+  if(!companyId || !productCode || !start || !end){
+    erroEl.textContent = 'Preencha empresa, produto e o período.';
+    erroEl.style.display = 'block';
+    return;
+  }
+  const inicioTotal = new Date(start);
+  const fimTotal = new Date(end);
+  const diasTotal = (fimTotal - inicioTotal) / 86400000;
+  if(diasTotal > MAX_DIAS_TOTAL){
+    erroEl.textContent = `Período de ${diasTotal.toFixed(1)} dias passa do limite de ${MAX_DIAS_TOTAL} dias mesmo dividindo em janelas — use o GitHub Actions pra isso (link acima).`;
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  // divide o período em janelas de ate JANELA_DIAS dias -- cada uma vira uma
+  // chamada separada pro /api/buscar (que ja tem seu proprio teto de 6 dias)
+  const janelas = [];
+  let cursor = new Date(inicioTotal);
+  while(cursor < fimTotal){
+    const fimJanela = new Date(Math.min(cursor.getTime() + JANELA_DIAS*86400000, fimTotal.getTime()));
+    janelas.push([new Date(cursor), fimJanela]);
+    cursor = fimJanela;
+  }
+
+  btn.disabled = true;
+  statusEl.style.display = 'block';
+
+  const linhasTotais = [];
+  const porAcaoTotal = {};
+  const porOrigemTotal = {};
+  let geradoEm = new Date().toISOString();
+  let produtoId = '', produtoCadastradoEm = '';
+
+  try{
+    for(let i = 0; i < janelas.length; i++){
+      const [jIni, jFim] = janelas[i];
+      statusTxt.textContent = janelas.length > 1
+        ? `Buscando janela ${i+1}/${janelas.length} (${jIni.toLocaleDateString('pt-BR')} a ${jFim.toLocaleDateString('pt-BR')})… pode levar alguns minutos no total`
+        : 'Buscando… (pode levar até 1 minuto)';
+
+      const resp = await fetch('/api/buscar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          company_id: companyId, product_code: productCode,
+          start: fmtLocalISO(jIni), end: fmtLocalISO(jFim),
+        }),
+      });
+      // le como texto primeiro: uma function da Vercel que estourou o tempo (ou
+      // caiu por outro motivo de infra, ex. Loki fora do ar) devolve uma pagina
+      // HTML de erro, nao JSON -- resp.json() direto quebra com "Unexpected
+      // token" e esconde o motivo real. Pedido da Laura, 19/10/2026.
+      const corpo = await resp.text();
+      let dados;
+      try { dados = JSON.parse(corpo); }
+      catch {
+        erroEl.textContent = janelas.length > 1
+          ? `Falhou na janela ${jIni.toLocaleDateString('pt-BR')}–${jFim.toLocaleDateString('pt-BR')}: o servidor demorou demais ou caiu (resposta não veio em JSON, provavelmente timeout do Loki) — tente de novo ou use um período menor (o que já tinha sido buscado nas janelas anteriores foi descartado)`
+          : 'O servidor demorou demais ou caiu (resposta não veio em JSON, provavelmente timeout do Loki) — tente de novo em instantes.';
+        erroEl.style.display = 'block';
+        return;
+      }
+      if(!resp.ok){
+        erroEl.textContent = janelas.length > 1
+          ? `Falhou na janela ${jIni.toLocaleDateString('pt-BR')}–${jFim.toLocaleDateString('pt-BR')}: ${dados.erro || `Erro ${resp.status}`} (o que já tinha sido buscado nas janelas anteriores foi descartado)`
+          : (dados.erro || `Erro ${resp.status}`);
+        erroEl.style.display = 'block';
+        return;
+      }
+      for(const r of (dados.rows||[])) linhasTotais.push(r);
+      for(const [k,v] of Object.entries(dados.porAcao||{})) porAcaoTotal[k] = (porAcaoTotal[k]||0) + v;
+      for(const [k,v] of Object.entries(dados.porOrigem||{})) porOrigemTotal[k] = (porOrigemTotal[k]||0) + v;
+      geradoEm = dados.geradoEm || geradoEm;
+      // entre varias janelas, fica com a data de cadastro mais ANTIGA encontrada
+      // (a primeira janela que tiver log ja' resolve, mas por garantia)
+      if(dados.produtoCadastradoEm && (!produtoCadastradoEm || dados.produtoCadastradoEm < produtoCadastradoEm)){
+        produtoCadastradoEm = dados.produtoCadastradoEm;
+        produtoId = dados.produtoId || produtoId;
+      }
+
+      // respiro entre chamadas pro Loki nao levar varias janelas seguidas como rajada
+      if(i < janelas.length - 1) await new Promise(r => setTimeout(r, 2000));
+    }
+
+    atual = {
+      id: `${companyId}_${productCode}-${start}-${end}`,
+      companyId, productCode,
+      periodoInicio: start, periodoFim: end,
+      totalLinhas: linhasTotais.length,
+      porAcao: porAcaoTotal, porOrigem: porOrigemTotal,
+      rows: linhasTotais, geradoEm,
+      produtoId, produtoCadastradoEm,
+    };
+    salvarHistorico(atual);
+    mostrarResultado();
+  } catch(e){
+    erroEl.textContent = 'Falha de rede: ' + e.message;
+    erroEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    statusEl.style.display = 'none';
+  }
+}
+
+function mostrarResultado(){
+  document.getElementById('resultado').style.display = 'block';
+  renderKpis();
+  document.getElementById('filtro').value = '';
+  renderTabela();
+}
+
+function renderKpis(){
+  const el = document.getElementById('kpis');
+  if(!atual){ el.innerHTML=''; return; }
+  const porAcao = Object.entries(atual.porAcao||{});
+  const porOrigem = Object.entries(atual.porOrigem||{});
+  const cards = [
+    {n: atual.totalLinhas, l: 'movimentações'},
+    {n: porAcao.length, l: 'tipos de ação'},
+    {n: porOrigem.length, l: 'origens diferentes'},
+    {n: fmtDt(atual.geradoEm), l: 'buscado em'},
+  ];
+  // so' aparece quando achou product_id no log E a credencial do BigQuery
+  // estava configurada -- sem isso fica sem o card, nao com um "—" confuso
+  if(atual.produtoCadastradoEm){
+    cards.push({n: fmtDt(atual.produtoCadastradoEm), l: 'produto cadastrado em'});
+  }
+  el.innerHTML = cards.map(c => `<div class="kpi"><div class="n">${c.n}</div><div class="l">${c.l}</div></div>`).join('');
+}
+
+function renderTabela(){
+  const tbody = document.querySelector('#tbl tbody');
+  if(!atual){ tbody.innerHTML=''; return; }
+  const termo = (document.getElementById('filtro').value||'').toLowerCase();
+  const rows = (atual.rows||[]).filter(r => !termo || Object.values(r).some(v =>
+    String(v??'').toLowerCase().includes(termo)));
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Nenhuma linha ${termo?'para esse filtro':'nessa busca'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.action_date||'—'}</td>
+    <td><span class="pill pill-${r.action}">${r.action||'—'}</span></td>
+    <td>${r.origin||'—'}</td>
+    <td>${r.sku||'—'}</td>
+    <td>${r.old_qty ?? '—'} → ${r.new_qty ?? '—'}</td>
+    <td>${r.old_balance ?? '—'} → ${r.new_balance ?? '—'}</td>
+    <td>${r.user_name||'<span class="hint">automático</span>'}</td>
+    <td>${r.order_number||'—'}</td>
+    <td>${r.ip||'—'}</td>
+  </tr>`).join('');
+}
+
+// ---------------- exportar Excel (.xlsx de verdade, via SheetJS) ----------------
+// Le direto do DOM (thead/tbody ja renderizados por renderTabela), entao o
+// arquivo sempre bate com o filtro de texto que estiver ativo na hora do
+// clique. table_to_sheet ja' cuida de tudo (cabecalho, escapes) -- nao precisa
+// montar CSV na mao. XLSX.writeFile grava o arquivo direto, sem blob/URL.revoke
+// manual (o problema de download derrubando a pagina era exatamente nesse
+// blob: URL feito na mao -- a lib cuida disso por dentro). Pedido da Laura,
+// 30/09/2026: "deveria baixar um xlsx" (nao csv fingindo ser Excel).
+function exportTableToExcel(tableId, filename){
+  const tbl = document.getElementById(tableId);
+  if(!tbl) return;
+  const wb = XLSX.utils.table_to_book(tbl, {sheet: 'Movimentações'});
+  XLSX.writeFile(wb, filename);
+}
+function baixarResultadoExcel(){
+  if(!atual || !(atual.rows||[]).length) return;
+  const empresa = (atual.companyId||'').slice(0,8);
+  const hoje = new Date().toISOString().slice(0,10);
+  exportTableToExcel('tbl', `stock-logs_${atual.productCode}_${empresa}_${hoje}.xlsx`);
+}
+</script>
+</body>
+</html>
