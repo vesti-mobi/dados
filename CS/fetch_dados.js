@@ -1365,7 +1365,13 @@ async function puxarReunioes(owners) {
      resultados por consulta, e uma consulta única do ano inteiro cortaria as
      reuniões mais antigas sem dar erro se o volume crescesse. */
   const brutas = await buscarPorMes('meetings',
-    ['hs_meeting_title', 'hs_meeting_start_time', 'hs_meeting_outcome', 'hs_meeting_body', 'hubspot_owner_id'],
+    /* `hs_activity_type` é o "Tipo de chamada e reunião" (1ª Reunião,
+       Discovery call, Day one, Reunião presencial...) e `formato` é um campo
+       próprio da Vesti, com Presencial ou Online. Vieram em 05/11/2026 a
+       pedido da Laura: "sempre que tivesse reuniões mostrasse o tipo da
+       reunião; quantas delas foram presenciais". */
+    ['hs_meeting_title', 'hs_meeting_start_time', 'hs_meeting_outcome', 'hs_meeting_body',
+     'hubspot_owner_id', 'hs_activity_type', 'formato'],
     'hs_meeting_start_time', ANO, 11);
   console.log('  reuniões no HubSpot (ano todo)'.padEnd(44) + String(brutas.length).padStart(8));
 
@@ -1381,6 +1387,8 @@ async function puxarReunioes(owners) {
     resultado: 'Sem negócio',
     negocio: null,
     valor: 0,
+    tipo: (m.properties.hs_activity_type || '').trim() || null,
+    formato: (m.properties.formato || '').trim() || null,
     // descrição/resumo da atividade (hs_meeting_body), sem o HTML do editor do HubSpot
     resumo: semHtml(m.properties.hs_meeting_body),
   /* Sem filtro de dono desde 24/09/2026 (pedido da Laura): "se tiver reunião
@@ -1389,6 +1397,12 @@ async function puxarReunioes(owners) {
      vendas, de parceiro ou de quem entrou no time depois sumia do painel sem
      deixar rastro. Quem recorta por pessoa agora é o filtro de CS da aba. */
   })).filter(r => r.data && Number(r.data.slice(0, 4)) === ANO);
+  const porFormato = {};
+  reunioes.forEach(r => { const k = r.formato || '(sem formato)'; porFormato[k] = (porFormato[k] || 0) + 1 });
+  console.log('  reuniões por formato'.padEnd(44)
+    + Object.entries(porFormato).map(([k, v]) => k + ': ' + v).join(' · '));
+  const comTipo = reunioes.filter(r => r.tipo).length;
+  console.log('  com tipo preenchido'.padEnd(44) + String(comTipo).padStart(8));
   const doTime = reunioes.filter(r => CS_TIME.includes(r.cs)).length;
   console.log('  reuniões do ano'.padEnd(44) + String(reunioes.length).padStart(8));
   console.log('    dos sete nomes de CS / de outros donos'.padEnd(44)
