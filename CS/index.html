@@ -2515,6 +2515,19 @@ function ehReuniaoInterna(r){
   if(/\bintern[oa]s?\b/i.test(r.reuniao||'')) return true;
   return !marcaNoTitulo(r.reuniao);
 }
+/* PRESENCIAL (05/11/2026). Pedido da Laura: "sempre que tivesse reuniões
+   mostrasse o tipo da reunião; quantas delas foram presenciais".
+
+   Quem responde é o `hs_activity_type` do HubSpot, o "Tipo de chamada e
+   reunião", que tem uma opção "Reunião presencial" entre as doze. Existe
+   também um campo `formato` só com Presencial e Online, feito exatamente
+   para isso — mas ele está VAZIO nas 536 reuniões do ano, ninguém preenche.
+   Por isso a régua é o tipo.
+
+   O tipo também não é obrigatório: vem preenchido em 207 das 536. O painel
+   diz quantas estão sem, em vez de deixar o número parecer completo. */
+const ehPresencial = r => /presencial/i.test(r.tipo || '');
+
 /* As internas saem de `DATA.reunioes` inteiras, e não de cada card: um
    consumidor esquecido voltaria a contá-las. Ficam aqui ao lado para o card
    poder dizer quantas foram deixadas de fora. */
@@ -2671,6 +2684,7 @@ function linhasReunioesMes(m){
       cs: CS_POR_DOM[r.dominio] || CS_POR_CLIENTE[r.cliente] || normalizarCs(r.cs) || 'Sem CS',
       dono: normalizarCs(r.cs) || '(sem responsável)',
       dominio:r.dominio, data:r.data, resultado:r.resultado, negocio:r.negocio||'—',
+      tipo:r.tipo||'—', presencial:ehPresencial(r)?'Sim':'',
       valor:r.valor||0, resumo:r.resumo||''})))
     .sort((a,b)=>String(b.data).localeCompare(String(a.data)));
 }
@@ -3251,6 +3265,10 @@ const CARDS_GERENCIAL = [
       const marcas = new Set(rows.map(r=>r.nome));
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:'no mês, sem contar agendadas'},
+        {l:'Presenciais', v:fmt.int(rows.filter(r=>r.presencial==='Sim').length),
+         s:(()=>{ const sem = rows.filter(r=>!r.tipo || r.tipo==='—').length;
+           return sem ? fmt.int(sem)+' das '+fmt.int(rows.length)+' estão sem tipo preenchido'
+                      : 'todas as reuniões têm tipo preenchido' })()},
         {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(janelaDoMes(ctx.m))),
          s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
         {l:'Fecharam negócio', v:fmt.int(fechou.length), s:pctTexto(fechou.length, rows.length)+' das reuniões'},
@@ -3261,7 +3279,7 @@ const CARDS_GERENCIAL = [
       {k:'qtd', l:'Reuniões realizadas', f:fmt.int, v:rows=>rows.length},
       {k:'fechou', l:'Com negócio fechado', f:fmt.int, v:rows=>rows.filter(r=>r.resultado==='Fechou negócio').length},
     ],
-    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, {k:'cs', l:'CS da marca'},
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, {k:'cs', l:'CS da marca'}, {k:'tipo', l:'Tipo'},
       {k:'dono', l:'Quem marcou'}, {k:'resultado', l:'Resultado'},
       {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
   },
@@ -5273,6 +5291,7 @@ const CARDS_VISAO = [
     campoData:'data',
     linhas:ctx=>reunioesNoPeriodo(ctx.p).map(r=>({nome:r.cliente||'(sem empresa)',
       cs:normalizarCs(r.cs)||CS_POR_CLIENTE[r.cliente]||'Sem CS', data:r.data, resultado:r.resultado,
+      tipo:r.tipo||'—', presencial:ehPresencial(r)?'Sim':'',
       negocio:r.negocio||'—', valor:r.valor||0, resumo:r.resumo||''}))
       .sort((a,b)=>String(b.data).localeCompare(String(a.data))),
     resumo:rows=>({v:fmt.int(rows.length),
@@ -5282,6 +5301,13 @@ const CARDS_VISAO = [
       const dif = rows.length - ant.length;
       return [
         {l:'Reuniões realizadas', v:fmt.int(rows.length), s:(dif>0?'+':'')+fmt.int(dif)+' vs período anterior'},
+        /* Presencial é tipo "Reunião presencial" no HubSpot. O subtítulo
+           avisa de quantas o tipo sequer foi preenchido, senão o número
+           parece completo quando não é. */
+        {l:'Presenciais', v:fmt.int(rows.filter(r=>r.presencial==='Sim').length),
+         s:(()=>{ const sem = rows.filter(r=>!r.tipo || r.tipo==='—').length;
+           return sem ? fmt.int(sem)+' das '+fmt.int(rows.length)+' estão sem tipo preenchido'
+                      : 'todas as reuniões têm tipo preenchido' })()},
         /* O que o filtro de internas tirou, dito em voz alta (26/10/2026). */
         {l:'Internas fora da conta', v:fmt.int(internasNoPeriodo(ctx.p)),
          s:'daily, 1:1 e alinhamento de time — não contam como reunião com cliente'},
@@ -5293,7 +5319,24 @@ const CARDS_VISAO = [
       {k:'qtd', l:'Reuniões realizadas', f:fmt.int, v:rows=>rows.length},
       {k:'fechou', l:'Com negócio fechado', f:fmt.int, v:rows=>rows.filter(r=>r.resultado==='Fechou negócio').length},
     ],
-    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD, {k:'resultado', l:'Resultado'},
+    /* A composição por tipo — "qual reunião o time faz" (05/11/2026). O
+       presencial ganha cor própria porque é o que a Laura quer achar de
+       relance; "sem tipo" fica em cinza, no fim, e não some: é quase metade
+       das reuniões e esconder isso faria o resto parecer o todo. */
+    tituloCategorias:'Por tipo de reunião',
+    categorias:ctx=>{ const rows = linhasDoCard(cardVisao('reunioesVg'), ctx);
+      const cores = ['var(--acc)','var(--acc-2)','var(--pos)','var(--gold)','var(--neg)','#8046C4','#12968D'];
+      const por = new Map();
+      rows.forEach(r=>{ const k = (!r.tipo || r.tipo==='—') ? 'Sem tipo' : r.tipo;
+        const l = por.get(k) || {l:k, v:0, quem:[]};
+        l.v++; if(l.quem.length < 40) l.quem.push(r.nome); por.set(k, l) });
+      const semTipo = por.get('Sem tipo'); por.delete('Sem tipo');
+      const lista = [...por.values()].sort((a,b)=>b.v-a.v).map((x,i)=>Object.assign(x, {
+        cor: /presencial/i.test(x.l) ? 'var(--gold)' : cores[i % cores.length] }));
+      if(semTipo) lista.push(Object.assign(semTipo, {cor:'var(--ink-3)'}));
+      return lista; },
+    colunas:[{k:'data', l:'Data', f:fmt.date}, COL_NOME, COL_CS_CARD,
+      {k:'tipo', l:'Tipo'}, {k:'resultado', l:'Resultado'},
       {k:'negocio', l:'Negócio'}, {k:'valor', l:'Valor', r:true, f:fmt.money}, {k:'resumo', l:'Resumo'}],
   },
   {
@@ -6493,13 +6536,16 @@ const TABS = [
   {
     id:'reunioes', grupo:'Operação', nav:'Reuniões', cor:'#B54A72', cor2:'#1E74C8',
     titulo:'Reuniões',
-    desc:'Reuniões realizadas pelo time de CS e o negócio fechado depois delas — a mesma leitura do painel <b>Reuniões × Negócios</b>. O negócio ganho é creditado à <b>última reunião daquela empresa antes do fechamento</b>, para uma empresa com cinco reuniões e um negócio não virar cinco negócios. <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor; passe o mouse pra ler inteiro quando cortar.',
+    desc:'Reuniões realizadas pelo time de CS e o negócio fechado depois delas — a mesma leitura do painel <b>Reuniões × Negócios</b>. O negócio ganho é creditado à <b>última reunião daquela empresa antes do fechamento</b>, para uma empresa com cinco reuniões e um negócio não virar cinco negócios. <b>Resumo</b> = descrição da reunião no HubSpot (<code>hs_meeting_body</code>), sem a formatação do editor; passe o mouse pra ler inteiro quando cortar. <b>Tipo</b> = <code>hs_activity_type</code>, o "Tipo de chamada e reunião" do HubSpot — 1ª Reunião, Discovery call, Day one, Reunião presencial e mais oito. É campo opcional lá, e vem preenchido em pouco mais de um terço das reuniões. <b>Reunião interna não entra</b> aqui: daily, 1:1 e alinhamento de time não são reunião com cliente.',
     filtros:['cliente','cs','periodo','resultadoReuniao'],
     tabela:'Reuniões', chaveCliente:'cliente',
     colunas:[
       {k:'cliente', l:'Cliente', tipo:'cliente'},
       {k:'dominio', l:'Domínio', tipo:'dominio'},
       {k:'reuniao', l:'Reunião', tipo:'texto'},
+      /* O "Tipo de chamada e reunião" do HubSpot (05/11/2026). Vem em branco
+         em boa parte das linhas — é campo opcional lá. */
+      {k:'tipo', l:'Tipo', tipo:'texto'},
       {k:'resumo', l:'Resumo', tipo:'resumo'},
       {k:'data', l:'Data', tipo:'dataRel'},
       {k:'resultado', l:'Resultado', tipo:'resultadoReuniao'},
