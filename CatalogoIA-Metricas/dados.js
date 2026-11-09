@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-08T17:27:43.788Z",
+  "gerado_em": "2026-11-09T00:17:06.157Z",
   "hoje": "2026-11-08",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -40,7 +40,7 @@ window.DADOS = {
       "envios": 780,
       "primeiro": "2026-09-24T17:58:46.470Z",
       "ultimo": "2026-09-24T20:17:17.985Z",
-      "dias": 44
+      "dias": 45
     },
     {
       "slug": "kauly",
@@ -58,7 +58,7 @@ window.DADOS = {
       "envios": 761,
       "primeiro": "2026-09-02T19:08:41.700Z",
       "ultimo": "2026-09-24T17:58:40.316Z",
-      "dias": 44
+      "dias": 45
     },
     {
       "slug": "nicoboco",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 276,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-11-06T20:32:59.641Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "amiska",
@@ -130,7 +130,7 @@ window.DADOS = {
       "envios": 159,
       "primeiro": "2026-07-28T18:41:18.639Z",
       "ultimo": "2026-11-05T18:57:51.897Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "company:2aa54ccb-f068-4f57-96e5-aa7e42669885",
@@ -148,7 +148,7 @@ window.DADOS = {
       "envios": 42,
       "primeiro": "2026-10-30T16:45:49.794Z",
       "ultimo": "2026-11-06T18:08:36.330Z",
-      "dias": 1
+      "dias": 2
     },
     {
       "slug": "monnika-marikinha",
@@ -202,7 +202,7 @@ window.DADOS = {
       "envios": 15,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-11-05T19:27:38.380Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "optimist-jeans",
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -418,7 +418,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-26T19:04:19.305Z",
       "ultimo": "2026-10-26T19:04:19.305Z",
-      "dias": 12
+      "dias": 13
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -436,7 +436,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-28T21:44:45.612Z",
       "ultimo": "2026-11-05T19:21:55.784Z",
-      "dias": 2
+      "dias": 3
     },
     {
       "slug": "company:a4154b83-2d22-4fe3-b3bd-98f045fa2718",
@@ -603,7 +603,7 @@ window.DADOS = {
           "envios": 780,
           "primeiro": "2026-09-24T17:58:46.470Z",
           "ultimo": "2026-09-24T20:17:17.985Z",
-          "dias": 44,
+          "dias": 45,
           "produtos_medidos": 774,
           "atribuido": 0
         },
@@ -623,7 +623,7 @@ window.DADOS = {
           "envios": 761,
           "primeiro": "2026-09-02T19:08:41.700Z",
           "ultimo": "2026-09-24T17:58:40.316Z",
-          "dias": 44,
+          "dias": 45,
           "produtos_medidos": 749,
           "atribuido": 0
         },
@@ -663,7 +663,7 @@ window.DADOS = {
           "envios": 205,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-11-06T20:32:59.641Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 170,
           "atribuido": 0
         },
@@ -683,7 +683,7 @@ window.DADOS = {
           "envios": 49,
           "primeiro": "2026-08-21T01:32:04.730Z",
           "ultimo": "2026-11-05T18:57:51.897Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 41,
           "atribuido": 0
         },
@@ -703,7 +703,7 @@ window.DADOS = {
           "envios": 42,
           "primeiro": "2026-10-30T16:45:49.794Z",
           "ultimo": "2026-11-06T18:08:36.330Z",
-          "dias": 1,
+          "dias": 2,
           "produtos_medidos": 31,
           "atribuido": 0
         },
@@ -763,7 +763,7 @@ window.DADOS = {
           "envios": 13,
           "primeiro": "2026-09-28T09:19:48.441Z",
           "ultimo": "2026-09-28T17:45:28.264Z",
-          "dias": 40,
+          "dias": 41,
           "produtos_medidos": 13,
           "atribuido": 0
         },
@@ -783,7 +783,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-11-05T19:27:38.380Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 6,
           "atribuido": 0
         },
@@ -1003,7 +1003,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1023,7 +1023,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-26T19:04:19.305Z",
           "ultimo": "2026-10-26T19:04:19.305Z",
-          "dias": 12,
+          "dias": 13,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1043,7 +1043,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-28T21:44:45.612Z",
           "ultimo": "2026-11-05T19:21:55.784Z",
-          "dias": 2,
+          "dias": 3,
           "produtos_medidos": 0,
           "atribuido": 0
         },
