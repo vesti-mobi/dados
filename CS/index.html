@@ -5341,12 +5341,25 @@ const CARDS_VISAO = [
   },
   {
     id:'negociosVg', titulo:'Negócios', cor:'#4048B8',
-    capa:'Cross-sell e upgrade criados no período — o que já foi ganho e o que ainda está em negociação',
-    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela data de criação do negócio (<code>createdate</code>), a régua que a Laura definiu em 15/09/2026 para as abas Cross-sell e Upsell. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade no Iugu</b> — marca cuja receita não passa por lá, como a Boise, com 293 dias de série e nenhum centavo — tem a base buscada na <b>planilha de mensalidades</b> do time, na aba de Vesti e na de Starter do <b>mês mais recente</b> que existir lá (29/10/2026, a pedido da Laura). De lá vem a MENSALIDADE, não o total cobrado: o negócio vale o plano novo, então a base justa é o plano velho. A linha diz de onde veio a base. <b>Duas ressalvas:</b> a planilha é a foto do mês mais recente e às vezes <i>já registra o plano novo</i> — aí a diferença some, e a linha avisa; e marca que não está nem no Iugu nem na planilha continua sem base, com o valor cheio no KPI <i>Upgrades sem base</i> para o dinheiro não sumir da vista.',
-    campoData:'data',
+    capa:'Cross-sell e upgrade do período — o que foi ganho e o que ainda está em negociação',
+    fonte:'HubSpot — pipeline <b>Expand (Upgrades)</b>, pela <b>data de fechamento</b> do negócio desde 09/11/2026, a pedido da Laura; negócio ainda em aberto entra pela data de criação, senão o pipeline sumiria do card. Era pela criação, e o "Miliore - Vesti Varejo" — criado em 14/10, ganho em 03/11 — caía em outubro. É a mesma régua do quadrante Cross-sell/Upsell da Bonificação, que antes discordava desta tela. <b>Temperatura</b> é a propriedade <code>temperatura_do_negocio</code>. <b>No upgrade o ganho é a diferença</b>, não o valor do plano novo: valor do negócio menos a última mensalidade da marca no Iugu antes dele. <b>Quem não tem mensalidade no Iugu</b> — marca cuja receita não passa por lá, como a Boise, com 293 dias de série e nenhum centavo — tem a base buscada na <b>planilha de mensalidades</b> do time, na aba de Vesti e na de Starter do <b>mês mais recente</b> que existir lá (29/10/2026, a pedido da Laura). De lá vem a MENSALIDADE, não o total cobrado: o negócio vale o plano novo, então a base justa é o plano velho. A linha diz de onde veio a base. <b>Duas ressalvas:</b> a planilha é a foto do mês mais recente e às vezes <i>já registra o plano novo</i> — aí a diferença some, e a linha avisa; e marca que não está nem no Iugu nem na planilha continua sem base, com o valor cheio no KPI <i>Upgrades sem base</i> para o dinheiro não sumir da vista.',
+    /* PELA DATA DE FECHAMENTO (09/11/2026). Era pela de criação, régua que a
+       Laura definiu em 15/09/2026 — e ela mesma pediu a troca ao ver que o
+       "Miliore - Vesti Varejo" não aparecia em novembro: criado em 14/10,
+       ganho em 03/11, caía em outubro.
+
+       Negócio em aberto não tem data de fechamento, então ele continua
+       entrando pela criação: sem isso o pipeline aberto sumiria do card, e é
+       dele que sai o KPI "Em negociação".
+
+       `fechadoEm || data` é exatamente o que o quadrante Cross-sell/Upsell da
+       Bonificação já usava. Antes o mesmo negócio caía em meses diferentes
+       nas duas telas; agora não cai mais. */
+    campoData:'dataRef',
     linhas:ctx=>[...negociosDe('cross').map(n=>({...n, categoriaTxt:'Cross-sell'})),
                  ...negociosDe('up').map(n=>({...n, categoriaTxt:'Upgrade'}))]
-      .filter(n=>n.data >= ctx.p.ini && n.data <= ctx.p.fim)
+      .filter(n=>{ const ref = n.fechadoEm || n.data;
+        return ref >= ctx.p.ini && ref <= ctx.p.fim })
       .map(n=>{
         const g = n.categoriaTxt==='Upgrade' ? ganhoDoUpgrade(n) : {antes:null, mesAntes:null, ganhoMes:null};
         /* O que entra na conta de "ganho": no cross-sell é o valor do negócio;
@@ -5360,6 +5373,9 @@ const CARDS_VISAO = [
           temperatura:n.temperatura||'', valor:n.valor||0, antes:g.antes, mesAntes:g.mesAntes,
           ganhoMes:g.ganhoMes, baseOrigem:g.origem||null, baseAlcancou:!!g.baseAlcancou,
           efetivo, data:n.data, fechadoEm:n.fechadoEm||null,
+          /* A data que vale para o recorte e para o gráfico mês a mês: a de
+             fechamento, ou a de criação enquanto o negócio está aberto. */
+          dataRef: n.fechadoEm || n.data,
           emNegociacao: n.status==='Em aberto' ? (n.valor||0) : 0,
           semBase: n.categoriaTxt==='Upgrade' && n.status==='Ganho' && g.ganhoMes==null};
       })
