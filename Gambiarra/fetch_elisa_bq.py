@@ -35,6 +35,7 @@ OUT_REATIV    = ROOT / "reativacao_elisa.json"
 OUT_LINKS     = ROOT / "links_elisa.json"
 OUT_PAGTOS    = ROOT / "pagamentos_elisa.json"
 OUT_INADIMP   = ROOT / "inadimplentes_elisa.json"
+OUT_FRETE     = ROOT / "frete_elisa.json"
 OUT_STATUS_FATURAS = ROOT / "status_faturas_elisa.json"
 OUT_FATURAS_ABERTAS = ROOT / "faturas_abertas_elisa.json"
 
@@ -650,14 +651,53 @@ def build_vp(empresas_by_dom: dict[str, dict], gmv: dict) -> dict:
         tem_pix = any(bucket_gmv.get(m, {}).get("qtPix", 0) > 0 for m in janela)
         tem_cartao = any(bucket_gmv.get(m, {}).get("qtCartao", 0) > 0 for m in janela)
         tem_vp = tem_pix or tem_cartao
-        tem_frete = any(bucket_gmv.get(m, {}).get("qtTotal", 0) > 0 for m in janela)
         vp[dom] = {
             "temVPAtivo": tem_vp,
             "temPixAtivo": tem_pix,
             "temCartaoAtivo": tem_cartao,
-            "temFreteAtivo": tem_frete,
         }
     return vp
+
+
+# -----------------------------------------------------------------------------
+# FRETE = marca com integracao de transportadora (BRHub/OnLog) CONFIGURADA E
+# LIGADA na mongodb_companies_logistics. Antes "frete ativo" era so' um proxy
+# errado (copiava a mesma logica do VP, olhando se a marca fez pedido no mes --
+# nao tinha nada a ver com frete de verdade). Pedido da Laura, 09/11/2026.
+#
+# mongodb_companies_logistics e' 1 linha por PROVEDOR POR EMPRESA (companyId),
+# nao por dominio -- uma marca com filiais pode ter o provedor ligado numa
+# empresa e nao na outra; conta como ativa se QUALQUER empresa do dominio tiver.
+# companyId liga em odbc_companies.id (mesmo padrao do resto do arquivo).
+# -----------------------------------------------------------------------------
+SQL_FRETE = f"""
+SELECT co.domain_id, l.providers_providerId provider_id, l.providers_active active
+FROM `{PROJECT}.{DATASET}.mongodb_companies_logistics` l
+JOIN `{PROJECT}.{DATASET}.odbc_companies` co ON co.id = l.companyId
+WHERE l.providers_providerId IN ('brHub', 'onLog')
+"""
+
+_FRETE_PROVIDER_LABEL = {"brhub": "BRHub", "onlog": "Onlog"}
+
+
+def build_frete(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
+    """{domain_id: [provedores ativos]}, ex: {"998275": ["BRHub"]}. Marca sem
+    nenhuma linha active=true pros dois provedores simplesmente nao aparece
+    (lista vazia equivale a sem frete ativo)."""
+    out: dict[str, set] = {}
+    for r in rows:
+        dom = str(r.get("domain_id") or "").strip()
+        try: dom = str(int(dom))
+        except (TypeError, ValueError): pass
+        if dom not in empresas_by_dom:
+            continue
+        if str(r.get("active") or "").strip().lower() != "true":
+            continue
+        provedor = _FRETE_PROVIDER_LABEL.get(str(r.get("provider_id") or "").strip().lower())
+        if not provedor:
+            continue
+        out.setdefault(dom, set()).add(provedor)
+    return {dom: sorted(provedores) for dom, provedores in out.items()}
 
 
 def build_links(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
@@ -994,6 +1034,7 @@ def coletar_do_bq(client: bigquery.Client):
     piso_rows   = run_query(client, SQL_PISO_PAGAMENTOS, "piso do espelho de faturas")
     inad_rows   = run_query(client, SQL_INADIMPLENTES, "faturas vencidas em aberto")
     fat_av_rows = run_query(client, SQL_FATURAS_ABERTAS, "faturas ainda nao vencidas")
+    frete_rows  = run_query(client, SQL_FRETE, "frete (BRHub/OnLog) por empresa")
     status_faturas_rows = run_query(client, SQL_STATUS_FATURAS, "status da ultima fatura por dominio")
 
     # Produtos: so se `odbc_products` estiver ingerido (odbc_product_details NAO serve).
@@ -1006,7 +1047,7 @@ def coletar_do_bq(client: bigquery.Client):
               "Ver _MIGRACAO_BQ_STATUS.md.", file=sys.stderr, flush=True)
 
     return (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-            pag_rows, piso_rows, inad_rows, fat_av_rows, status_faturas_rows)
+            pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, status_faturas_rows)
 
 
 def main() -> None:
@@ -1016,7 +1057,7 @@ def main() -> None:
 
     prod_disponivel = _table_exists(client, "odbc_products")
     (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-     pag_rows, piso_rows, inad_rows, fat_av_rows, status_faturas_rows) = coletar_do_bq(client)
+     pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, status_faturas_rows) = coletar_do_bq(client)
 
     empresas = build_empresas(emp_rows)
     OUT_COMPANIES.write_text(json.dumps(empresas, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1040,6 +1081,10 @@ def main() -> None:
     vp = build_vp(empresas_by_dom, gmv)
     OUT_VP.write_text(json.dumps(vp, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[write] {OUT_VP.name} ({len(vp)} dominios)")
+
+    frete = build_frete(frete_rows, empresas_by_dom)
+    OUT_FRETE.write_text(json.dumps(frete, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[write] {OUT_FRETE.name} ({len(frete)} dominios com frete ativo)")
 
     reativ = build_reativacao(reativ_rows, empresas_by_dom)
     OUT_REATIV.write_text(json.dumps(reativ, ensure_ascii=False, indent=2), encoding="utf-8")

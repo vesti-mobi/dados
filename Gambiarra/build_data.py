@@ -262,7 +262,7 @@ def _canceladas(ambiente: dict, empresas_by_dom: dict,
     return out
 
 
-def _alertas(emp: dict, cad: dict, vp: dict, gmv_emp: dict) -> list[str]:
+def _alertas(emp: dict, cad: dict, vp: dict, gmv_emp: dict, frete_ativo: bool) -> list[str]:
     out = []
     hoje = date.today()
     primeiro_ped = _parse_iso_date(cad.get("primeiroPedidoCadastrado"))
@@ -275,7 +275,7 @@ def _alertas(emp: dict, cad: dict, vp: dict, gmv_emp: dict) -> list[str]:
             out.append(f"<5 vendas apos {(hoje-primeira_venda).days}d da 1a venda")
     if not vp.get("temVPAtivo"):
         out.append("VP inativo (sem pedidos nos ultimos 30-60d)")
-    if not vp.get("temFreteAtivo"):
+    if not frete_ativo:
         out.append("Sem frete ativo")
     if not cad.get("qtProdutos"):
         out.append("Nenhum produto cadastrado")
@@ -287,6 +287,8 @@ def main():
     gmv       = _load(ROOT / "gmv_elisa.json")
     cadastros = _load(ROOT / "cadastros_elisa.json")
     vp        = _load(ROOT / "vestipago_elisa.json")
+    frete_p   = ROOT / "frete_elisa.json"
+    frete     = _load(frete_p) if frete_p.exists() else {}
     reativ_p  = ROOT / "reativacao_elisa.json"
     reativ    = _load(reativ_p) if reativ_p.exists() else {}
     links_p   = ROOT / "links_elisa.json"
@@ -364,7 +366,8 @@ def main():
         dom = e["domain_id"]
         g = gmv["empresas"].get(dom, {})
         c = cadastros.get(dom, {})
-        v = vp.get(dom, {"temVPAtivo": False, "temFreteAtivo": False})
+        v = vp.get(dom, {"temVPAtivo": False})
+        frete_provedores = frete.get(dom) or []
         meses_set.update(g.get("mensal", {}).keys())
         semanas_set.update(g.get("semanal", {}).keys())
         qtd_vendas_mes = g.get("qtdVendasMes", {})
@@ -399,8 +402,12 @@ def main():
             "temVPAtivo":     v.get("temVPAtivo", False),
             "temPixAtivo":    v.get("temPixAtivo", False),
             "temCartaoAtivo": v.get("temCartaoAtivo", False),
-            "temFreteAtivo":  v.get("temFreteAtivo", False),
-            "alertas": _alertas(e, c, v, g),
+            # Frete ativo = BRHub e/ou OnLog configurado e LIGADO na empresa
+            # (mongodb_companies_logistics) -- ver build_frete em fetch_elisa_bq.py.
+            # Antes era proxy errado (= fez pedido no mes). Pedido da Laura, 09/11/2026.
+            "temFreteAtivo":  bool(frete_provedores),
+            "freteProvedor":  ", ".join(frete_provedores),
+            "alertas": _alertas(e, c, v, g, bool(frete_provedores)),
             "reativacoesPorMes": (reativ.get(dom) or {}).get("reativacoesPorMes", {}),
             "totalReativ": (reativ.get(dom) or {}).get("totalReativ", 0),
             # cada retorno: {mes, ultimoPag, voltou, dias sem pagar}

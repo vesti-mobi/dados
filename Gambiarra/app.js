@@ -13,7 +13,8 @@ const fmtBRLCurto = (n) => {
 // Varejo Vesti separado de Vesti como canal proprio -- pedido da Laura, 21/10/2026
 const CANAIS = ["Starter","Vesti","Varejo Vesti","Uemtel","Atta","Parceiros"];
 const state = { periodo:"mensal", chaves:[], cs:"todas", canais:new Set(CANAIS), empresa:"todas", tab:"home", cadMes:"todos", upgMin:300000, soCoorte:true, reativOrigem:"todas", reativDrill:null, portesSel:new Set(),
-  inadDias:0, situacoes:new Set(["alerta","bloqueada","cancelada"]) };
+  inadDias:0, situacoes:new Set(["alerta","bloqueada","cancelada"]),
+  freteAtivoFiltro:"todas", freteProvedorFiltro:"todas" };
 const D = (typeof DADOS !== "undefined") ? DADOS : { empresas:[], mesesList:[], semanasList:[], anosList:[] };
 // parceiros que NAO entram no ranking "TOP 10 Parceiros" (viram canal proprio)
 const PARC_EXCL = new Set(["atta","attasoft","onix","uemtel","vesti","varejo vesti"]);
@@ -424,6 +425,9 @@ function baixarFaturasExcel() {
 }
 function baixarTravadasExcel() {
   exportTableToExcel("tbl-travadas", `marcas_travadas_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function baixarFreteExcel() {
+  exportTableToExcel("tbl-semfrete", `frete_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // Copia o link de checkout da fatura (Iugu) pra CS colar e mandar pro
@@ -964,8 +968,22 @@ function renderTabSemVp(canalSemVp) { // canalSemVp ignored — render both char
   ], lista.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>({...e,_alert:true})));
 }
 
+// Aba Frete: agora mostra TODAS as marcas (nao so' quem esta sem), com filtro
+// de ativo/inativo e de qual provedor -- antes so' listava quem nao tinha
+// frete. Pedido da Laura, 09/11/2026.
+function freteFiltrada() {
+  return empresasFiltradas().filter(e => {
+    if (state.freteAtivoFiltro === "sim" && !e.temFreteAtivo) return false;
+    if (state.freteAtivoFiltro === "nao" && e.temFreteAtivo) return false;
+    if (state.freteProvedorFiltro !== "todas") {
+      const provs = (e.freteProvedor || "").split(",").map(s=>s.trim()).filter(Boolean);
+      if (!provs.includes(state.freteProvedorFiltro)) return false;
+    }
+    return true;
+  });
+}
 function renderTabSemFrete() {
-  const lista = empresasFiltradas().filter(e=>!e.temFreteAtivo);
+  const lista = freteFiltrada();
   const porCs = countBy(lista, e=>e.cs);
   makeChart("chart-semfrete-cs", {
     type:"bar",
@@ -979,11 +997,13 @@ function renderTabSemFrete() {
     options:{responsive:true, maintainAspectRatio:false}
   });
   renderTable("tbl-semfrete", [
-    {label:"Marca", fn:r=>r.name},
-    {label:"CS", fn:r=>r.cs},
-    {label:"Canal", fn:r=>r.canal},
-    {label:"Mensalidade", cls:"num", fn:r=>fmtBRL(r.valor_mensal)},
-  ], lista.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>({...e,_alert:true})));
+    {label:"Marca", fn:r=>r.name, sort:r=>r.name},
+    {label:"CS", fn:r=>r.cs, sort:r=>r.cs},
+    {label:"Canal", fn:r=>r.canal, sort:r=>r.canal},
+    {label:"Frete ativo", fn:r=>r.temFreteAtivo?"Sim":"Não", sort:r=>r.temFreteAtivo?1:0},
+    {label:"Qual frete", fn:r=>r.freteProvedor||"—", sort:r=>r.freteProvedor||""},
+    {label:"Mensalidade", cls:"num", fn:r=>fmtBRL(r.valor_mensal), sort:r=>r.valor_mensal||0},
+  ], lista.sort((a,b)=>a.name.localeCompare(b.name)).map(e=>({...e,_alert:!e.temFreteAtivo})));
 }
 
 // As 4 origens da aba (regra fechada com a Laura em 13/08/2026 — ver
@@ -1629,7 +1649,7 @@ const TAB_LABELS = {
   gmv:"GMV", vp:"VestiPago (Cartão + PIX)", cadastro:"Cadastro de Produtos",
   primeiras5:"Primeiras 5 Vendas", primeiras25:"Primeiras 25 Vendas",
   reativ:"Ativações e reativações", topstarter:"TOP 10 Starter", topparceiros:"TOP 10 Parceiros",
-  vpinativo:"Sem VP Ativo", freteinativo:"Sem Frete Ativo", travadas:"Marcas Travadas",
+  vpinativo:"Sem VP Ativo", freteinativo:"Frete", travadas:"Marcas Travadas",
   upgrade:"Oportunidades de Upgrade", tamanho:"Tamanho da marca",
   inadimplentes:"Inadimplentes", faturas:"Faturas", links:"Links & Cliques"
 };
@@ -1854,6 +1874,8 @@ function bind() {
   $("filter-inad-dias").value = String(state.inadDias);
   $("filter-inad-dias").addEventListener("change", e=>{ state.inadDias=Number(e.target.value)||0; renderActiveTab(); });
   $("filter-upg-min").addEventListener("change", e=>{ state.upgMin=Number(e.target.value)||300000; renderActiveTab(); });
+  $("filter-frete-ativo").addEventListener("change", e=>{ state.freteAtivoFiltro=e.target.value; renderActiveTab(); });
+  $("filter-frete-provedor").addEventListener("change", e=>{ state.freteProvedorFiltro=e.target.value; renderActiveTab(); });
   // mudar filtro invalida a seleção feita no gráfico (o pedaço clicado pode nem existir mais)
   $("filter-tam-porte").addEventListener("change", e=>{
     state.portesSel = e.target.value ? new Set([e.target.value]) : new Set();

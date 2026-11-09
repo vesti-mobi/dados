@@ -119,8 +119,8 @@
         <div class="hl-val" id="kpi-semvp">0</div><div class="hl-sub">marcas</div>
       </div>
       <div class="hl-card" onclick="switchTab('freteinativo')" style="background:linear-gradient(135deg,#74B9FF,#A0CDFF)">
-        <div class="hl-icon">📮</div><div class="hl-label">Sem Frete Ativo</div>
-        <div class="hl-val" id="kpi-semfrete">0</div><div class="hl-sub">marcas</div>
+        <div class="hl-icon">📮</div><div class="hl-label">Frete</div>
+        <div class="hl-val" id="kpi-semfrete">0</div><div class="hl-sub">marcas sem frete ativo</div>
       </div>
       <div class="hl-card" onclick="switchTab('travadas')" style="background:linear-gradient(135deg,#2D3436,#636E72)">
         <div class="hl-icon">⚠️</div><div class="hl-label">Marcas travadas</div>
@@ -268,12 +268,31 @@
   </div>
 
   <div id="tab-freteinativo" class="tab-panel">
-    <h2 class="tab-title">📮 Marcas sem Frete Ativo</h2>
+    <h2 class="tab-title">📮 Frete</h2>
+    <p class="hint" style="margin-bottom:12px;color:var(--g);font-size:12px">
+      Frete ativo = BRHub e/ou OnLog configurado e <strong>ligado</strong> na empresa
+      (<em>mongodb_companies_logistics</em>). Marca com filial conta como ativa se
+      qualquer uma das empresas dela tiver o provedor ligado.
+    </p>
+    <div class="sub-filter">
+      <label>Frete ativo:</label>
+      <select class="f-select" id="filter-frete-ativo">
+        <option value="todas" selected>Todas</option>
+        <option value="sim">Sim</option>
+        <option value="nao">Não</option>
+      </select>
+      <label>Qual frete:</label>
+      <select class="f-select" id="filter-frete-provedor">
+        <option value="todas" selected>Todos</option>
+        <option value="BRHub">BRHub</option>
+        <option value="Onlog">Onlog</option>
+      </select>
+    </div>
     <div class="chart-row">
       <div class="ch"><h4>Marcas por CS</h4><div class="cw"><canvas id="chart-semfrete-cs"></canvas></div></div>
       <div class="ch"><h4>Marcas por canal</h4><div class="cw"><canvas id="chart-semfrete-canal"></canvas></div></div>
     </div>
-    <div class="tbl-card"><h4>Marcas sem envios recentes</h4><div class="tbl-wrap"><table class="dt" id="tbl-semfrete"></table></div></div>
+    <div class="tbl-card"><h4>Marcas <button class="btn-export" onclick="baixarFreteExcel()">⬇️ Baixar Excel</button></h4><div class="tbl-wrap"><table class="dt" id="tbl-semfrete"></table></div></div>
   </div>
 
   <div id="tab-travadas" class="tab-panel">
