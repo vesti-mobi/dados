@@ -1000,6 +1000,7 @@ function renderTabSemFrete() {
     {label:"Marca", fn:r=>r.name, sort:r=>r.name},
     {label:"CS", fn:r=>r.cs, sort:r=>r.cs},
     {label:"Canal", fn:r=>r.canal, sort:r=>r.canal},
+    {label:"Domínio", cls:"num", fn:r=>r.domain_id||"—", sort:r=>+r.domain_id||0},
     {label:"Frete ativo", fn:r=>r.temFreteAtivo?"Sim":"Não", sort:r=>r.temFreteAtivo?1:0},
     {label:"Qual frete", fn:r=>r.freteProvedor||"—", sort:r=>r.freteProvedor||""},
     {label:"Mensalidade", cls:"num", fn:r=>fmtBRL(r.valor_mensal), sort:r=>r.valor_mensal||0},
