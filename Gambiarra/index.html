@@ -270,9 +270,9 @@
   <div id="tab-freteinativo" class="tab-panel">
     <h2 class="tab-title">📮 Frete</h2>
     <p class="hint" style="margin-bottom:12px;color:var(--g);font-size:12px">
-      Frete ativo = BRHub e/ou OnLog configurado e <strong>ligado</strong> na empresa
+      Frete ativo = qualquer provedor de frete configurado e <strong>ligado</strong> na empresa
       (<em>mongodb_companies_logistics</em>). Marca com filial conta como ativa se
-      qualquer uma das empresas dela tiver o provedor ligado.
+      qualquer uma das empresas dela tiver algum provedor ligado.
     </p>
     <div class="sub-filter">
       <label>Frete ativo:</label>
@@ -285,7 +285,17 @@
       <select class="f-select" id="filter-frete-provedor">
         <option value="todas" selected>Todos</option>
         <option value="BRHub">BRHub</option>
+        <option value="Correios">Correios</option>
+        <option value="Datafrete">Datafrete</option>
+        <option value="Excursão/Ônibus">Excursão/Ônibus</option>
+        <option value="Frete">Frete</option>
+        <option value="Melhor Envio">Melhor Envio</option>
+        <option value="Motoboy">Motoboy</option>
         <option value="Onlog">Onlog</option>
+        <option value="Personalizado">Personalizado</option>
+        <option value="Retirada em Loja">Retirada em Loja</option>
+        <option value="Transportadoras">Transportadoras</option>
+        <option value="Uber">Uber</option>
       </select>
     </div>
     <div class="chart-row">

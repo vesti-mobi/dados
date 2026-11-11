@@ -638,21 +638,43 @@ def build_cadastros(prods: list[dict], primeiros: list[dict],
     return out
 
 
-def build_vp(empresas_by_dom: dict[str, dict], gmv: dict) -> dict:
-    hoje = datetime.now(timezone.utc).date()
-    mes_atual = hoje.strftime("%Y-%m")
-    mes_anterior_y, mes_anterior_m = (hoje.year, hoje.month - 1) if hoje.month > 1 else (hoje.year - 1, 12)
-    mes_anterior = f"{mes_anterior_y:04d}-{mes_anterior_m:02d}"
-    janela = {mes_atual, mes_anterior}
+# -----------------------------------------------------------------------------
+# VP (VestiPago) = PIX e/ou Cartao CONFIGURADO E LIGADO pra empresa, direto da
+# MongoDB_Payment_Companies (isEnabled + paymentSettings_iugu_pix_isEnabled /
+# ..._creditCard_isEnabled). Antes "VP ativo" era proxy errado (= fez pedido
+# PIX/Cartao pago no mes atual ou anterior) -- mesma familia de bug do frete
+# antigo. Caso reportado: Dubalo aparecia "sem VP" tendo PIX e Cartao
+# habilitados (isEnabled=true, pix=true, creditCard=true na fonte). Pedido da
+# Laura, 11/11/2026.
+#
+# MongoDB_Payment_Companies e' por domainId direto (nao precisa de join por
+# empresa/filial feito do zero igual mongodb_companies_logistics).
+# -----------------------------------------------------------------------------
+SQL_VP = f"""
+SELECT domainId domain_id, isEnabled habilitado,
+  paymentSettings_iugu_pix_isEnabled pix_ligado,
+  paymentSettings_iugu_creditCard_isEnabled cartao_ligado
+FROM `{PROJECT}.{DATASET}.MongoDB_Payment_Companies`
+"""
 
+
+def _bq_bool(v) -> bool:
+    return str(v or "").strip().lower() == "true"
+
+
+def build_vp(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
     vp: dict[str, dict] = {}
-    for dom, emp in empresas_by_dom.items():
-        bucket_gmv = gmv["empresas"].get(dom, {}).get("mensal", {})
-        tem_pix = any(bucket_gmv.get(m, {}).get("qtPix", 0) > 0 for m in janela)
-        tem_cartao = any(bucket_gmv.get(m, {}).get("qtCartao", 0) > 0 for m in janela)
-        tem_vp = tem_pix or tem_cartao
+    for r in rows:
+        dom = str(r.get("domain_id") or "").strip()
+        try: dom = str(int(dom))
+        except (TypeError, ValueError): pass
+        if dom not in empresas_by_dom:
+            continue
+        habilitado = _bq_bool(r.get("habilitado"))
+        tem_pix = habilitado and _bq_bool(r.get("pix_ligado"))
+        tem_cartao = habilitado and _bq_bool(r.get("cartao_ligado"))
         vp[dom] = {
-            "temVPAtivo": tem_vp,
+            "temVPAtivo": tem_pix or tem_cartao,
             "temPixAtivo": tem_pix,
             "temCartaoAtivo": tem_cartao,
         }
@@ -660,10 +682,12 @@ def build_vp(empresas_by_dom: dict[str, dict], gmv: dict) -> dict:
 
 
 # -----------------------------------------------------------------------------
-# FRETE = marca com integracao de transportadora (BRHub/OnLog) CONFIGURADA E
-# LIGADA na mongodb_companies_logistics. Antes "frete ativo" era so' um proxy
-# errado (copiava a mesma logica do VP, olhando se a marca fez pedido no mes --
-# nao tinha nada a ver com frete de verdade). Pedido da Laura, 09/11/2026.
+# FRETE = marca com QUALQUER forma de envio CONFIGURADA E LIGADA na
+# mongodb_companies_logistics -- nao so' BRHub/OnLog (limitacao da 1a versao,
+# pedido da Laura 09/11/2026). Caso reportado: Dubalo usa Melhor Envio e
+# aparecia "sem frete". Agora pega qualquer providers_providerId nao nulo;
+# o rotulo exibido vem de _FRETE_PROVIDER_LABEL, com fallback pro proprio id
+# (formatado) pra provedor novo que apareca e ainda nao esteja mapeado.
 #
 # mongodb_companies_logistics e' 1 linha por PROVEDOR POR EMPRESA (companyId),
 # nao por dominio -- uma marca com filiais pode ter o provedor ligado numa
@@ -674,16 +698,40 @@ SQL_FRETE = f"""
 SELECT co.domain_id, l.providers_providerId provider_id, l.providers_active active
 FROM `{PROJECT}.{DATASET}.mongodb_companies_logistics` l
 JOIN `{PROJECT}.{DATASET}.odbc_companies` co ON co.id = l.companyId
-WHERE l.providers_providerId IN ('brHub', 'onLog')
+WHERE l.providers_providerId IS NOT NULL
 """
 
-_FRETE_PROVIDER_LABEL = {"brhub": "BRHub", "onlog": "Onlog"}
+# Rotulo legivel pra cada provider_id conhecido (visto ao vivo em
+# mongodb_companies_logistics, 11/11/2026). Provedor fora dessa lista ainda
+# aparece (fallback no _frete_label), so' sem nome bonito.
+_FRETE_PROVIDER_LABEL = {
+    "brhub": "BRHub",
+    "onlog": "Onlog",
+    "melhorenvio": "Melhor Envio",
+    "melhorenviov2": "Melhor Envio",
+    "motoboy": "Motoboy",
+    "uber": "Uber",
+    "retirada_loja": "Retirada em Loja",
+    "excursao_onibus": "Excursão/Ônibus",
+    "datafrete": "Datafrete",
+    "correios": "Correios",
+    "personalizado": "Personalizado",
+    "frete": "Frete",
+    "transportadoras": "Transportadoras",
+}
+
+
+def _frete_label(provider_id: str) -> str:
+    key = provider_id.strip().lower()
+    if key in _FRETE_PROVIDER_LABEL:
+        return _FRETE_PROVIDER_LABEL[key]
+    return provider_id.strip().replace("_", " ").title()
 
 
 def build_frete(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
     """{domain_id: [provedores ativos]}, ex: {"998275": ["BRHub"]}. Marca sem
-    nenhuma linha active=true pros dois provedores simplesmente nao aparece
-    (lista vazia equivale a sem frete ativo)."""
+    nenhuma linha active=true simplesmente nao aparece (lista vazia equivale
+    a sem frete ativo)."""
     out: dict[str, set] = {}
     for r in rows:
         dom = str(r.get("domain_id") or "").strip()
@@ -693,10 +741,10 @@ def build_frete(rows: list[dict], empresas_by_dom: dict[str, dict]) -> dict:
             continue
         if str(r.get("active") or "").strip().lower() != "true":
             continue
-        provedor = _FRETE_PROVIDER_LABEL.get(str(r.get("provider_id") or "").strip().lower())
-        if not provedor:
+        provider_id = str(r.get("provider_id") or "").strip()
+        if not provider_id:
             continue
-        out.setdefault(dom, set()).add(provedor)
+        out.setdefault(dom, set()).add(_frete_label(provider_id))
     return {dom: sorted(provedores) for dom, provedores in out.items()}
 
 
@@ -1034,7 +1082,8 @@ def coletar_do_bq(client: bigquery.Client):
     piso_rows   = run_query(client, SQL_PISO_PAGAMENTOS, "piso do espelho de faturas")
     inad_rows   = run_query(client, SQL_INADIMPLENTES, "faturas vencidas em aberto")
     fat_av_rows = run_query(client, SQL_FATURAS_ABERTAS, "faturas ainda nao vencidas")
-    frete_rows  = run_query(client, SQL_FRETE, "frete (BRHub/OnLog) por empresa")
+    frete_rows  = run_query(client, SQL_FRETE, "frete (todos os provedores) por empresa")
+    vp_rows     = run_query(client, SQL_VP, "VestiPago (PIX/Cartao) configurado por dominio")
     status_faturas_rows = run_query(client, SQL_STATUS_FATURAS, "status da ultima fatura por dominio")
 
     # Produtos: so se `odbc_products` estiver ingerido (odbc_product_details NAO serve).
@@ -1047,7 +1096,7 @@ def coletar_do_bq(client: bigquery.Client):
               "Ver _MIGRACAO_BQ_STATUS.md.", file=sys.stderr, flush=True)
 
     return (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-            pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, status_faturas_rows)
+            pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, vp_rows, status_faturas_rows)
 
 
 def main() -> None:
@@ -1057,7 +1106,7 @@ def main() -> None:
 
     prod_disponivel = _table_exists(client, "odbc_products")
     (emp_rows, gmv_rows, prod_rows, pp_rows, reativ_rows, links_rows,
-     pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, status_faturas_rows) = coletar_do_bq(client)
+     pag_rows, piso_rows, inad_rows, fat_av_rows, frete_rows, vp_rows, status_faturas_rows) = coletar_do_bq(client)
 
     empresas = build_empresas(emp_rows)
     OUT_COMPANIES.write_text(json.dumps(empresas, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1078,7 +1127,7 @@ def main() -> None:
     OUT_CADASTROS.write_text(json.dumps(cad, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[write] {OUT_CADASTROS.name} ({len(cad)} dominios)")
 
-    vp = build_vp(empresas_by_dom, gmv)
+    vp = build_vp(vp_rows, empresas_by_dom)
     OUT_VP.write_text(json.dumps(vp, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[write] {OUT_VP.name} ({len(vp)} dominios)")
 
