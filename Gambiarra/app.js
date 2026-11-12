@@ -698,6 +698,7 @@ function renderTabGmv() {
     {label:"CS", fn:r=>r.cs, sort:r=>r.cs},
     {label:"Canal", fn:r=>r.canal+(r.starter_interno?" (Int)":""),
       sort:r=>r.canal+(r.starter_interno?" (Int)":"")},
+    {label:"Domínio", cls:"num", fn:r=>r.domain_id||"—", sort:r=>+r.domain_id||0},
     {label:"GMV", cls:"num", fn:r=>fmtBRL(r._g.valTotal), sort:r=>r._g.valTotal},
     {label:"Pedidos", cls:"num", fn:r=>fmtInt(r._g.qtTotal), sort:r=>r._g.qtTotal},
     {label:"Mensalidade", cls:"num", fn:r=>fmtBRL(r.valor_mensal), sort:r=>r.valor_mensal||0},
