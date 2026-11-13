@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-12T19:22:13.344Z",
+  "gerado_em": "2026-11-13T01:35:54.875Z",
   "hoje": "2026-11-12",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -112,7 +112,7 @@ window.DADOS = {
       "envios": 276,
       "primeiro": "2026-07-28T11:47:18.529Z",
       "ultimo": "2026-11-06T20:32:59.641Z",
-      "dias": 5
+      "dias": 6
     },
     {
       "slug": "amiska",
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 13
+      "dias": 14
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -436,7 +436,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-28T21:44:45.612Z",
       "ultimo": "2026-11-05T19:21:55.784Z",
-      "dias": 6
+      "dias": 7
     },
     {
       "slug": "company:a4154b83-2d22-4fe3-b3bd-98f045fa2718",
@@ -663,7 +663,7 @@ window.DADOS = {
           "envios": 205,
           "primeiro": "2026-08-18T13:22:59.954Z",
           "ultimo": "2026-11-06T20:32:59.641Z",
-          "dias": 5,
+          "dias": 6,
           "produtos_medidos": 170,
           "atribuido": 0
         },
@@ -1003,7 +1003,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 13,
+          "dias": 14,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1043,7 +1043,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-28T21:44:45.612Z",
           "ultimo": "2026-11-05T19:21:55.784Z",
-          "dias": 6,
+          "dias": 7,
           "produtos_medidos": 0,
           "atribuido": 0
         },
