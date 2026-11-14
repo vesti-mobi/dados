@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-13T19:00:16.226Z",
+  "gerado_em": "2026-11-14T01:10:52.772Z",
   "hoje": "2026-11-13",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -15,7 +15,7 @@ window.DADOS = {
     "ativas": 6,
     "usando": 17,
     "nunca_usaram": 7,
-    "paradas": 8,
+    "paradas": 9,
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2676,
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 14
+      "dias": 15
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -418,7 +418,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-26T19:04:19.305Z",
       "ultimo": "2026-10-26T19:04:19.305Z",
-      "dias": 17
+      "dias": 18
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -436,7 +436,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-28T21:44:45.612Z",
       "ultimo": "2026-11-05T19:21:55.784Z",
-      "dias": 7
+      "dias": 8
     },
     {
       "slug": "company:a4154b83-2d22-4fe3-b3bd-98f045fa2718",
@@ -577,7 +577,7 @@ window.DADOS = {
         "ativas": 6,
         "usando": 15,
         "nunca_usaram": 9,
-        "paradas": 7,
+        "paradas": 8,
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 2286,
@@ -1003,7 +1003,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 14,
+          "dias": 15,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1023,7 +1023,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-26T19:04:19.305Z",
           "ultimo": "2026-10-26T19:04:19.305Z",
-          "dias": 17,
+          "dias": 18,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1043,7 +1043,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-28T21:44:45.612Z",
           "ultimo": "2026-11-05T19:21:55.784Z",
-          "dias": 7,
+          "dias": 8,
           "produtos_medidos": 0,
           "atribuido": 0
         },
