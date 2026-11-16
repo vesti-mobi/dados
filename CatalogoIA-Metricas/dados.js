@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-15T18:14:21.765Z",
+  "gerado_em": "2026-11-16T00:31:15.497Z",
   "hoje": "2026-11-15",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -220,7 +220,7 @@ window.DADOS = {
       "envios": 15,
       "primeiro": "2026-08-10T16:01:03.796Z",
       "ultimo": "2026-11-11T18:45:05.399Z",
-      "dias": 3
+      "dias": 4
     },
     {
       "slug": "optimist-jeans",
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 16
+      "dias": 17
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -418,7 +418,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-26T19:04:19.305Z",
       "ultimo": "2026-10-26T19:04:19.305Z",
-      "dias": 19
+      "dias": 20
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -436,7 +436,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-28T21:44:45.612Z",
       "ultimo": "2026-11-05T19:21:55.784Z",
-      "dias": 9
+      "dias": 10
     },
     {
       "slug": "company:a4154b83-2d22-4fe3-b3bd-98f045fa2718",
@@ -803,7 +803,7 @@ window.DADOS = {
           "envios": 7,
           "primeiro": "2026-08-13T17:14:37.157Z",
           "ultimo": "2026-11-11T18:45:05.399Z",
-          "dias": 3,
+          "dias": 4,
           "produtos_medidos": 6,
           "atribuido": 0
         },
@@ -1003,7 +1003,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 16,
+          "dias": 17,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1023,7 +1023,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-26T19:04:19.305Z",
           "ultimo": "2026-10-26T19:04:19.305Z",
-          "dias": 19,
+          "dias": 20,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1043,7 +1043,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-28T21:44:45.612Z",
           "ultimo": "2026-11-05T19:21:55.784Z",
-          "dias": 9,
+          "dias": 10,
           "produtos_medidos": 0,
           "atribuido": 0
         },
