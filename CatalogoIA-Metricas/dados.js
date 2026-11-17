@@ -1,6 +1,6 @@
 window.DADOS = {
-  "gerado_em": "2026-11-16T21:28:43.272Z",
-  "hoje": "2026-11-16",
+  "gerado_em": "2026-11-17T03:20:38.169Z",
+  "hoje": "2026-11-17",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
   "auto_publica_desde": "2026-08-10",
@@ -19,7 +19,7 @@ window.DADOS = {
     "com_conta": 11,
     "contas": 10,
     "produtos_total": 2680,
-    "produtos_7d": 204,
+    "produtos_7d": 200,
     "descricoes_total": 3410,
     "total_estimado": true
   },
@@ -86,7 +86,7 @@ window.DADOS = {
       "email": "nicoboco.shop@nicoboco.com.br",
       "produtos": 256,
       "estimado": false,
-      "produtos_7d": 4,
+      "produtos_7d": 3,
       "ativa": true,
       "acessos": 88,
       "buscas": 392,
@@ -122,7 +122,7 @@ window.DADOS = {
       "email": "missmilliebr@gmail.com",
       "produtos": 131,
       "estimado": true,
-      "produtos_7d": 11,
+      "produtos_7d": 8,
       "ativa": true,
       "acessos": 39,
       "buscas": 181,
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 17
+      "dias": 18
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -581,7 +581,7 @@ window.DADOS = {
         "com_conta": 11,
         "contas": 10,
         "produtos_total": 2291,
-        "produtos_7d": 188,
+        "produtos_7d": 184,
         "descricoes_total": 2777,
         "total_estimado": false,
         "produtos_atribuidos": 0
@@ -635,7 +635,7 @@ window.DADOS = {
           "email": "nicoboco.shop@nicoboco.com.br",
           "produtos": 255,
           "estimado": false,
-          "produtos_7d": 4,
+          "produtos_7d": 3,
           "ativa": true,
           "acessos": 79,
           "buscas": 352,
@@ -695,7 +695,7 @@ window.DADOS = {
           "email": "missmilliebr@gmail.com",
           "produtos": 52,
           "estimado": false,
-          "produtos_7d": 11,
+          "produtos_7d": 8,
           "ativa": true,
           "acessos": 22,
           "buscas": 77,
@@ -1003,7 +1003,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 17,
+          "dias": 18,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1398,7 +1398,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 88,
+          "dias": 89,
           "produtos_medidos": 0,
           "atribuido": 8
         },
