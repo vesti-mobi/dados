@@ -1,13 +1,13 @@
 {
-  "geradoEm": "2026-11-16T18:31:30.404162+00:00",
+  "geradoEm": "2026-11-17T11:01:38.158582+00:00",
   "reguaDias": 15,
   "semDominio": {
-    "qtFaturas": 51,
-    "valor": 38046.12,
+    "qtFaturas": 36,
+    "valor": 30283.45,
     "subcontas": {
-      "*Vesti - Uemtel*": 10,
-      "**VESTI**": 16,
-      "*Vesti Portal*": 22,
+      "*Vesti Portal*": 12,
+      "**VESTI**": 13,
+      "*Vesti - Uemtel*": 8,
       "*Vesti Setup*": 1,
       "*Vesti - Vê Vantanges*": 2
     }
@@ -16,7 +16,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 132,
+      "diasAtraso": 133,
       "vencimentoMaisAntigo": "2026-07-07",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/828158bc-1204-4846-835a-bd97b187b0e7-f414",
       "subcontas": [
@@ -25,7 +25,7 @@
       "faturas": [
         {
           "venc": "2026-07-07",
-          "dias": 132,
+          "dias": 133,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Vê Vantanges*",
@@ -44,7 +44,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 1125.0,
-      "diasAtraso": 42,
+      "diasAtraso": 43,
       "vencimentoMaisAntigo": "2026-10-05",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1888280a-cf5b-408a-98bf-d4123bafd4d1-1602",
       "subcontas": [
@@ -53,7 +53,7 @@
       "faturas": [
         {
           "venc": "2026-10-05",
-          "dias": 42,
+          "dias": 43,
           "valor": 1125.0,
           "status": "expired",
           "subconta": "*Vesti Setup*",
@@ -72,7 +72,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 33,
+      "diasAtraso": 34,
       "vencimentoMaisAntigo": "2026-10-14",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b9930cae-b1c0-48c3-98d5-66956aa109a2-8925",
       "subcontas": [
@@ -81,7 +81,7 @@
       "faturas": [
         {
           "venc": "2026-10-14",
-          "dias": 33,
+          "dias": 34,
           "valor": 429.0,
           "status": "expired",
           "subconta": "*Vesti - Uemtel*",
@@ -100,7 +100,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 819.0,
-      "diasAtraso": 32,
+      "diasAtraso": 33,
       "vencimentoMaisAntigo": "2026-10-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/2a66fdc4-d349-4b0f-8760-ec6fd086d120-03dc",
       "subcontas": [
@@ -109,7 +109,7 @@
       "faturas": [
         {
           "venc": "2026-10-15",
-          "dias": 32,
+          "dias": 33,
           "valor": 819.0,
           "status": "expired",
           "subconta": "**VESTI**",
@@ -126,47 +126,19 @@
       "bloqueada": true
     },
     {
-      "qtFaturas": 1,
-      "valorEmAberto": 499.0,
-      "diasAtraso": 30,
-      "vencimentoMaisAntigo": "2026-10-17",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/2fedd134-11b2-4427-ad45-49e876dabacd-8794",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-10-17",
-          "dias": 30,
-          "valor": 499.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/2fedd134-11b2-4427-ad45-49e876dabacd-8794"
-        }
-      ],
-      "domain_id": "1613335",
-      "name": "Bekymiro",
-      "cs": "Elisa Marques",
-      "canal": "Parceiros",
-      "partner_raw": "Uemtel",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
       "qtFaturas": 2,
       "valorEmAberto": 1355.0,
-      "diasAtraso": 27,
+      "diasAtraso": 28,
       "vencimentoMaisAntigo": "2026-10-20",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/c960dee0-3ef2-4caa-a319-c84115ff1139-071b",
       "subcontas": [
-        "*Vesti Portal*",
-        "**VESTI**"
+        "**VESTI**",
+        "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-10-20",
-          "dias": 27,
+          "dias": 28,
           "valor": 1232.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -174,7 +146,7 @@
         },
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 123.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
@@ -193,7 +165,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 447.0,
-      "diasAtraso": 25,
+      "diasAtraso": 26,
       "vencimentoMaisAntigo": "2026-10-22",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/61e7c955-f694-44c7-ae1b-2e49c3785cbc-2d7e",
       "subcontas": [
@@ -202,7 +174,7 @@
       "faturas": [
         {
           "venc": "2026-10-22",
-          "dias": 25,
+          "dias": 26,
           "valor": 447.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*",
@@ -221,7 +193,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 1100.0,
-      "diasAtraso": 24,
+      "diasAtraso": 25,
       "vencimentoMaisAntigo": "2026-10-23",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/913262db-1a27-4b8f-9852-456e725887d1-1f77",
       "subcontas": [
@@ -230,7 +202,7 @@
       "faturas": [
         {
           "venc": "2026-10-23",
-          "dias": 24,
+          "dias": 25,
           "valor": 1100.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*",
@@ -249,7 +221,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 19,
+      "diasAtraso": 20,
       "vencimentoMaisAntigo": "2026-10-28",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9e48e6e7-a452-4f54-a26e-e969896934d0-100c",
       "subcontas": [
@@ -258,7 +230,7 @@
       "faturas": [
         {
           "venc": "2026-10-28",
-          "dias": 19,
+          "dias": 20,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*",
@@ -277,436 +249,7 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/83a904b2-6ab7-4c47-8a0e-88e957d3af5c-d695",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/83a904b2-6ab7-4c47-8a0e-88e957d3af5c-d695"
-        }
-      ],
-      "domain_id": "373114",
-      "name": "Alanis",
-      "cs": "N/A",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/2abf8cb8-67fc-4b4e-88a7-38833096d947-7b31",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/2abf8cb8-67fc-4b4e-88a7-38833096d947-7b31"
-        }
-      ],
-      "domain_id": "640649",
-      "name": "Oxo Paxo",
-      "cs": "Elisa Marques",
-      "canal": "Vesti",
-      "partner_raw": "Vesti",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 2,
-      "valorEmAberto": 1505.67,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/dcfdd60d-1764-46d6-8efd-2127cc75e9d3-6a00",
-      "subcontas": [
-        "**VESTI**",
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1124.67,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/dcfdd60d-1764-46d6-8efd-2127cc75e9d3-6a00"
-        },
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 381.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/7f010710-ccc8-4c5b-9cbe-838e8e7c4fa3-cbef"
-        }
-      ],
-      "domain_id": "313663",
-      "name": "Teste Karina Marketing",
-      "cs": "Shirley Silva",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['vendas', 'compras']}",
-      "bloqueada": false
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e0edec12-a181-4d99-b7e9-60d2829e2156-960b",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/e0edec12-a181-4d99-b7e9-60d2829e2156-960b"
-        }
-      ],
-      "domain_id": "143178",
-      "name": "Del Amo By Sofia",
-      "cs": "Shirley Silva",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f3db5777-28d6-4ce3-b47b-bf7d30125b50-27b5",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/f3db5777-28d6-4ce3-b47b-bf7d30125b50-27b5"
-        }
-      ],
-      "domain_id": "551944",
-      "name": "Kiki",
-      "cs": "Shirley Silva",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 225.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/45420ee3-171a-432c-aa12-bc9303a86498-4eb2",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 225.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/45420ee3-171a-432c-aa12-bc9303a86498-4eb2"
-        }
-      ],
-      "domain_id": "9162",
-      "name": "ESMERAL",
-      "cs": "N/A",
-      "canal": "Parceiros",
-      "partner_raw": "N/A",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/db491206-9364-4f29-9a5a-f22bb01f8b66-506c",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/db491206-9364-4f29-9a5a-f22bb01f8b66-506c"
-        }
-      ],
-      "domain_id": "187592",
-      "name": "Chesed",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/c86929f2-a41b-4e85-8906-db6f8f05ab9d-40c3",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/c86929f2-a41b-4e85-8906-db6f8f05ab9d-40c3"
-        }
-      ],
-      "domain_id": "179596",
-      "name": "MIXXON",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b59e033c-dba4-44ae-9524-0a64d9e11d54-ce9e",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/b59e033c-dba4-44ae-9524-0a64d9e11d54-ce9e"
-        }
-      ],
-      "domain_id": "136820",
-      "name": "Minerale",
-      "cs": "Thamiris Ribeiro",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 120.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/57a6e144-e7cd-44e6-823b-e90b778f8fc7-74ca",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 120.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/57a6e144-e7cd-44e6-823b-e90b778f8fc7-74ca"
-        }
-      ],
-      "domain_id": "918725",
-      "name": "Melina Teste",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/87f01ce5-8bac-4411-b610-0e33386574e1-2b10",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/87f01ce5-8bac-4411-b610-0e33386574e1-2b10"
-        }
-      ],
-      "domain_id": "722398",
-      "name": "Ytcom",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 2457.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/80fc5e5b-ab08-497e-a525-7be968659931-ad5f",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 2457.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/80fc5e5b-ab08-497e-a525-7be968659931-ad5f"
-        }
-      ],
-      "domain_id": "2145043",
-      "name": "Alex Yoo",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ec661dbf-7c4f-4225-b283-5cb819928e26-6881",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/ec661dbf-7c4f-4225-b283-5cb819928e26-6881"
-        }
-      ],
-      "domain_id": "166949",
-      "name": "Modawa",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 720.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/36ce578e-240d-4500-92a8-e327d2ed2630-5344",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 720.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/36ce578e-240d-4500-92a8-e327d2ed2630-5344"
-        }
-      ],
-      "domain_id": "1226342",
-      "name": "Gule Gule",
-      "cs": "",
-      "canal": "Parceiros",
-      "partner_raw": "",
-      "starter_interno": false,
-      "modulos": "{'modulos': ['compras']}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/37e7e386-e37e-4c94-a00c-41813846f40b-d724",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/37e7e386-e37e-4c94-a00c-41813846f40b-d724"
-        }
-      ],
-      "domain_id": "140433",
-      "name": "Lou Bucca",
-      "cs": "N/A",
-      "canal": "Parceiros",
-      "partner_raw": "Attasoft",
-      "starter_interno": false,
-      "modulos": "{'modulos': []}",
-      "bloqueada": true
-    },
-    {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/4f11c5b7-c445-4711-9388-e1d88d82cbb9-a50f",
       "subcontas": [
@@ -715,7 +258,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 60.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
@@ -734,1335 +277,205 @@
     {
       "qtFaturas": 1,
       "valorEmAberto": 60.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/8fba7e95-605c-441e-87ba-b9ee58850b4e-2453",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ec661dbf-7c4f-4225-b283-5cb819928e26-6881",
       "subcontas": [
         "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 60.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/8fba7e95-605c-441e-87ba-b9ee58850b4e-2453"
+          "link": "https://checkout.iugu.com/invoices/ec661dbf-7c4f-4225-b283-5cb819928e26-6881"
         }
       ],
-      "domain_id": "146795",
-      "name": "Vitral",
+      "domain_id": "166949",
+      "name": "Modawa",
+      "cs": "",
+      "canal": "Parceiros",
+      "partner_raw": "Attasoft",
+      "starter_interno": false,
+      "modulos": "{'modulos': []}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/37e7e386-e37e-4c94-a00c-41813846f40b-d724",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/37e7e386-e37e-4c94-a00c-41813846f40b-d724"
+        }
+      ],
+      "domain_id": "140433",
+      "name": "Lou Bucca",
       "cs": "N/A",
       "canal": "Parceiros",
       "partner_raw": "Attasoft",
       "starter_interno": false,
+      "modulos": "{'modulos': []}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f3db5777-28d6-4ce3-b47b-bf7d30125b50-27b5",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/f3db5777-28d6-4ce3-b47b-bf7d30125b50-27b5"
+        }
+      ],
+      "domain_id": "551944",
+      "name": "Kiki",
+      "cs": "Shirley Silva",
+      "canal": "Parceiros",
+      "partner_raw": "Attasoft",
+      "starter_interno": false,
+      "modulos": "{'modulos': []}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 225.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/45420ee3-171a-432c-aa12-bc9303a86498-4eb2",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 225.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/45420ee3-171a-432c-aa12-bc9303a86498-4eb2"
+        }
+      ],
+      "domain_id": "9162",
+      "name": "ESMERAL",
+      "cs": "N/A",
+      "canal": "Parceiros",
+      "partner_raw": "N/A",
+      "starter_interno": false,
       "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/c86929f2-a41b-4e85-8906-db6f8f05ab9d-40c3",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/c86929f2-a41b-4e85-8906-db6f8f05ab9d-40c3"
+        }
+      ],
+      "domain_id": "179596",
+      "name": "MIXXON",
+      "cs": "",
+      "canal": "Parceiros",
+      "partner_raw": "",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 120.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/57a6e144-e7cd-44e6-823b-e90b778f8fc7-74ca",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 120.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/57a6e144-e7cd-44e6-823b-e90b778f8fc7-74ca"
+        }
+      ],
+      "domain_id": "918725",
+      "name": "Melina Teste",
+      "cs": "",
+      "canal": "Parceiros",
+      "partner_raw": "",
+      "starter_interno": false,
+      "modulos": "{'modulos': ['compras']}",
+      "bloqueada": true
+    },
+    {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b59e033c-dba4-44ae-9524-0a64d9e11d54-ce9e",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/b59e033c-dba4-44ae-9524-0a64d9e11d54-ce9e"
+        }
+      ],
+      "domain_id": "136820",
+      "name": "Minerale",
+      "cs": "Thamiris Ribeiro",
+      "canal": "Parceiros",
+      "partner_raw": "Attasoft",
+      "starter_interno": false,
+      "modulos": "{'modulos': []}",
       "bloqueada": true
     }
   ],
   "dominios": {
-    "1618300": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ccb325a1-7821-4267-8129-81213fe5bffc-16f7",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*",
-          "link": "https://checkout.iugu.com/invoices/ccb325a1-7821-4267-8129-81213fe5bffc-16f7"
-        }
-      ]
-    },
-    "813072": {
-      "qtFaturas": 2,
-      "valorEmAberto": 499.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/eda963b3-a2e5-4347-90f1-018eba4cc5df-361c",
-      "subcontas": [
-        "**VESTI**",
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 439.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/eda963b3-a2e5-4347-90f1-018eba4cc5df-361c"
-        },
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/416a9376-d8ce-4bee-819c-c40777fbfce7-245c"
-        }
-      ]
-    },
-    "187139": {
-      "qtFaturas": 1,
-      "valorEmAberto": 446.33,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/0f2a3ddf-02d3-4e1c-baf5-7ea397525721-3712",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 446.33,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/0f2a3ddf-02d3-4e1c-baf5-7ea397525721-3712"
-        }
-      ]
-    },
-    "139911": {
-      "qtFaturas": 1,
-      "valorEmAberto": 496.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f58a2264-5caa-4769-9886-555eb0b604d9-08f9",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 496.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f58a2264-5caa-4769-9886-555eb0b604d9-08f9"
-        }
-      ]
-    },
-    "1228753": {
-      "qtFaturas": 1,
-      "valorEmAberto": 756.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5c1d8012-81bb-4261-bb0a-c92094603d77-4fde",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 756.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/5c1d8012-81bb-4261-bb0a-c92094603d77-4fde"
-        }
-      ]
-    },
-    "57": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/78d28250-5061-4328-b1da-24fbbfd972ce-bf99",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/78d28250-5061-4328-b1da-24fbbfd972ce-bf99"
-        }
-      ]
-    },
-    "1071612": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6b668261-60b2-43d3-8da7-cd40f65d3913-969e",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/6b668261-60b2-43d3-8da7-cd40f65d3913-969e"
-        }
-      ]
-    },
-    "120695": {
-      "qtFaturas": 1,
-      "valorEmAberto": 380.67,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/83dcec84-be2f-4e6f-a8ab-f25bdfc8a1c9-3364",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 380.67,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/83dcec84-be2f-4e6f-a8ab-f25bdfc8a1c9-3364"
-        }
-      ]
-    },
-    "149926": {
-      "qtFaturas": 1,
-      "valorEmAberto": 627.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b99db229-aaaa-4309-bf62-31cb5741fe8f-08a4",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 627.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/b99db229-aaaa-4309-bf62-31cb5741fe8f-08a4"
-        }
-      ]
-    },
-    "42673": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ca838f13-99d4-4b09-8136-6ca8b88239d1-2c57",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/ca838f13-99d4-4b09-8136-6ca8b88239d1-2c57"
-        }
-      ]
-    },
-    "55829": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/cf6bc4dc-b8e1-4a6a-925a-0df700b98dee-fb5c",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/cf6bc4dc-b8e1-4a6a-925a-0df700b98dee-fb5c"
-        }
-      ]
-    },
-    "1213886": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1577.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5589b8c3-85ff-4fa2-b059-ccf3421da83d-81a3",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 1577.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/5589b8c3-85ff-4fa2-b059-ccf3421da83d-81a3"
-        }
-      ]
-    },
-    "449259": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1095.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/2410652d-22bc-4268-9e19-aade33ea830f-1408",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1095.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/2410652d-22bc-4268-9e19-aade33ea830f-1408"
-        }
-      ]
-    },
-    "35249": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/863eae4d-3c7f-484e-86d6-7e12735cf126-8f68",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/863eae4d-3c7f-484e-86d6-7e12735cf126-8f68"
-        }
-      ]
-    },
-    "913427": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/25b63a7d-0047-4386-a81a-5bfbed11d86f-2541",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/25b63a7d-0047-4386-a81a-5bfbed11d86f-2541"
-        }
-      ]
-    },
-    "175476": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ef64344f-c5ab-45cb-a7c4-f581b8584c98-cabb",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/ef64344f-c5ab-45cb-a7c4-f581b8584c98-cabb"
-        }
-      ]
-    },
-    "1123393": {
-      "qtFaturas": 1,
-      "valorEmAberto": 3272.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/51534d47-2f0b-47d6-b044-5c3e513a20d5-21d1",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 3272.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/51534d47-2f0b-47d6-b044-5c3e513a20d5-21d1"
-        }
-      ]
-    },
-    "650237": {
-      "qtFaturas": 1,
-      "valorEmAberto": 460.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/729e01ed-644b-4350-9413-923d13b47250-2058",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 460.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/729e01ed-644b-4350-9413-923d13b47250-2058"
-        }
-      ]
-    },
-    "2057805": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 29,
-      "vencimentoMaisAntigo": "2026-10-18",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/437f0bf2-69bb-44c1-b651-e16c7128a3b4-8aea",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-10-18",
-          "dias": 29,
-          "valor": 1100.0,
-          "status": "partially_paid",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/437f0bf2-69bb-44c1-b651-e16c7128a3b4-8aea"
-        }
-      ]
-    },
-    "812626": {
-      "qtFaturas": 1,
-      "valorEmAberto": 993.87,
-      "diasAtraso": 219,
-      "vencimentoMaisAntigo": "2026-04-11",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a06669e4-d777-47de-8ef6-6303df7069fa-6f9f",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-04-11",
-          "dias": 219,
-          "valor": 993.87,
-          "status": "partially_paid",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/a06669e4-d777-47de-8ef6-6303df7069fa-6f9f"
-        }
-      ]
-    },
-    "149183": {
-      "qtFaturas": 2,
-      "valorEmAberto": 1209.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/950c4237-9488-454d-80e5-74e6990c7669-bf62",
-      "subcontas": [
-        "*Vesti Portal*",
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/950c4237-9488-454d-80e5-74e6990c7669-bf62"
-        },
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/c3d1c1e8-e389-4dcb-9806-b4447387b052-dea2"
-        }
-      ]
-    },
-    "1029845": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/53d9678a-e0d1-408b-8139-06c0c705dcbc-58b7",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/53d9678a-e0d1-408b-8139-06c0c705dcbc-58b7"
-        }
-      ]
-    },
-    "1712269": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1425.33,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9d95f6ce-feeb-47ef-b0aa-f97d10f66be2-a544",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1425.33,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/9d95f6ce-feeb-47ef-b0aa-f97d10f66be2-a544"
-        }
-      ]
-    },
-    "107524": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/0d5724aa-4899-4a13-97bd-f7efd85bfacb-65b0",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1232.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/0d5724aa-4899-4a13-97bd-f7efd85bfacb-65b0"
-        }
-      ]
-    },
-    "23263": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/0bfe4faa-d3d5-406e-9bac-9c6b70cea850-3b06",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/0bfe4faa-d3d5-406e-9bac-9c6b70cea850-3b06"
-        }
-      ]
-    },
-    "448792": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1125.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/28901ae9-79c1-47fc-8385-9680a64dfa45-52b6",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1125.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/28901ae9-79c1-47fc-8385-9680a64dfa45-52b6"
-        }
-      ]
-    },
-    "1979643": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 10,
-      "vencimentoMaisAntigo": "2026-11-06",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3034e9dc-560e-4890-bda7-db925644e286-15ac",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-06",
-          "dias": 10,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/3034e9dc-560e-4890-bda7-db925644e286-15ac"
-        }
-      ]
-    },
-    "1661979": {
-      "qtFaturas": 1,
-      "valorEmAberto": 4544.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f26733e0-0145-42fd-a8e8-ad4ba2f8d177-a1ad",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 4544.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f26733e0-0145-42fd-a8e8-ad4ba2f8d177-a1ad"
-        }
-      ]
-    },
-    "152498": {
-      "qtFaturas": 1,
-      "valorEmAberto": 477.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/dc57e145-ff74-476e-82b4-3e51e756446f-880e",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 477.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/dc57e145-ff74-476e-82b4-3e51e756446f-880e"
-        }
-      ]
-    },
-    "27008": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1591.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e7680be5-e5ea-41ea-a953-1797ccd7b9d7-fb3e",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1591.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/e7680be5-e5ea-41ea-a953-1797ccd7b9d7-fb3e"
-        }
-      ]
-    },
-    "2191743": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1299.0,
-      "diasAtraso": 9,
-      "vencimentoMaisAntigo": "2026-11-07",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/decdc78f-7df4-4719-a08d-3da2c5c78dc8-e6b4",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-07",
-          "dias": 9,
-          "valor": 1299.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/decdc78f-7df4-4719-a08d-3da2c5c78dc8-e6b4"
-        }
-      ]
-    },
-    "141380": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1f6a8dc2-caaf-400c-8fb2-ef6f2c375dff-5a96",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/1f6a8dc2-caaf-400c-8fb2-ef6f2c375dff-5a96"
-        }
-      ]
-    },
-    "1080025": {
-      "qtFaturas": 1,
-      "valorEmAberto": 699.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-11-14",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f6be51ba-352b-404a-81c4-963c18135b13-061d",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-14",
-          "dias": 2,
-          "valor": 699.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f6be51ba-352b-404a-81c4-963c18135b13-061d"
-        }
-      ]
-    },
-    "1326489": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/92683148-7266-4a14-95b5-0e087168d19c-61df",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/92683148-7266-4a14-95b5-0e087168d19c-61df"
-        }
-      ]
-    },
-    "796597": {
-      "qtFaturas": 1,
-      "valorEmAberto": 255.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/7f257e9e-ecf1-4da6-8e0a-fb5848c0f578-b9b5",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 255.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/7f257e9e-ecf1-4da6-8e0a-fb5848c0f578-b9b5"
-        }
-      ]
-    },
-    "317316": {
-      "qtFaturas": 1,
-      "valorEmAberto": 571.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9d20c874-a6cf-4c6a-b9fe-1697acf45db8-26b7",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 571.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/9d20c874-a6cf-4c6a-b9fe-1697acf45db8-26b7"
-        }
-      ]
-    },
-    "261508": {
-      "qtFaturas": 1,
-      "valorEmAberto": 66.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6b53557e-0ea8-4681-9ed0-b074a48171f5-4a54",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 66.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/6b53557e-0ea8-4681-9ed0-b074a48171f5-4a54"
-        }
-      ]
-    },
-    "50487": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/74b5754a-3d08-49f7-91f8-3f0b1359098a-79c0",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/74b5754a-3d08-49f7-91f8-3f0b1359098a-79c0"
-        }
-      ]
-    },
-    "2090422": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f574a656-39dc-4bac-ad2e-42f377ffc21c-cb06",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*",
-          "link": "https://checkout.iugu.com/invoices/f574a656-39dc-4bac-ad2e-42f377ffc21c-cb06"
-        }
-      ]
-    },
-    "17894": {
-      "qtFaturas": 1,
-      "valorEmAberto": 490.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/abec6aba-f9de-43b3-8657-7a48f577e982-0032",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 490.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/abec6aba-f9de-43b3-8657-7a48f577e982-0032"
-        }
-      ]
-    },
-    "172199": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/14d6e80b-485e-4e95-a992-6e4cc60cc60e-5609",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/14d6e80b-485e-4e95-a992-6e4cc60cc60e-5609"
-        }
-      ]
-    },
-    "1943437": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5312b7c4-fd6c-44f7-8333-14e0a5dd99d3-fdd7",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/5312b7c4-fd6c-44f7-8333-14e0a5dd99d3-fdd7"
-        }
-      ]
-    },
-    "1791859": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 7,
-      "vencimentoMaisAntigo": "2026-11-09",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1bcbfd48-cab2-40b9-9cee-8da5942161b9-ed17",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-09",
-          "dias": 7,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/1bcbfd48-cab2-40b9-9cee-8da5942161b9-ed17"
-        }
-      ]
-    },
-    "117175": {
-      "qtFaturas": 1,
-      "valorEmAberto": 532.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/35a506dc-28e0-4d26-b05d-76e3bc820151-c3b9",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 532.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/35a506dc-28e0-4d26-b05d-76e3bc820151-c3b9"
-        }
-      ]
-    },
-    "1282081": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1761.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ae7d49d0-c477-404b-8318-8e31c6505691-3a42",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1761.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/ae7d49d0-c477-404b-8318-8e31c6505691-3a42"
-        }
-      ]
-    },
-    "660189": {
-      "qtFaturas": 1,
-      "valorEmAberto": 316.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/849896a3-0d28-4d6d-bcf5-ffb57f532062-92b4",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 316.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/849896a3-0d28-4d6d-bcf5-ffb57f532062-92b4"
-        }
-      ]
-    },
-    "1816615": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-11-10",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/41d90e1b-dbdb-4c9d-85b3-af250f9b6824-8327",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-10",
-          "dias": 6,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/41d90e1b-dbdb-4c9d-85b3-af250f9b6824-8327"
-        }
-      ]
-    },
-    "312379": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2073.25,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/92ee188c-b54c-42fa-8e50-c391efcf7065-2589",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 2073.25,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/92ee188c-b54c-42fa-8e50-c391efcf7065-2589"
-        }
-      ]
-    },
-    "23502": {
-      "qtFaturas": 1,
-      "valorEmAberto": 459.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9b46a180-f6a1-40a5-87a7-35ab9c27b2ac-0705",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 459.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/9b46a180-f6a1-40a5-87a7-35ab9c27b2ac-0705"
-        }
-      ]
-    },
-    "1812943": {
-      "qtFaturas": 1,
-      "valorEmAberto": 447.0,
-      "diasAtraso": 9,
-      "vencimentoMaisAntigo": "2026-11-07",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bb393acf-6bf8-4365-8e8d-dff6cb75f652-57a3",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-07",
-          "dias": 9,
-          "valor": 447.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/bb393acf-6bf8-4365-8e8d-dff6cb75f652-57a3"
-        }
-      ]
-    },
-    "957264": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2075.0,
-      "diasAtraso": 236,
-      "vencimentoMaisAntigo": "2026-03-25",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/76488ac1-3b66-43e3-9559-6192e9b834c1-ddae",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-03-25",
-          "dias": 236,
-          "valor": 2075.0,
-          "status": "partially_paid",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/76488ac1-3b66-43e3-9559-6192e9b834c1-ddae"
-        }
-      ]
-    },
-    "145706": {
-      "qtFaturas": 1,
-      "valorEmAberto": 505.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a009a2f5-661e-495e-98b0-7e488d2f05fb-90f3",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 505.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/a009a2f5-661e-495e-98b0-7e488d2f05fb-90f3"
-        }
-      ]
-    },
-    "1140146": {
-      "qtFaturas": 1,
-      "valorEmAberto": 285.0,
-      "diasAtraso": 11,
-      "vencimentoMaisAntigo": "2026-11-05",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/379d09a1-2be0-4ec3-9778-c3481ab38c53-fa65",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-05",
-          "dias": 11,
-          "valor": 285.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/379d09a1-2be0-4ec3-9778-c3481ab38c53-fa65"
-        }
-      ]
-    },
-    "1613705": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 8,
-      "vencimentoMaisAntigo": "2026-11-08",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/15f444f0-85b6-4001-ac07-5d2f0f379cf1-8d0d",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-08",
-          "dias": 8,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/15f444f0-85b6-4001-ac07-5d2f0f379cf1-8d0d"
-        }
-      ]
-    },
-    "106130": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/99349b38-b8a0-48b5-81d1-9fc569b10339-5847",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/99349b38-b8a0-48b5-81d1-9fc569b10339-5847"
-        }
-      ]
-    },
-    "2176855": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-11-10",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3a117499-e0c8-413e-9e63-ab736e2815c4-7699",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-10",
-          "dias": 6,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/3a117499-e0c8-413e-9e63-ab736e2815c4-7699"
-        }
-      ]
-    },
-    "44388": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9b248126-9fce-44d9-9188-8044c11fe432-ceb1",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/9b248126-9fce-44d9-9188-8044c11fe432-ceb1"
-        }
-      ]
-    },
-    "276241": {
-      "qtFaturas": 1,
-      "valorEmAberto": 285.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/67d2baf8-111f-4c1f-b219-25d4f0d0f967-e11b",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 285.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/67d2baf8-111f-4c1f-b219-25d4f0d0f967-e11b"
-        }
-      ]
-    },
-    "1069425": {
-      "qtFaturas": 1,
-      "valorEmAberto": 699.0,
-      "diasAtraso": 7,
-      "vencimentoMaisAntigo": "2026-11-09",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/41dbb250-858c-4232-8cb7-6975009c9ca6-7492",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-09",
-          "dias": 7,
-          "valor": 699.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/41dbb250-858c-4232-8cb7-6975009c9ca6-7492"
-        }
-      ]
-    },
-    "1659718": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/025644a5-8734-4951-b796-6fd4cc607a4e-8594",
-      "subcontas": [
-        "*Vesti Starter*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti Starter*",
-          "link": "https://checkout.iugu.com/invoices/025644a5-8734-4951-b796-6fd4cc607a4e-8594"
-        }
-      ]
-    },
-    "1389025": {
-      "qtFaturas": 1,
-      "valorEmAberto": 99.9,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-11-13",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3d03d061-dc35-433d-9f9c-4a60cccf107e-fc24",
-      "subcontas": [
-        "*Vesti - Multimarcas*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-13",
-          "dias": 3,
-          "valor": 99.9,
-          "status": "pending",
-          "subconta": "*Vesti - Multimarcas*",
-          "link": "https://checkout.iugu.com/invoices/3d03d061-dc35-433d-9f9c-4a60cccf107e-fc24"
-        }
-      ]
-    },
-    "2041369": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/74d31e56-ae08-4ba6-87a6-52044e58e1d2-a999",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/74d31e56-ae08-4ba6-87a6-52044e58e1d2-a999"
-        }
-      ]
-    },
-    "970563": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d29da55d-47db-482d-b0fc-2e2e0a7435ec-0dd5",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/d29da55d-47db-482d-b0fc-2e2e0a7435ec-0dd5"
-        }
-      ]
-    },
-    "2190389": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1000.0,
-      "diasAtraso": 184,
-      "vencimentoMaisAntigo": "2026-05-16",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d382abf3-68e5-43e7-8923-e4581ba90a6d-c487",
-      "subcontas": [
-        "*Vesti Setup*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-05-16",
-          "dias": 184,
-          "valor": 1000.0,
-          "status": "partially_paid",
-          "subconta": "*Vesti Setup*",
-          "link": "https://checkout.iugu.com/invoices/d382abf3-68e5-43e7-8923-e4581ba90a6d-c487"
-        }
-      ]
-    },
     "503164": {
       "qtFaturas": 1,
       "valorEmAberto": 1577.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a2a25b38-4096-4b04-8c16-bd48a706c698-df1c",
       "subcontas": [
@@ -2071,7 +484,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 1577.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -2079,350 +492,110 @@
         }
       ]
     },
-    "949606": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ef8caa8b-f460-4a0a-800d-81e468916b19-e968",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/ef8caa8b-f460-4a0a-800d-81e468916b19-e968"
-        }
-      ]
-    },
-    "117968": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/37425599-381f-466e-b1c5-66175e1f3163-4b3e",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/37425599-381f-466e-b1c5-66175e1f3163-4b3e"
-        }
-      ]
-    },
-    "218207": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1232.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e1e41f94-68ca-4898-9450-d347083a0b70-83d1",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1232.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/e1e41f94-68ca-4898-9450-d347083a0b70-83d1"
-        }
-      ]
-    },
-    "1078045": {
-      "qtFaturas": 1,
-      "valorEmAberto": 555.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6571de55-9e6c-4f53-9468-937bada1843a-1a1c",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 555.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/6571de55-9e6c-4f53-9468-937bada1843a-1a1c"
-        }
-      ]
-    },
-    "1069542": {
-      "qtFaturas": 1,
-      "valorEmAberto": 843.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/10d071ca-f658-46a3-a8a5-d5622e548291-6ef4",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 843.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/10d071ca-f658-46a3-a8a5-d5622e548291-6ef4"
-        }
-      ]
-    },
-    "1191066": {
-      "qtFaturas": 1,
-      "valorEmAberto": 724.0,
-      "diasAtraso": 10,
-      "vencimentoMaisAntigo": "2026-11-06",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-06",
-          "dias": 10,
-          "valor": 724.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f"
-        }
-      ]
-    },
-    "25174": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1048.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b75f3a78-c79c-4551-9258-106715a5505a-229a",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1048.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/b75f3a78-c79c-4551-9258-106715a5505a-229a"
-        }
-      ]
-    },
-    "74170": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/26ad25b1-94e9-475b-a179-da0313ab5cff-5e10",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/26ad25b1-94e9-475b-a179-da0313ab5cff-5e10"
-        }
-      ]
-    },
-    "135667": {
+    "147683": {
       "qtFaturas": 1,
       "valorEmAberto": 444.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f262cf1a-2267-4366-8a74-9c80f411e49f-c4a4",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/c313e617-6605-433a-97f2-8ac59c1e19fb-ef31",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 444.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f262cf1a-2267-4366-8a74-9c80f411e49f-c4a4"
+          "link": "https://checkout.iugu.com/invoices/c313e617-6605-433a-97f2-8ac59c1e19fb-ef31"
         }
       ]
     },
-    "97262": {
+    "141380": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/249620fd-ab56-4788-a189-a6cbf698acfa-1622",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1f6a8dc2-caaf-400c-8fb2-ef6f2c375dff-5a96",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
+          "dias": 2,
+          "valor": 1149.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/249620fd-ab56-4788-a189-a6cbf698acfa-1622"
+          "link": "https://checkout.iugu.com/invoices/1f6a8dc2-caaf-400c-8fb2-ef6f2c375dff-5a96"
         }
       ]
     },
-    "809980": {
-      "qtFaturas": 1,
-      "valorEmAberto": 756.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1a7caca7-03b6-4d23-804a-e03a8994d2d2-dfbf",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 756.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/1a7caca7-03b6-4d23-804a-e03a8994d2d2-dfbf"
-        }
-      ]
-    },
-    "1628897": {
-      "qtFaturas": 1,
-      "valorEmAberto": 780.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/10e86d95-2e29-409c-8d4b-61c079c2a17a-a222",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 780.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/10e86d95-2e29-409c-8d4b-61c079c2a17a-a222"
-        }
-      ]
-    },
-    "2071752": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ca7b2547-fa9d-454a-93be-beac8ac52c6a-3246",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/ca7b2547-fa9d-454a-93be-beac8ac52c6a-3246"
-        }
-      ]
-    },
-    "222252": {
-      "qtFaturas": 1,
-      "valorEmAberto": 2216.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3a07198d-8a89-42fe-a6b2-70c9f95d0823-1c61",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 2216.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/3a07198d-8a89-42fe-a6b2-70c9f95d0823-1c61"
-        }
-      ]
-    },
-    "1420548": {
-      "qtFaturas": 1,
-      "valorEmAberto": 499.0,
-      "diasAtraso": 7,
-      "vencimentoMaisAntigo": "2026-11-09",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d752c5d2-ec1b-4f7e-85b8-dea0d8bfcbd7-40dc",
-      "subcontas": [
-        "*Vesti - Uemtel*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-09",
-          "dias": 7,
-          "valor": 499.0,
-          "status": "pending",
-          "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/d752c5d2-ec1b-4f7e-85b8-dea0d8bfcbd7-40dc"
-        }
-      ]
-    },
-    "323816": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1095.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/166990ff-ede8-4d8e-831e-d28bdfe1bb3b-2227",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1095.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/166990ff-ede8-4d8e-831e-d28bdfe1bb3b-2227"
-        }
-      ]
-    },
-    "26986": {
+    "1326489": {
       "qtFaturas": 1,
       "valorEmAberto": 60.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/4e618aa8-880e-4477-8411-777fa8c1a790-78bb",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/92683148-7266-4a14-95b5-0e087168d19c-61df",
       "subcontas": [
         "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 60.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/4e618aa8-880e-4477-8411-777fa8c1a790-78bb"
+          "link": "https://checkout.iugu.com/invoices/92683148-7266-4a14-95b5-0e087168d19c-61df"
+        }
+      ]
+    },
+    "55829": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/cf6bc4dc-b8e1-4a6a-925a-0df700b98dee-fb5c",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 296.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/cf6bc4dc-b8e1-4a6a-925a-0df700b98dee-fb5c"
+        }
+      ]
+    },
+    "261508": {
+      "qtFaturas": 1,
+      "valorEmAberto": 66.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6b53557e-0ea8-4681-9ed0-b074a48171f5-4a54",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 66.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/6b53557e-0ea8-4681-9ed0-b074a48171f5-4a54"
         }
       ]
     },
     "16265": {
       "qtFaturas": 1,
       "valorEmAberto": 285.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/8fd10416-05c3-4fb3-9d45-dc22add32378-fff5",
       "subcontas": [
@@ -2431,7 +604,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 285.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
@@ -2439,110 +612,50 @@
         }
       ]
     },
-    "894067": {
-      "qtFaturas": 1,
-      "valorEmAberto": 307.37,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/15fcbb83-5bd7-4ef6-b694-e4090c212a9b-6233",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 307.37,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/15fcbb83-5bd7-4ef6-b694-e4090c212a9b-6233"
-        }
-      ]
-    },
-    "127618": {
+    "35249": {
       "qtFaturas": 1,
       "valorEmAberto": 444.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e5ddf31e-b298-429d-be32-d970042ca97d-642a",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/863eae4d-3c7f-484e-86d6-7e12735cf126-8f68",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 444.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/e5ddf31e-b298-429d-be32-d970042ca97d-642a"
+          "link": "https://checkout.iugu.com/invoices/863eae4d-3c7f-484e-86d6-7e12735cf126-8f68"
         }
       ]
     },
-    "82263": {
+    "1816615": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bbfde2e5-7b7b-4a33-accc-a5c6a86969d6-2e06",
+      "valorEmAberto": 429.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-11-10",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/41d90e1b-dbdb-4c9d-85b3-af250f9b6824-8327",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
+          "venc": "2026-11-10",
+          "dias": 7,
+          "valor": 429.0,
           "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/bbfde2e5-7b7b-4a33-accc-a5c6a86969d6-2e06"
-        }
-      ]
-    },
-    "240758": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/df1e8257-0e31-4c9f-9f0c-dd0aadc2b3d5-d1ea",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/df1e8257-0e31-4c9f-9f0c-dd0aadc2b3d5-d1ea"
-        }
-      ]
-    },
-    "757564": {
-      "qtFaturas": 1,
-      "valorEmAberto": 945.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/cd27eeda-0e4b-4246-9424-1c438c312e8e-a5b9",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 945.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/cd27eeda-0e4b-4246-9424-1c438c312e8e-a5b9"
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/41d90e1b-dbdb-4c9d-85b3-af250f9b6824-8327"
         }
       ]
     },
     "768796": {
       "qtFaturas": 1,
       "valorEmAberto": 612.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e0a84ec0-d526-446a-90a4-9c359bb00dfa-51db",
       "subcontas": [
@@ -2551,7 +664,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 612.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -2559,70 +672,70 @@
         }
       ]
     },
-    "288450": {
+    "1812943": {
       "qtFaturas": 1,
-      "valorEmAberto": 1561.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/37de412b-32f4-44cb-a313-670d6bb60a72-6278",
+      "valorEmAberto": 447.0,
+      "diasAtraso": 10,
+      "vencimentoMaisAntigo": "2026-11-07",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bb393acf-6bf8-4365-8e8d-dff6cb75f652-57a3",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1561.0,
+          "venc": "2026-11-07",
+          "dias": 10,
+          "valor": 447.0,
           "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/37de412b-32f4-44cb-a313-670d6bb60a72-6278"
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/bb393acf-6bf8-4365-8e8d-dff6cb75f652-57a3"
         }
       ]
     },
-    "45777": {
+    "812626": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/8119e6c6-002d-4757-99ac-fec7a615a5d3-a61c",
+      "valorEmAberto": 993.87,
+      "diasAtraso": 220,
+      "vencimentoMaisAntigo": "2026-04-11",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a06669e4-d777-47de-8ef6-6303df7069fa-6f9f",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
+          "venc": "2026-04-11",
+          "dias": 220,
+          "valor": 993.87,
+          "status": "partially_paid",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/8119e6c6-002d-4757-99ac-fec7a615a5d3-a61c"
+          "link": "https://checkout.iugu.com/invoices/a06669e4-d777-47de-8ef6-6303df7069fa-6f9f"
         }
       ]
     },
-    "123613": {
+    "139911": {
       "qtFaturas": 1,
-      "valorEmAberto": 671.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 496.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/45796038-f644-46ef-aa8d-6effd785e2f3-eab3",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f58a2264-5caa-4769-9886-555eb0b604d9-08f9",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 671.0,
+          "dias": 2,
+          "valor": 496.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/45796038-f644-46ef-aa8d-6effd785e2f3-eab3"
+          "link": "https://checkout.iugu.com/invoices/f58a2264-5caa-4769-9886-555eb0b604d9-08f9"
         }
       ]
     },
     "1623082": {
       "qtFaturas": 1,
       "valorEmAberto": 447.0,
-      "diasAtraso": 10,
+      "diasAtraso": 11,
       "vencimentoMaisAntigo": "2026-11-06",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ffd2247c-8484-49bb-888c-553b25d0111c-b41f",
       "subcontas": [
@@ -2631,7 +744,7 @@
       "faturas": [
         {
           "venc": "2026-11-06",
-          "dias": 10,
+          "dias": 11,
           "valor": 447.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*",
@@ -2639,130 +752,199 @@
         }
       ]
     },
-    "451968": {
+    "809980": {
       "qtFaturas": 1,
-      "valorEmAberto": 766.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 756.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9fdcac73-bde9-41ff-8c3e-fe18f666f954-c75f",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1a7caca7-03b6-4d23-804a-e03a8994d2d2-dfbf",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 766.0,
+          "dias": 2,
+          "valor": 756.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/9fdcac73-bde9-41ff-8c3e-fe18f666f954-c75f"
+          "link": "https://checkout.iugu.com/invoices/1a7caca7-03b6-4d23-804a-e03a8994d2d2-dfbf"
         }
       ]
     },
-    "145277": {
+    "144574": {
       "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 1002.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/42be03a0-778c-438d-b93f-9f41c1a994d1-c4f0",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bc3675d6-a120-4a9d-83d1-f9f48ef200ff-268a",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1149.0,
+          "dias": 2,
+          "valor": 1002.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/42be03a0-778c-438d-b93f-9f41c1a994d1-c4f0"
+          "link": "https://checkout.iugu.com/invoices/bc3675d6-a120-4a9d-83d1-f9f48ef200ff-268a"
         }
       ]
     },
-    "2147903": {
+    "757564": {
       "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 4,
-      "vencimentoMaisAntigo": "2026-11-12",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b63f7a40-388a-4834-a57b-c88976056182-1054",
+      "valorEmAberto": 945.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/cd27eeda-0e4b-4246-9424-1c438c312e8e-a5b9",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti Portal*"
       ],
       "faturas": [
         {
-          "venc": "2026-11-12",
-          "dias": 4,
-          "valor": 1100.0,
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 945.0,
           "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/b63f7a40-388a-4834-a57b-c88976056182-1054"
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/cd27eeda-0e4b-4246-9424-1c438c312e8e-a5b9"
         }
       ]
     },
-    "1300009": {
+    "1029845": {
       "qtFaturas": 1,
       "valorEmAberto": 793.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/4e4c5b30-fdf8-4f7e-ad2c-931c0b43b2ca-66ca",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/53d9678a-e0d1-408b-8139-06c0c705dcbc-58b7",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 793.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/4e4c5b30-fdf8-4f7e-ad2c-931c0b43b2ca-66ca"
+          "link": "https://checkout.iugu.com/invoices/53d9678a-e0d1-408b-8139-06c0c705dcbc-58b7"
         }
       ]
     },
-    "164034": {
+    "202785": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d6774f28-e3ed-498e-b87c-5070466e56b3-baec",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f0f50acb-c43d-4209-976b-c08369b9fe37-72ac",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/f0f50acb-c43d-4209-976b-c08369b9fe37-72ac"
+        }
+      ]
+    },
+    "1069425": {
+      "qtFaturas": 1,
+      "valorEmAberto": 699.0,
+      "diasAtraso": 8,
+      "vencimentoMaisAntigo": "2026-11-09",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/41dbb250-858c-4232-8cb7-6975009c9ca6-7492",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
+          "venc": "2026-11-09",
+          "dias": 8,
+          "valor": 699.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/d6774f28-e3ed-498e-b87c-5070466e56b3-baec"
+          "link": "https://checkout.iugu.com/invoices/41dbb250-858c-4232-8cb7-6975009c9ca6-7492"
         }
       ]
     },
-    "893740": {
+    "2057805": {
       "qtFaturas": 1,
-      "valorEmAberto": 955.67,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/95120cc2-a166-4008-bf02-da1f10cd7995-b1d9",
+      "valorEmAberto": 1100.0,
+      "diasAtraso": 30,
+      "vencimentoMaisAntigo": "2026-10-18",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/437f0bf2-69bb-44c1-b651-e16c7128a3b4-8aea",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
+          "venc": "2026-10-18",
+          "dias": 30,
+          "valor": 1100.0,
+          "status": "partially_paid",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/437f0bf2-69bb-44c1-b651-e16c7128a3b4-8aea"
+        }
+      ]
+    },
+    "2176855": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-11-10",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3a117499-e0c8-413e-9e63-ab736e2815c4-7699",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-10",
+          "dias": 7,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/3a117499-e0c8-413e-9e63-ab736e2815c4-7699"
+        }
+      ]
+    },
+    "27404": {
+      "qtFaturas": 2,
+      "valorEmAberto": 776.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5c1558aa-510d-4278-8252-2cb456c00fcd-444f",
+      "subcontas": [
+        "**VESTI**",
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 955.67,
+          "dias": 2,
+          "valor": 461.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/95120cc2-a166-4008-bf02-da1f10cd7995-b1d9"
+          "link": "https://checkout.iugu.com/invoices/5c1558aa-510d-4278-8252-2cb456c00fcd-444f"
+        },
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 315.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/e3cabe6b-c4c4-4196-8c77-3aa876929ff6-e475"
         }
       ]
     },
     "1859835": {
       "qtFaturas": 1,
       "valorEmAberto": 447.0,
-      "diasAtraso": 3,
+      "diasAtraso": 4,
       "vencimentoMaisAntigo": "2026-11-13",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6cfc6636-45a3-41e2-adf7-ca679ad8a320-56bd",
       "subcontas": [
@@ -2771,7 +953,7 @@
       "faturas": [
         {
           "venc": "2026-11-13",
-          "dias": 3,
+          "dias": 4,
           "valor": 447.0,
           "status": "pending",
           "subconta": "*Vesti Starter*",
@@ -2782,7 +964,7 @@
     "1365858": {
       "qtFaturas": 1,
       "valorEmAberto": 780.0,
-      "diasAtraso": 3,
+      "diasAtraso": 4,
       "vencimentoMaisAntigo": "2026-11-13",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/91e8edf6-6458-4138-aec9-e62511e1cac2-f41e",
       "subcontas": [
@@ -2791,7 +973,7 @@
       "faturas": [
         {
           "venc": "2026-11-13",
-          "dias": 3,
+          "dias": 4,
           "valor": 780.0,
           "status": "pending",
           "subconta": "*Vesti Starter*",
@@ -2799,119 +981,750 @@
         }
       ]
     },
-    "147683": {
+    "27008": {
       "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 1591.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/c313e617-6605-433a-97f2-8ac59c1e19fb-ef31",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e7680be5-e5ea-41ea-a953-1797ccd7b9d7-fb3e",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
+          "dias": 2,
+          "valor": 1591.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/c313e617-6605-433a-97f2-8ac59c1e19fb-ef31"
+          "link": "https://checkout.iugu.com/invoices/e7680be5-e5ea-41ea-a953-1797ccd7b9d7-fb3e"
         }
       ]
     },
-    "67489": {
-      "qtFaturas": 2,
-      "valorEmAberto": 371.0,
-      "diasAtraso": 1,
+    "48997": {
+      "qtFaturas": 1,
+      "valorEmAberto": 706.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e3e10df3-924b-4846-adff-be736d91df59-9436",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f765a9c7-4ec9-485c-a6a7-e4eb7eb91e63-c25f",
       "subcontas": [
-        "*Vesti Portal*",
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 75.0,
+          "dias": 2,
+          "valor": 706.0,
           "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/e3e10df3-924b-4846-adff-be736d91df59-9436"
-        },
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/f765a9c7-4ec9-485c-a6a7-e4eb7eb91e63-c25f"
+        }
+      ]
+    },
+    "1791859": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 8,
+      "vencimentoMaisAntigo": "2026-11-09",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1bcbfd48-cab2-40b9-9cee-8da5942161b9-ed17",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-09",
+          "dias": 8,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/1bcbfd48-cab2-40b9-9cee-8da5942161b9-ed17"
+        }
+      ]
+    },
+    "1637820": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-11-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/0d9bafba-2ecc-4640-9800-b3ee5736dd78-cc32",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-16",
+          "dias": 1,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/0d9bafba-2ecc-4640-9800-b3ee5736dd78-cc32"
+        }
+      ]
+    },
+    "82263": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bbfde2e5-7b7b-4a33-accc-a5c6a86969d6-2e06",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 296.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/cea3151e-80ab-4233-bd41-9a9903649bd9-db1c"
+          "link": "https://checkout.iugu.com/invoices/bbfde2e5-7b7b-4a33-accc-a5c6a86969d6-2e06"
         }
       ]
     },
-    "103213": {
+    "288450": {
       "qtFaturas": 1,
-      "valorEmAberto": 225.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 1561.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a6908fa9-d328-4371-b7f8-cef11c7c0bc9-c6c8",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 225.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/a6908fa9-d328-4371-b7f8-cef11c7c0bc9-c6c8"
-        }
-      ]
-    },
-    "145165": {
-      "qtFaturas": 1,
-      "valorEmAberto": 472.67,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/96ad68e7-bf5d-44f9-9cf1-bbc44685e64c-3081",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/37de412b-32f4-44cb-a313-670d6bb60a72-6278",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 472.67,
+          "dias": 2,
+          "valor": 1561.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/96ad68e7-bf5d-44f9-9cf1-bbc44685e64c-3081"
+          "link": "https://checkout.iugu.com/invoices/37de412b-32f4-44cb-a313-670d6bb60a72-6278"
         }
       ]
     },
-    "1833521": {
+    "1637938": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-11-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/fe88f105-cd00-4bdc-9b8f-91df23586c57-5c5b",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-16",
+          "dias": 1,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/fe88f105-cd00-4bdc-9b8f-91df23586c57-5c5b"
+        }
+      ]
+    },
+    "152498": {
+      "qtFaturas": 1,
+      "valorEmAberto": 477.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/dc57e145-ff74-476e-82b4-3e51e756446f-880e",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 477.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/dc57e145-ff74-476e-82b4-3e51e756446f-880e"
+        }
+      ]
+    },
+    "145277": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/42be03a0-778c-438d-b93f-9f41c1a994d1-c4f0",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/42be03a0-778c-438d-b93f-9f41c1a994d1-c4f0"
+        }
+      ]
+    },
+    "172199": {
+      "qtFaturas": 1,
+      "valorEmAberto": 444.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/14d6e80b-485e-4e95-a992-6e4cc60cc60e-5609",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 444.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/14d6e80b-485e-4e95-a992-6e4cc60cc60e-5609"
+        }
+      ]
+    },
+    "93281": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/7d4bab6f-58a9-436e-b5af-dfdf033a6435-021f",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 296.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/7d4bab6f-58a9-436e-b5af-dfdf033a6435-021f"
+        }
+      ]
+    },
+    "276241": {
+      "qtFaturas": 1,
+      "valorEmAberto": 285.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/67d2baf8-111f-4c1f-b219-25d4f0d0f967-e11b",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 285.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/67d2baf8-111f-4c1f-b219-25d4f0d0f967-e11b"
+        }
+      ]
+    },
+    "124451": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-11-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/61cf45e5-b087-44f4-bfab-5341aedab932-a67a",
+      "subcontas": [
+        "*Vesti - Atta*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-16",
+          "dias": 1,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Atta*",
+          "link": "https://checkout.iugu.com/invoices/61cf45e5-b087-44f4-bfab-5341aedab932-a67a"
+        }
+      ]
+    },
+    "1618300": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/ccb325a1-7821-4267-8129-81213fe5bffc-16f7",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*",
+          "link": "https://checkout.iugu.com/invoices/ccb325a1-7821-4267-8129-81213fe5bffc-16f7"
+        }
+      ]
+    },
+    "72934": {
+      "qtFaturas": 1,
+      "valorEmAberto": 499.0,
+      "diasAtraso": 4,
+      "vencimentoMaisAntigo": "2026-11-13",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/22f4678d-f7ac-47b2-8f49-08684c57a5a6-843a",
+      "subcontas": [
+        "*Vesti - Atta*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-13",
+          "dias": 4,
+          "valor": 499.0,
+          "status": "pending",
+          "subconta": "*Vesti - Atta*",
+          "link": "https://checkout.iugu.com/invoices/22f4678d-f7ac-47b2-8f49-08684c57a5a6-843a"
+        }
+      ]
+    },
+    "1228753": {
+      "qtFaturas": 1,
+      "valorEmAberto": 756.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5c1d8012-81bb-4261-bb0a-c92094603d77-4fde",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 756.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/5c1d8012-81bb-4261-bb0a-c92094603d77-4fde"
+        }
+      ]
+    },
+    "57": {
       "qtFaturas": 1,
       "valorEmAberto": 60.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b0189f95-f10d-40b0-bf9e-fc38953799b7-d674",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/78d28250-5061-4328-b1da-24fbbfd972ce-bf99",
       "subcontas": [
         "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 60.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/b0189f95-f10d-40b0-bf9e-fc38953799b7-d674"
+          "link": "https://checkout.iugu.com/invoices/78d28250-5061-4328-b1da-24fbbfd972ce-bf99"
+        }
+      ]
+    },
+    "1389025": {
+      "qtFaturas": 1,
+      "valorEmAberto": 99.9,
+      "diasAtraso": 4,
+      "vencimentoMaisAntigo": "2026-11-13",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3d03d061-dc35-433d-9f9c-4a60cccf107e-fc24",
+      "subcontas": [
+        "*Vesti - Multimarcas*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-13",
+          "dias": 4,
+          "valor": 99.9,
+          "status": "pending",
+          "subconta": "*Vesti - Multimarcas*",
+          "link": "https://checkout.iugu.com/invoices/3d03d061-dc35-433d-9f9c-4a60cccf107e-fc24"
+        }
+      ]
+    },
+    "317316": {
+      "qtFaturas": 1,
+      "valorEmAberto": 571.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9d20c874-a6cf-4c6a-b9fe-1697acf45db8-26b7",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 571.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/9d20c874-a6cf-4c6a-b9fe-1697acf45db8-26b7"
+        }
+      ]
+    },
+    "2090422": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-11-12",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f574a656-39dc-4bac-ad2e-42f377ffc21c-cb06",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-12",
+          "dias": 5,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*",
+          "link": "https://checkout.iugu.com/invoices/f574a656-39dc-4bac-ad2e-42f377ffc21c-cb06"
+        }
+      ]
+    },
+    "1213886": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1577.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-11-12",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5589b8c3-85ff-4fa2-b059-ccf3421da83d-81a3",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-12",
+          "dias": 5,
+          "valor": 1577.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/5589b8c3-85ff-4fa2-b059-ccf3421da83d-81a3"
+        }
+      ]
+    },
+    "117175": {
+      "qtFaturas": 1,
+      "valorEmAberto": 532.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/35a506dc-28e0-4d26-b05d-76e3bc820151-c3b9",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 532.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/35a506dc-28e0-4d26-b05d-76e3bc820151-c3b9"
+        }
+      ]
+    },
+    "1652126": {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6f58b053-6c07-4e9a-b9cf-eaa5afbf7e5e-563f",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/6f58b053-6c07-4e9a-b9cf-eaa5afbf7e5e-563f"
+        }
+      ]
+    },
+    "2147903": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1100.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-11-12",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b63f7a40-388a-4834-a57b-c88976056182-1054",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-12",
+          "dias": 5,
+          "valor": 1100.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/b63f7a40-388a-4834-a57b-c88976056182-1054"
+        }
+      ]
+    },
+    "1566528": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 3,
+      "vencimentoMaisAntigo": "2026-11-14",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bbf73885-b729-4102-88a0-8adc96137a5f-9b23",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-14",
+          "dias": 3,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/bbf73885-b729-4102-88a0-8adc96137a5f-9b23"
+        }
+      ]
+    },
+    "913427": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/25b63a7d-0047-4386-a81a-5bfbed11d86f-2541",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/25b63a7d-0047-4386-a81a-5bfbed11d86f-2541"
+        }
+      ]
+    },
+    "240758": {
+      "qtFaturas": 1,
+      "valorEmAberto": 444.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/df1e8257-0e31-4c9f-9f0c-dd0aadc2b3d5-d1ea",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 444.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/df1e8257-0e31-4c9f-9f0c-dd0aadc2b3d5-d1ea"
+        }
+      ]
+    },
+    "1979643": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 11,
+      "vencimentoMaisAntigo": "2026-11-06",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/3034e9dc-560e-4890-bda7-db925644e286-15ac",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "dias": 11,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/3034e9dc-560e-4890-bda7-db925644e286-15ac"
+        }
+      ]
+    },
+    "23502": {
+      "qtFaturas": 1,
+      "valorEmAberto": 459.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9b46a180-f6a1-40a5-87a7-35ab9c27b2ac-0705",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 459.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/9b46a180-f6a1-40a5-87a7-35ab9c27b2ac-0705"
+        }
+      ]
+    },
+    "45777": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/8119e6c6-002d-4757-99ac-fec7a615a5d3-a61c",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 296.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/8119e6c6-002d-4757-99ac-fec7a615a5d3-a61c"
+        }
+      ]
+    },
+    "2109876": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-11-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5721edc3-3a84-4fd6-b861-edb5234ac694-1d95",
+      "subcontas": [
+        "*Vesti Starter*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-16",
+          "dias": 1,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti Starter*",
+          "link": "https://checkout.iugu.com/invoices/5721edc3-3a84-4fd6-b861-edb5234ac694-1d95"
+        }
+      ]
+    },
+    "1712269": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1425.33,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9d95f6ce-feeb-47ef-b0aa-f97d10f66be2-a544",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 1425.33,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/9d95f6ce-feeb-47ef-b0aa-f97d10f66be2-a544"
+        }
+      ]
+    },
+    "2190389": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1000.0,
+      "diasAtraso": 185,
+      "vencimentoMaisAntigo": "2026-05-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d382abf3-68e5-43e7-8923-e4581ba90a6d-c487",
+      "subcontas": [
+        "*Vesti Setup*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-05-16",
+          "dias": 185,
+          "valor": 1000.0,
+          "status": "partially_paid",
+          "subconta": "*Vesti Setup*",
+          "link": "https://checkout.iugu.com/invoices/d382abf3-68e5-43e7-8923-e4581ba90a6d-c487"
+        }
+      ]
+    },
+    "1536375": {
+      "qtFaturas": 1,
+      "valorEmAberto": 429.0,
+      "diasAtraso": 7,
+      "vencimentoMaisAntigo": "2026-11-10",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/fa80978d-c1c0-4a13-91e1-e2c3ff12b183-629a",
+      "subcontas": [
+        "*Vesti - Uemtel*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-10",
+          "dias": 7,
+          "valor": 429.0,
+          "status": "pending",
+          "subconta": "*Vesti - Uemtel*",
+          "link": "https://checkout.iugu.com/invoices/fa80978d-c1c0-4a13-91e1-e2c3ff12b183-629a"
+        }
+      ]
+    },
+    "1071612": {
+      "qtFaturas": 1,
+      "valorEmAberto": 793.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6b668261-60b2-43d3-8da7-cd40f65d3913-969e",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 793.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/6b668261-60b2-43d3-8da7-cd40f65d3913-969e"
+        }
+      ]
+    },
+    "1613705": {
+      "qtFaturas": 1,
+      "valorEmAberto": 1149.0,
+      "diasAtraso": 9,
+      "vencimentoMaisAntigo": "2026-11-08",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/15f444f0-85b6-4001-ac07-5d2f0f379cf1-8d0d",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-08",
+          "dias": 9,
+          "valor": 1149.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/15f444f0-85b6-4001-ac07-5d2f0f379cf1-8d0d"
+        }
+      ]
+    },
+    "164034": {
+      "qtFaturas": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d6774f28-e3ed-498e-b87c-5070466e56b3-baec",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 296.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/d6774f28-e3ed-498e-b87c-5070466e56b3-baec"
         }
       ]
     },
     "1814060": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 2,
+      "diasAtraso": 3,
       "vencimentoMaisAntigo": "2026-11-14",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/647729e1-9073-4d85-800a-925f21bcec8f-70d6",
       "subcontas": [
@@ -2920,7 +1733,7 @@
       "faturas": [
         {
           "venc": "2026-11-14",
-          "dias": 2,
+          "dias": 3,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*",
@@ -2928,50 +1741,70 @@
         }
       ]
     },
-    "89170": {
+    "1659718": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/968002c8-0f68-4fa8-8841-f852ca3fccb6-cf33",
+      "valorEmAberto": 429.0,
+      "diasAtraso": 5,
+      "vencimentoMaisAntigo": "2026-11-12",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/025644a5-8734-4951-b796-6fd4cc607a4e-8594",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti Starter*"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
+          "venc": "2026-11-12",
+          "dias": 5,
+          "valor": 429.0,
           "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/968002c8-0f68-4fa8-8841-f852ca3fccb6-cf33"
+          "subconta": "*Vesti Starter*",
+          "link": "https://checkout.iugu.com/invoices/025644a5-8734-4951-b796-6fd4cc607a4e-8594"
         }
       ]
     },
-    "7777": {
+    "1661979": {
       "qtFaturas": 1,
-      "valorEmAberto": 1504.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 4544.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/a6e07d88-ffa0-468b-ac8c-1b88f5f1d757-9bdb",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f26733e0-0145-42fd-a8e8-ad4ba2f8d177-a1ad",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1504.0,
+          "dias": 2,
+          "valor": 4544.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/a6e07d88-ffa0-468b-ac8c-1b88f5f1d757-9bdb"
+          "link": "https://checkout.iugu.com/invoices/f26733e0-0145-42fd-a8e8-ad4ba2f8d177-a1ad"
+        }
+      ]
+    },
+    "317706": {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/81c76062-0bf6-484a-8941-29fcb59a358f-d80c",
+      "subcontas": [
+        "*Vesti Portal*"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 60.0,
+          "status": "pending",
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/81c76062-0bf6-484a-8941-29fcb59a358f-d80c"
         }
       ]
     },
     "24244": {
       "qtFaturas": 1,
       "valorEmAberto": 481.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/8b7bd841-39b6-4833-84cd-59ace7bea3ff-8616",
       "subcontas": [
@@ -2980,7 +1813,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 481.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -2988,30 +1821,50 @@
         }
       ]
     },
-    "53159": {
+    "2191743": {
       "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/fcbe16c7-9c59-4be8-826d-82a5d1f88474-3ec5",
+      "valorEmAberto": 1299.0,
+      "diasAtraso": 10,
+      "vencimentoMaisAntigo": "2026-11-07",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/decdc78f-7df4-4719-a08d-3da2c5c78dc8-e6b4",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
+          "venc": "2026-11-07",
+          "dias": 10,
+          "valor": 1299.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/fcbe16c7-9c59-4be8-826d-82a5d1f88474-3ec5"
+          "link": "https://checkout.iugu.com/invoices/decdc78f-7df4-4719-a08d-3da2c5c78dc8-e6b4"
+        }
+      ]
+    },
+    "1191066": {
+      "qtFaturas": 1,
+      "valorEmAberto": 724.0,
+      "diasAtraso": 11,
+      "vencimentoMaisAntigo": "2026-11-06",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-06",
+          "dias": 11,
+          "valor": 724.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/bc4e76b1-600a-4377-8b48-123bf678190c-365f"
         }
       ]
     },
     "1956465": {
       "qtFaturas": 1,
       "valorEmAberto": 429.0,
-      "diasAtraso": 5,
+      "diasAtraso": 6,
       "vencimentoMaisAntigo": "2026-11-11",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6143db82-ea80-47a3-b225-735309eecdb1-b890",
       "subcontas": [
@@ -3020,7 +1873,7 @@
       "faturas": [
         {
           "venc": "2026-11-11",
-          "dias": 5,
+          "dias": 6,
           "valor": 429.0,
           "status": "pending",
           "subconta": "*Vesti Starter*",
@@ -3031,7 +1884,7 @@
     "21684": {
       "qtFaturas": 1,
       "valorEmAberto": 444.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f33a7b6e-c078-4845-a4ec-b1fa74ded460-44f1",
       "subcontas": [
@@ -3040,7 +1893,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 444.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -3048,70 +1901,50 @@
         }
       ]
     },
-    "48997": {
+    "106130": {
       "qtFaturas": 1,
-      "valorEmAberto": 706.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 296.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f765a9c7-4ec9-485c-a6a7-e4eb7eb91e63-c25f",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/99349b38-b8a0-48b5-81d1-9fc569b10339-5847",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 706.0,
+          "dias": 2,
+          "valor": 296.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f765a9c7-4ec9-485c-a6a7-e4eb7eb91e63-c25f"
+          "link": "https://checkout.iugu.com/invoices/99349b38-b8a0-48b5-81d1-9fc569b10339-5847"
         }
       ]
     },
-    "139516": {
+    "26986": {
       "qtFaturas": 1,
-      "valorEmAberto": 285.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/81e909ab-0dcd-4fec-ac88-3d217e2c1637-f206",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/4e618aa8-880e-4477-8411-777fa8c1a790-78bb",
       "subcontas": [
-        "**VESTI**"
+        "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 285.0,
+          "dias": 2,
+          "valor": 60.0,
           "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/81e909ab-0dcd-4fec-ac88-3d217e2c1637-f206"
-        }
-      ]
-    },
-    "144574": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1002.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bc3675d6-a120-4a9d-83d1-f9f48ef200ff-268a",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1002.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/bc3675d6-a120-4a9d-83d1-f9f48ef200ff-268a"
+          "subconta": "*Vesti Portal*",
+          "link": "https://checkout.iugu.com/invoices/4e618aa8-880e-4477-8411-777fa8c1a790-78bb"
         }
       ]
     },
     "1455826": {
       "qtFaturas": 1,
       "valorEmAberto": 706.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1ee8a761-f5e6-4380-beae-f24be1ca850c-cd75",
       "subcontas": [
@@ -3120,7 +1953,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 706.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -3128,279 +1961,10 @@
         }
       ]
     },
-    "57825": {
-      "qtFaturas": 1,
-      "valorEmAberto": 532.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f1960f56-2761-40c9-b824-a8aa88b0ad27-8a8f",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 532.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/f1960f56-2761-40c9-b824-a8aa88b0ad27-8a8f"
-        }
-      ]
-    },
-    "1652126": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6f58b053-6c07-4e9a-b9cf-eaa5afbf7e5e-563f",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/6f58b053-6c07-4e9a-b9cf-eaa5afbf7e5e-563f"
-        }
-      ]
-    },
-    "1566528": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1149.0,
-      "diasAtraso": 2,
-      "vencimentoMaisAntigo": "2026-11-14",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/bbf73885-b729-4102-88a0-8adc96137a5f-9b23",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-14",
-          "dias": 2,
-          "valor": 1149.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/bbf73885-b729-4102-88a0-8adc96137a5f-9b23"
-        }
-      ]
-    },
-    "27404": {
-      "qtFaturas": 2,
-      "valorEmAberto": 776.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/5c1558aa-510d-4278-8252-2cb456c00fcd-444f",
-      "subcontas": [
-        "**VESTI**",
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 461.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/5c1558aa-510d-4278-8252-2cb456c00fcd-444f"
-        },
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 315.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/e3cabe6b-c4c4-4196-8c77-3aa876929ff6-e475"
-        }
-      ]
-    },
-    "49554": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1642.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/b3337590-fb98-49a3-92eb-92d53b436290-c638",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1642.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/b3337590-fb98-49a3-92eb-92d53b436290-c638"
-        }
-      ]
-    },
-    "47326": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/6832aa74-985c-444e-a615-eee6e155d7fc-a2da",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/6832aa74-985c-444e-a615-eee6e155d7fc-a2da"
-        }
-      ]
-    },
-    "93281": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/7d4bab6f-58a9-436e-b5af-dfdf033a6435-021f",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/7d4bab6f-58a9-436e-b5af-dfdf033a6435-021f"
-        }
-      ]
-    },
-    "1094612": {
-      "qtFaturas": 1,
-      "valorEmAberto": 793.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/43f1e153-4182-4f31-b910-d33e5e40f524-6f3a",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 793.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/43f1e153-4182-4f31-b910-d33e5e40f524-6f3a"
-        }
-      ]
-    },
-    "28210": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1188.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1d163e53-1df7-490e-adde-67227d52f4e1-0bd8",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 1188.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/1d163e53-1df7-490e-adde-67227d52f4e1-0bd8"
-        }
-      ]
-    },
-    "11076": {
-      "qtFaturas": 1,
-      "valorEmAberto": 428.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/949011bd-a13f-4ea1-878f-0a73fd3b9fda-efb8",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 428.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/949011bd-a13f-4ea1-878f-0a73fd3b9fda-efb8"
-        }
-      ]
-    },
-    "842293": {
-      "qtFaturas": 1,
-      "valorEmAberto": 1100.0,
-      "diasAtraso": 13,
-      "vencimentoMaisAntigo": "2026-11-03",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d2a1d851-6637-4c3a-8714-a3556db2aa8d-2096",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-03",
-          "dias": 13,
-          "valor": 1100.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/d2a1d851-6637-4c3a-8714-a3556db2aa8d-2096"
-        }
-      ]
-    },
-    "317706": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/81c76062-0bf6-484a-8941-29fcb59a358f-d80c",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/81c76062-0bf6-484a-8941-29fcb59a358f-d80c"
-        }
-      ]
-    },
-    "174033": {
-      "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/39865ec5-2bad-46e7-a22c-b5f3c78cd3fe-185c",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/39865ec5-2bad-46e7-a22c-b5f3c78cd3fe-185c"
-        }
-      ]
-    },
     "107077": {
       "qtFaturas": 1,
       "valorEmAberto": 4078.0,
-      "diasAtraso": 1,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/1a1a501a-1c37-48d5-867b-f9aaf7159530-9721",
       "subcontas": [
@@ -3409,7 +1973,7 @@
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
+          "dias": 2,
           "valor": 4078.0,
           "status": "pending",
           "subconta": "**VESTI**",
@@ -3417,150 +1981,170 @@
         }
       ]
     },
-    "202785": {
+    "1123393": {
       "qtFaturas": 1,
-      "valorEmAberto": 60.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 3272.0,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/f0f50acb-c43d-4209-976b-c08369b9fe37-72ac",
-      "subcontas": [
-        "*Vesti Portal*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 60.0,
-          "status": "pending",
-          "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/f0f50acb-c43d-4209-976b-c08369b9fe37-72ac"
-        }
-      ]
-    },
-    "142297": {
-      "qtFaturas": 1,
-      "valorEmAberto": 444.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e4d3914a-8961-487c-ab21-1fddfc0e671c-fbaf",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/51534d47-2f0b-47d6-b044-5c3e513a20d5-21d1",
       "subcontas": [
         "**VESTI**"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 444.0,
+          "dias": 2,
+          "valor": 3272.0,
           "status": "pending",
           "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/e4d3914a-8961-487c-ab21-1fddfc0e671c-fbaf"
+          "link": "https://checkout.iugu.com/invoices/51534d47-2f0b-47d6-b044-5c3e513a20d5-21d1"
         }
       ]
     },
-    "72934": {
+    "123613": {
+      "qtFaturas": 1,
+      "valorEmAberto": 671.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/45796038-f644-46ef-aa8d-6effd785e2f3-eab3",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 671.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/45796038-f644-46ef-aa8d-6effd785e2f3-eab3"
+        }
+      ]
+    },
+    "957264": {
+      "qtFaturas": 1,
+      "valorEmAberto": 2075.0,
+      "diasAtraso": 237,
+      "vencimentoMaisAntigo": "2026-03-25",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/76488ac1-3b66-43e3-9559-6192e9b834c1-ddae",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-03-25",
+          "dias": 237,
+          "valor": 2075.0,
+          "status": "partially_paid",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/76488ac1-3b66-43e3-9559-6192e9b834c1-ddae"
+        }
+      ]
+    },
+    "1420548": {
       "qtFaturas": 1,
       "valorEmAberto": 499.0,
-      "diasAtraso": 3,
-      "vencimentoMaisAntigo": "2026-11-13",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/22f4678d-f7ac-47b2-8f49-08684c57a5a6-843a",
-      "subcontas": [
-        "*Vesti - Atta*"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-13",
-          "dias": 3,
-          "valor": 499.0,
-          "status": "pending",
-          "subconta": "*Vesti - Atta*",
-          "link": "https://checkout.iugu.com/invoices/22f4678d-f7ac-47b2-8f49-08684c57a5a6-843a"
-        }
-      ]
-    },
-    "279807": {
-      "qtFaturas": 1,
-      "valorEmAberto": 296.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/66b2d123-6d62-42cd-b8ae-1abe8c436421-e661",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 296.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/66b2d123-6d62-42cd-b8ae-1abe8c436421-e661"
-        }
-      ]
-    },
-    "13160": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 1,
-      "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/132c3eb3-188c-4d35-a309-78e16c32f584-da5b",
-      "subcontas": [
-        "**VESTI**"
-      ],
-      "faturas": [
-        {
-          "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 429.0,
-          "status": "pending",
-          "subconta": "**VESTI**",
-          "link": "https://checkout.iugu.com/invoices/132c3eb3-188c-4d35-a309-78e16c32f584-da5b"
-        }
-      ]
-    },
-    "1536375": {
-      "qtFaturas": 1,
-      "valorEmAberto": 429.0,
-      "diasAtraso": 6,
-      "vencimentoMaisAntigo": "2026-11-10",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/fa80978d-c1c0-4a13-91e1-e2c3ff12b183-629a",
+      "diasAtraso": 8,
+      "vencimentoMaisAntigo": "2026-11-09",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d752c5d2-ec1b-4f7e-85b8-dea0d8bfcbd7-40dc",
       "subcontas": [
         "*Vesti - Uemtel*"
       ],
       "faturas": [
         {
-          "venc": "2026-11-10",
-          "dias": 6,
-          "valor": 429.0,
+          "venc": "2026-11-09",
+          "dias": 8,
+          "valor": 499.0,
           "status": "pending",
           "subconta": "*Vesti - Uemtel*",
-          "link": "https://checkout.iugu.com/invoices/fa80978d-c1c0-4a13-91e1-e2c3ff12b183-629a"
+          "link": "https://checkout.iugu.com/invoices/d752c5d2-ec1b-4f7e-85b8-dea0d8bfcbd7-40dc"
         }
       ]
     },
-    "16331": {
+    "894067": {
       "qtFaturas": 1,
-      "valorEmAberto": 435.0,
-      "diasAtraso": 1,
+      "valorEmAberto": 307.37,
+      "diasAtraso": 2,
       "vencimentoMaisAntigo": "2026-11-15",
-      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/93079273-f25e-4ad4-9eb1-d05ef9e07a73-c215",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/15fcbb83-5bd7-4ef6-b694-e4090c212a9b-6233",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 307.37,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/15fcbb83-5bd7-4ef6-b694-e4090c212a9b-6233"
+        }
+      ]
+    },
+    "1271690": {
+      "qtFaturas": 1,
+      "valorEmAberto": 756.0,
+      "diasAtraso": 1,
+      "vencimentoMaisAntigo": "2026-11-16",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/e33eebcd-5e5b-45ab-b229-c273a8d79935-687d",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-16",
+          "dias": 1,
+          "valor": 756.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/e33eebcd-5e5b-45ab-b229-c273a8d79935-687d"
+        }
+      ]
+    },
+    "451968": {
+      "qtFaturas": 1,
+      "valorEmAberto": 766.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/9fdcac73-bde9-41ff-8c3e-fe18f666f954-c75f",
+      "subcontas": [
+        "**VESTI**"
+      ],
+      "faturas": [
+        {
+          "venc": "2026-11-15",
+          "dias": 2,
+          "valor": 766.0,
+          "status": "pending",
+          "subconta": "**VESTI**",
+          "link": "https://checkout.iugu.com/invoices/9fdcac73-bde9-41ff-8c3e-fe18f666f954-c75f"
+        }
+      ]
+    },
+    "970563": {
+      "qtFaturas": 1,
+      "valorEmAberto": 60.0,
+      "diasAtraso": 2,
+      "vencimentoMaisAntigo": "2026-11-15",
+      "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d29da55d-47db-482d-b0fc-2e2e0a7435ec-0dd5",
       "subcontas": [
         "*Vesti Portal*"
       ],
       "faturas": [
         {
           "venc": "2026-11-15",
-          "dias": 1,
-          "valor": 435.0,
+          "dias": 2,
+          "valor": 60.0,
           "status": "pending",
           "subconta": "*Vesti Portal*",
-          "link": "https://checkout.iugu.com/invoices/93079273-f25e-4ad4-9eb1-d05ef9e07a73-c215"
+          "link": "https://checkout.iugu.com/invoices/d29da55d-47db-482d-b0fc-2e2e0a7435ec-0dd5"
         }
       ]
     },
     "2051090": {
       "qtFaturas": 1,
       "valorEmAberto": 1920.0,
-      "diasAtraso": 124,
+      "diasAtraso": 125,
       "vencimentoMaisAntigo": "2026-07-15",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/635b31a5-e8e0-4a91-a951-a6f96d49d827-ef93",
       "subcontas": [
@@ -3569,7 +2153,7 @@
       "faturas": [
         {
           "venc": "2026-07-15",
-          "dias": 124,
+          "dias": 125,
           "valor": 1920.0,
           "status": "pending",
           "subconta": "*Vesti - Vê Vantanges*",
@@ -3580,7 +2164,7 @@
     "1568965": {
       "qtFaturas": 1,
       "valorEmAberto": 1149.0,
-      "diasAtraso": 117,
+      "diasAtraso": 118,
       "vencimentoMaisAntigo": "2026-07-22",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/511c577a-3dc9-4755-8633-490b10a5be67-31d9",
       "subcontas": [
@@ -3589,7 +2173,7 @@
       "faturas": [
         {
           "venc": "2026-07-22",
-          "dias": 117,
+          "dias": 118,
           "valor": 1149.0,
           "status": "pending",
           "subconta": "*Vesti - Vê Vantanges*",
@@ -3600,7 +2184,7 @@
     "1434319": {
       "qtFaturas": 1,
       "valorEmAberto": 317.0,
-      "diasAtraso": 125,
+      "diasAtraso": 126,
       "vencimentoMaisAntigo": "2026-07-14",
       "linkFaturaMaisAntiga": "https://checkout.iugu.com/invoices/d0a9cebd-e9f5-4abe-b515-5118b2fa0131-ed82",
       "subcontas": [
@@ -3609,7 +2193,7 @@
       "faturas": [
         {
           "venc": "2026-07-14",
-          "dias": 125,
+          "dias": 126,
           "valor": 317.0,
           "status": "pending",
           "subconta": "*Vesti - Vê Vantanges*",
