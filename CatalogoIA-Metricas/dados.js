@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-17T20:18:09.582Z",
+  "gerado_em": "2026-11-18T02:43:09.521Z",
   "hoje": "2026-11-17",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -11,9 +11,9 @@ window.DADOS = {
     "semanas": 12
   },
   "kpis": {
-    "liberadas": 24,
+    "liberadas": 25,
     "ativas": 6,
-    "usando": 17,
+    "usando": 18,
     "nunca_usaram": 7,
     "paradas": 9,
     "com_conta": 11,
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 18
+      "dias": 19
     },
     {
       "slug": "company:40efad13-d52c-4c99-9777-078399818d0c",
@@ -419,6 +419,24 @@ window.DADOS = {
       "primeiro": "2026-10-26T19:04:19.305Z",
       "ultimo": "2026-10-26T19:04:19.305Z",
       "dias": 22
+    },
+    {
+      "slug": "company:956b1fc3-70f2-4ddf-8ea1-f1ad6f18a36d",
+      "nome": "Via Vesti (956b1fc3)",
+      "arquetipo": "",
+      "tem_conta": false,
+      "email": "",
+      "produtos": 0,
+      "estimado": false,
+      "produtos_7d": 0,
+      "ativa": false,
+      "acessos": 1,
+      "buscas": 0,
+      "descricoes": 0,
+      "envios": 0,
+      "primeiro": "2026-11-17T23:45:04.472Z",
+      "ultimo": "2026-11-17T23:45:04.472Z",
+      "dias": 0
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -562,7 +580,7 @@ window.DADOS = {
       "fim": "2026-11-22",
       "produtos": 13,
       "ativas": 2,
-      "usaram": 3,
+      "usaram": 4,
       "cadastros": 10,
       "novos": 0
     }
@@ -573,9 +591,9 @@ window.DADOS = {
       "nome": "Piloto automático",
       "prefixo": "app:auto:",
       "kpis": {
-        "liberadas": 24,
+        "liberadas": 25,
         "ativas": 6,
-        "usando": 15,
+        "usando": 16,
         "nunca_usaram": 9,
         "paradas": 8,
         "com_conta": 11,
@@ -1003,7 +1021,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 18,
+          "dias": 19,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1024,6 +1042,26 @@ window.DADOS = {
           "primeiro": "2026-10-26T19:04:19.305Z",
           "ultimo": "2026-10-26T19:04:19.305Z",
           "dias": 22,
+          "produtos_medidos": 0,
+          "atribuido": 0
+        },
+        {
+          "slug": "company:956b1fc3-70f2-4ddf-8ea1-f1ad6f18a36d",
+          "nome": "Via Vesti (956b1fc3)",
+          "arquetipo": "",
+          "tem_conta": false,
+          "email": "",
+          "produtos": 0,
+          "estimado": false,
+          "produtos_7d": 0,
+          "ativa": false,
+          "acessos": 1,
+          "buscas": 0,
+          "descricoes": 0,
+          "envios": 0,
+          "primeiro": "2026-11-17T23:45:04.472Z",
+          "ultimo": "2026-11-17T23:45:04.472Z",
+          "dias": 0,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1195,7 +1233,7 @@ window.DADOS = {
           "fim": "2026-11-22",
           "produtos": 8,
           "ativas": 2,
-          "usaram": 3,
+          "usaram": 4,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 8,
@@ -1208,18 +1246,18 @@ window.DADOS = {
       "nome": "Manual",
       "prefixo": "app:manual:",
       "kpis": {
-        "liberadas": 24,
+        "liberadas": 25,
         "ativas": 1,
         "usando": 13,
-        "nunca_usaram": 11,
+        "nunca_usaram": 12,
         "paradas": 3,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1894,
+        "produtos_total": 1895,
         "produtos_7d": 21,
         "descricoes_total": 548,
         "total_estimado": true,
-        "produtos_atribuidos": 1501
+        "produtos_atribuidos": 1502
       },
       "marcas": [
         {
@@ -1288,7 +1326,7 @@ window.DADOS = {
           "arquetipo": "inocente",
           "tem_conta": true,
           "email": "contato@operakids.com.br",
-          "produtos": 211,
+          "produtos": 212,
           "estimado": true,
           "produtos_7d": 21,
           "ativa": true,
@@ -1300,7 +1338,7 @@ window.DADOS = {
           "ultimo": "2026-11-17T18:59:37.126Z",
           "dias": 0,
           "produtos_medidos": 78,
-          "atribuido": 133
+          "atribuido": 134
         },
         {
           "slug": "amiska",
@@ -1398,7 +1436,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-08-14T12:06:46.387Z",
           "ultimo": "2026-08-20T02:30:36.116Z",
-          "dias": 89,
+          "dias": 90,
           "produtos_medidos": 0,
           "atribuido": 8
         },
@@ -1663,6 +1701,26 @@ window.DADOS = {
           "atribuido": 0
         },
         {
+          "slug": "company:956b1fc3-70f2-4ddf-8ea1-f1ad6f18a36d",
+          "nome": "Via Vesti (956b1fc3)",
+          "arquetipo": "",
+          "tem_conta": false,
+          "email": "",
+          "produtos": 0,
+          "estimado": false,
+          "produtos_7d": 0,
+          "ativa": false,
+          "acessos": 0,
+          "buscas": 0,
+          "descricoes": 0,
+          "envios": 0,
+          "primeiro": "",
+          "ultimo": "",
+          "dias": null,
+          "produtos_medidos": 0,
+          "atribuido": 0
+        },
+        {
           "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
           "nome": "Via Vesti (a23f0e13)",
           "arquetipo": "",
@@ -1751,13 +1809,13 @@ window.DADOS = {
         {
           "inicio": "2026-09-28",
           "fim": "2026-10-04",
-          "produtos": 138,
+          "produtos": 139,
           "ativas": 2,
           "usaram": 3,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 28,
-          "atribuido": 110
+          "atribuido": 111
         },
         {
           "inicio": "2026-10-05",
