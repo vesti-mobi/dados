@@ -1,0 +1,181 @@
+# Deploy no Cloud Run (GCP vesti-data-499015) dos paineis que estavam na Vercel:
+#
+#   servico            pasta              como era publicado na Vercel
+#   painel-tribo       painel-tribo/      Git: todo push na main
+#   gambiarra-uemtel   GambiarraUemtel/   Git: todo push na main
+#   gambiarra-atta     GambiarraAtta/     Git: todo push na main
+#   vesti-cs-tier      CS/api-tier/       manual (npx vercel --prod)
+#
+# Gatilhos:
+#   push na main          -> so os servicos cuja pasta (ou deploy/gcp/<servico>/) mudou
+#   workflow_run          -> painel-tribo, depois de cada carga diaria do workflow
+#                            "Painel da Tribo". O commit dessa carga e feito com o
+#                            GITHUB_TOKEN, que nao dispara `push` em outro workflow;
+#                            na Vercel era o proprio commit que publicava.
+#   workflow_dispatch     -> um servico escolhido, ou todos
+#
+# Autenticacao sem chave: Workload Identity Federation (pool github-actions do
+# projeto customer-access-control) personificando gha-deploy@vesti-data-499015.
+# Preparo unico em deploy/gcp/bootstrap.sh.
+name: Deploy GCP (Cloud Run)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "painel-tribo/**"
+      - "GambiarraUemtel/**"
+      - "GambiarraAtta/**"
+      - "CS/api-tier/**"
+      - "deploy/gcp/**"
+      - ".github/workflows/deploy-gcp.yml"
+  workflow_run:
+    workflows: ["Painel da Tribo"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      servico:
+        description: "Servico para publicar"
+        type: choice
+        default: all
+        options:
+          - all
+          - painel-tribo
+          - gambiarra-uemtel
+          - gambiarra-atta
+          - vesti-cs-tier
+
+concurrency:
+  group: deploy-gcp-${{ github.event_name == 'workflow_run' && 'painel-tribo' || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: vesti-data-499015
+  REGION: southamerica-east1
+  REGISTRY: southamerica-east1-docker.pkg.dev/vesti-data-499015/apps-web
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    # A carga do painel pode falhar sem commitar nada; ai nao ha o que publicar.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: plan
+        env:
+          EVENTO: ${{ github.event_name }}
+          ESCOLHA: ${{ inputs.servico }}
+          ANTES: ${{ github.event.before }}
+          CS_TIER_ATIVO: ${{ vars.CS_TIER_ATIVO }}
+        run: |
+          # servico|pasta (contexto de build)|dockerfile|tipo
+          CATALOGO='painel-tribo|painel-tribo|deploy/gcp/static.Dockerfile|static
+          gambiarra-uemtel|GambiarraUemtel|deploy/gcp/static.Dockerfile|static
+          gambiarra-atta|GambiarraAtta|deploy/gcp/static.Dockerfile|static
+          vesti-cs-tier|CS/api-tier|deploy/gcp/vesti-cs-tier/Dockerfile|node'
+
+          case "$EVENTO" in
+            workflow_run) ESCOLHIDOS="painel-tribo" ;;
+            workflow_dispatch)
+              if [ "$ESCOLHA" = "all" ]; then ESCOLHIDOS=$(echo "$CATALOGO" | cut -d'|' -f1)
+              else ESCOLHIDOS="$ESCOLHA"; fi ;;
+            push)
+              if [ -z "$ANTES" ] || [ "$ANTES" = "0000000000000000000000000000000000000000" ]; then
+                ANTES="${GITHUB_SHA}^"
+              fi
+              MUDOU=$(git diff --name-only "$ANTES" "$GITHUB_SHA")
+              ESCOLHIDOS=""
+              # mudanca no proprio workflow ou no Dockerfile compartilhado publica tudo
+              if echo "$MUDOU" | grep -qE '^(\.github/workflows/deploy-gcp\.yml|deploy/gcp/static\.Dockerfile)$'; then
+                ESCOLHIDOS=$(echo "$CATALOGO" | cut -d'|' -f1)
+              else
+                while IFS='|' read -r svc pasta _ _; do
+                  if echo "$MUDOU" | grep -qE "^(${pasta}/|deploy/gcp/${svc}/)"; then
+                    ESCOLHIDOS="$ESCOLHIDOS $svc"
+                  fi
+                done <<< "$CATALOGO"
+              fi ;;
+          esac
+
+          # O cs-tier depende do segredo vesti-cs-tier-senha-painel (SENHA_PAINEL).
+          # Enquanto ele nao tiver valor, fica fora (o deploy falharia). Para ligar:
+          # Settings -> Secrets and variables -> Actions -> Variables: CS_TIER_ATIVO=true
+          if [ "$CS_TIER_ATIVO" != "true" ]; then
+            ESCOLHIDOS=$(echo "$ESCOLHIDOS" | tr ' ' '\n' | grep -vx 'vesti-cs-tier' | tr '\n' ' ')
+          fi
+
+          MATRIX=$(echo "$CATALOGO" | python3 -c '
+          import json, sys
+          escolhidos = set(sys.argv[1].split())
+          itens = []
+          for linha in sys.stdin:
+              svc, pasta, dockerfile, tipo = linha.strip().split("|")
+              if svc in escolhidos:
+                  itens.append({"service": svc, "context": pasta, "dockerfile": dockerfile, "tipo": tipo})
+          print(json.dumps({"include": itens}))
+          ' "$ESCOLHIDOS")
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "count=$(echo "$MATRIX" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)["include"]))')" >> "$GITHUB_OUTPUT"
+          echo "Servicos: $ESCOLHIDOS"
+
+  deploy:
+    needs: plan
+    if: needs.plan.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.service }}
+    steps:
+      # Em workflow_run o checkout pega a ponta da main, que ja tem o commit da carga.
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/500224547944/locations/global/workloadIdentityPools/github-actions/providers/github
+          service_account: gha-deploy@vesti-data-499015.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build e push da imagem
+        env:
+          SERVICE: ${{ matrix.service }}
+          CONTEXTO: ${{ matrix.context }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+          TIPO: ${{ matrix.tipo }}
+        run: |
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          IMAGE="${REGISTRY}/${SERVICE}:${GITHUB_SHA}"
+          if [ "$TIPO" = "static" ]; then
+            docker buildx build --load -f "$DOCKERFILE" \
+              --build-context conf="deploy/gcp/${SERVICE}" \
+              -t "$IMAGE" "$CONTEXTO"
+          else
+            docker buildx build --load -f "$DOCKERFILE" -t "$IMAGE" "$CONTEXTO"
+          fi
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy (gcloud run services replace)
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          sed "s|IMAGE_PLACEHOLDER|${IMAGE}|" "deploy/gcp/${SERVICE}/service.yaml" > "$RUNNER_TEMP/service.yaml"
+          gcloud run services replace "$RUNNER_TEMP/service.yaml" \
+            --region "$REGION" --project "$PROJECT_ID"
+          gcloud run services add-iam-policy-binding "$SERVICE" \
+            --region "$REGION" --project "$PROJECT_ID" \
+            --member=allUsers --role=roles/run.invoker --quiet >/dev/null
+          gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT_ID" \
+            --format='value(status.url)'

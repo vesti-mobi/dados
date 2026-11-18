@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/:path*", "destination": "https://painel-tribo-829232163598.southamerica-east1.run.app/:path*", "permanent": true }
+  ]
+}

@@ -28,9 +28,13 @@
  * mesma tranca do painel e do /api/varejo: segura a porta, não é um cofre — a
  * senha viaja no HTML de um repositório público. O que está em jogo aqui é a
  * classificação de porte de uma carteira, não dado de cliente.
+ *
+ * ONDE FICA GUARDADO. Com TIER_BUCKET definido (Cloud Run, GCP
+ * vesti-data-499015) o estado vai para um bucket GCS; sem ele, continua no
+ * Vercel Blob. O esquema de um arquivo por escrita é o mesmo nos dois — o GCS
+ * não tem o problema de cache do Blob (leitura depois de escrita é consistente),
+ * mas manter o mesmo formato deixa o histórico e a faxina idênticos.
  */
-import { put, list, del } from '@vercel/blob';
-
 const PREFIXO = 'tier-';
 const GUARDAR = 5;                 // quantas versões anteriores ficam de pé
 const TIERS = ['T1', 'T2', 'T3', 'T4'];
@@ -55,29 +59,75 @@ function versoes(blobs) {
     .sort((a, b) => b.pathname.localeCompare(a.pathname));
 }
 
+/* Os dois armazenamentos expõem a mesma interface: listar() devolve
+   [{pathname, ref}], lerJson(ref), gravar(nome, texto), apagar([ref]). */
+let _armazenamento;
+async function armazenamento() {
+  if (_armazenamento) return _armazenamento;
+  if (process.env.TIER_BUCKET) {
+    const { Storage } = await import('@google-cloud/storage');
+    const bucket = new Storage().bucket(process.env.TIER_BUCKET);
+    _armazenamento = {
+      async listar() {
+        const [files] = await bucket.getFiles({ prefix: PREFIXO, maxResults: 100 });
+        return files.map(f => ({ pathname: f.name, ref: f.name }));
+      },
+      async lerJson(ref) {
+        const [buf] = await bucket.file(ref).download();
+        return JSON.parse(buf.toString('utf8'));
+      },
+      async gravar(nome, texto) {
+        await bucket.file(nome).save(texto, {
+          resumable: false, contentType: 'application/json',
+          metadata: { cacheControl: 'no-store' },
+        });
+      },
+      async apagar(refs) {
+        await Promise.all(refs.map(r => bucket.file(r).delete({ ignoreNotFound: true })));
+      },
+    };
+  } else {
+    const { put, list, del } = await import('@vercel/blob');
+    _armazenamento = {
+      async listar() {
+        const { blobs } = await list({ prefix: PREFIXO, limit: 100 });
+        return blobs.map(b => ({ pathname: b.pathname, ref: b.url }));
+      },
+      async lerJson(ref) {
+        const r = await fetch(ref, { cache: 'no-store' });
+        if (!r.ok) throw new Error('não consegui ler o estado guardado (HTTP ' + r.status + ')');
+        return r.json();
+      },
+      async gravar(nome, texto) {
+        await put(nome, texto, {
+          access: 'public', contentType: 'application/json',
+          addRandomSuffix: false, cacheControlMaxAge: 0,
+        });
+      },
+      async apagar(refs) { await del(refs); },
+    };
+  }
+  return _armazenamento;
+}
+
 async function ler() {
-  const { blobs } = await list({ prefix: PREFIXO, limit: 100 });
-  const v = versoes(blobs);
+  const arm = await armazenamento();
+  const v = versoes(await arm.listar());
   if (!v.length) return { atualizadoEm: null, marcas: {}, _versoes: 0 };
-  const r = await fetch(v[0].url, { cache: 'no-store' });
-  if (!r.ok) throw new Error('não consegui ler o estado guardado (HTTP ' + r.status + ')');
-  const j = await r.json();
+  const j = await arm.lerJson(v[0].ref);
   return { atualizadoEm: j.atualizadoEm || null, marcas: j.marcas || {}, _versoes: v.length };
 }
 
 async function escrever(marcas) {
+  const arm = await armazenamento();
   const saida = { atualizadoEm: new Date().toISOString(), marcas };
   const nome = PREFIXO + String(Date.now()).padStart(16, '0') + '.json';
-  await put(nome, JSON.stringify(saida), {
-    access: 'public', contentType: 'application/json',
-    addRandomSuffix: false, cacheControlMaxAge: 0,
-  });
+  await arm.gravar(nome, JSON.stringify(saida));
   /* Faxina das versões velhas. Falhar aqui não pode derrubar a escrita, que já
      aconteceu — no pior caso sobra lixo barato no armazenamento. */
   try {
-    const { blobs } = await list({ prefix: PREFIXO, limit: 100 });
-    const velhas = versoes(blobs).slice(GUARDAR + 1).map(b => b.url);
-    if (velhas.length) await del(velhas);
+    const velhas = versoes(await arm.listar()).slice(GUARDAR + 1).map(b => b.ref);
+    if (velhas.length) await arm.apagar(velhas);
   } catch (e) { console.warn('faxina das versões antigas falhou:', e.message) }
   return saida;
 }
