@@ -1,5 +1,5 @@
 window.DADOS = {
-  "gerado_em": "2026-11-18T19:48:38.175Z",
+  "gerado_em": "2026-11-19T02:10:15.736Z",
   "hoje": "2026-11-18",
   "medindo_desde": "2026-07-24T17:20:05.000Z",
   "apps_desde": "2026-08-11T18:28:02.542Z",
@@ -400,7 +400,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-10-29T23:09:36.844Z",
       "ultimo": "2026-10-29T23:09:36.844Z",
-      "dias": 19
+      "dias": 20
     },
     {
       "slug": "company:27b9ebff-423d-4148-9e64-83f0c84203c3",
@@ -454,7 +454,7 @@ window.DADOS = {
       "envios": 0,
       "primeiro": "2026-11-17T23:45:04.472Z",
       "ultimo": "2026-11-17T23:45:04.472Z",
-      "dias": 0
+      "dias": 1
     },
     {
       "slug": "company:a23f0e13-47df-4dd9-9917-427b5dc9f615",
@@ -1039,7 +1039,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-10-29T23:09:36.844Z",
           "ultimo": "2026-10-29T23:09:36.844Z",
-          "dias": 19,
+          "dias": 20,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1099,7 +1099,7 @@ window.DADOS = {
           "envios": 0,
           "primeiro": "2026-11-17T23:45:04.472Z",
           "ultimo": "2026-11-17T23:45:04.472Z",
-          "dias": 0,
+          "dias": 1,
           "produtos_medidos": 0,
           "atribuido": 0
         },
@@ -1291,11 +1291,11 @@ window.DADOS = {
         "paradas": 3,
         "com_conta": 11,
         "contas": 10,
-        "produtos_total": 1897,
+        "produtos_total": 1902,
         "produtos_7d": 21,
         "descricoes_total": 558,
         "total_estimado": true,
-        "produtos_atribuidos": 1504
+        "produtos_atribuidos": 1509
       },
       "marcas": [
         {
@@ -1399,6 +1399,26 @@ window.DADOS = {
           "atribuido": 21
         },
         {
+          "slug": "nicoboco",
+          "nome": "Nicoboco",
+          "arquetipo": "explorador",
+          "tem_conta": true,
+          "email": "nicoboco.shop@nicoboco.com.br",
+          "produtos": 64,
+          "estimado": true,
+          "produtos_7d": 0,
+          "ativa": false,
+          "acessos": 0,
+          "buscas": 0,
+          "descricoes": 0,
+          "envios": 0,
+          "primeiro": "",
+          "ultimo": "",
+          "dias": null,
+          "produtos_medidos": 0,
+          "atribuido": 64
+        },
+        {
           "slug": "kauly-varejo",
           "nome": "Kauly varejo",
           "arquetipo": "governante",
@@ -1417,26 +1437,6 @@ window.DADOS = {
           "dias": null,
           "produtos_medidos": 0,
           "atribuido": 63
-        },
-        {
-          "slug": "nicoboco",
-          "nome": "Nicoboco",
-          "arquetipo": "explorador",
-          "tem_conta": true,
-          "email": "nicoboco.shop@nicoboco.com.br",
-          "produtos": 59,
-          "estimado": true,
-          "produtos_7d": 0,
-          "ativa": false,
-          "acessos": 0,
-          "buscas": 0,
-          "descricoes": 0,
-          "envios": 0,
-          "primeiro": "",
-          "ultimo": "",
-          "dias": null,
-          "produtos_medidos": 0,
-          "atribuido": 59
         },
         {
           "slug": "company:2aa54ccb-f068-4f57-96e5-aa7e42669885",
@@ -1911,13 +1911,13 @@ window.DADOS = {
         {
           "inicio": "2026-10-26",
           "fim": "2026-11-01",
-          "produtos": 53,
+          "produtos": 58,
           "ativas": 1,
           "usaram": 2,
           "cadastros": 10,
           "novos": 0,
           "produtos_medidos": 4,
-          "atribuido": 49
+          "atribuido": 54
         },
         {
           "inicio": "2026-11-02",
