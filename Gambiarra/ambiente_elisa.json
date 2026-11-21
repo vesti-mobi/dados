@@ -1689,7 +1689,7 @@
   "1812943": {
     "ligado": true,
     "update": "2026-11-20",
-    "religamentoReal": true,
+    "religamentoReal": false,
     "nomePlanilha": "Tica Modas",
     "canalPlanilha": "Uemtel"
   },
@@ -2520,8 +2520,8 @@
     "canalPlanilha": ""
   },
   "1536375": {
-    "ligado": true,
-    "update": "2026-10-21",
+    "ligado": false,
+    "update": "2026-11-21",
     "religamentoReal": false,
     "nomePlanilha": "Sam Modas",
     "canalPlanilha": "Uemtel"
@@ -8055,5 +8055,12 @@
     "religamentoReal": false,
     "nomePlanilha": "SECIA",
     "canalPlanilha": "Attasoft"
+  },
+  "2176855": {
+    "ligado": false,
+    "update": "2026-11-21",
+    "religamentoReal": false,
+    "nomePlanilha": "LM Modas Infantil",
+    "canalPlanilha": "Starter"
   }
 }
